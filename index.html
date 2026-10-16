@@ -1,12 +1,13 @@
+cat << 'EOF' > /opt/pestis/public/index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pestis - Live Camera Barcode Scanner</title>
+    <title>Pestis - Device Checklist & Camera Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Include Html5Qrcode Scanner Library -->
+    <!-- Html5Qrcode Scanner Library -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col">
@@ -15,7 +16,7 @@
     <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center shadow-md">
         <div class="flex items-center space-x-3">
             <span class="text-2xl">🛡️</span>
-            <h1 class="font-bold text-lg tracking-wide text-white">Pestis <span class="text-xs bg-emerald-500 text-slate-950 px-2 py-0.5 rounded font-bold">Live Camera Scan</span></h1>
+            <h1 class="font-bold text-lg tracking-wide text-white">Pestis <span class="text-xs bg-emerald-500 text-slate-950 px-2 py-0.5 rounded font-bold">Site Device Manager</span></h1>
         </div>
         <div class="text-sm bg-slate-700 px-3 py-1 rounded-full text-slate-300">
             Tech: J. Smith (Online)
@@ -29,7 +30,7 @@
         <section class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-xl space-y-4">
             <div class="flex justify-between items-center">
                 <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">1. Select or Register Customer Site</h2>
-                <button onclick="toggleAddClientModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow">
+                <button type="button" onclick="toggleAddClientModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow cursor-pointer">
                     + Register New Client
                 </button>
             </div>
@@ -38,7 +39,7 @@
                 <select id="clientSelect" class="bg-slate-900 border border-slate-700 rounded-lg p-3 flex-1 text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
                     <option value="">-- Choose Client from Database --</option>
                 </select>
-                <button onclick="startSiteVisit()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-lg text-sm shadow transition">
+                <button type="button" onclick="startSiteVisit()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-lg text-sm shadow transition">
                     Open Site Visit ⏱️
                 </button>
             </div>
@@ -51,20 +52,20 @@
                     <input type="text" id="newClientAddress" placeholder="Physical Address" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
                 </div>
                 <div class="flex justify-end space-x-2 pt-1">
-                    <button onclick="toggleAddClientModal()" class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-1.5 rounded-lg">Cancel</button>
-                    <button onclick="saveNewClient()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow">Save Client</button>
+                    <button type="button" onclick="toggleAddClientModal()" class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-1.5 rounded-lg">Cancel</button>
+                    <button type="button" onclick="saveNewClient()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow">Save Client</button>
                 </div>
             </div>
         </section>
 
-        <!-- 2. Active Technician Visit & Real Camera Scanner Workspace -->
+        <!-- 2. Active Technician Visit & Device Checklist Workspace -->
         <section id="visitWorkspace" class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-xl space-y-6 hidden">
             <div class="flex justify-between items-center border-b border-slate-700 pb-4">
                 <div>
                     <h3 class="font-bold text-lg text-emerald-400" id="activeClientTitle">Service Workspace</h3>
-                    <p class="text-xs text-slate-400">Use your phone camera to scan device barcodes.</p>
+                    <p class="text-xs text-slate-400">Scan devices with camera or click directly from the device checklist below.</p>
                 </div>
-                <button onclick="completeVisit()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow">
+                <button type="button" onclick="completeVisit()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow">
                     Complete & Submit Visit 📋
                 </button>
             </div>
@@ -72,27 +73,50 @@
             <!-- Live Camera Scanner Box -->
             <div class="bg-slate-900 p-5 rounded-xl border border-slate-700 space-y-4">
                 <div class="flex justify-between items-center">
-                    <h4 class="font-bold text-sm text-sky-400">Live Camera Barcode Scanner</h4>
-                    <button onclick="startCameraScanner()" class="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow">
-                        📷 Start Camera
-                    </button>
+                    <h4 class="font-bold text-sm text-sky-400">Barcode Camera Scanner</h4>
+                    <div class="space-x-2">
+                        <button type="button" onclick="startCameraScanner()" class="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow">
+                            📷 Start Camera
+                        </button>
+                        <button type="button" onclick="stopCameraScanner()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow">
+                            ⏹️ Stop Camera
+                        </button>
+                    </div>
                 </div>
-                <!-- Camera Viewport Container -->
-                <div id="reader" class="w-full max-w-md mx-auto overflow-hidden rounded-lg"></div>
+                <div id="reader" class="w-full max-w-sm mx-auto overflow-hidden rounded-lg bg-black"></div>
             </div>
 
-            <!-- Station Editing Form (Appears when barcode is recognized) -->
+            <!-- Device Lists: Separated by Scanned and Unscanned -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Unscanned Devices List -->
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">⏳ Unscanned Devices (<span id="unscannedCount">0</span>)</h4>
+                    <div id="unscannedList" class="space-y-2 max-h-60 overflow-y-auto text-xs">
+                        <span class="text-slate-500 italic">No devices found for this site yet.</span>
+                    </div>
+                </div>
+
+                <!-- Scanned Devices List -->
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">✓ Scanned / Serviced Today (<span id="scannedCount">0</span>)</h4>
+                    <div id="scannedList" class="space-y-2 max-h-60 overflow-y-auto text-xs">
+                        <span class="text-slate-500 italic">None scanned yet in this visit.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Station Editing Form (Appears when a device is clicked or scanned) -->
             <div id="stationFormContainer" class="bg-slate-900 p-5 rounded-xl border border-slate-700 space-y-4 hidden">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                    <h4 class="font-bold text-sm text-emerald-400" id="formTitle">Servicing Station</h4>
+                    <h4 class="font-bold text-sm text-emerald-400" id="formTitle">Servicing Device</h4>
                     <span id="scannedBarcodeBadge" class="bg-slate-800 text-sky-400 px-2 py-1 rounded text-xs font-mono"></span>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div id="newStationFields" class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 hidden bg-slate-800 p-3 rounded-lg border border-amber-500/50">
-                        <div class="sm:col-span-2 text-xs text-amber-400 font-semibold">⚠️ Barcode not found in database. Please register this new station:</div>
+                        <div class="sm:col-span-2 text-xs text-amber-400 font-semibold">💡 New Barcode Detected. Enter device name & type:</div>
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">New Station Location Name</label>
+                            <label class="block text-xs text-slate-400 mb-1">Device / Location Name</label>
                             <input type="text" id="newLocName" placeholder="e.g. Back Roller Door" class="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
                         </div>
                         <div>
@@ -139,17 +163,17 @@
                     <textarea id="serviceNotes" rows="2" placeholder="Station cleaned, fresh bait applied..." class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white"></textarea>
                 </div>
 
-                <button onclick="saveStationServiceRecord()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 rounded-lg text-sm transition shadow">
+                <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 space-y-2">
+                    <label class="block text-xs text-slate-400">Attach Photo (Camera)</label>
+                    <input type="file" id="stationPhoto" accept="image/*" capture="environment" class="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer">
+                    <div id="photoPreviewContainer" class="hidden pt-2">
+                        <img id="photoPreview" class="h-20 rounded-lg border border-slate-700 object-cover" alt="Preview">
+                    </div>
+                </div>
+
+                <button type="button" onclick="saveStationServiceRecord()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 rounded-lg text-sm transition shadow">
                     Save Station Service Record ✓
                 </button>
-            </div>
-
-            <!-- Session Queue Preview -->
-            <div class="space-y-2">
-                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Serviced Devices This Visit (<span id="queueCount">0</span>)</h4>
-                <div id="serviceQueueList" class="bg-slate-900 border border-slate-700 rounded-xl p-4 text-xs space-y-2 max-h-48 overflow-y-auto text-slate-300">
-                    <span class="text-slate-500 italic">No devices serviced yet in this session. Start camera and scan a barcode.</span>
-                </div>
             </div>
         </section>
 
@@ -165,10 +189,26 @@
 
         let clientsData = [];
         let selectedClient = null;
-        let serviceQueue = [];
+        let siteDevices = []; // All known devices for this client pulled from service_logs history
+        let scannedBarcodesThisVisit = new Set();
         let html5QrCode = null;
-        let currentScannedBarcode = null;
-        let isNewStation = false;
+        let currentBarcode = null;
+        let currentDeviceName = null;
+        let currentDeviceType = null;
+        let capturedPhotoBase64 = null;
+
+        document.getElementById('stationPhoto').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(uploadEvent) {
+                capturedPhotoBase64 = uploadEvent.target.result;
+                const preview = document.getElementById('photoPreview');
+                preview.src = capturedPhotoBase64;
+                document.getElementById('photoPreviewContainer').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
 
         async function loadClients() {
             const select = document.getElementById('clientSelect');
@@ -186,12 +226,15 @@
         }
 
         function toggleAddClientModal() {
-            document.getElementById('addClientModal').classList.toggle('hidden');
+            const modal = document.getElementById('addClientModal');
+            if (modal) modal.classList.toggle('hidden');
         }
 
         async function saveNewClient() {
-            const name = document.getElementById('newClientName').value.trim();
-            const address = document.getElementById('newClientAddress').value.trim();
+            const nameInput = document.getElementById('newClientName');
+            const addressInput = document.getElementById('newClientAddress');
+            const name = nameInput ? nameInput.value.trim() : '';
+            const address = addressInput ? addressInput.value.trim() : '';
 
             if (!name || !address) {
                 alert('Please enter both name and address.');
@@ -202,9 +245,9 @@
                 const { error } = await _supabase.from('clients').insert([{ Name: name, Address: address }]);
                 if (error) throw error;
 
-                alert('New client successfully registered in Supabase!');
-                document.getElementById('newClientName').value = '';
-                document.getElementById('newClientAddress').value = '';
+                alert('New client successfully registered!');
+                if (nameInput) nameInput.value = '';
+                if (addressInput) addressInput.value = '';
                 toggleAddClientModal();
                 loadClients();
             } catch (err) {
@@ -212,7 +255,7 @@
             }
         }
 
-        function startSiteVisit() {
+        async function startSiteVisit() {
             const clientId = document.getElementById('clientSelect').value;
             if (!clientId) {
                 alert('Please select a client site first.');
@@ -221,144 +264,218 @@
             selectedClient = clientsData.find(c => c.id == clientId);
             document.getElementById('activeClientTitle').textContent = `Servicing Site: ${selectedClient.Name}`;
             document.getElementById('visitWorkspace').classList.remove('hidden');
+            scannedBarcodesThisVisit.clear();
+            
+            await fetchSiteDevices(clientId);
             window.scrollTo({ top: 400, behavior: 'smooth' });
         }
 
-        // Start Live Camera Scanning
+        // Fetch unique devices previously logged for this client
+        async function fetchSiteDevices(clientId) {
+            try {
+                const { data, error } = await _supabase
+                    .from('service_logs')
+                    .select('barcode_id, payload, created_at')
+                    .eq('client_id', clientId)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                // Extract unique devices by barcode_id, keeping the latest metadata
+                const map = new Map();
+                (data || []).forEach(row => {
+                    if (!map.has(row.barcode_id)) {
+                        map.set(row.barcode_id, {
+                            barcode_id: row.barcode_id,
+                            locationName: row.payload.locationName || 'Unnamed Device',
+                            deviceType: row.payload.deviceType || 'Rodent Bait Station',
+                            lastPayload: row.payload
+                        });
+                    }
+                });
+
+                siteDevices = Array.from(map.values());
+                renderDeviceLists();
+            } catch (err) {
+                console.error("Error loading site devices:", err);
+                siteDevices = [];
+                renderDeviceLists();
+            }
+        }
+
+        function renderDeviceLists() {
+            const unscannedList = document.getElementById('unscannedList');
+            const scannedList = document.getElementById('scannedList');
+
+            const unscanned = siteDevices.filter(d => !scannedBarcodesThisVisit.has(d.barcode_id));
+            const scanned = siteDevices.filter(d => scannedBarcodesThisVisit.has(d.barcode_id));
+
+            document.getElementById('unscannedCount').textContent = unscanned.length;
+            document.getElementById('scannedCount').textContent = scanned.length;
+
+            // Render Unscanned
+            if (unscanned.length === 0) {
+                unscannedList.innerHTML = '<span class="text-slate-500 italic">All known devices scanned or none registered.</span>';
+            } else {
+                unscannedList.innerHTML = '';
+                unscanned.forEach(d => {
+                    unscannedList.innerHTML += `
+                        <div onclick="openDeviceForm('${d.barcode_id}', '${d.locationName}', '${d.deviceType}', false)" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-lg border border-slate-700 cursor-pointer transition flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-white text-sm">${d.locationName}</div>
+                                <div class="text-slate-400 text-xs">${d.deviceType} • <span class="font-mono text-sky-400">${d.barcode_id}</span></div>
+                            </div>
+                            <span class="text-amber-400 text-xs bg-amber-950 px-2 py-1 rounded">Unscanned</span>
+                        </div>
+                    `;
+                });
+            }
+
+            // Render Scanned
+            if (scanned.length === 0) {
+                scannedList.innerHTML = '<span class="text-slate-500 italic">None scanned yet in this session.</span>';
+            } else {
+                scannedList.innerHTML = '';
+                scanned.forEach(d => {
+                    scannedList.innerHTML += `
+                        <div onclick="openDeviceForm('${d.barcode_id}', '${d.locationName}', '${d.deviceType}', true)" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-lg border border-slate-700 cursor-pointer transition flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-white text-sm">${d.locationName}</div>
+                                <div class="text-slate-400 text-xs">${d.deviceType} • <span class="font-mono text-sky-400">${d.barcode_id}</span></div>
+                            </div>
+                            <span class="text-emerald-400 text-xs bg-emerald-950 px-2 py-1 rounded">Serviced ✓</span>
+                        </div>
+                    `;
+                });
+            }
+        }
+
         async function startCameraScanner() {
             if (html5QrCode) {
                 try { await html5QrCode.stop(); } catch(e) {}
             }
-
             html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 150 } };
-
-            html5QrCode.start({ facingMode: "environment" }, config, async (decodedText) => {
-                // Successfully scanned a barcode!
-                // Stop camera temporarily while technician fills out form
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } }, async (decodedText) => {
                 try { await html5QrCode.stop(); } catch(e) {}
                 handleScannedBarcode(decodedText);
-            }, (errorMessage) => {
-                // Scanning frame miss - ignore
-            }).catch(err => {
-                alert("Camera access error or not supported on this device: " + err);
+            }, (err) => {}).catch(err => {
+                alert("Camera access error: " + err);
             });
         }
 
-        // Check if barcode exists in database
-        async function handleScannedBarcode(barcode) {
-            currentScannedBarcode = barcode;
-            document.getElementById('scannedBarcodeBadge').textContent = `Barcode: ${barcode}`;
-            document.getElementById('stationFormContainer').classList.remove('hidden');
-
-            try {
-                const { data, error } = await _supabase
-                    .from('stations')
-                    .select('*')
-                    .eq('barcode_id', barcode)
-                    .single();
-
-                if (error || !data) {
-                    // Barcode NOT found -> Prompt user to add new location
-                    isNewStation = true;
-                    document.getElementById('formTitle').textContent = 'Register New Station Barcode';
-                    document.getElementById('newStationFields').classList.remove('hidden');
-                } else {
-                    // Barcode FOUND -> Load existing station details
-                    isNewStation = false;
-                    document.getElementById('formTitle').textContent = `Servicing Station: ${data.location_description} (${data.device_type})`;
-                    document.getElementById('newStationFields').classList.add('hidden');
-                }
-                window.scrollTo({ top: 600, behavior: 'smooth' });
-            } catch (err) {
-                isNewStation = true;
-                document.getElementById('formTitle').textContent = 'Register New Station Barcode';
-                document.getElementById('newStationFields').classList.remove('hidden');
+        async function stopCameraScanner() {
+            if (html5QrCode) {
+                try { await html5QrCode.stop(); } catch(e) {}
             }
         }
 
-        // Save station service record & register new station if needed
+        function handleScannedBarcode(barcode) {
+            // Check if device already exists in siteDevices
+            const existing = siteDevices.find(d => d.barcode_id === barcode);
+            if (existing) {
+                openDeviceForm(existing.barcode_id, existing.locationName, existing.deviceType, true);
+            } else {
+                // Brand new barcode scanned
+                openDeviceForm(barcode, '', 'Rodent Bait Station', true, true);
+            }
+        }
+
+        function openDeviceForm(barcode, locName, devType, markAsScanned, isNew = false) {
+            currentBarcode = barcode;
+            currentDeviceName = locName;
+            currentDeviceType = devType;
+
+            document.getElementById('scannedBarcodeBadge').textContent = `Barcode: ${barcode}`;
+            document.getElementById('stationFormContainer').classList.remove('hidden');
+
+            if (isNew || !locName) {
+                document.getElementById('formTitle').textContent = 'Register & Service New Device';
+                document.getElementById('newStationFields').classList.remove('hidden');
+                document.getElementById('newLocName').value = '';
+            } else {
+                document.getElementById('formTitle').textContent = `Servicing: ${locName} (${devType})`;
+                document.getElementById('newStationFields').classList.add('hidden');
+                document.getElementById('newLocName').value = locName;
+            }
+
+            if (markAsScanned) {
+                scannedBarcodesThisVisit.add(barcode);
+                renderDeviceLists();
+            }
+
+            window.scrollTo({ top: 600, behavior: 'smooth' });
+        }
+
         async function saveStationServiceRecord() {
+            const locNameInput = document.getElementById('newLocName').value.trim() || currentDeviceName;
+            const devType = document.getElementById('newDeviceType').value || currentDeviceType;
             const activityLevel = document.getElementById('activityLevel').value;
             const prepUsed = document.getElementById('prepUsed').value;
             const species = document.getElementById('speciesCaught').value.trim();
             const qty = document.getElementById('qtyCount').value;
             const notes = document.getElementById('serviceNotes').value.trim();
 
-            try {
-                if (isNewStation) {
-                    const locName = document.getElementById('newLocName').value.trim();
-                    const devType = document.getElementById('newDeviceType').value;
-                    if (!locName) {
-                        alert('Please enter a location name for this new station.');
-                        return;
-                    }
-                    // Insert new station into database
-                    const { error: stationErr } = await _supabase.from('stations').insert([{
-                        client_id: selectedClient.id,
-                        barcode_id: currentScannedBarcode,
-                        device_type: devType,
-                        location_description: locName
-                    }]);
-                    if (stationErr) throw stationErr;
-                }
+            if (!locNameInput) {
+                alert('Please enter a device/location name.');
+                return;
+            }
 
-                // Log service record
+            try {
+                const payloadData = {
+                    locationName: locNameInput,
+                    deviceType: devType,
+                    activityLevel: activityLevel,
+                    prepUsed: prepUsed,
+                    speciesCaught: species || 'None',
+                    quantity: parseFloat(qty),
+                    notes: notes,
+                    photo: capturedPhotoBase64 || null,
+                    servicedAt: new Date().toISOString()
+                };
+
                 const record = {
                     client_id: selectedClient.id,
-                    barcode_id: currentScannedBarcode,
-                    activity_level: activityLevel,
-                    preparation_used: prepUsed,
-                    species_caught: species || 'None',
-                    quantity: parseFloat(qty),
-                    notes: notes
+                    barcode_id: currentBarcode,
+                    payload: payloadData
                 };
 
                 const { error: logErr } = await _supabase.from('service_logs').insert([record]);
                 if (logErr) throw logErr;
 
-                serviceQueue.push(record);
-                updateQueueUI();
+                // Add to siteDevices if not already there
+                if (!siteDevices.some(d => d.barcode_id === currentBarcode)) {
+                    siteDevices.push({
+                        barcode_id: currentBarcode,
+                        locationName: locNameInput,
+                        deviceType: devType,
+                        lastPayload: payloadData
+                    });
+                }
+
+                scannedBarcodesThisVisit.add(currentBarcode);
+                renderDeviceLists();
 
                 // Reset form
                 document.getElementById('stationFormContainer').classList.add('hidden');
-                document.getElementById('newLocName').value = '';
                 document.getElementById('speciesCaught').value = '';
                 document.getElementById('serviceNotes').value = '';
-                alert('Station service record saved successfully!');
+                document.getElementById('stationPhoto').value = '';
+                document.getElementById('photoPreviewContainer').classList.add('hidden');
+                capturedPhotoBase64 = null;
+
+                alert('Device service record saved successfully!');
 
             } catch (err) {
                 alert('Error saving record: ' + err.message);
             }
         }
 
-        function updateQueueUI() {
-            document.getElementById('queueCount').textContent = serviceQueue.length;
-            const list = document.getElementById('serviceQueueList');
-            if (serviceQueue.length === 0) {
-                list.innerHTML = '<span class="text-slate-500 italic">No devices serviced yet in this session. Start camera and scan a barcode.</span>';
-                return;
-            }
-            list.innerHTML = '';
-            serviceQueue.forEach((item) => {
-                list.innerHTML += `
-                    <div class="bg-slate-800 p-3 rounded-lg flex justify-between items-center border border-slate-700">
-                        <div>
-                            <span class="font-bold text-white">[${item.barcode_id}]</span>
-                            <div class="text-slate-400 text-xs">Activity: ${item.activity_level} | Prep: ${item.preparation_used} | Qty: ${item.quantity}</div>
-                        </div>
-                        <span class="text-emerald-400 font-semibold text-xs bg-emerald-950 px-2 py-1 rounded">Synced ✓</span>
-                    </div>
-                `;
-            });
-        }
-
         function completeVisit() {
             alert(`Visit for ${selectedClient.Name} completed successfully!`);
-            if (html5QrCode) { try { html5QrCode.stop(); } catch(e) {} }
+            stopCameraScanner();
             document.getElementById('visitWorkspace').classList.add('hidden');
-            serviceQueue = [];
-            updateQueueUI();
+            siteDevices = [];
+            scannedBarcodesThisVisit.clear();
             document.getElementById('clientSelect').value = '';
         }
 
@@ -366,3 +483,4 @@
     </script>
 </body>
 </html>
+EOF
