@@ -150,8 +150,6 @@
         .site-name { color: #fff; font-weight: 800; font-size: .95rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .site-addr { color: rgba(255, 255, 255, .78); font-size: .72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .site-due { align-self: flex-start; font-size: .6rem; font-weight: 800; padding: .15rem .5rem; border-radius: .4rem; color: #fff; margin-bottom: .3rem; }
-        .site-open { position: absolute; top: .7rem; left: .7rem; font-size: .65rem; font-weight: 800; color: #fff; background: #f97316; padding: .22rem .6rem; border-radius: .5rem; opacity: 0; transform: translateY(-4px); transition: all .2s ease; }
-        .site-card:hover .site-open, .site-card:focus-visible .site-open { opacity: 1; transform: none; }
         .site-card-add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; aspect-ratio: 4 / 3; width: 100%; border-radius: 1rem; border: 2px dashed var(--border); color: var(--muted); font-weight: 800; font-size: .8rem; cursor: pointer; transition: all .2s ease; background: transparent; }
         .site-card-add:hover { border-color: #f97316; color: var(--accent-text); transform: translateY(-3px); }
 
@@ -159,6 +157,22 @@
         .img-drop img { width: 100%; height: 100%; object-fit: cover; }
 
         .ph-hidden { display: none !important; }
+
+        /* ================= FLOATING SCAN BUTTONS ================= */
+        .fab { display: inline-flex; align-items: center; gap: .5rem; font-weight: 800; font-size: .8rem; padding: .95rem 1.4rem; border-radius: 999px; cursor: pointer; transition: transform .15s ease, filter .15s ease; border: 1px solid transparent; box-shadow: 0 14px 30px -10px rgba(0, 0, 0, .55); }
+        .fab:hover { filter: brightness(1.08); transform: translateY(-2px); }
+        .fab:active { transform: scale(.97); }
+        .fab-primary { background: linear-gradient(90deg, #ea580c, #f97316); color: #fff; }
+        .fab-secondary { background: var(--surface3); color: var(--text); border-color: var(--border); }
+
+        /* ================= STATION FOCUS VIEW ================= */
+        @keyframes sheetIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+        #stationFormContainer:not(.hidden) .station-sheet { animation: sheetIn .22s ease-out; }
+        .thumb { position: relative; width: 5rem; height: 5rem; border-radius: .8rem; overflow: hidden; border: 1px solid var(--border); }
+        .thumb img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
+        .thumb-x { position: absolute; top: .25rem; right: .25rem; width: 1.4rem; height: 1.4rem; border-radius: 999px; background: rgba(2, 6, 23, .8); color: #fff; font-size: .7rem; font-weight: 900; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .viewer-thumb { width: 3.5rem; height: 3.5rem; border-radius: .6rem; object-fit: cover; cursor: pointer; border: 2px solid transparent; opacity: .7; }
+        .viewer-thumb.active { border-color: #f97316; opacity: 1; }
 
         /* thin scrollbars */
         .scroll-thin { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
@@ -203,6 +217,10 @@
                     <span id="syncText" class="hidden sm:inline">Online & Synced</span>
                     <span id="queueCountBadge" class="queue-count hidden">0</span>
                     <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h10"></path></svg>
+                </button>
+
+                <button type="button" onclick="openSettingsModal()" class="icon-btn" title="Settings">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 </button>
 
                 <button type="button" onclick="toggleTheme()" class="icon-btn" title="Toggle day / night mode">
@@ -278,6 +296,10 @@
                             <div><span class="chip chip-orange">Active Site Dashboard</span></div>
                             <h2 class="text-2xl sm:text-3xl font-black t-strong mt-2 break-words" id="siteLandingTitle">Customer Site Overview</h2>
                             <p class="text-xs t-muted mt-1" id="siteLandingAddress">Address information</p>
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] t-faint">
+                                <span class="site-sync-text"></span>
+                                <button type="button" onclick="backgroundSyncSite('manual')" class="site-sync-btn link-btn !text-[11px] disabled:opacity-50">Sync Site</button>
+                            </div>
                         </div>
                     </div>
                     <div class="flex flex-wrap gap-3">
@@ -359,13 +381,17 @@
         </section>
 
         <!-- 3. ACTIVE SERVICE WORKSPACE -->
-        <section id="visitWorkspace" class="space-y-6 hidden">
+        <section id="visitWorkspace" class="space-y-6 hidden pb-24">
             <div class="card p-5 sm:p-7">
                 <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-5">
                     <div class="min-w-0">
                         <span class="chip chip-orange">Service Mode</span>
                         <h3 class="text-2xl font-black t-strong mt-2 break-words" id="activeWorkspaceTitle">Station Checklist</h3>
                         <p class="text-xs t-muted mt-1">Scan device barcodes or select from the active inventory below.</p>
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] t-faint">
+                            <span class="site-sync-text"></span>
+                            <button type="button" onclick="backgroundSyncSite('manual')" class="site-sync-btn link-btn !text-[11px] disabled:opacity-50">Sync Site</button>
+                        </div>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <button type="button" onclick="showSiteDashboard()" class="btn btn-secondary">← Back to Site Dashboard</button>
@@ -375,17 +401,9 @@
                 </div>
             </div>
 
-            <!-- Scanner & search toolbar -->
-            <div class="card p-4 sm:p-5 flex flex-wrap justify-between items-center gap-4">
-                <div class="flex flex-wrap gap-3">
-                    <button type="button" onclick="startFullscreenCameraScanner()" class="btn btn-primary !py-3">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        Launch Camera Scanner
-                    </button>
-                    <button type="button" onclick="openManualScanModal()" class="btn btn-secondary !py-3">Manual Barcode Entry</button>
-                </div>
-
-                <div class="flex-1 max-w-xl w-full relative">
+            <!-- Station search -->
+            <div class="card p-4 sm:p-5">
+                <div class="relative">
                     <div class="absolute inset-y-0 left-3.5 flex items-center pointer-events-none t-faint">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
@@ -393,155 +411,201 @@
                 </div>
             </div>
 
-            <!-- Lists (left) + Form (right on desktop) -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                <div class="lg:col-span-7 xl:col-span-8 grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    <!-- Unscanned -->
-                    <div class="card p-5 space-y-3">
-                        <div class="flex justify-between items-center border-b divider pb-3">
-                            <h4 class="eyebrow flex items-center gap-2" style="color:#d97706;">
-                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                                Pending / Unscanned Devices
-                            </h4>
-                            <span id="unscannedCount" class="chip chip-amber font-mono">0</span>
-                        </div>
-                        <div id="unscannedList" class="space-y-2.5 max-h-[32rem] lg:max-h-[calc(100vh-24rem)] overflow-y-auto scroll-thin text-xs pr-1">
-                            <span class="t-faint italic">No devices found for this site.</span>
-                        </div>
+            <!-- Station lists -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                <!-- Unscanned -->
+                <div class="card p-5 space-y-3">
+                    <div class="flex justify-between items-center border-b divider pb-3">
+                        <h4 class="eyebrow flex items-center gap-2" style="color:#d97706;">
+                            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                            Pending / Unscanned Devices
+                        </h4>
+                        <span id="unscannedCount" class="chip chip-amber font-mono">0</span>
                     </div>
-
-                    <!-- Scanned -->
-                    <div class="card p-5 space-y-3">
-                        <div class="flex justify-between items-center border-b divider pb-3">
-                            <h4 class="eyebrow flex items-center gap-2" style="color:#059669;">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                Serviced / Scanned Today
-                            </h4>
-                            <span id="scannedCount" class="chip chip-green font-mono">0</span>
-                        </div>
-                        <div id="scannedList" class="space-y-2.5 max-h-[32rem] lg:max-h-[calc(100vh-24rem)] overflow-y-auto scroll-thin text-xs pr-1">
-                            <span class="t-faint italic">None scanned yet in this session.</span>
-                        </div>
+                    <div id="unscannedList" class="space-y-2.5 text-xs">
+                        <span class="t-faint italic">No devices found for this site.</span>
                     </div>
                 </div>
 
-                <!-- Right column: form / placeholder -->
-                <div class="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24">
-                    <!-- Desktop placeholder when nothing selected -->
-                    <div id="stationPlaceholder" class="hidden lg:flex card p-10 flex-col items-center justify-center text-center gap-3 min-h-[18rem]">
-                        <svg class="w-10 h-10 t-faint" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h7"></path></svg>
-                        <p class="text-sm font-bold t-strong">No station selected</p>
-                        <p class="text-xs t-muted max-w-[16rem]">Scan a barcode or click a station in the lists to record a service.</p>
+                <!-- Scanned -->
+                <div class="card p-5 space-y-3">
+                    <div class="flex justify-between items-center border-b divider pb-3">
+                        <h4 class="eyebrow flex items-center gap-2" style="color:#059669;">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            Serviced / Scanned Today
+                        </h4>
+                        <span id="scannedCount" class="chip chip-green font-mono">0</span>
                     </div>
-
-                    <!-- Station Editing Form -->
-                    <div id="stationFormContainer" class="card p-5 sm:p-6 space-y-5 hidden lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto scroll-thin">
-                        <div class="flex justify-between items-start gap-3 border-b divider pb-4">
-                            <div class="min-w-0">
-                                <h4 class="font-black text-base t-strong break-words" id="formTitle">Servicing Device</h4>
-                                <span id="scannedBarcodeBadge" class="chip chip-orange font-mono mt-2"></span>
-                            </div>
-                            <button type="button" onclick="hideStationForm()" class="btn btn-secondary !px-3 !py-2 shrink-0">✕ Close</button>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div id="newStationFields" class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 hidden inset p-4" style="border-color:#f97316;">
-                                <div class="sm:col-span-2 eyebrow t-accent">New Barcode Detected - Register Device Details:</div>
-                                <div>
-                                    <label class="lbl">Device / Location Name</label>
-                                    <input type="text" id="newLocName" placeholder="e.g. Back Roller Door" class="field">
-                                </div>
-                                <div>
-                                    <label class="lbl">Device Type</label>
-                                    <select id="newDeviceType" class="field cursor-pointer">
-                                        <option value="Rodent Bait Station">Rodent Bait Station</option>
-                                        <option value="Insect Light Trap">Insect Light Trap (ILT)</option>
-                                        <option value="Crawling Insect Monitor">Crawling Insect Monitor</option>
-                                        <option value="Snap Trap">Snap Trap</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="lbl">Pest Activity Level</label>
-                                <select id="activityLevel" class="field cursor-pointer">
-                                    <option value="None">None (Clear)</option>
-                                    <option value="Low">Low Activity / Tampered</option>
-                                    <option value="Medium">Medium Activity</option>
-                                    <option value="High">High Infestation</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="lbl">Preparation / Chemical Used</label>
-                                <select id="prepUsed" class="field cursor-pointer">
-                                    <option value="None - Monitoring Only">None - Monitoring Only</option>
-                                    <option value="Brodifacoum Rodent Blocks">Brodifacoum Rodent Blocks</option>
-                                    <option value="Alpha-Cypermethrin Spray">Alpha-Cypermethrin Spray</option>
-                                    <option value="Cockroach Gel Bait">Cockroach Gel Bait</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="lbl">Species Caught / Observed</label>
-                                <input type="text" id="speciesCaught" placeholder="e.g. Norway Rat / None" class="field">
-                            </div>
-                            <div>
-                                <label class="lbl">Quantity (Bait Blocks / Pests)</label>
-                                <input type="number" id="qtyCount" value="1" min="0" step="0.5" class="field">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="lbl">Technician Service Notes</label>
-                            <textarea id="serviceNotes" rows="2" placeholder="Station inspected, fresh bait applied..." class="field"></textarea>
-                        </div>
-
-                        <!-- Recommendations & Issue Capture -->
-                        <div class="inset p-4 space-y-4" style="border-color: rgba(249,115,22,.45);">
-                            <h5 class="eyebrow t-accent">Corrective Action & Issue Photo Logging</h5>
-
-                            <div class="space-y-3">
-                                <div>
-                                    <label class="lbl">Corrective Action / Recommendation</label>
-                                    <textarea id="recommendationNote" rows="3" placeholder="e.g. Seal gap around pipes, repair damaged door seal..." class="field"></textarea>
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label class="lbl">Issue Photo Attachment</label>
-                                    <input type="file" id="issuePhotoInput" accept="image/*" capture="environment" class="field !p-2 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-brand-500 file:text-white hover:file:bg-brand-600 cursor-pointer">
-
-                                    <div id="photoPreviewContainer" class="hidden pt-1">
-                                        <img id="photoPreview" class="h-20 w-20 rounded-xl object-cover cursor-pointer shadow-lg" style="border:1px solid var(--border);" onclick="viewFullImage(this.src, document.getElementById('recommendationNote').value)" alt="Issue Preview">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button type="button" id="saveRecBtn" onclick="saveRecommendationOnly()" class="btn btn-secondary w-full !py-3" style="border-color:#f97316;">
-                                Save Recommendation & Photo Record
-                            </button>
-                        </div>
-
-                        <!-- Lazy-Loaded Historical Recommendations -->
-                        <div id="pastRecommendationsSection" class="hidden inset p-4 space-y-3">
-                            <div class="flex justify-between items-center">
-                                <h5 class="eyebrow" style="color:#2563eb;">Past Recommendations & Issue History</h5>
-                                <button type="button" id="loadPastHistoryBtn" onclick="lazyLoadStationHistory()" class="btn btn-secondary !px-3 !py-1.5">View History</button>
-                            </div>
-                            <div id="pastRecommendationsList" class="hidden space-y-2.5 max-h-48 overflow-y-auto scroll-thin text-xs pt-1"></div>
-                        </div>
-
-                        <button type="button" onclick="saveStationServiceRecord()" class="btn btn-primary w-full !py-3.5 !text-sm">
-                            Save Complete Service Record
-                        </button>
-
-                        <button type="button" id="deleteStationBtn" onclick="deleteCurrentStation()" class="btn btn-outline-danger w-full hidden">
-                            Delete This Station
-                        </button>
+                    <div id="scannedList" class="space-y-2.5 text-xs">
+                        <span class="t-faint italic">None scanned yet in this session.</span>
                     </div>
                 </div>
             </div>
         </section>
 
     </main>
+
+    <!-- ===================== FLOATING SCAN BUTTONS (service mode only) ===================== -->
+    <div id="scanFab" class="hidden fixed bottom-0 inset-x-0 z-40 pointer-events-none" style="padding-bottom: max(1rem, env(safe-area-inset-bottom));">
+        <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 flex justify-center sm:justify-end gap-3">
+            <button type="button" onclick="openManualScanModal()" class="fab fab-secondary pointer-events-auto">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                Manual Entry
+            </button>
+            <button type="button" onclick="startFullscreenCameraScanner()" class="fab fab-primary pointer-events-auto">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 7V5a1 1 0 011-1h2M17 4h2a1 1 0 011 1v2M20 17v2a1 1 0 01-1 1h-2M7 20H5a1 1 0 01-1-1v-2M7 9v6M10 9v6M13 9v6M16 9v6"></path></svg>
+                Scan Barcode
+            </button>
+        </div>
+    </div>
+
+    <!-- ===================== STATION FOCUS VIEW ===================== -->
+    <div id="stationFormContainer" class="hidden fixed inset-0 z-[55] overlay flex justify-center items-stretch sm:items-center sm:p-6">
+        <div class="station-sheet w-full sm:max-w-3xl h-full sm:h-auto sm:max-h-[92vh] flex flex-col sm:rounded-[1.25rem] overflow-hidden" style="background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);">
+            <!-- Header -->
+            <div class="flex justify-between items-start gap-3 p-4 sm:p-5 border-b divider shrink-0" style="background: var(--surface);">
+                <div class="min-w-0">
+                    <button type="button" onclick="hideStationForm()" class="link-btn !no-underline inline-flex items-center gap-1 mb-1.5">← Back to stations</button>
+                    <h4 class="font-black text-lg t-strong break-words" id="formTitle">Servicing Device</h4>
+                    <span id="scannedBarcodeBadge" class="chip chip-orange font-mono mt-1.5"></span>
+                </div>
+                <button type="button" onclick="hideStationForm()" class="icon-btn shrink-0" title="Close">✕</button>
+            </div>
+
+            <!-- Body -->
+            <div id="stationSheetBody" class="flex-1 overflow-y-auto scroll-thin p-4 sm:p-6 space-y-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div id="newStationFields" class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 hidden inset p-4" style="border-color:#f97316;">
+                        <div class="sm:col-span-2 eyebrow t-accent">New Barcode Detected - Register Device Details:</div>
+                        <div>
+                            <label class="lbl">Device / Location Name</label>
+                            <input type="text" id="newLocName" placeholder="e.g. Back Roller Door" class="field">
+                        </div>
+                        <div>
+                            <label class="lbl">Device Type</label>
+                            <select id="newDeviceType" class="field cursor-pointer">
+                                <option value="Rodent Bait Station">Rodent Bait Station</option>
+                                <option value="Insect Light Trap">Insect Light Trap (ILT)</option>
+                                <option value="Crawling Insect Monitor">Crawling Insect Monitor</option>
+                                <option value="Snap Trap">Snap Trap</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="lbl">Pest Activity Level</label>
+                        <select id="activityLevel" class="field cursor-pointer">
+                            <option value="None">None (Clear)</option>
+                            <option value="Low">Low Activity / Tampered</option>
+                            <option value="Medium">Medium Activity</option>
+                            <option value="High">High Infestation</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="lbl">Preparation / Chemical Used</label>
+                        <select id="prepUsed" class="field cursor-pointer"></select>
+                    </div>
+                    <div>
+                        <label class="lbl">Species Caught / Observed</label>
+                        <select id="speciesCaught" class="field cursor-pointer"></select>
+                    </div>
+                    <div>
+                        <label class="lbl">Quantity (Bait Blocks / Pests)</label>
+                        <input type="number" id="qtyCount" value="1" min="0" step="0.5" class="field">
+                    </div>
+                </div>
+                <p class="text-[11px] t-faint -mt-2">Preparations and species lists are managed in Settings (gear icon at the top).</p>
+
+                <div>
+                    <label class="lbl">Technician Service Notes</label>
+                    <textarea id="serviceNotes" rows="2" placeholder="Station inspected, fresh bait applied..." class="field"></textarea>
+                </div>
+
+                <!-- Recommendations & Issue Capture -->
+                <div class="inset p-4 space-y-4" style="border-color: rgba(249,115,22,.45);">
+                    <h5 class="eyebrow t-accent">Corrective Action & Issue Photo Logging</h5>
+
+                    <div>
+                        <label class="lbl">Corrective Action / Recommendation</label>
+                        <textarea id="recommendationNote" rows="3" placeholder="e.g. Seal gap around pipes, repair damaged door seal..." class="field"></textarea>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="lbl">Issue Photos <span class="t-faint">(add as many as you need)</span></label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="document.getElementById('issuePhotoCamera').click()" class="btn btn-secondary !py-3">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                Take Photo
+                            </button>
+                            <button type="button" onclick="document.getElementById('issuePhotoGallery').click()" class="btn btn-secondary !py-3">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Choose from Device
+                            </button>
+                        </div>
+                        <input type="file" id="issuePhotoCamera" accept="image/*" capture="environment" class="hidden">
+                        <input type="file" id="issuePhotoGallery" accept="image/*" multiple class="hidden">
+                        <div id="photoPreviewGrid" class="flex flex-wrap gap-2 pt-1"></div>
+                    </div>
+
+                    <button type="button" id="saveRecBtn" onclick="saveRecommendationOnly()" class="btn btn-secondary w-full !py-3" style="border-color:#f97316;">
+                        Save Recommendation & Photos
+                    </button>
+                </div>
+
+                <!-- Lazy-Loaded Historical Recommendations -->
+                <div id="pastRecommendationsSection" class="hidden inset p-4 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h5 class="eyebrow" style="color:#2563eb;">Past Recommendations & Issue History</h5>
+                        <button type="button" id="loadPastHistoryBtn" onclick="lazyLoadStationHistory()" class="btn btn-secondary !px-3 !py-1.5">View History</button>
+                    </div>
+                    <div id="pastRecommendationsList" class="hidden space-y-2.5 max-h-64 overflow-y-auto scroll-thin text-xs pt-1"></div>
+                </div>
+
+                <button type="button" id="deleteStationBtn" onclick="deleteCurrentStation()" class="btn btn-outline-danger w-full hidden">
+                    Delete This Station
+                </button>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 sm:p-5 border-t divider shrink-0" style="background: var(--surface); padding-bottom: max(1rem, env(safe-area-inset-bottom));">
+                <button type="button" onclick="saveStationServiceRecord()" class="btn btn-primary w-full !py-3.5 !text-sm">
+                    Save Complete Service Record
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== SETTINGS MODAL ===================== -->
+    <div id="settingsModal" class="hidden overlay fixed inset-0 z-50 flex flex-col justify-center items-center p-4">
+        <div class="card p-6 sm:p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto scroll-thin space-y-6">
+            <div class="flex justify-between items-start gap-3">
+                <div>
+                    <h3 class="font-black text-lg t-accent">Settings</h3>
+                    <p class="text-xs t-muted mt-1">These lists are shared with your whole team and appear in the station service form. Removing an item doesn't change records that already use it.</p>
+                </div>
+                <button type="button" onclick="closeSettingsModal()" class="t-faint hover:opacity-70 text-xs font-semibold cursor-pointer shrink-0">✕ Close</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-3">
+                    <h4 class="eyebrow t-accent">Preparations & Chemicals</h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="newPrepInput" placeholder="e.g. Difenacoum Wax Blocks" class="field" onkeydown="if(event.key==='Enter') addOption('prep')">
+                        <button type="button" onclick="addOption('prep')" class="btn btn-primary">Add</button>
+                    </div>
+                    <div id="prepOptionsList" class="space-y-2 text-xs"></div>
+                </div>
+                <div class="space-y-3">
+                    <h4 class="eyebrow t-accent">Species Caught / Observed</h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="newSpeciesInput" placeholder="e.g. Ship Rat" class="field" onkeydown="if(event.key==='Enter') addOption('species')">
+                        <button type="button" onclick="addOption('species')" class="btn btn-primary">Add</button>
+                    </div>
+                    <div id="speciesOptionsList" class="space-y-2 text-xs"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- ===================== ADD CLIENT MODAL ===================== -->
     <div id="addClientModal" class="hidden overlay fixed inset-0 z-50 flex flex-col justify-center items-center p-4">
@@ -774,7 +838,12 @@
 
     <!-- ===================== IMAGE / RECOMMENDATION VIEWER ===================== -->
     <div id="imageModal" class="hidden overlay fixed inset-0 z-[65] flex flex-col justify-center items-center p-6 space-y-4" onclick="if(event.target===this) closeImageModal()">
-        <img id="fullImageDisplay" class="max-h-[65vh] max-w-full rounded-2xl object-contain shadow-2xl" style="border:1px solid var(--border);">
+        <div class="relative flex items-center justify-center max-w-full">
+            <button type="button" id="viewerPrev" onclick="stepViewer(-1)" class="icon-btn absolute left-2 z-10 hidden" title="Previous photo">‹</button>
+            <img id="fullImageDisplay" class="max-h-[60vh] max-w-full rounded-2xl object-contain shadow-2xl" style="border:1px solid var(--border);">
+            <button type="button" id="viewerNext" onclick="stepViewer(1)" class="icon-btn absolute right-2 z-10 hidden" title="Next photo">›</button>
+        </div>
+        <div id="viewerThumbs" class="flex flex-wrap gap-2 justify-center max-w-xl"></div>
         <div class="card p-4 max-w-xl w-full text-center space-y-1">
             <div id="modalTitleDisplay" class="eyebrow t-accent hidden"></div>
             <div id="modalTextDisplay" class="text-sm font-medium t-strong whitespace-pre-line"></div>
@@ -836,7 +905,6 @@
         let currentBarcode = null;
         let currentDeviceName = null;
         let currentDeviceType = null;
-        let selectedFileBlob = null;
         let isLoadingSite = false;
         let confirmAction = null;
 
@@ -1141,6 +1209,26 @@
             flushQueue();
         }
 
+        async function recheckProfileInBackground() {
+            try {
+                const { data: profile, error } = await withTimeout(
+                    _supabase.from('profiles').select('*').eq('id', currentUser.id).maybeSingle(), 10000, 'Profile lookup');
+                if (error) return; // offline or temporary problem: keep using the saved profile
+                if (!profile || !profile.approved) {
+                    clearIdentity();
+                    appStarted = false;
+                    alert('Your access to Pestis has been removed. Ask your administrator if this is a mistake.' +
+                        (unsentItems().length ? ' Items not yet uploaded stay saved on this device.' : ''));
+                    try { await _supabase.auth.signOut(); } catch (e) {}
+                    location.href = window.location.origin + window.location.pathname;
+                    return;
+                }
+                currentProfile = profile;
+                saveIdentity();
+                applyProfileToUI();
+            } catch (e) {}
+        }
+
         async function initAuth() {
             const cached = loadJSON(IDENTITY_KEY, null);
             let session = null;
@@ -1151,6 +1239,15 @@
                 session = r.data && r.data.session;
                 sessErr = r.error || null;
             } catch (e) { sessErr = e; }
+
+            if (session && cached && cached.user && cached.user.id === session.user.id && cached.profile && cached.profile.approved) {
+                // Known, approved user on this device: open straight away, re-check approval in the background
+                currentUser = session.user;
+                currentProfile = cached.profile;
+                startApp(false);
+                recheckProfileInBackground();
+                return;
+            }
 
             if (session) {
                 currentUser = session.user;
@@ -1390,31 +1487,64 @@
             try { await _supabase.auth.getSession(); } catch (e) {}
             await flushQueue();
             if (appStarted && !selectedClient) loadClients();
-            else if (appStarted) refreshCoverUrls();
+            else if (appStarted) { refreshCoverUrls(); backgroundSyncSite(); }
         }
 
         setInterval(checkInternetConnectivity, 8000);
         window.addEventListener('online', () => checkInternetConnectivity());
         window.addEventListener('offline', () => { isOnline = false; updateSyncBadge(); });
 
-        document.getElementById('issuePhotoInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        // ---------- Issue photos picked for the recommendation being written ----------
+        let pendingPhotos = []; // [{ blob, url }]
 
-            selectedFileBlob = file;
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const preview = document.getElementById('photoPreview');
-                preview.src = event.target.result;
-                document.getElementById('photoPreviewContainer').classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
+        async function addPickedPhotos(fileList) {
+            for (const f of Array.from(fileList || [])) {
+                const blob = await compressImage(f);
+                pendingPhotos.push({ blob: blob, url: URL.createObjectURL(blob) });
+            }
+            renderPhotoPreviews();
+        }
+        ['issuePhotoCamera', 'issuePhotoGallery'].forEach(id => {
+            document.getElementById(id).addEventListener('change', async e => {
+                await addPickedPhotos(e.target.files);
+                e.target.value = '';
+            });
         });
+
+        function renderPhotoPreviews() {
+            const grid = document.getElementById('photoPreviewGrid');
+            grid.innerHTML = pendingPhotos.map((p, i) => `
+                <div class="thumb">
+                    <img src="${esc(p.url)}" alt="" onclick="previewPendingPhoto(${i})">
+                    <button type="button" class="thumb-x" onclick="removePendingPhoto(${i})" title="Remove photo">✕</button>
+                </div>`).join('');
+        }
+        function removePendingPhoto(i) {
+            const p = pendingPhotos.splice(i, 1)[0];
+            if (p) URL.revokeObjectURL(p.url);
+            renderPhotoPreviews();
+        }
+        function previewPendingPhoto(i) {
+            viewFullImage(pendingPhotos.map(p => p.url), document.getElementById('recommendationNote').value, 'Photo preview', '', i);
+        }
+        function clearPendingPhotos(revoke) {
+            if (revoke) pendingPhotos.forEach(p => URL.revokeObjectURL(p.url));
+            pendingPhotos = [];
+            renderPhotoPreviews();
+        }
+
+        // Storage paths of every photo on a record (old records have one "photo", new ones a "photos" list)
+        function payloadPhotoPaths(p) {
+            if (!p) return [];
+            const list = Array.isArray(p.photos) && p.photos.length ? p.photos : [p.photo || p.image];
+            return list.filter(Boolean).map(toStoragePath).filter(Boolean);
+        }
+        function allPhotoPaths(rows) { return (rows || []).flatMap(r => payloadPhotoPaths(r.payload)); }
 
         // ===================================================================
         //  OFFLINE UPLOAD QUEUE
-        //  Every write goes into a queue stored on the device first, then uploads
-        //  in order. If there's no connection it waits and retries automatically.
+        //  Every change goes into a queue stored on the device first, then
+        //  uploads in order. With no connection it waits and retries itself.
         // ===================================================================
         let lastSeq = 0;
         function nextSeq() { lastSeq = Math.max(Date.now(), lastSeq + 1); return lastSeq; }
@@ -1423,9 +1553,24 @@
             try { await IDB.put('queue', item); } catch (e) { console.warn('Queue persist failed', e); }
         }
 
+        // Photos attached to a queued item. Converts items saved by the previous version (single photo).
+        function itemPhotos(item) {
+            if (!item.photos) {
+                item.photos = item.photoPath ? [{ path: item.photoPath, blobKey: item.blobKey || null, uploaded: !!item.photoUploaded }] : [];
+            }
+            return item.photos;
+        }
+        function itemBlobKeys(item) {
+            return itemPhotos(item).map(p => p.blobKey).concat(item.blobKey ? [item.blobKey] : []).filter(Boolean);
+        }
+
         async function initQueue() {
             try { queueItems = (await IDB.all('queue')) || []; } catch (e) { queueItems = []; }
-            queueItems.forEach(i => { if (i.status === 'uploading') i.status = 'pending'; lastSeq = Math.max(lastSeq, i.seq || 0); });
+            queueItems.forEach(i => {
+                if (i.status === 'uploading') i.status = 'pending';
+                itemPhotos(i);
+                lastSeq = Math.max(lastSeq, i.seq || 0);
+            });
             queueItems.sort((a, b) => a.seq - b.seq);
             await pruneSent();
         }
@@ -1440,19 +1585,22 @@
         async function removeQueueItem(item) {
             queueItems = queueItems.filter(i => i.key !== item.key);
             try { await IDB.del('queue', item.key); } catch (e) {}
-            if (item.blobKey) { try { await IDB.del('blobs', item.blobKey); } catch (e) {} }
+            for (const k of itemBlobKeys(item)) { try { await IDB.del('blobs', k); } catch (e) {} }
         }
 
-        async function enqueue(item, blob) {
+        // photos: [{ path, blob }]
+        async function enqueue(item, photos) {
             item.key = 'q_' + uid();
             item.seq = nextSeq();
             item.status = 'pending';
             item.attempts = 0;
             item.error = null;
             item.createdAt = new Date().toISOString();
-            if (blob) {
-                item.blobKey = 'b_' + item.key;
-                await saveBlob(item.blobKey, blob);
+            item.photos = [];
+            for (let i = 0; i < (photos || []).length; i++) {
+                const blobKey = 'b_' + item.key + '_' + i;
+                await saveBlob(blobKey, photos[i].blob);
+                item.photos.push({ path: photos[i].path, blobKey: blobKey, uploaded: false });
             }
             queueItems.push(item);
             await persistItem(item);
@@ -1487,12 +1635,12 @@
                 item.status = 'uploading';
                 updateSyncBadge();
                 try {
-                    await withTimeout(processItem(item), 60000, 'Upload');
+                    await withTimeout(processItem(item), 90000, 'Upload');
                     item.status = 'sent';
                     item.sentAt = new Date().toISOString();
                     item.error = null;
                     await persistItem(item);
-                    if (item.blobKey) { try { await IDB.del('blobs', item.blobKey); } catch (e) {} }
+                    for (const k of itemBlobKeys(item)) { try { await IDB.del('blobs', k); } catch (e) {} }
                 } catch (err) {
                     item.status = 'failed';
                     item.attempts = (item.attempts || 0) + 1;
@@ -1500,7 +1648,7 @@
                     lastFailAt = Date.now();
                     await persistItem(item);
                     if (isNetworkError(err)) { isOnline = await probeOnline(); }
-                    // Stop here so records always reach the server in the order they were made
+                    // Stop here so changes always reach the server in the order they were made
                     break;
                 }
             }
@@ -1509,60 +1657,72 @@
         }
 
         // True if the photo is in storage AND this user can open it. Throws on a network problem.
+        let lastPhotoCheckError = '';
         async function photoExistsOnServer(path) {
+            lastPhotoCheckError = '';
             const { data, error } = await _supabase.storage.from(PHOTO_BUCKET).createSignedUrl(path, 60);
             if (error) {
                 if (isNetworkError(error)) throw error;
-                item_lastPhotoCheckError = error.message || String(error);
+                lastPhotoCheckError = error.message || String(error);
                 return false;
             }
             return !!(data && data.signedUrl);
         }
-        let item_lastPhotoCheckError = '';
 
-        async function uploadQueuedBlob(item) {
-            const blob = item.blobKey ? await loadBlob(item.blobKey) : null;
+        async function uploadQueuedPhoto(item, ph, index, total) {
+            const blob = ph.blobKey ? await loadBlob(ph.blobKey) : null;
+            const which = total > 1 ? ` (photo ${index + 1} of ${total})` : '';
             if (!blob) {
                 // Never drop a photo silently. It may already be on the server from an earlier attempt.
-                if (await photoExistsOnServer(item.photoPath)) {
-                    item.photoUploaded = true;
+                if (await photoExistsOnServer(ph.path)) {
+                    ph.uploaded = true;
                     await persistItem(item);
-                    return true;
+                    return;
                 }
-                item.photoMissing = true;
+                ph.missing = true;
                 await persistItem(item);
-                throw new Error("The photo for this item is no longer stored on this device, so it can't be uploaded. Use \"Send without photo\" to keep the text, or Discard it and take the photo again.");
+                throw new Error(`A photo${which} is no longer stored on this device, so it can't be uploaded. Use "Send without missing photos" to keep the rest, or Discard the item and take the photos again.`);
             }
 
             const { error } = await _supabase.storage.from(PHOTO_BUCKET)
-                .upload(item.photoPath, blob, { cacheControl: '3600', upsert: false, contentType: blob.type || 'image/jpeg' });
+                .upload(ph.path, blob, { cacheControl: '3600', upsert: false, contentType: blob.type || 'image/jpeg' });
             if (error) {
                 const msg = error.message || error.error || JSON.stringify(error);
                 const alreadyThere = /already exists|duplicate/i.test(msg) || String(error.statusCode) === '409';
                 if (!alreadyThere) {
                     if (isNetworkError(error)) throw error;
-                    throw new Error('Photo upload was refused by storage: ' + msg + (/row-level security|policy|unauthori/i.test(msg) ? ' (check the storage policies on the station-photos bucket).' : ''));
+                    throw new Error(`Photo upload${which} was refused by storage: ` + msg + (/row-level security|policy|unauthori/i.test(msg) ? ' (check the storage policies on the station-photos bucket).' : ''));
                 }
             }
 
-            // Confirm the photo really landed before the record is allowed to go up without it
-            if (!(await photoExistsOnServer(item.photoPath))) {
-                throw new Error('The photo upload could not be confirmed on the server' + (item_lastPhotoCheckError ? ': ' + item_lastPhotoCheckError : '') + '. It will be retried.');
+            // Confirm the photo really landed before the record goes up
+            if (!(await photoExistsOnServer(ph.path))) {
+                throw new Error(`The photo upload${which} could not be confirmed on the server` + (lastPhotoCheckError ? ': ' + lastPhotoCheckError : '') + '. It will be retried.');
             }
-
-            item.photoUploaded = true;
-            item.photoMissing = false;
+            ph.uploaded = true;
+            ph.missing = false;
             await persistItem(item);
-            return true;
+        }
+
+        async function uploadAllPhotos(item) {
+            const phs = itemPhotos(item);
+            for (let i = 0; i < phs.length; i++) {
+                if (!phs[i].uploaded) await uploadQueuedPhoto(item, phs[i], i, phs.length);
+            }
         }
 
         async function sendWithoutPhoto(key) {
             const item = queueItems.find(i => i.key === key);
             if (!item) return;
-            if (item.kind === 'insert_log') item.data.payload.photo = null;
-            item.photoPath = null;
-            item.photoUploaded = true;
-            item.photoMissing = false;
+            const keep = itemPhotos(item).filter(p => p.uploaded);
+            const dropped = itemPhotos(item).length - keep.length;
+            item.photos = keep;
+            item.droppedPhotos = (item.droppedPhotos || 0) + dropped;
+            if (item.kind === 'insert_log') {
+                const paths = keep.map(p => p.path);
+                item.data.payload.photos = paths;
+                item.data.payload.photo = paths[0] || null;
+            }
             item.status = 'pending';
             item.error = null;
             await persistItem(item);
@@ -1570,9 +1730,17 @@
             flushQueue();
         }
 
+        // Marks uploaded records as cancelled on this device so they stop showing straight away
+        async function markSentCancelled(match) {
+            for (const i of queueItems.filter(x => x.kind === 'insert_log' && x.status === 'sent' && match(x))) {
+                i.cancelled = true;
+                await persistItem(i);
+            }
+        }
+
         async function processItem(item) {
             if (item.kind === 'insert_log') {
-                if (item.photoPath && !item.photoUploaded) await uploadQueuedBlob(item);
+                await uploadAllPhotos(item);
 
                 // If a previous attempt may have reached the server, check before inserting again (no duplicates)
                 const ref = item.data.payload && item.data.payload.clientRef;
@@ -1598,14 +1766,80 @@
             }
 
             if (item.kind === 'client_image') {
-                if (!item.photoPath) return; // sent without a photo: nothing to attach
-                if (!item.photoUploaded) await uploadQueuedBlob(item);
-                const { data, error } = await _supabase.from('clients').update({ image_path: item.photoPath }).eq('id', item.clientId).select('id');
+                const ph = itemPhotos(item)[0];
+                if (!ph) return; // sent without a photo: nothing to attach
+                if (!ph.uploaded) await uploadQueuedPhoto(item, ph, 0, 1);
+                const { data, error } = await _supabase.from('clients').update({ image_path: ph.path }).eq('id', item.clientId).select('id');
                 if (error) throw error;
                 if (!data || data.length === 0) throw new Error('The database refused the site photo update (permission denied).' + SQL_HINT);
-                if (item.data.oldPath && item.data.oldPath !== item.photoPath) await removePhotos([item.data.oldPath]);
+                if (item.data.oldPath && item.data.oldPath !== ph.path) await removePhotos([item.data.oldPath]);
                 const c = clientsData.find(x => String(x.id) === String(item.clientId));
-                if (c) { c.image_path = item.photoPath; cacheSet('clients', clientsData); }
+                if (c) { c.image_path = ph.path; cacheSet('clients', clientsData); }
+                return;
+            }
+
+            if (item.kind === 'cancel_visit') {
+                // Removes this technician's records made after the site's most recent completed visit
+                const cid = item.clientId;
+                const { data: last, error: lastErr } = await _supabase.from('service_logs').select('created_at')
+                    .eq('client_id', cid).eq('barcode_id', 'SITE_VISIT_SUMMARY')
+                    .order('created_at', { ascending: false }).limit(1);
+                if (lastErr) throw lastErr;
+                const cutoff = last && last[0] ? last[0].created_at : null;
+
+                let selQ = _supabase.from('service_logs').select('payload')
+                    .eq('client_id', cid).eq('technician_id', item.data.technicianId).neq('barcode_id', 'SITE_VISIT_SUMMARY');
+                if (cutoff) selQ = selQ.gt('created_at', cutoff);
+                const { data: rows, error: selErr } = await selQ;
+                if (selErr) throw selErr;
+
+                if ((rows || []).length > 0) {
+                    let delQ = _supabase.from('service_logs').delete()
+                        .eq('client_id', cid).eq('technician_id', item.data.technicianId).neq('barcode_id', 'SITE_VISIT_SUMMARY');
+                    if (cutoff) delQ = delQ.gt('created_at', cutoff);
+                    const { data: deleted, error: delErr } = await delQ.select('barcode_id');
+                    if (delErr) throw delErr;
+                    if ((deleted || []).length === 0) {
+                        throw new Error('Permission denied. Run the delete-permissions SQL script in Supabase (pestis_update_delete_permissions.sql).');
+                    }
+                    await removePhotos(allPhotoPaths(rows));
+                }
+                if (await getSiteCache(cid)) syncSiteCache(cid, 'full').catch(() => {});
+                return;
+            }
+
+            if (item.kind === 'delete_station') {
+                const cid = item.clientId;
+                const barcode = item.data.barcode;
+                const { data: rows, error: selErr } = await _supabase.from('service_logs').select('payload')
+                    .eq('client_id', cid).eq('barcode_id', barcode);
+                if (selErr) throw selErr;
+                if ((rows || []).length > 0) {
+                    const { data: deleted, error: delErr } = await _supabase.from('service_logs').delete()
+                        .eq('client_id', cid).eq('barcode_id', barcode).select('barcode_id');
+                    if (delErr) throw delErr;
+                    if ((deleted || []).length === 0) {
+                        throw new Error('Permission denied. Run the delete-permissions SQL script in Supabase (pestis_update_delete_permissions.sql).');
+                    }
+                    await removePhotos(allPhotoPaths(rows));
+                }
+                const cache = await getSiteCache(cid);
+                if (cache) {
+                    cache.rows = cache.rows.filter(r => r.barcode_id !== barcode);
+                    await saveSiteCache(cid, cache);
+                }
+                return;
+            }
+
+            if (item.kind === 'add_option') {
+                const { error } = await _supabase.from('app_options').upsert([item.data], { onConflict: 'id' });
+                if (error) throw new Error(friendlyOptionsError(error));
+                return;
+            }
+
+            if (item.kind === 'delete_option') {
+                const { error } = await _supabase.from('app_options').delete().eq('id', item.data.id);
+                if (error) throw new Error(friendlyOptionsError(error));
                 return;
             }
 
@@ -1613,22 +1847,25 @@
         }
 
         // Queue helpers used by the forms
-        async function queueLog(barcode, payload, blob, label) {
+        async function queueLog(barcode, payload, blobs, label) {
             payload.clientRef = payload.clientRef || uid();
-            let photoPath = null;
-            if (blob) {
-                const safeBarcode = String(barcode).replace(/[^a-zA-Z0-9_-]/g, '_');
-                photoPath = `${selectedClient.id}/${safeBarcode}_${Date.now()}.${extFor(blob)}`;
-                payload.photo = photoPath;
+            const safeBarcode = String(barcode).replace(/[^a-zA-Z0-9_-]/g, '_');
+            const stamp = Date.now();
+            const photos = (blobs || []).map((blob, i) => ({
+                blob: blob,
+                path: `${selectedClient.id}/${safeBarcode}_${stamp}_${i + 1}.${extFor(blob)}`
+            }));
+            if (photos.length) {
+                payload.photos = photos.map(p => p.path);
+                payload.photo = photos[0].path; // kept for older records / reports
             }
             return enqueue({
                 kind: 'insert_log',
                 clientId: selectedClient.id,
                 siteName: selectedClient.Name,
                 label: label,
-                photoPath: photoPath,
                 data: { client_id: selectedClient.id, barcode_id: barcode, payload: payload }
-            }, blob);
+            }, photos);
         }
 
         async function queueClientUpdate(client, fields, label, removePaths) {
@@ -1652,9 +1889,8 @@
                 clientId: client.id,
                 siteName: client.Name,
                 label: 'Site photo',
-                photoPath: path,
                 data: { oldPath: client.image_path || null }
-            }, blob);
+            }, [{ path: path, blob: blob }]);
         }
 
         // ---------- Queue viewer ----------
@@ -1692,18 +1928,20 @@
 
                 const times = `Saved ${esc(fmtDateTime(item.createdAt))}` + (item.sentAt && item.status === 'sent' ? ` · Sent ${esc(fmtDateTime(item.sentAt))}` : '');
                 const err = item.error && item.status !== 'sent' ? `<div class="mt-1" style="color:#ef4444;">${esc(item.error)}</div>` : '';
+                const phs = itemPhotos(item);
+                const done = phs.filter(p => p.uploaded).length;
                 let photo = '';
-                if (item.photoPath) {
-                    photo = item.photoUploaded
-                        ? '<div class="mt-0.5 font-semibold" style="color:#10b981;">📷 Photo uploaded & confirmed ✓</div>'
-                        : `<div class="mt-0.5 font-semibold" style="color:#d97706;">📷 Photo ${item.status === 'uploading' ? 'uploading…' : 'not uploaded yet'}</div>`;
-                } else if (item.blobKey) {
-                    photo = '<div class="mt-0.5 t-faint">📷 Sent without photo</div>';
+                if (phs.length) {
+                    const n = phs.length === 1 ? 'Photo' : `${phs.length} photos`;
+                    photo = done === phs.length
+                        ? `<div class="mt-0.5 font-semibold" style="color:#10b981;">📷 ${n} uploaded & confirmed ✓</div>`
+                        : `<div class="mt-0.5 font-semibold" style="color:#d97706;">📷 ${phs.length === 1 ? 'Photo' : done + ' of ' + phs.length + ' photos'} ${item.status === 'uploading' ? 'uploading…' : (phs.length === 1 ? 'not uploaded yet' : 'uploaded')}</div>`;
                 }
+                if (item.droppedPhotos) photo += `<div class="mt-0.5 t-faint">📷 ${item.droppedPhotos} photo${item.droppedPhotos === 1 ? '' : 's'} left out by request</div>`;
                 const actions = item.status === 'sent' || item.status === 'uploading' ? '' : `
                     <div class="flex flex-wrap gap-2 mt-2">
                         ${item.status === 'failed' ? `<button type="button" data-key="${esc(item.key)}" onclick="retryQueueItem(this.dataset.key)" class="btn btn-primary !px-3 !py-1.5">Retry</button>` : ''}
-                        ${item.status === 'failed' && item.photoPath && !item.photoUploaded ? `<button type="button" data-key="${esc(item.key)}" onclick="sendWithoutPhoto(this.dataset.key)" class="btn btn-secondary !px-3 !py-1.5">Send without photo</button>` : ''}
+                        ${item.status === 'failed' && done < phs.length ? `<button type="button" data-key="${esc(item.key)}" onclick="sendWithoutPhoto(this.dataset.key)" class="btn btn-secondary !px-3 !py-1.5">Send without missing photos</button>` : ''}
                         <button type="button" data-key="${esc(item.key)}" onclick="discardQueueItem(this.dataset.key)" class="btn btn-outline-danger !px-3 !py-1.5">Discard</button>
                     </div>`;
 
@@ -1830,16 +2068,38 @@
             if (error) console.warn('Photo cleanup warning:', error.message);
         }
 
-        function viewFullImage(src, text, title, photoNote) {
+        // Photo viewer. srcs can be one link or a list of links (several photos on one recommendation).
+        let viewerSrcs = [];
+        let viewerIndex = 0;
+        let viewerNote = '';
+
+        function viewFullImage(srcs, text, title, photoNote, startIndex) {
+            viewerSrcs = (Array.isArray(srcs) ? srcs : [srcs]).filter(Boolean);
+            viewerIndex = Math.min(Math.max(startIndex || 0, 0), Math.max(viewerSrcs.length - 1, 0));
+            viewerNote = photoNote || '';
+
+            const titleDiv = document.getElementById('modalTitleDisplay');
+            titleDiv.textContent = title || '';
+            titleDiv.classList.toggle('hidden', !title);
+            const textDiv = document.getElementById('modalTextDisplay');
+            textDiv.textContent = (text && String(text).trim() !== '') ? text : 'No description provided.';
+
+            showViewerPhoto();
+            document.getElementById('imageModal').classList.remove('hidden');
+        }
+
+        function showViewerPhoto() {
             const img = document.getElementById('fullImageDisplay');
             const note = document.getElementById('modalPhotoNote');
-            note.textContent = photoNote || '';
-            note.classList.toggle('hidden', !photoNote);
+            note.textContent = viewerNote;
+            note.classList.toggle('hidden', !viewerNote);
+
+            const src = viewerSrcs[viewerIndex];
             if (src) {
                 img.onerror = () => {
                     img.classList.add('hidden');
                     note.textContent = isOnline
-                        ? "The photo couldn't be loaded from storage. Tap Sync Site on the dashboard and try again."
+                        ? "This photo couldn't be loaded from storage. Tap Sync Site and try again."
                         : "This photo hasn't been saved on this device yet, so it can't be shown offline.";
                     note.classList.remove('hidden');
                 };
@@ -1850,12 +2110,18 @@
                 img.removeAttribute('src');
                 img.classList.add('hidden');
             }
-            const titleDiv = document.getElementById('modalTitleDisplay');
-            titleDiv.textContent = title || '';
-            titleDiv.classList.toggle('hidden', !title);
-            const textDiv = document.getElementById('modalTextDisplay');
-            textDiv.textContent = (text && String(text).trim() !== '') ? text : 'No description provided.';
-            document.getElementById('imageModal').classList.remove('hidden');
+
+            const many = viewerSrcs.length > 1;
+            document.getElementById('viewerPrev').classList.toggle('hidden', !many);
+            document.getElementById('viewerNext').classList.toggle('hidden', !many);
+            document.getElementById('viewerThumbs').innerHTML = many ? viewerSrcs.map((u, i) =>
+                `<img src="${esc(u)}" alt="" class="viewer-thumb ${i === viewerIndex ? 'active' : ''}" onclick="viewerIndex=${i}; showViewerPhoto()">`).join('') : '';
+        }
+
+        function stepViewer(d) {
+            if (viewerSrcs.length < 2) return;
+            viewerIndex = (viewerIndex + d + viewerSrcs.length) % viewerSrcs.length;
+            showViewerPhoto();
         }
 
         function closeImageModal() {
@@ -1962,34 +2228,50 @@
             'linear-gradient(135deg,#1e1b4b,#4f46e5)'
         ];
 
+        // Shows the saved site list straight away, then quietly refreshes it from the server (one small request)
         async function loadClients() {
-            let list = null;
+            const cached = await cacheGetEntry('clients');
+            if (cached && Array.isArray(cached.data)) {
+                mergeClients(cached.data);
+                await applyPendingClientEdits();
+                renderSiteCards();
+                refreshCoverUrls();
+            }
+
             let loadErr = null;
             if (isOnline) {
                 try {
                     const { data, error } = await withTimeout(_supabase.from('clients').select('*').order('Name', { ascending: true }), 12000, 'Loading sites');
                     if (error) throw error;
-                    list = data || [];
-                    await cacheSet('clients', list);
+                    mergeClients(data || []);
+                    await applyPendingClientEdits();
+                    await cacheSet('clients', clientsData);
+                    renderSiteCards();
+                    refreshCoverUrls();
+                    if (selectedClient) refreshLandingHeader();
+                    return;
                 } catch (err) {
                     loadErr = err;
                     console.warn('Loading clients from server failed:', err.message || err);
                 }
             }
-            if (!list) {
-                const cached = await cacheGetEntry('clients');
-                if (cached) list = cached.data;
-            }
-            if (!list) {
+
+            if (!cached) {
                 document.getElementById('siteCardsGrid').innerHTML = '<span class="text-xs col-span-full" style="color:#ef4444;">Could not load client sites' +
                     (loadErr ? ': ' + esc(loadErr.message || loadErr) : " - you're offline and no sites have been saved on this device yet.") + '</span>';
-                return;
             }
+        }
 
-            clientsData = list;
-            await applyPendingClientEdits();
-            renderSiteCards();
-            refreshCoverUrls();
+        // Updates the site list in place so an open site keeps working while the list refreshes
+        function mergeClients(list) {
+            const byId = new Map(clientsData.map(c => [String(c.id), c]));
+            clientsData = list.map(c => {
+                const existing = byId.get(String(c.id));
+                if (!existing) return Object.assign({}, c);
+                Object.keys(existing).forEach(k => { if (!(k in c)) delete existing[k]; });
+                return Object.assign(existing, c);
+            });
+            if (selectedClient && !clientsData.includes(selectedClient)) clientsData.push(selectedClient);
         }
 
         // Re-apply queued (not yet uploaded) site edits so the screen matches what the technician entered
@@ -1998,8 +2280,9 @@
                 const c = clientsData.find(x => String(x.id) === String(item.clientId));
                 if (!c) continue;
                 if (item.kind === 'update_client') Object.assign(c, item.data.fields);
-                if (item.kind === 'client_image' && item.blobKey) {
-                    const u = await localBlobUrl(item.blobKey);
+                const cover = item.kind === 'client_image' && itemPhotos(item)[0];
+                if (cover && cover.blobKey) {
+                    const u = await localBlobUrl(cover.blobKey);
                     if (u) localCovers.set(String(c.id), u);
                 }
             }
@@ -2040,7 +2323,6 @@
                         ${cover
                             ? `<img src="${esc(cover)}" alt="" loading="lazy" class="site-cover" onerror="this.remove()">`
                             : `<span class="site-initials">${esc(initials)}</span>`}
-                        <span class="site-open">Open ▸</span>
                         <span class="site-overlay">
                             ${dueChip}
                             <span class="site-name">${esc(name)}</span>
@@ -2344,59 +2626,153 @@
         }
 
         // ===================================================================
-        //  SITE DATA (server when online, saved copy + queued records when offline)
+        //  SITE DATA - saved on this device, only new changes are downloaded
+        //  Opening a site uses the saved copy straight away. In the background
+        //  the app asks the server only for records newer than the newest one
+        //  it already has, then checks the record count to catch anything that
+        //  was deleted on another device.
         // ===================================================================
-        async function loadSiteData(clientId, onProgress) {
-            const progress = (p, t) => { if (onProgress) onProgress(p, t); };
+        const SITE_AUTO_SYNC_MS = 5 * 60 * 1000;              // an open site re-checks for changes every 5 minutes
+        const SITE_FULL_RESYNC_MS = 7 * 24 * 60 * 60 * 1000;  // full re-download at most once a week, as a safety net
+        const PAGE_SIZE = 1000;
+        let siteSyncInfo = { lastSyncAt: 0, syncing: false, error: null };
+        let siteSyncSeq = 0;
 
-            progress(20, 'Connecting to database...');
-            let rows = null;
+        async function getSiteCache(clientId) {
+            const e = await cacheGetEntry('site_' + clientId);
+            if (!e) return null;
+            if (Array.isArray(e.data)) { // older saved format
+                const t = new Date(e.at).getTime() || 0;
+                return { rows: e.data, lastSyncAt: t, lastFullAt: t };
+            }
+            return e.data;
+        }
+        async function saveSiteCache(clientId, cache) { await cacheSet('site_' + clientId, cache); }
 
-            if (isOnline) {
-                try {
-                    progress(50, 'Downloading station records and open recommendations...');
-                    const { data, error } = await withTimeout(_supabase
-                        .from('service_logs')
-                        .select('barcode_id, payload, created_at')
-                        .eq('client_id', clientId)
-                        .order('created_at', { ascending: true }), 15000, 'Downloading site data');
-                    if (error) throw error;
-                    rows = data || [];
-                    await cacheSet('site_' + clientId, rows);
-                } catch (err) {
-                    if (!isNetworkError(err)) throw err;
-                    console.warn('Site download failed, using saved copy:', err.message || err);
+        function serverRows(rows) { return (rows || []).filter(r => !r._local); }
+        function latestCreatedAt(rows) {
+            let best = null, bestT = -1;
+            serverRows(rows).forEach(r => {
+                const t = new Date(r.created_at).getTime();
+                if (t > bestT) { bestT = t; best = r.created_at; }
+            });
+            return best;
+        }
+
+        async function fetchRowsPaged(clientId, since) {
+            const out = [];
+            for (let from = 0; ; from += PAGE_SIZE) {
+                let q = _supabase.from('service_logs').select('barcode_id, payload, created_at').eq('client_id', clientId);
+                if (since) q = q.gt('created_at', since);
+                const { data, error } = await withTimeout(
+                    q.order('created_at', { ascending: true }).range(from, from + PAGE_SIZE - 1),
+                    20000, 'Downloading site data');
+                if (error) throw error;
+                out.push(...(data || []));
+                if (!data || data.length < PAGE_SIZE) break;
+            }
+            return out;
+        }
+
+        // Brings the saved copy of a site up to date. mode: 'auto' or 'full'
+        async function syncSiteCache(clientId, mode) {
+            let cache = await getSiteCache(clientId);
+            const now = Date.now();
+            const needFull = mode === 'full' || !cache || now - (cache.lastFullAt || 0) > SITE_FULL_RESYNC_MS;
+            let changed = false;
+
+            if (needFull) {
+                const rows = await fetchRowsPaged(clientId, null);
+                changed = !cache || rows.length !== serverRows(cache.rows).length || latestCreatedAt(rows) !== latestCreatedAt(cache.rows);
+                cache = { rows: rows, lastSyncAt: now, lastFullAt: now };
+            } else {
+                let rows = cache.rows;
+                let lastFullAt = cache.lastFullAt || now;
+                const fresh = await fetchRowsPaged(clientId, latestCreatedAt(rows));
+                if (fresh.length) {
+                    const freshRefs = new Set(fresh.map(r => r.payload && r.payload.clientRef).filter(Boolean));
+                    rows = rows.filter(r => !(r._local && freshRefs.has(r.payload && r.payload.clientRef))).concat(fresh);
+                    changed = true;
                 }
+                const { count, error } = await withTimeout(
+                    _supabase.from('service_logs').select('barcode_id', { count: 'exact', head: true }).eq('client_id', clientId),
+                    15000, 'Checking site data');
+                if (error) throw error;
+                if (typeof count === 'number' && count !== serverRows(rows).length) {
+                    rows = await fetchRowsPaged(clientId, null);
+                    lastFullAt = now;
+                    changed = true;
+                }
+                cache = { rows: rows, lastSyncAt: now, lastFullAt: lastFullAt };
             }
 
-            if (!rows) {
-                const cached = await cacheGetEntry('site_' + clientId);
-                if (!cached) throw new Error("You're offline and this site hasn't been opened on this device before, so its stations aren't saved here yet. You can still scan and record new stations.");
-                rows = cached.data || [];
-                progress(50, 'Offline - using the copy saved on this device...');
-            }
+            await saveSiteCache(clientId, cache);
+            return { cache, changed };
+        }
 
-            rows = rows.slice();
+        // After a queued record uploads, add it to the saved copy so the site doesn't need re-downloading
+        async function addSentRowToSiteCache(item) {
+            try {
+                const cache = await getSiteCache(item.clientId);
+                if (!cache) return;
+                const ref = item.data.payload && item.data.payload.clientRef;
+                if (ref && cache.rows.some(r => r.payload && r.payload.clientRef === ref)) return;
+                cache.rows.push({ barcode_id: item.data.barcode_id, payload: item.data.payload, created_at: item.createdAt, _local: true });
+                await saveSiteCache(item.clientId, cache);
+            } catch (e) { console.warn('Could not update saved site copy', e); }
+        }
 
-            // Add records that are still waiting in the upload queue
+        // Refresh just this site's details (contact, notes, services, photo) - one small request
+        async function refreshClientRecord(clientId) {
+            const { data, error } = await withTimeout(_supabase.from('clients').select('*').eq('id', clientId).maybeSingle(), 10000, 'Site details');
+            if (error || !data) return false;
+            const c = clientsData.find(x => String(x.id) === String(clientId));
+            if (!c) return false;
+            const before = JSON.stringify(c);
+            const oldImage = c.image_path;
+            Object.keys(data).forEach(k => { c[k] = data[k]; });
+            // keep edits made on this device that haven't uploaded yet
+            queueItems.filter(i => i.kind === 'update_client' && i.status !== 'sent' && String(i.clientId) === String(clientId))
+                .sort((a, b) => a.seq - b.seq).forEach(i => Object.assign(c, i.data.fields));
+            await cacheSet('clients', clientsData);
+            if (c.image_path !== oldImage) await refreshCoverUrls();
+            return JSON.stringify(c) !== before;
+        }
+
+        function photoErrorText(path) {
+            const e = signedErrors.get(path);
+            if (!e) return isOnline ? "The photo link couldn't be created." : "This photo hasn't been saved on this device yet, so it can't be shown offline.";
+            if (/not.?found/i.test(e)) return 'The photo file is missing from storage - it never finished uploading. Add the photo to this station again.';
+            return 'Photo unavailable: ' + e;
+        }
+
+        // Turns saved rows (+ anything still in the upload queue) into the site dashboard state
+        async function buildSiteState(clientId, cachedRows, keepScanned) {
+            const rows = (cachedRows || []).map(r => Object.assign({}, r));
+
             const refs = new Set(rows.map(r => r.payload && r.payload.clientRef).filter(Boolean));
             queueItems
-                .filter(i => i.kind === 'insert_log' && String(i.clientId) === String(clientId))
+                .filter(i => i.kind === 'insert_log' && !i.cancelled && String(i.clientId) === String(clientId))
                 .sort((a, b) => a.seq - b.seq)
                 .forEach(i => {
                     const ref = i.data.payload && i.data.payload.clientRef;
                     if (ref && refs.has(ref)) return;
-                    rows.push({ barcode_id: i.data.barcode_id, payload: i.data.payload, created_at: i.createdAt, _blobKey: i.status !== 'sent' ? i.blobKey : null });
+                    const blobKeys = i.status !== 'sent' ? itemPhotos(i).map(p => p.blobKey) : [];
+                    rows.push({ barcode_id: i.data.barcode_id, payload: i.data.payload, created_at: i.createdAt, _blobKeys: blobKeys });
                 });
             rows.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-            progress(80, 'Securing issue photos...');
-            const signedMap = await getSignedUrls(rows.filter(r => !r._blobKey).map(r => toStoragePath(r.payload && (r.payload.photo || r.payload.image))));
+            // Each photo: the copy on this device if it hasn't uploaded yet, otherwise a link from storage
             for (const r of rows) {
-                if (r._blobKey) r._localPhoto = await localBlobUrl(r._blobKey);
+                const paths = payloadPhotoPaths(r.payload);
+                r._slots = [];
+                for (let i = 0; i < paths.length; i++) {
+                    const local = r._blobKeys && r._blobKeys[i] ? await localBlobUrl(r._blobKeys[i]) : null;
+                    r._slots.push({ path: paths[i], local: local });
+                }
             }
+            const signedMap = await getSignedUrls(rows.flatMap(r => r._slots.filter(s => !s.local).map(s => s.path)));
 
-            progress(90, 'Building site dashboard...');
             const map = new Map();
             const visitMap = new Map();
             const activeScannedSet = new Set();
@@ -2422,10 +2798,7 @@
                     return;
                 }
 
-                const rowTime = new Date(row.created_at).getTime();
-                if (rowTime > latestVisitTimestamp) {
-                    activeScannedSet.add(row.barcode_id);
-                }
+                if (new Date(row.created_at).getTime() > latestVisitTimestamp) activeScannedSet.add(row.barcode_id);
 
                 const existing = map.get(row.barcode_id) || {
                     barcode_id: row.barcode_id,
@@ -2439,78 +2812,162 @@
                 existing.deviceType = payload.deviceType || existing.deviceType;
 
                 const recText = payload.recommendation || payload.recommendationNote || null;
-                const rawPhoto = payload.photo || payload.image || null;
-                const photoUrl = row._localPhoto || (rawPhoto ? (signedMap.get(toStoragePath(rawPhoto)) || null) : null);
+                const slots = row._slots || [];
+                const photos = [];
+                const missing = [];
+                slots.forEach(s => {
+                    const u = s.local || signedMap.get(s.path) || null;
+                    if (u) photos.push(u); else missing.push(s.path);
+                });
+                let photoError = '';
+                if (missing.length) {
+                    photoError = (slots.length > 1 ? `${missing.length} of ${slots.length} photos unavailable. ` : '') + photoErrorText(missing[0]);
+                }
 
-                if (recText || rawPhoto) {
+                if (recText || slots.length) {
                     existing.recommendationsHistory.push({
                         recommendation: recText || 'Issue photo attached',
-                        photo: photoUrl,
+                        photos: photos,
+                        photoCount: slots.length,
+                        photoError: photoError,
                         date: payload.servicedAt || row.created_at
                     });
                 }
                 existing.lastPayload = payload;
-
                 map.set(row.barcode_id, existing);
             });
 
             siteDevices = Array.from(map.values());
             sitePastVisits = Array.from(visitMap.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
             scannedBarcodesThisVisit = activeScannedSet;
+            if (keepScanned) keepScanned.forEach(b => scannedBarcodesThisVisit.add(b));
             lastVisitCutoffRaw = latestVisitRaw;
-
-            progress(100, 'Site loaded successfully!');
-            await new Promise(r => setTimeout(r, 100));
         }
 
+        function showProgress(pct, text) {
+            document.getElementById('syncProgressModal').classList.remove('hidden');
+            document.getElementById('progressPercent').textContent = pct + '%';
+            document.getElementById('progressBarFill').style.width = pct + '%';
+            document.getElementById('progressStatusText').textContent = text;
+        }
+        function hideProgress() { document.getElementById('syncProgressModal').classList.add('hidden'); }
+
         async function startSiteVisit(clientId) {
-            if (isLoadingSite) return;
-            if (!clientId) return;
+            if (isLoadingSite || !clientId) return;
 
             const client = clientsData.find(c => String(c.id) === String(clientId));
             if (!client) { alert('Site not found. Please refresh the page.'); return; }
             selectedClient = client;
             isLoadingSite = true;
+            const mySeq = ++siteSyncSeq;
 
             document.getElementById('siteSelectorSection').classList.add('hidden');
 
-            const progressModal = document.getElementById('syncProgressModal');
-            const progressBarFill = document.getElementById('progressBarFill');
-            const progressPercent = document.getElementById('progressPercent');
-            const progressStatusText = document.getElementById('progressStatusText');
-            progressModal.classList.remove('hidden');
-
             try {
-                setSyncStatus('uploading', 'Loading Site Data...');
-                try {
-                    await loadSiteData(client.id, (pct, text) => {
-                        progressPercent.textContent = pct + '%';
-                        progressBarFill.style.width = pct + '%';
-                        progressStatusText.textContent = text;
-                    });
-                } catch (err) {
-                    if (isOnline) throw err;
-                    // Offline and never opened here: start with an empty register so the visit can still be recorded
-                    alert(err.message);
-                    siteDevices = []; sitePastVisits = []; scannedBarcodesThisVisit = new Set(); lastVisitCutoffRaw = null;
+                let cache = await getSiteCache(client.id);
+
+                if (!cache) {
+                    if (isOnline) {
+                        showProgress(30, 'First time on this device - downloading and saving this site...');
+                        cache = (await syncSiteCache(client.id, 'full')).cache;
+                        showProgress(90, 'Building site dashboard...');
+                    } else {
+                        alert("You're offline and this site hasn't been opened on this device before, so its stations aren't saved here yet. You can still scan and record new stations.");
+                        cache = { rows: [], lastSyncAt: 0, lastFullAt: 0 };
+                    }
                 }
 
-                progressModal.classList.add('hidden');
-                setSyncStatus('synced');
+                siteSyncInfo = { lastSyncAt: cache.lastSyncAt || 0, syncing: false, error: null };
+                await buildSiteState(client.id, cache.rows);
+                hideProgress();
 
                 refreshLandingHeader();
                 renderLandingRecommendationsAndVisits();
                 showSiteDashboard();
+                renderSiteSyncInfo();
+
+                if (isOnline && mySeq === siteSyncSeq && Date.now() - (cache.lastSyncAt || 0) > SITE_AUTO_SYNC_MS) {
+                    backgroundSyncSite();
+                }
             } catch (err) {
-                progressModal.classList.add('hidden');
-                setSyncStatus('synced');
+                hideProgress();
                 selectedClient = null;
                 document.getElementById('siteSelectorSection').classList.remove('hidden');
-                alert('Error downloading site data: ' + err.message);
+                alert('Error downloading site data: ' + friendlyError(err));
             } finally {
                 isLoadingSite = false;
             }
         }
+
+        // Checks the server for changes to the open site without interrupting work.
+        // mode: undefined (automatic), 'manual' (Sync Site button) or 'full'
+        async function backgroundSyncSite(mode) {
+            if (!selectedClient || siteSyncInfo.syncing) return;
+            if (!isOnline) {
+                if (mode) alert("You're offline. The saved copy of this site is being used, and it will sync when you're back online.");
+                return;
+            }
+            const clientId = selectedClient.id;
+            const mySeq = siteSyncSeq;
+            siteSyncInfo.syncing = true;
+            siteSyncInfo.error = null;
+            renderSiteSyncInfo();
+            try {
+                if (mode) await flushQueue();
+                const detailsChanged = await refreshClientRecord(clientId).catch(() => false);
+                const { cache, changed } = await syncSiteCache(clientId, mode === 'full' ? 'full' : 'auto');
+                if (mySeq !== siteSyncSeq) return;
+                siteSyncInfo.lastSyncAt = cache.lastSyncAt;
+                if (changed || mode) {
+                    await buildSiteState(clientId, cache.rows, new Set(scannedBarcodesThisVisit));
+                    if (mySeq !== siteSyncSeq) return;
+                    rerenderOpenSite();
+                } else if (detailsChanged) {
+                    refreshLandingHeader();
+                }
+            } catch (err) {
+                if (mySeq === siteSyncSeq) siteSyncInfo.error = isNetworkError(err) ? 'connection lost' : friendlyError(err);
+            } finally {
+                if (mySeq === siteSyncSeq) {
+                    siteSyncInfo.syncing = false;
+                    renderSiteSyncInfo();
+                }
+            }
+        }
+
+        function rerenderOpenSite() {
+            refreshLandingHeader();
+            renderLandingRecommendationsAndVisits();
+            if (!document.getElementById('visitWorkspace').classList.contains('hidden')) renderDeviceLists();
+        }
+
+        function relTime(ms) {
+            if (!ms) return 'never';
+            const mins = Math.round((Date.now() - ms) / 60000);
+            if (mins < 1) return 'just now';
+            if (mins < 60) return mins + ' min ago';
+            const hrs = Math.round(mins / 60);
+            if (hrs < 24) return hrs + ' h ago';
+            return new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+        }
+
+        function renderSiteSyncInfo() {
+            let text;
+            if (siteSyncInfo.syncing) text = 'Checking for changes…';
+            else if (siteSyncInfo.error) text = `Saved on this device · last sync failed (${siteSyncInfo.error})`;
+            else text = `Saved on this device · synced ${relTime(siteSyncInfo.lastSyncAt)}${isOnline ? '' : ' · offline'}`;
+            document.querySelectorAll('.site-sync-text').forEach(el => { el.textContent = text; });
+            document.querySelectorAll('.site-sync-btn').forEach(b => { b.disabled = siteSyncInfo.syncing; });
+        }
+
+        // Keep an open site fresh, and keep the "synced X ago" label current
+        setInterval(() => {
+            if (!selectedClient) return;
+            renderSiteSyncInfo();
+            if (isOnline && !siteSyncInfo.syncing && !isLoadingSite && Date.now() - (siteSyncInfo.lastSyncAt || 0) > SITE_AUTO_SYNC_MS) {
+                backgroundSyncSite();
+            }
+        }, 60000);
 
         function refreshLandingHeader() {
             const c = selectedClient;
@@ -2549,6 +3006,8 @@
             scannedBarcodesThisVisit = new Set();
             lastVisitCutoffRaw = null;
             selectedClient = null;
+            siteSyncSeq++;
+            siteSyncInfo = { lastSyncAt: 0, syncing: false, error: null };
             const s = document.getElementById('stationSearchInput');
             if (s) s.value = '';
         }
@@ -2580,15 +3039,18 @@
             } else {
                 recsContainer.innerHTML = allRecs.map(item => {
                     const dateStr = item.date ? new Date(item.date).toLocaleDateString() : '';
-                    const idx = regImg(item.photo || '', item.recommendation, `${item.station}${dateStr ? ' · ' + dateStr : ''}`);
-                    const right = item.photo
-                        ? `<img src="${esc(item.photo)}" loading="lazy" alt="" class="h-12 w-12 rounded-lg object-cover shrink-0" style="border:1px solid var(--border);" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'link-btn shrink-0',textContent:'View'}))">`
+                    const photos = item.photos || [];
+                    const idx = regImg(photos, item.recommendation, `${item.station}${dateStr ? ' · ' + dateStr : ''}`, item.photoError);
+                    const countBadge = photos.length > 1 ? `<span class="absolute bottom-0.5 right-0.5 text-[10px] font-black text-white bg-black/70 rounded px-1">${photos.length}</span>` : '';
+                    const right = photos.length
+                        ? `<span class="relative shrink-0"><img src="${esc(photos[0])}" loading="lazy" alt="" class="h-12 w-12 rounded-lg object-cover" style="border:1px solid var(--border);">${countBadge}</span>`
                         : '<span class="link-btn !no-underline shrink-0">View ▸</span>';
+                    const photoInfo = item.photoCount ? ` · ${item.photoCount} photo${item.photoCount === 1 ? '' : 's'}` : '';
                     return `
                         <button type="button" onclick="openImg(${idx})" class="row-item clickable w-full text-left p-3 flex justify-between items-center gap-3" style="border-color: rgba(249,115,22,.35);">
                             <div class="min-w-0">
                                 <div class="t-muted break-words"><span class="font-bold t-accent">${esc(item.station)}:</span> ${esc(item.recommendation)}</div>
-                                <div class="t-faint text-[11px] mt-0.5">${esc(dateStr)}${item.photo ? ' · Photo attached' : ''}</div>
+                                <div class="t-faint text-[11px] mt-0.5">${esc(dateStr)}${photoInfo}${item.photoError ? ' · <span style="color:#d97706;">Photo unavailable</span>' : ''}</div>
                             </div>
                             ${right}
                         </button>`;
@@ -2780,25 +3242,29 @@
                     y += 5;
 
                     doc.setFont('helvetica', 'normal');
-                    const splitRec = doc.splitTextToSize(item.recommendation, 110);
+                    const splitRec = doc.splitTextToSize(item.recommendation, 180);
                     doc.text(splitRec, 14, y);
+                    y += (splitRec.length * 5) + 2;
 
-                    let spaceNeeded = (splitRec.length * 5) + 10;
-
-                    if (item.photo) {
+                    // Photos in rows of four under the recommendation
+                    const imgs = [];
+                    for (const url of (item.photos || [])) {
                         try {
-                            const base64Img = await getBase64ImageFromUrl(item.photo);
-                            if (base64Img) {
-                                const fmt = base64Img.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-                                doc.addImage(base64Img, fmt, 130, y - 4, 60, 60);
-                                spaceNeeded = Math.max(spaceNeeded, 65);
-                            }
+                            const b64 = await getBase64ImageFromUrl(url);
+                            if (b64) imgs.push(b64);
                         } catch (err) {
                             console.warn("Could not embed image in PDF:", err);
                         }
                     }
-
-                    y += spaceNeeded;
+                    for (let i = 0; i < imgs.length; i += 4) {
+                        if (y > 240) { doc.addPage(); y = 20; }
+                        imgs.slice(i, i + 4).forEach((b64, j) => {
+                            const fmt = b64.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+                            try { doc.addImage(b64, fmt, 14 + j * 46, y, 42, 42); } catch (e) { console.warn('PDF image skipped', e); }
+                        });
+                        y += 46;
+                    }
+                    y += 6;
                 }
             }
 
@@ -3034,7 +3500,7 @@
 
             existingDev.recommendationsHistory.forEach(item => {
                 const formattedDate = item.date ? new Date(item.date).toLocaleDateString() : 'Past Visit';
-                const idx = regImg(item.photo || '', item.recommendation, `${existingDev.locationName} · ${formattedDate}`);
+                const idx = regImg(item.photo || '', item.recommendation, `${existingDev.locationName} · ${formattedDate}`, item.photoError);
 
                 const div = document.createElement('div');
                 div.className = 'row-item p-3 flex justify-between items-center gap-2';
@@ -3244,7 +3710,12 @@
                 }
 
                 await removePhotos((rows || []).map(r => toStoragePath(r.payload && (r.payload.photo || r.payload.image))));
-                await cacheDel('site_' + selectedClient.id);
+                // Remove it from the saved copy too, then let the background sync confirm with the server
+                const delCache = await getSiteCache(selectedClient.id);
+                if (delCache) {
+                    delCache.rows = delCache.rows.filter(r => r.barcode_id !== barcode);
+                    await saveSiteCache(selectedClient.id, delCache);
+                }
 
                 siteDevices = siteDevices.filter(d => d.barcode_id !== barcode);
                 scannedBarcodesThisVisit.delete(barcode);
@@ -3298,7 +3769,9 @@
                     await removePhotos(rows.map(r => toStoragePath(r.payload && (r.payload.photo || r.payload.image))));
                 }
 
-                await cacheDel('site_' + selectedClient.id);
+                // Refresh the saved copy so the cancelled records disappear from it as well
+                const cancelledId = selectedClient.id;
+                syncSiteCache(cancelledId, 'full').catch(() => cacheDel('site_' + cancelledId));
                 await stopFullscreenCameraScanner();
                 resetSiteState();
                 document.getElementById('siteSelectorSection').classList.remove('hidden');
