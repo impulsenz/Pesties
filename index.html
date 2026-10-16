@@ -159,9 +159,11 @@
         .tab-btn.active { background: #f97316; border-color: #f97316; color: #fff; }
         #stationHistoryTabs .btn.active { border-color: #f97316; color: var(--accent-text); }
         .viz-root { --viz-surface: #ffffff; --viz-grid: #e5e7eb; --viz-axis: #6b7280; --viz-text: #0b1530; --viz-muted: #52514e;
-                    --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-other: #eda100; }
+                    --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-other: #eda100;
+                    --series-4: #eda100; --series-5: #e87ba4; --series-6: #008300; --series-7: #6250d6; }
         html.dark .viz-root { --viz-surface: #0f1c3d; --viz-grid: #1d2d58; --viz-axis: #9db0d1; --viz-text: #f1f5f9; --viz-muted: #c3c2b7;
-                    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-other: #c98500; }
+                    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-other: #c98500;
+                    --series-4: #c98500; --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; }
         .viz-tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border); border-radius: .6rem; padding: .45rem .6rem; font-size: .68rem; color: var(--text); box-shadow: var(--shadow); white-space: nowrap; z-index: 5; }
         .site-grid.size-0 .site-due { font-size: .5rem; padding: .1rem .35rem; }
         .site-grid.size-0 .site-initials { font-size: 2.6rem; }
@@ -392,6 +394,10 @@
                             <div><div id="statServiced" class="text-2xl font-black" style="color:#10b981;">0</div><div class="eyebrow t-faint mt-0.5">Serviced</div></div>
                             <div><div id="statIssues" class="text-2xl font-black t-accent">0</div><div class="eyebrow t-faint mt-0.5">Issues</div></div>
                         </div>
+                        <div class="border-t divider mt-4 pt-3">
+                            <div class="eyebrow t-faint mb-2">Stations by type</div>
+                            <div id="stationTypeList" class="space-y-1.5 text-xs"></div>
+                        </div>
                     </div>
                     <!-- Contracted services & schedule (compact, in the side column) -->
                     <div class="card p-4 sm:p-5 space-y-3 sm:col-span-3 xl:col-span-1">
@@ -450,6 +456,7 @@
                             Historical Visit Notes & PDF Reports
                         </h3>
                     </div>
+                    <div id="visitTypeChart" class="viz-root"></div>
                     <div id="siteLandingVisitsList" class="space-y-2.5 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1">
                         <span class="t-faint italic">No previous visit records found.</span>
                     </div>
@@ -552,20 +559,15 @@
             <!-- Body -->
             <div id="stationSheetBody" class="flex-1 overflow-y-auto scroll-thin p-4 sm:p-6 space-y-5">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div id="newStationFields" class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 hidden inset p-4" style="border-color:#f97316;">
-                        <div class="sm:col-span-2 eyebrow t-accent">New Barcode Detected - Register Device Details:</div>
+                    <div id="newStationFields" class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 inset p-4" style="border-color:#f97316;">
+                        <div id="stationDetailsHeading" class="sm:col-span-2 eyebrow t-accent">New Barcode Detected - Register Device Details:</div>
                         <div>
-                            <label class="lbl">Device / Location Name</label>
+                            <label class="lbl">Station / Location Name</label>
                             <input type="text" id="newLocName" placeholder="e.g. Back Roller Door" class="field">
                         </div>
                         <div>
-                            <label class="lbl">Device Type</label>
-                            <select id="newDeviceType" class="field cursor-pointer">
-                                <option value="Rodent Bait Station">Rodent Bait Station</option>
-                                <option value="Insect Light Trap">Insect Light Trap (ILT)</option>
-                                <option value="Crawling Insect Monitor">Crawling Insect Monitor</option>
-                                <option value="Snap Trap">Snap Trap</option>
-                            </select>
+                            <label class="lbl">Station Type</label>
+                            <select id="newDeviceType" class="field cursor-pointer"></select>
                         </div>
                     </div>
 
@@ -692,6 +694,14 @@
                         <button type="button" onclick="addOption('species')" class="btn btn-primary">Add</button>
                     </div>
                     <div id="speciesOptionsList" class="space-y-2 text-xs"></div>
+                </div>
+                <div class="space-y-3">
+                    <h4 class="eyebrow t-accent">Station Types</h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="newStationTypeInput" placeholder="e.g. External Rodent Station" class="field" onkeydown="if(event.key==='Enter') addOption('station_type')">
+                        <button type="button" onclick="addOption('station_type')" class="btn btn-primary">Add</button>
+                    </div>
+                    <div id="stationTypeOptionsList" class="space-y-2 text-xs"></div>
                 </div>
             </div>
 
@@ -923,6 +933,10 @@
         <div class="card p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto scroll-thin space-y-5">
             <h3 class="font-black text-lg t-accent">Complete & Close Site Visit</h3>
             <p class="text-xs t-muted">Add overall site notes or general observations before finalizing the visit & generating the PDF report.</p>
+            <div>
+                <label class="lbl !font-bold">Visit type</label>
+                <select id="closingVisitType" class="field cursor-pointer"></select>
+            </div>
             <div id="completeServicesSection" class="hidden space-y-2">
                 <label class="lbl !font-bold">Services completed on this visit</label>
                 <p class="text-[11px] t-faint">Ticked services have their last-done date set to today and their next due date rolled forward.</p>
@@ -993,6 +1007,20 @@
                 <button type="button" onclick="closeRecModal()" class="btn btn-secondary">Close</button>
                 <button type="button" id="recModalSaveBtn" onclick="saveRecUpdate()" class="btn btn-primary flex-1 !py-3">Save Update</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ===================== VISIT TYPE PICKER ===================== -->
+    <div id="visitTypeModal" class="hidden overlay fixed inset-0 z-50 flex flex-col justify-center items-center p-4" onclick="if(event.target===this) closeVisitTypeModal()">
+        <div class="card p-6 sm:p-7 max-w-md w-full space-y-4">
+            <div class="flex justify-between items-start gap-3">
+                <div>
+                    <h3 class="font-black text-lg t-accent">What type of visit is this?</h3>
+                    <p id="visitTypeSite" class="text-xs t-muted mt-1"></p>
+                </div>
+                <button type="button" onclick="closeVisitTypeModal()" class="t-faint hover:opacity-70 text-xs font-semibold cursor-pointer shrink-0">✕ Cancel</button>
+            </div>
+            <div id="visitTypeOptions" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
         </div>
     </div>
 
@@ -1085,11 +1113,11 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.17-r10';
+        const APP_VERSION = '2026.10.17-r11';
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "syncProgressModal", "progressTitle", "progressPercent", "progressBarFill", "progressStatusText", "progressStats", "progressStatData", "progressStatSpeed", "progressStatItems", "progressStatItemsLabel", "progressSteps", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "statStations", "statServiced", "statIssues", "siteServicesList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "siteLandingRecsList", "siteLandingVisitsList", "visitWorkspace", "activeWorkspaceTitle", "stationSearchInput", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTitle", "scannedBarcodeBadge", "stationSheetBody", "newStationFields", "newLocName", "newDeviceType", "activityLevel", "prepUsed", "speciesCaught", "qtyCount", "serviceNotes", "recommendationNote", "visitEditNote", "issuePhotoCamera", "issuePhotoGallery", "photoPreviewGrid", "stationHistorySection", "stationPrepSummary", "stationChart", "stationLog", "pastRecommendationsSection", "loadPastHistoryBtn", "pastRecommendationsList", "deleteStationBtn", "saveServiceBtn", "settingsModal", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "flashToggleBtn", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalStation", "recModalTitle", "recModalStatusChip", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoCamera", "recPhotoGallery", "recPhotoPreview", "recModalSaveBtn", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "syncToast", "syncToastIcon", "syncToastText", "syncToastBar", "syncToastPct", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "syncProgressModal", "progressTitle", "progressPercent", "progressBarFill", "progressStatusText", "progressStats", "progressStatData", "progressStatSpeed", "progressStatItems", "progressStatItemsLabel", "progressSteps", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "statStations", "statServiced", "statIssues", "stationTypeList", "siteServicesList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "siteLandingRecsList", "visitTypeChart", "siteLandingVisitsList", "visitWorkspace", "activeWorkspaceTitle", "stationSearchInput", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTitle", "scannedBarcodeBadge", "stationSheetBody", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "activityLevel", "prepUsed", "speciesCaught", "qtyCount", "serviceNotes", "recommendationNote", "visitEditNote", "issuePhotoCamera", "issuePhotoGallery", "photoPreviewGrid", "stationHistorySection", "stationPrepSummary", "stationChart", "stationLog", "pastRecommendationsSection", "loadPastHistoryBtn", "pastRecommendationsList", "deleteStationBtn", "saveServiceBtn", "settingsModal", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "flashToggleBtn", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalStation", "recModalTitle", "recModalStatusChip", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoCamera", "recPhotoGallery", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "syncToast", "syncToastIcon", "syncToastText", "syncToastBar", "syncToastPct", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -1226,7 +1254,7 @@
             image_path: 'pestis_offline_sites_update.sql', services: 'pestis_offline_sites_update.sql',
             contract_start: 'pestis_contracts_team_update.sql', contract_end: 'pestis_contracts_team_update.sql',
             contract_notes: 'pestis_contracts_team_update.sql', assigned_to: 'pestis_contracts_team_update.sql',
-            visit_started_at: 'pestis_visit_status.sql', visit_started_by: 'pestis_visit_status.sql'
+            visit_started_at: 'pestis_visit_status.sql', visit_started_by: 'pestis_visit_status.sql', visit_type: 'pestis_visit_and_station_types.sql'
         };
         function friendlyError(err) {
             const msg = (err && err.message) || String(err);
@@ -1832,7 +1860,7 @@
             const grid = document.getElementById('photoPreviewGrid');
             const kept = (typeof keptPhotos !== 'undefined' ? keptPhotos : []).map((k, i) => `
                 <div class="thumb" title="Already saved">
-                    ${k.url ? `<img src="${esc(k.url)}" alt="" onclick="viewFullImage(keptPhotos.map(x => x.url).filter(Boolean), 'Saved photo', 'Saved earlier this visit', '', ${i})">` : '<div class="w-full h-full flex items-center justify-center text-[10px] t-faint text-center p-1">Saved photo</div>'}
+                    ${k.url ? `<img src="${esc(k.url)}" alt="" onclick="viewFullImage(keptPhotos.map(x => x.url).filter(Boolean), 'Saved photo', 'Saved earlier this visit', '', ${i})">` : '<div class="w-full h-full flex items-center justify-center text-[10px] t-faint text-center p-1">📷 Saved photo</div>'}
                     <span class="absolute bottom-1 left-1 text-[9px] font-black text-white bg-emerald-600 rounded px-1">SAVED</span>
                     <button type="button" class="thumb-x" onclick="keptPhotos.splice(${i}, 1); renderPhotoPreviews();" title="Remove photo">✕</button>
                 </div>`).join('');
@@ -2242,6 +2270,38 @@
             });
         }
 
+        // ---------- Visit types ----------
+        const VISIT_TYPES = ['Routine Service', 'Call Out', 'Broken Treatment', 'Initial Install', 'Uninstall', 'Technical Support', 'Meeting'];
+        const VISIT_TYPE_HINT = {
+            'Routine Service': 'Scheduled service of the site',
+            'Call Out': 'Client called about a problem',
+            'Broken Treatment': 'Follow-up where a treatment has failed',
+            'Initial Install': 'Setting up stations at a new site',
+            'Uninstall': 'Removing stations',
+            'Technical Support': 'Help or advice for the client',
+            'Meeting': 'Meeting with the client'
+        };
+        function visitTypeOf(v) { return (v && v.visitType) || 'Routine Service'; } // visits before types existed were routine
+
+        let visitTypeResolve = null;
+        function chooseVisitType() {
+            return new Promise(resolve => {
+                visitTypeResolve = resolve;
+                document.getElementById('visitTypeSite').textContent = selectedClient ? selectedClient.Name : '';
+                document.getElementById('visitTypeOptions').innerHTML = VISIT_TYPES.map(t => `
+                    <button type="button" data-type="${esc(t)}" onclick="pickVisitType(this.dataset.type)" class="row-item clickable text-left p-3">
+                        <div class="font-bold t-strong text-sm">${esc(t)}</div>
+                        <div class="t-faint text-[11px]">${esc(VISIT_TYPE_HINT[t] || '')}</div>
+                    </button>`).join('');
+                document.getElementById('visitTypeModal').classList.remove('hidden');
+            });
+        }
+        function pickVisitType(t) {
+            document.getElementById('visitTypeModal').classList.add('hidden');
+            if (visitTypeResolve) { visitTypeResolve(t); visitTypeResolve = null; }
+        }
+        function closeVisitTypeModal() { pickVisitType(null); }
+
         // ---------- Visits in progress ----------
         // Stored on the site record so the whole team sees it. Updates use their own upload lane,
         // so they can never hold up service records if the database columns haven't been added yet.
@@ -2253,15 +2313,15 @@
             const hours = (Date.now() - t) / 3600000;
             return { at: c.visit_started_at, by: c.visit_started_by || null, hours: hours, stale: hours >= VISIT_STALE_HOURS };
         }
-        async function markVisitStarted(c) {
+        async function markVisitStarted(c, type) {
             if (!c || c.visit_started_at) return;
-            await queueClientUpdate(c, { visit_started_at: new Date().toISOString(), visit_started_by: currentUser ? currentUser.id : null }, 'Visit started', null, 'visit');
+            await queueClientUpdate(c, { visit_started_at: new Date().toISOString(), visit_started_by: currentUser ? currentUser.id : null, visit_type: type || 'Routine Service' }, `Visit started (${type || 'Routine Service'})`, null, 'visit');
             renderSiteCards();
             renderNotifications();
         }
         async function markVisitClosed(c, label) {
-            if (!c || (!c.visit_started_at && !c.visit_started_by)) return;
-            await queueClientUpdate(c, { visit_started_at: null, visit_started_by: null }, label || 'Visit closed', null, 'visit');
+            if (!c || (!c.visit_started_at && !c.visit_started_by && !c.visit_type)) return;
+            await queueClientUpdate(c, { visit_started_at: null, visit_started_by: null, visit_type: null }, label || 'Visit closed', null, 'visit');
         }
         function visitAgeText(v) {
             const h = Math.floor(v.hours);
@@ -2282,7 +2342,7 @@
             line.className = 'mt-2';
             line.innerHTML = v && v.stale
                 ? `<span class="chip chip-red">⚠ Visit open for ${esc(visitAgeText(v))}</span> <span class="text-[11px] t-muted">Started ${esc(when.date)} ${esc(when.time)}${who ? ' by ' + esc(who) : ''} - complete or cancel it.</span>`
-                : `<span class="chip chip-blue">● Visit in progress</span> <span class="text-[11px] t-muted">${when ? `Started ${esc(when.date)} ${esc(when.time)}${who ? ' by ' + esc(who) : ''}` : 'Records already saved this visit'}</span>`;
+                : `<span class="chip chip-blue">● ${esc(c.visit_type || 'Visit')} in progress</span> <span class="text-[11px] t-muted">${when ? `Started ${esc(when.date)} ${esc(when.time)}${who ? ' by ' + esc(who) : ''}` : 'Records already saved this visit'}</span>`;
         }
 
         async function queueClientImage(client, blob) {
@@ -3474,17 +3534,14 @@
         const DOWNLOAD_STEPS = [
             { key: 'connect', label: 'Connecting to the database', from: 0, to: 3 },
             { key: 'count', label: 'Checking how much there is to download', from: 3, to: 6 },
-            { key: 'records', label: 'Downloading station records', from: 6, to: 70 },
-            { key: 'save', label: 'Saving the site to this device', from: 70, to: 74 },
-            { key: 'links', label: 'Securing photo links', from: 74, to: 78 },
-            { key: 'photos', label: 'Saving photos for offline use', from: 78, to: 97 },
-            { key: 'build', label: 'Building the dashboard', from: 97, to: 100 }
+            { key: 'records', label: 'Downloading station records', from: 6, to: 90 },
+            { key: 'save', label: 'Saving the site to this device', from: 90, to: 95 },
+            { key: 'build', label: 'Building the dashboard', from: 95, to: 100 }
         ];
 
         const LOCAL_OPEN_STEPS = [
-            { key: 'read', label: 'Reading the copy saved on this device', from: 0, to: 35 },
-            { key: 'links', label: 'Preparing photos', from: 35, to: 80 },
-            { key: 'build', label: 'Building the dashboard', from: 80, to: 100 }
+            { key: 'read', label: 'Reading the copy saved on this device', from: 0, to: 60 },
+            { key: 'build', label: 'Building the dashboard', from: 60, to: 100 }
         ];
 
         function createProgress(steps, opts) {
@@ -3559,6 +3616,7 @@
                 },
                 step(key, frac, text) {
                     const idx = PROGRESS_STEPS.findIndex(s => s.key === key);
+                    if (idx < 0) { if (text) el('progressStatusText').textContent = text; return; }
                     PROGRESS_STEPS.forEach((s, i) => {
                         if (i < idx && state[s.key] !== 'skipped') state[s.key] = 'done';
                         if (i === idx) state[s.key] = 'active';
@@ -3568,7 +3626,7 @@
                     if (text) el('progressStatusText').textContent = text;
                     renderSteps();
                 },
-                skip(key) { state[key] = 'skipped'; renderSteps(); },
+                skip(key) { if (key in state) { state[key] = 'skipped'; renderSteps(); } },
                 addBytes(n) { bytes += n; samples.push([Date.now(), bytes]); },
                 items(n, total, label) {
                     items = n;
@@ -3668,6 +3726,9 @@
             return recs.flatMap(r => r.photos || []);
         }
         async function prefetchPhotos(urls, prog) {
+            // Photos are no longer saved on the device - they load only when a recommendation is opened.
+            if (prog) prog.skip('photos');
+            return;
             const canKeep = typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller;
             const list = Array.from(new Set(urls)).filter(u => u && !u.startsWith('blob:') && !prefetchedUrls.has(u)).slice(0, 200);
             if (!canKeep || list.length === 0) {
@@ -3834,13 +3895,12 @@
                     r._slots.push({ path: paths[i], local: local });
                 }
             }
-            const toSign = rows.flatMap(r => r._slots.filter(s => !s.local).map(s => s.path));
-            if (prog) prog.step('links', 0.1, toSign.length ? `Securing ${toSign.length} photo link${toSign.length === 1 ? '' : 's'}...` : 'No photos to link');
+            // Photos are NOT fetched here: a recommendation's photos load only when it is opened.
+            // Only photos still waiting to upload (held on this device) can be shown straight away.
+            const signedMap = new Map();
+            photosAwaitingLinks = [];
+            const awaiting = new Set(rows.flatMap(r => r._slots.filter(s => !s.local).map(s => s.path)));
             await new Promise(r => setTimeout(r, 0)); // let the loading screen paint
-            const signedMap = quick ? getCachedSignedUrls(toSign) : await getSignedUrls(toSign);
-            photosAwaitingLinks = quick && isOnline ? Array.from(new Set(toSign.filter(p => !signedMap.has(p) && !signedErrors.has(p)))) : [];
-            const awaiting = new Set(photosAwaitingLinks);
-            if (prog) prog.step('links', 1);
 
             const map = new Map();
             const visitMap = new Map();
@@ -3862,7 +3922,8 @@
                 const photos = [], missing = [], slotUrls = [];
                 slots.forEach(sl => {
                     const u = sl.local || signedMap.get(sl.path) || null;
-                    if (u) { photos.push(u); slotUrls.push({ path: sl.path, url: u }); } else missing.push(sl.path);
+                    slotUrls.push({ path: sl.path, url: u || '' });
+                    if (u) photos.push(u); else missing.push(sl.path);
                 });
                 return { photos, missing, slotUrls };
             };
@@ -3874,7 +3935,8 @@
                         date: payload.completedAt || row.created_at,
                         summaryNote: payload.siteNotes || 'No notes provided',
                         technician: payload.technician || '',
-                        servicesCompleted: payload.servicesCompleted || []
+                        servicesCompleted: payload.servicesCompleted || [],
+                        visitType: payload.visitType || null
                     });
                     return;
                 }
@@ -3936,6 +3998,7 @@
                         recommendation: recText || 'Issue photo attached',
                         photos: photos,
                         photoSlots: slotUrls,
+                        allSlots: slots.map(sl => ({ path: sl.path, local: sl.local || null })),
                         photoCount: slots.length,
                         photoError: photoError,
                         missingPaths: missing,
@@ -3967,6 +4030,7 @@
                     const ph = resolvePhotos(u._slots || []);
                     rec.photos = rec.photos.concat(ph.photos);
                     rec.missingPaths = rec.missingPaths.concat(ph.missing);
+                    rec.allSlots = rec.allSlots.concat((u._slots || []).map(sl => ({ path: sl.path, local: sl.local || null })));
                     const nPhotos = (u._slots || []).length;
                     rec.photoCount += nPhotos;
                     // What changed in this update, for the log
@@ -4013,11 +4077,9 @@
                     prog.step('connect', 0.5, 'Connecting to the database...');
                     cache = (await syncSiteCache(client.id, 'full', prog)).cache;
                     prog.step('save', 1, 'Saved to this device');
-                    prog.step('links', 0, 'Securing photo links...');
-                    await buildSiteState(client.id, cache.rows, null, prog);
-                    prog.step('links', 1);
-                    await prefetchPhotos(sitePhotoUrls(), prog);
-                    prog.step('build', 0.5, 'Building the dashboard...');
+                    prog.step('build', 0.3, 'Building the dashboard...');
+                    await buildSiteState(client.id, cache.rows, null, null);
+                    prog.step('build', 0.7);
                     prog.finish();
                     await new Promise(r => setTimeout(r, 450));
                     prog.hide();
@@ -4034,7 +4096,7 @@
                     prog.step('read', 0.5, `Reading ${cache.rows.length.toLocaleString()} saved record${cache.rows.length === 1 ? '' : 's'}...`);
                     await new Promise(r => setTimeout(r, 0));
                     prog.step('read', 1);
-                    await buildSiteState(client.id, cache.rows, null, prog, { quick: true });
+                    await buildSiteState(client.id, cache.rows, null, null, { quick: true });
                     prog.step('build', 0.6, 'Building the dashboard...');
                 }
 
@@ -4242,6 +4304,70 @@
         function findRec(id) { return allSiteRecs().find(r => r.id === id) || null; }
         function openRecCount(dev) { return dev.recommendationsHistory.filter(r => r.status !== 'complete').length; }
 
+        // ---------- Dashboard: stations by type ----------
+        function renderStationTypes() {
+            const el = document.getElementById('stationTypeList');
+            if (!el) return;
+            const counts = new Map();
+            siteDevices.forEach(d => counts.set(d.deviceType || 'Unknown type', (counts.get(d.deviceType || 'Unknown type') || 0) + 1));
+            if (!counts.size) { el.innerHTML = '<span class="t-faint italic">No stations recorded yet.</span>'; return; }
+            const max = Math.max(...counts.values());
+            el.innerHTML = Array.from(counts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([t, n]) => `
+                <div class="flex items-center gap-2">
+                    <span class="flex-1 min-w-0 truncate t-strong">${esc(t)}</span>
+                    <span class="w-16 h-1.5 rounded-full overflow-hidden" style="background:var(--surface2);"><span class="block h-full rounded-full" style="width:${Math.max(8, n / max * 100)}%;background:#f97316;"></span></span>
+                    <span class="w-6 text-right font-black t-strong">${n}</span>
+                </div>`).join('');
+        }
+
+        // ---------- Dashboard: visit types (donut) ----------
+        // Colour follows the visit type (fixed order), never its rank.
+        function renderVisitTypeChart() {
+            const el = document.getElementById('visitTypeChart');
+            if (!el) return;
+            const counts = new Map();
+            sitePastVisits.forEach(v => { const t = visitTypeOf(v); counts.set(t, (counts.get(t) || 0) + 1); });
+            const total = sitePastVisits.length;
+            if (!total) { el.innerHTML = ''; return; }
+            let segs = VISIT_TYPES.map((t, i) => ({ t, n: counts.get(t) || 0, color: `var(--series-${i + 1})` })).filter(x => x.n > 0);
+            // keep it readable: at most 6 slices, the smallest fold into "Other"
+            if (segs.length > 6) {
+                const sorted = segs.slice().sort((a, b) => b.n - a.n);
+                const keep = new Set(sorted.slice(0, 5).map(x => x.t));
+                const other = segs.filter(x => !keep.has(x.t)).reduce((a, x) => a + x.n, 0);
+                segs = segs.filter(x => keep.has(x.t)).concat([{ t: 'Other', n: other, color: 'var(--viz-muted)' }]);
+            }
+            const R = 54, r = 34, C = 64, gap = segs.length > 1 ? 0.035 : 0;
+            let a0 = -Math.PI / 2;
+            const arc = (from, to) => {
+                const large = to - from > Math.PI ? 1 : 0;
+                const p = (ang, rad) => [C + rad * Math.cos(ang), C + rad * Math.sin(ang)].map(v => v.toFixed(2)).join(' ');
+                return `M ${p(from, R)} A ${R} ${R} 0 ${large} 1 ${p(to, R)} L ${p(to, r)} A ${r} ${r} 0 ${large} 0 ${p(from, r)} Z`;
+            };
+            const paths = segs.map((sg, i) => {
+                const sweep = sg.n / total * Math.PI * 2;
+                const from = a0 + (segs.length > 1 ? gap / 2 : 0), to = a0 + sweep - (segs.length > 1 ? gap / 2 : 0);
+                a0 += sweep;
+                const d = segs.length === 1
+                    ? `M ${C} ${C - R} A ${R} ${R} 0 1 1 ${C - 0.01} ${C - R} L ${C - 0.01} ${C - r} A ${r} ${r} 0 1 0 ${C} ${C - r} Z`
+                    : arc(from, to);
+                return `<path d="${d}" fill="${sg.color}" data-i="${i}" class="viz-seg" style="cursor:default;"><title>${esc(sg.t)}: ${sg.n} (${Math.round(sg.n / total * 100)}%)</title></path>`;
+            }).join('');
+            el.innerHTML = `
+                <div class="flex items-center gap-4 flex-wrap">
+                    <div class="relative shrink-0" style="width:128px;height:128px;">
+                        <svg viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Visit types for this site">${paths}</svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span class="text-xl font-black t-strong leading-none">${total}</span>
+                            <span class="text-[10px] t-faint">visit${total === 1 ? '' : 's'}</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-[10rem] space-y-1 text-[11px]">
+                        ${segs.map(sg => `<div class="flex items-center gap-2"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${sg.color};"></span><span class="flex-1 t-strong">${esc(sg.t)}</span><span class="t-muted font-bold">${sg.n} · ${Math.round(sg.n / total * 100)}%</span></div>`).join('')}
+                    </div>
+                </div>`;
+        }
+
         function renderLandingStats() {
             const total = siteDevices.length;
             const serviced = siteDevices.filter(d => scannedBarcodesThisVisit.has(d.barcode_id)).length;
@@ -4250,6 +4376,8 @@
             document.getElementById('statStations').textContent = total;
             document.getElementById('statServiced').textContent = serviced;
             document.getElementById('statIssues').textContent = issues;
+            renderStationTypes();
+            renderVisitTypeChart();
         }
 
         let recFilter = 'open';
@@ -4265,16 +4393,11 @@
 
         function recRowHtml(item, opts) {
             const dateStr = item.date ? new Date(item.date).toLocaleDateString(LOCALE, NZ_DATE) : '';
-            const photos = item.photos || [];
-            const countBadge = photos.length > 1 ? `<span class="absolute bottom-0.5 right-0.5 text-[10px] font-black text-white bg-black/70 rounded px-1">${photos.length}</span>` : '';
-            const right = photos.length
-                ? `<span class="relative shrink-0"><img src="${esc(photos[0])}" loading="lazy" alt="" class="h-12 w-12 rounded-lg object-cover" style="border:1px solid var(--border);">${countBadge}</span>`
-                : '<span class="link-btn !no-underline shrink-0">Open ▸</span>';
+            const right = `<span class="shrink-0 flex flex-col items-end gap-1">${item.photoCount ? `<span class="chip chip-blue">📷 ${item.photoCount}</span>` : ''}<span class="link-btn !no-underline">Open ▸</span></span>`;
             const bits = [esc(dateStr)];
             if (item.photoCount) bits.push(`${item.photoCount} photo${item.photoCount === 1 ? '' : 's'}`);
             if (item.updates && item.updates.length) bits.push(`${item.updates.length} update${item.updates.length === 1 ? '' : 's'}`);
-            if (item.photoError) bits.push('<span style="color:#d97706;">Photo unavailable</span>');
-            else if (item.photosLoading) bits.push('<span class="t-faint">Loading photos...</span>');
+
             const stationLabel = opts && opts.hideStation ? '' : `<span class="font-bold t-accent">${esc(item.station)}:</span> `;
             return `
                 <button type="button" data-rec="${esc(item.id)}" onclick="openRecModal(this.dataset.rec)" class="row-item clickable w-full text-left p-3 flex justify-between items-center gap-3" style="border-color: ${item.status === 'complete' ? 'var(--border)' : 'rgba(249,115,22,.35)'};${item.status === 'complete' ? 'opacity:.75;' : ''}">
@@ -4314,6 +4437,7 @@
                         <div class="row-item p-3.5 flex justify-between items-center gap-3">
                             <div class="min-w-0">
                                 <div class="font-bold t-strong">${esc(dt.date)}</div>
+                                <div class="t-strong text-[11px] font-semibold">${esc(visitTypeOf(v))}</div>
                                 <div class="t-muted truncate">Closed ${esc(dt.time)} · ${esc(v.technician || 'Technician not recorded')}</div>
                             </div>
                             <button type="button" onclick="generatePDFReport(${index})" class="btn btn-blue !px-3.5 !py-2 shrink-0">Download</button>
@@ -4359,13 +4483,7 @@
             const dt = fmtDateTimeLong(rec.date);
             document.getElementById('recModalMeta').textContent = `Logged ${dt.date} ${dt.time}${rec.technician ? ' by ' + rec.technician : ''}`;
 
-            const idx = regImg(rec.photos, rec.recommendation, rec.station, rec.photoError, rec.missingPaths);
-            document.getElementById('recModalPhotos').innerHTML = rec.photos.length
-                ? rec.photos.map((u, i) => `<div class="thumb"><img src="${esc(u)}" alt="" onclick="openImgAt(${idx}, ${i})"></div>`).join('')
-                : '<span class="text-xs t-faint italic">No photos yet.</span>';
-            const pn = document.getElementById('recModalPhotoNote');
-            pn.textContent = rec.photoError || '';
-            pn.classList.toggle('hidden', !rec.photoError);
+            loadRecModalPhotos(rec);
 
             const hist = [`<div class="row-item p-3"><div class="t-faint">${esc(dt.date)} ${esc(dt.time)}${rec.technician ? ' · ' + esc(rec.technician) : ''}</div><div class="t-strong mt-0.5">Logged: ${esc(rec.recommendation)}</div></div>`]
                 .concat(rec.updates.map(u => {
@@ -4381,6 +4499,35 @@
             recModalStartStatus = document.getElementById('recModalStatus').value;
             document.getElementById('recModalNote').value = '';
             document.getElementById('recModal').classList.remove('hidden');
+        }
+
+        // Fetches links for this recommendation's photos only, then shows them
+        async function loadRecModalPhotos(rec) {
+            const box = document.getElementById('recModalPhotos');
+            const pn = document.getElementById('recModalPhotoNote');
+            pn.classList.add('hidden');
+            const slots = rec.allSlots || [];
+            if (!slots.length) { box.innerHTML = '<span class="text-xs t-faint italic">No photos yet.</span>'; return; }
+            const remote = slots.filter(sl => !sl.local).map(sl => sl.path);
+            if (remote.length && !isOnline) {
+                const local = slots.filter(sl => sl.local);
+                box.innerHTML = local.length ? '' : '';
+                pn.textContent = `${remote.length} photo${remote.length === 1 ? '' : 's'} can only be viewed online.`;
+                pn.classList.remove('hidden');
+                if (!local.length) { box.innerHTML = '<span class="text-xs t-faint italic">Connect to the internet to view the photos.</span>'; return; }
+            } else if (remote.length) {
+                box.innerHTML = `<span class="text-xs t-muted"><span class="spinner" style="border-color:rgba(249,115,22,.3);border-top-color:#f97316;display:inline-block;vertical-align:middle;"></span> Loading ${remote.length} photo${remote.length === 1 ? '' : 's'}...</span>`;
+            }
+            const links = remote.length && isOnline ? await withSyncBadge('photos', 'Loading photos...', () => getSignedUrls(remote)) : new Map();
+            if (openRecId !== rec.id) return; // closed or switched meanwhile
+            const urls = [], missing = [];
+            slots.forEach(sl => { const u = sl.local || links.get(sl.path); if (u) urls.push(u); else if (isOnline) missing.push(sl.path); });
+            const idx = regImg(urls, rec.recommendation, rec.station, missing.length ? photoErrorText(missing[0]) : '', []);
+            box.innerHTML = urls.map((u, i) => `<div class="thumb"><img src="${esc(u)}" alt="" onclick="openImgAt(${idx}, ${i})"></div>`).join('') || '';
+            if (missing.length) {
+                pn.textContent = (slots.length > 1 ? `${missing.length} of ${slots.length} photos unavailable. ` : '') + photoErrorText(missing[0]);
+                pn.classList.remove('hidden');
+            }
         }
 
         function openImgAt(i, start) {
@@ -4440,6 +4587,7 @@
         // Photos without a saved link show as "loading" and are filled in here, after the screen is up
         let fetchingLinks = false;
         async function fetchMissingPhotoLinks() {
+            return; // photos load on demand when a recommendation is opened
             if (fetchingLinks || !selectedClient || !photosAwaitingLinks.length || !isOnline) return;
             fetchingLinks = true;
             const seq = siteSyncSeq;
@@ -4476,7 +4624,7 @@
         }
 
         // PROFESSIONAL PDF SERVICE REPORT GENERATOR
-        async function generatePDFReport(visitIndex = null, currentServicesDone = null) {
+        async function generatePDFReport(visitIndex = null, currentServicesDone = null, currentVisitType = null) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
 
@@ -4504,6 +4652,7 @@
             doc.setFont('helvetica', 'normal');
             doc.text(`Date: ${visitDateStr}`, 150, 14);
             doc.text(`Closed: ${visitTimeStr}`, 150, 20);
+            doc.text(`Visit: ${pastVisit ? visitTypeOf(pastVisit) : (currentVisitType || 'Routine Service')}`, 150, 26);
 
             y = 42;
             doc.setTextColor(15, 23, 42);
@@ -4643,7 +4792,10 @@
 
                     // Photos in rows of four under the recommendation
                     const imgs = [];
-                    for (const url of (item.photos || [])) {
+                    const remote = (item.allSlots || []).filter(sl => !sl.local).map(sl => sl.path);
+                    const links = remote.length && isOnline ? await getSignedUrls(remote) : new Map();
+                    const reportUrls = (item.allSlots || []).map(sl => sl.local || links.get(sl.path)).filter(Boolean);
+                    for (const url of reportUrls) {
                         try {
                             const b64 = await getBase64ImageFromUrl(url);
                             if (b64) imgs.push(b64);
@@ -4674,14 +4826,23 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function proceedToWorkSpace() {
+        async function proceedToWorkSpace() {
+            const continuing = !!visitInfo(selectedClient) || scannedBarcodesThisVisit.size > 0;
+            let type = selectedClient.visit_type || null;
+            if (!continuing) {
+                type = await chooseVisitType();
+                if (!type) return; // cancelled
+            } else if (!type) {
+                type = 'Routine Service';
+                selectedClient.visit_type = type;
+            }
             document.getElementById('siteLandingDashboard').classList.add('hidden');
             document.getElementById('visitWorkspace').classList.remove('hidden');
-            document.getElementById('activeWorkspaceTitle').textContent = `Service - ${selectedClient.Name}`;
+            document.getElementById('activeWorkspaceTitle').textContent = `${type} - ${selectedClient.Name}`;
             hideStationForm();
             renderDeviceLists();
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            markVisitStarted(selectedClient).catch(e => logAppError('Marking visit started', e));
+            if (!continuing) markVisitStarted(selectedClient, type).catch(e => logAppError('Marking visit started', e));
             if (isOnline) backgroundSyncSite('start'); // pick up anything recorded elsewhere before servicing
         }
 
@@ -4839,6 +5000,7 @@
                 notes: document.getElementById('serviceNotes').value.trim(),
                 recommendation: document.getElementById('recommendationNote').value.trim(),
                 name: document.getElementById('newLocName').value.trim(),
+                type: document.getElementById('newDeviceType').value,
                 kept: keptPhotos.map(k => k.path).join('|')
             };
         }
@@ -4881,7 +5043,7 @@
             const rec = dev.visitRec;
             if (rec && p.recommendation) {
                 document.getElementById('recommendationNote').value = p.recommendation === 'Issue photo attached' && rec.photoCount ? '' : p.recommendation;
-                keptPhotos = (rec.photoSlots || []).slice(0, (p.photos || []).length);
+                keptPhotos = (rec.photoSlots || []).slice(0, (p.photos || []).length).map(k => ({ path: k.path, url: '' }));
                 // photos that couldn't be linked are still kept on the record
                 payloadPhotoPaths(p).forEach(path => { if (!keptPhotos.some(k => k.path === path)) keptPhotos.push({ path: path, url: '' }); });
             }
@@ -4971,15 +5133,18 @@
             document.getElementById('deleteStationBtn').classList.toggle('hidden', !existingDev);
 
             if (isNew || !locName) {
-                document.getElementById('formTitle').textContent = 'Register & Service New Device';
-                document.getElementById('newStationFields').classList.remove('hidden');
+                document.getElementById('formTitle').textContent = 'Register & Service New Station';
+                document.getElementById('stationDetailsHeading').textContent = 'New barcode - register the station:';
                 document.getElementById('newLocName').value = '';
+                const types = optionLabels('station_type');
+                document.getElementById('newDeviceType').value = types.includes(devType) ? devType : (types[0] || '');
             } else {
                 document.getElementById('formTitle').textContent = `${locName} (${devType})`;
-                document.getElementById('newStationFields').classList.add('hidden');
+                document.getElementById('stationDetailsHeading').textContent = 'Station details (change the type here if needed):';
                 document.getElementById('newLocName').value = locName;
-                document.getElementById('newDeviceType').value = devType;
+                setSelectValue('newDeviceType', devType);
             }
+            document.getElementById('newStationFields').classList.remove('hidden');
 
             prefillFromThisVisit(existingDev);
             formSnapshot = JSON.stringify(readStationForm());
@@ -5332,6 +5497,9 @@
         // ===================================================================
         function openCompleteVisitModal() {
             document.getElementById('closingSiteNotes').value = '';
+            const vt = document.getElementById('closingVisitType');
+            vt.innerHTML = VISIT_TYPES.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+            vt.value = (selectedClient && selectedClient.visit_type) || 'Routine Service';
             const list = getServices(selectedClient);
             const section = document.getElementById('completeServicesSection');
             section.classList.toggle('hidden', list.length === 0);
@@ -5360,6 +5528,7 @@
             const doneIds = new Set(Array.from(document.querySelectorAll('#completeServicesList .svc-done:checked')).map(cb => cb.value));
             const services = getServices(selectedClient);
             const doneTypes = services.filter(s => doneIds.has(s.id)).map(s => s.type);
+            const visitType = document.getElementById('closingVisitType').value || 'Routine Service';
 
             // 1. Save the visit (the part that matters). Only this step can "fail" the close.
             try {
@@ -5367,6 +5536,8 @@
                 await queueLog('SITE_VISIT_SUMMARY', {
                     siteNotes: siteNotes || 'Visit completed successfully.',
                     technician: technicianLabel(),
+                    visitType: visitType,
+                    startedAt: (selectedClient && selectedClient.visit_started_at) || null,
                     servicesCompleted: doneTypes,
                     completedAt: new Date().toISOString()
                 }, null, 'Visit completed');
@@ -5391,7 +5562,7 @@
             let pdfProblem = null;
             try {
                 setSyncStatus('uploading', 'Generating PDF...');
-                await generatePDFReport(null, doneTypes);
+                await generatePDFReport(null, doneTypes, visitType);
             } catch (err) {
                 pdfProblem = err;
                 logAppError('PDF report', err);
@@ -5429,20 +5600,24 @@
         const NONE_SPECIES = 'None';
         const DEFAULT_OPTIONS = {
             prep: ['Brodifacoum Rodent Blocks', 'Alpha-Cypermethrin Spray', 'Cockroach Gel Bait'],
-            species: ['Norway Rat', 'Ship Rat', 'House Mouse', 'German Cockroach', 'American Cockroach', 'House Fly', 'Ants']
+            species: ['Norway Rat', 'Ship Rat', 'House Mouse', 'German Cockroach', 'American Cockroach', 'House Fly', 'Ants'],
+            station_type: ['External Rodent Station', 'Internal Rodent Station', 'Flying Insect Station (ILT)', 'Crawling Insect Station', 'Snap Trap']
         };
+        const OPTION_KIND_LABEL = { prep: 'preparation', species: 'species', station_type: 'station type' };
+        const OPTION_INPUT = { prep: 'newPrepInput', species: 'newSpeciesInput', station_type: 'newStationTypeInput' };
         let appOptions = [];        // [{ id, kind: 'prep' | 'species', label, sort }]
         let optionsLoadError = null;
 
         function friendlyOptionsError(err) {
             const msg = (err && err.message) || String(err);
+            if (/app_options_kind_check|violates check constraint/i.test(msg)) return 'The database does not accept station types yet. Run pestis_visit_and_station_types.sql in the Supabase SQL editor, then tap Retry.';
             if (/app_options|relation .* does not exist|schema cache/i.test(msg)) return msg + '. Run pestis_settings_update.sql in the Supabase SQL editor.';
             return msg;
         }
 
         function defaultOptions() {
             const out = [];
-            ['prep', 'species'].forEach(kind => DEFAULT_OPTIONS[kind].forEach((label, i) => out.push({ id: 'default-' + kind + '-' + i, kind, label, sort: i })));
+            ['prep', 'species', 'station_type'].forEach(kind => DEFAULT_OPTIONS[kind].forEach((label, i) => out.push({ id: 'default-' + kind + '-' + i, kind, label, sort: i })));
             return out;
         }
 
@@ -5482,9 +5657,12 @@
         }
 
         function optionLabels(kind) {
-            return appOptions.filter(o => o.kind === kind)
+            const labels = appOptions.filter(o => o.kind === kind)
                 .sort((a, b) => (a.sort || 0) - (b.sort || 0) || String(a.label).localeCompare(String(b.label)))
                 .map(o => o.label);
+            // Station types are new: until the team's list exists, offer the standard set
+            if (!labels.length && kind === 'station_type') return DEFAULT_OPTIONS.station_type.slice();
+            return labels;
         }
 
         // Fills the service form dropdowns, keeping whatever is currently selected
@@ -5500,6 +5678,15 @@
             };
             fill('prepUsed', NONE_PREP, 'prep');
             fill('speciesCaught', NONE_SPECIES, 'species');
+            // Station type: no "None" choice
+            const st = document.getElementById('newDeviceType');
+            if (st) {
+                const current = st.value;
+                const labels = optionLabels('station_type');
+                if (current && !labels.includes(current)) labels.push(current);
+                st.innerHTML = labels.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+                if (current) st.value = current;
+            }
         }
 
         function openSettingsModal() {
@@ -5520,6 +5707,11 @@
                     .sort((a, b) => (a.sort || 0) - (b.sort || 0) || String(a.label).localeCompare(String(b.label)));
                 const warn = optionsLoadError ? `<div class="row-item p-3" style="color:#ef4444;">${esc(optionsLoadError)}</div>` : '';
                 const pending = id => queueItems.some(i => i.status !== 'sent' && i.kind === 'add_option' && i.data.id === id);
+                if (!items.length && kind === 'station_type') {
+                    el.innerHTML = warn + '<div class="t-faint mb-1">Standard list in use. Adding a type saves these to your team\'s list, then any can be removed.</div>' +
+                        DEFAULT_OPTIONS.station_type.map(l => `<div class="row-item p-3 t-strong font-semibold">${esc(l)}</div>`).join('');
+                    return;
+                }
                 el.innerHTML = warn + (items.map(o => `
                     <div class="row-item p-3 flex justify-between items-center gap-2">
                         <div class="min-w-0 t-strong font-semibold break-words">${esc(o.label)}${pending(o.id) ? ' <span class="t-faint font-normal">(waiting to upload)</span>' : ''}</div>
@@ -5528,14 +5720,15 @@
             };
             render('prep', 'prepOptionsList');
             render('species', 'speciesOptionsList');
+            render('station_type', 'stationTypeOptionsList');
         }
 
         async function addOption(kind) {
-            const input = document.getElementById(kind === 'prep' ? 'newPrepInput' : 'newSpeciesInput');
+            const input = document.getElementById(OPTION_INPUT[kind]);
             const label = input.value.trim();
             if (!label) return;
-            const none = kind === 'prep' ? NONE_PREP : NONE_SPECIES;
-            if (label.toLowerCase() === none.toLowerCase() || appOptions.some(o => o.kind === kind && o.label.toLowerCase() === label.toLowerCase())) {
+            const none = kind === 'prep' ? NONE_PREP : kind === 'species' ? NONE_SPECIES : '';
+            if ((none && label.toLowerCase() === none.toLowerCase()) || appOptions.some(o => o.kind === kind && o.label.toLowerCase() === label.toLowerCase())) {
                 alert('"' + label + '" is already in the list.');
                 return;
             }
@@ -5544,7 +5737,18 @@
             appOptions.push(row);
             input.value = '';
             await cacheSet('app_options', appOptions);
-            await enqueue({ kind: 'add_option', siteName: 'Settings', label: `Added ${kind === 'prep' ? 'preparation' : 'species'} "${label}"`, data: row });
+            // First custom station type: also save the standard ones, so the list doesn't shrink to just this one
+            if (kind === 'station_type' && !appOptions.some(o => o.kind === 'station_type' && o.id !== row.id && !String(o.id).startsWith('default-'))) {
+                for (const [i, l] of DEFAULT_OPTIONS.station_type.entries()) {
+                    if (l.toLowerCase() === label.toLowerCase() || appOptions.some(o => o.kind === 'station_type' && o.label === l)) continue;
+                    const d = { id: uid(), kind: 'station_type', label: l, sort: i };
+                    appOptions.push(d);
+                    await enqueue({ kind: 'add_option', siteName: 'Settings', label: `Added station type "${l}"`, data: d });
+                }
+                row.sort = DEFAULT_OPTIONS.station_type.length + 1;
+                await cacheSet('app_options', appOptions);
+            }
+            await enqueue({ kind: 'add_option', siteName: 'Settings', label: `Added ${OPTION_KIND_LABEL[kind]} "${label}"`, data: row });
             populateOptionSelects();
             renderSettingsLists();
         }
@@ -5560,7 +5764,7 @@
             const unsentAdd = queueItems.find(i => i.status !== 'sent' && i.status !== 'uploading' && i.kind === 'add_option' && i.data.id === id);
             if (unsentAdd) await removeQueueItem(unsentAdd);
             else if (!String(id).startsWith('default-')) {
-                await enqueue({ kind: 'delete_option', siteName: 'Settings', label: `Removed ${o.kind === 'prep' ? 'preparation' : 'species'} "${o.label}"`, data: { id: id } });
+                await enqueue({ kind: 'delete_option', siteName: 'Settings', label: `Removed ${OPTION_KIND_LABEL[o.kind] || o.kind} "${o.label}"`, data: { id: id } });
             }
             updateSyncBadge();
             populateOptionSelects();
