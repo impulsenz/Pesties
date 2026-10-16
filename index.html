@@ -33,8 +33,31 @@
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-brand-500 selection:text-slate-950">
 
+    <!-- ===================== LOGIN SCREEN (shown until signed in & approved) ===================== -->
+    <div id="loginScreen" class="fixed inset-0 z-[70] bg-slate-950 flex items-center justify-center p-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full text-center space-y-5 shadow-2xl">
+            <img src="3021.jpg" alt="Logo" onerror="this.style.display='none'" class="w-16 h-16 mx-auto rounded-2xl object-cover border border-slate-700 shadow-md">
+            <div>
+                <h1 class="text-xl font-black text-white tracking-wide">PESTIS</h1>
+                <p class="text-[10px] text-brand-400 font-semibold uppercase tracking-widest">Field Operations</p>
+            </div>
+
+            <p id="authLoading" class="text-xs text-slate-400 italic">Checking session...</p>
+
+            <div id="loginPanel" class="hidden space-y-4">
+                <p class="text-xs text-slate-400">Sign in with your authorised Google account to continue.</p>
+                <button type="button" onclick="signInWithGoogle()" class="w-full bg-white hover:bg-slate-200 text-slate-900 font-bold py-3 rounded-xl text-sm cursor-pointer flex items-center justify-center gap-3 transition-all">
+                    <svg class="w-5 h-5" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                    Sign in with Google
+                </button>
+            </div>
+
+            <p id="loginMessage" class="text-xs text-red-400 hidden leading-relaxed"></p>
+        </div>
+    </div>
+
     <!-- Modern App Header Navbar -->
-    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-6 py-3.5 flex justify-between items-center shadow-lg w-full">
+    <header id="appHeader" class="hidden bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 sm:px-6 py-3.5 flex justify-between items-center shadow-lg w-full">
         <!-- Left: Branding -->
         <div class="flex items-center space-x-3">
             <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center font-black text-slate-950 text-base shadow-lg shadow-brand-500/20">
@@ -46,13 +69,20 @@
             </div>
         </div>
 
-        <!-- Right: Logo & Dynamic Sync Status Indicator Badge -->
-        <div class="flex items-center space-x-4">
+        <!-- Right: Sync status, profile, logo -->
+        <div class="flex items-center space-x-3 sm:space-x-4">
             <div id="syncStatusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 transition-all duration-300">
                 <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span id="syncText">Online & Synced</span>
             </div>
-            
+
+            <!-- Profile chip -->
+            <button type="button" onclick="openProfileModal()" class="flex items-center gap-2.5 bg-slate-800/70 hover:bg-slate-800 border border-slate-700 rounded-xl pl-1.5 pr-3 py-1.5 cursor-pointer transition-all">
+                <img id="headerAvatar" src="" alt="" class="w-7 h-7 rounded-lg object-cover bg-slate-700 hidden">
+                <span id="headerAvatarFallback" class="w-7 h-7 rounded-lg bg-brand-600 text-slate-950 font-black text-xs flex items-center justify-center">?</span>
+                <span id="headerName" class="text-xs font-bold text-slate-200 hidden sm:block max-w-[8rem] truncate"></span>
+            </button>
+
             <!-- User Logo Integration -->
             <div class="flex items-center">
                 <img src="3021.jpg" alt="Pesties Logo" class="w-10 h-10 rounded-xl object-cover border border-slate-700 shadow-md">
@@ -61,12 +91,12 @@
     </header>
 
     <!-- Main Content Container (Full-Screen Edge-to-Edge Fluid Layout) -->
-    <main class="flex-1 w-full max-w-none px-4 sm:px-6 lg:px-10 py-8 space-y-8">
+    <main id="appRoot" class="hidden flex-1 w-full max-w-none px-4 sm:px-6 lg:px-10 py-8 space-y-8">
 
         <!-- 1. Client Site Selector & Add Client Section -->
         <section id="siteSelectorSection" class="bg-slate-900/90 backdrop-blur-md rounded-2xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6 w-full relative overflow-hidden">
             <div class="absolute top-0 right-0 w-96 h-96 bg-brand-500/5 rounded-full blur-3xl pointer-events-none"></div>
-            
+
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800/80 pb-5">
                 <div>
                     <h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Site Management</h2>
@@ -319,7 +349,7 @@
                 <!-- Recommendations & Issue Capture Section -->
                 <div class="bg-slate-900 p-5 rounded-2xl border border-amber-500/30 space-y-4">
                     <h5 class="text-xs font-bold text-amber-400 uppercase tracking-widest">Corrective Action & Issue Photo Logging</h5>
-                    
+
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 items-center">
                         <div class="sm:col-span-2 space-y-1.5">
                             <label class="block text-xs text-slate-400">Corrective Action / Recommendation</label>
@@ -329,7 +359,7 @@
                         <div class="space-y-2 flex flex-col items-center sm:items-start">
                             <label class="block text-xs text-slate-400">Issue Photo Attachment</label>
                             <input type="file" id="issuePhotoInput" accept="image/*" capture="environment" class="text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-600 file:text-slate-950 hover:file:bg-amber-500 cursor-pointer w-full bg-slate-950 p-2 rounded-xl border border-slate-800">
-                            
+
                             <div id="photoPreviewContainer" class="hidden pt-1">
                                 <img id="photoPreview" class="h-20 w-20 rounded-xl border border-slate-700 object-cover cursor-pointer shadow-lg" onclick="viewFullImage(this.src, document.getElementById('recommendationNote').value)" alt="Issue Preview">
                             </div>
@@ -360,6 +390,57 @@
 
     </main>
 
+    <!-- PROFILE & TEAM ACCESS MODAL -->
+    <div id="profileModal" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex flex-col justify-center items-center p-4">
+        <div class="bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-6 shadow-2xl">
+            <div class="flex justify-between items-start">
+                <h3 class="font-black text-lg text-brand-400">My Profile</h3>
+                <button type="button" onclick="closeProfileModal()" class="text-slate-500 hover:text-slate-300 text-xs font-semibold cursor-pointer">✕ Close</button>
+            </div>
+
+            <div class="flex items-center gap-4 bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                <img id="profileAvatarLarge" src="" alt="" class="w-16 h-16 rounded-2xl object-cover bg-slate-800 hidden">
+                <span id="profileAvatarLargeFallback" class="w-16 h-16 rounded-2xl bg-brand-600 text-slate-950 font-black text-2xl flex items-center justify-center">?</span>
+                <div class="min-w-0">
+                    <p id="profileNameLarge" class="text-base font-black text-white truncate"></p>
+                    <p id="profileEmailLarge" class="text-xs text-slate-400 font-mono truncate"></p>
+                    <span id="profileRoleBadge" class="inline-block mt-1.5 text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md border bg-brand-500/10 text-brand-400 border-brand-500/20"></span>
+                </div>
+            </div>
+
+            <!-- Admin-only: team access -->
+            <div id="adminPanel" class="hidden space-y-5">
+                <div class="border-t border-slate-800 pt-5">
+                    <h4 class="text-xs font-bold text-amber-400 uppercase tracking-widest">Team Access (Admin)</h4>
+                    <p class="text-xs text-slate-400 mt-1">Pre-approve a staff Google email, or approve / revoke people who have already signed in.</p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="email" id="adminNewEmail" placeholder="staff@gmail.com" class="flex-1 bg-slate-950 border border-slate-800 p-3 rounded-xl text-sm text-white focus:border-brand-500 outline-none">
+                    <select id="adminNewRole" class="bg-slate-950 border border-slate-800 p-3 rounded-xl text-sm text-white outline-none cursor-pointer">
+                        <option value="technician">Technician</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                    <button type="button" onclick="addAllowedEmail()" class="bg-brand-600 hover:bg-brand-500 text-slate-950 font-extrabold text-xs px-5 py-3 rounded-xl cursor-pointer">Approve Email</button>
+                </div>
+
+                <div>
+                    <h5 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Users who have signed in</h5>
+                    <div id="adminProfilesList" class="space-y-2 text-xs"></div>
+                </div>
+
+                <div>
+                    <h5 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Pre-approved emails</h5>
+                    <div id="adminAllowedList" class="space-y-2 text-xs"></div>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button type="button" onclick="signOut()" class="bg-red-600/90 hover:bg-red-500 text-white font-extrabold text-xs px-6 py-3 rounded-xl cursor-pointer">Sign Out</button>
+            </div>
+        </div>
+    </div>
+
     <!-- FULLSCREEN CAMERA SCANNER MODAL WITH FLASH TOGGLE -->
     <div id="fullscreenScannerModal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex flex-col justify-between p-4 sm:p-6">
         <div class="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800 max-w-xl w-full mx-auto shadow-2xl">
@@ -373,7 +454,7 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="flex-1 flex items-center justify-center p-2">
             <div id="fullscreenReader" class="w-full max-w-lg overflow-hidden rounded-3xl bg-black border-2 border-brand-500 shadow-2xl"></div>
         </div>
@@ -388,7 +469,7 @@
         <div class="bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl max-w-md w-full space-y-5 shadow-2xl">
             <h3 class="font-black text-base text-sky-400">Manual Station Lookup / Barcode Entry</h3>
             <p class="text-xs text-slate-400">Use this option if a barcode sticker is damaged or camera cannot scan.</p>
-            
+
             <div class="space-y-3">
                 <div>
                     <label class="block text-xs text-slate-300 mb-1.5 font-medium">Enter Barcode ID Manually</label>
@@ -408,7 +489,7 @@
         <div class="bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl max-w-lg w-full space-y-5 shadow-2xl">
             <h3 class="font-black text-lg text-brand-400">Complete & Close Site Visit</h3>
             <p class="text-xs text-slate-400">Add overall site notes or general observations before finalizing visit & generating PDF report.</p>
-            
+
             <div>
                 <label class="block text-xs text-slate-300 mb-1.5 font-bold">Overall Site Summary Notes</label>
                 <textarea id="closingSiteNotes" rows="4" placeholder="Client was present. All exterior bait stations serviced successfully..." class="w-full bg-slate-950 border border-slate-800 p-3.5 rounded-xl text-sm text-white focus:border-brand-500 outline-none"></textarea>
@@ -422,7 +503,7 @@
     </div>
 
     <!-- FULLSCREEN IMAGE MODAL VIEWER -->
-    <div id="imageModal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex flex-col justify-center items-center p-6 space-y-4">
+    <div id="imageModal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur-md z-[65] flex flex-col justify-center items-center p-6 space-y-4">
         <img id="fullImageDisplay" class="max-h-[70vh] max-w-full rounded-2xl border border-slate-800 object-contain shadow-2xl">
         <div id="modalTextDisplay" class="bg-slate-900 border border-slate-800 p-4 rounded-2xl text-slate-200 text-sm max-w-xl w-full text-center font-medium shadow-xl"></div>
         <button type="button" onclick="closeImageModal()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-6 py-3 rounded-xl cursor-pointer transition-all">Close Viewer</button>
@@ -432,9 +513,13 @@
     <script>
         const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
+        const PHOTO_BUCKET = 'station-photos';
+        const SIGNED_URL_SECONDS = 6 * 60 * 60; // photo links stay valid for 6 hours
 
         const { createClient } = supabase;
-        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
 
         let clientsData = [];
         let selectedClient = null;
@@ -449,7 +534,227 @@
         let selectedFileBlob = null;
         let isUploadingActive = false;
 
-        // Sync Status Manager
+        // Auth state
+        let currentUser = null;
+        let currentProfile = null;
+        let appStarted = false;
+        let adminProfiles = [];
+        let adminAllowed = [];
+
+        // ---------- Helpers ----------
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        // Registry so we never have to put user text inside inline onclick strings
+        const imageRegistry = [];
+        function regImg(src, text) {
+            imageRegistry.push({ src: src, text: text });
+            return imageRegistry.length - 1;
+        }
+        function openImg(i) {
+            const r = imageRegistry[i];
+            if (r) viewFullImage(r.src, r.text);
+        }
+
+        // ===================================================================
+        //  AUTHENTICATION (Google via Supabase)
+        // ===================================================================
+        function showLoginMessage(msg) {
+            const el = document.getElementById('loginMessage');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+        }
+
+        function showLoginPanel() {
+            document.getElementById('authLoading').classList.add('hidden');
+            document.getElementById('loginPanel').classList.remove('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('appRoot').classList.add('hidden');
+            document.getElementById('appHeader').classList.add('hidden');
+        }
+
+        async function signInWithGoogle() {
+            const { error } = await _supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin + window.location.pathname,
+                    queryParams: { prompt: 'select_account' }
+                }
+            });
+            if (error) showLoginMessage('Sign-in failed: ' + error.message);
+        }
+
+        async function signOut() {
+            try { await stopFullscreenCameraScanner(); } catch (e) {}
+            await _supabase.auth.signOut();
+            location.href = window.location.origin + window.location.pathname;
+        }
+
+        function applyProfileToUI() {
+            const name = (currentProfile && currentProfile.full_name) || currentUser.email;
+            const initial = (name || '?').trim().charAt(0).toUpperCase();
+            const avatar = currentProfile && currentProfile.avatar_url;
+
+            document.getElementById('headerName').textContent = name;
+            document.getElementById('headerAvatarFallback').textContent = initial;
+            document.getElementById('profileNameLarge').textContent = name;
+            document.getElementById('profileEmailLarge').textContent = currentUser.email;
+            document.getElementById('profileAvatarLargeFallback').textContent = initial;
+            document.getElementById('profileRoleBadge').textContent = currentProfile.role || 'technician';
+
+            ['headerAvatar', 'profileAvatarLarge'].forEach(id => {
+                const img = document.getElementById(id);
+                const fb = document.getElementById(id + 'Fallback');
+                if (avatar) {
+                    img.src = avatar;
+                    img.referrerPolicy = 'no-referrer';
+                    img.classList.remove('hidden');
+                    fb.classList.add('hidden');
+                    img.onerror = () => { img.classList.add('hidden'); fb.classList.remove('hidden'); };
+                }
+            });
+        }
+
+        async function initAuth() {
+            try {
+                const { data: { session }, error } = await _supabase.auth.getSession();
+                if (error) throw error;
+
+                if (!session) {
+                    showLoginPanel();
+                    return;
+                }
+
+                currentUser = session.user;
+
+                const { data: profile, error: profErr } = await _supabase
+                    .from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
+
+                if (profErr) throw profErr;
+
+                if (!profile || !profile.approved) {
+                    const email = currentUser.email;
+                    await _supabase.auth.signOut();
+                    showLoginPanel();
+                    showLoginMessage('Signed in as ' + email + ', but this account has not been approved yet. Ask your administrator to approve your email, then sign in again.');
+                    return;
+                }
+
+                currentProfile = profile;
+                applyProfileToUI();
+
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('appHeader').classList.remove('hidden');
+                document.getElementById('appRoot').classList.remove('hidden');
+                appStarted = true;
+
+                loadClients();
+            } catch (err) {
+                console.error('Auth init error:', err);
+                showLoginPanel();
+                showLoginMessage('Could not verify your session: ' + (err.message || err) + '. Check your connection and try again.');
+            }
+        }
+
+        _supabase.auth.onAuthStateChange((event) => {
+            // If the session ends while the app is open (e.g. signed out in another tab), return to login.
+            if (event === 'SIGNED_OUT' && appStarted) {
+                location.href = window.location.origin + window.location.pathname;
+            }
+        });
+
+        // ---------- Profile modal & admin panel ----------
+        function openProfileModal() {
+            document.getElementById('profileModal').classList.remove('hidden');
+            const isAdmin = currentProfile && currentProfile.role === 'admin';
+            document.getElementById('adminPanel').classList.toggle('hidden', !isAdmin);
+            if (isAdmin) loadAdminPanel();
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.add('hidden');
+        }
+
+        async function loadAdminPanel() {
+            const profList = document.getElementById('adminProfilesList');
+            const allowedList = document.getElementById('adminAllowedList');
+            profList.innerHTML = '<span class="text-slate-500 italic">Loading...</span>';
+            allowedList.innerHTML = '';
+
+            try {
+                const [p, a] = await Promise.all([
+                    _supabase.from('profiles').select('*').order('created_at', { ascending: true }),
+                    _supabase.from('allowed_emails').select('*').order('added_at', { ascending: true })
+                ]);
+                if (p.error) throw p.error;
+                if (a.error) throw a.error;
+                adminProfiles = p.data || [];
+                adminAllowed = a.data || [];
+            } catch (err) {
+                profList.innerHTML = '<span class="text-red-400">Could not load: ' + esc(err.message) + '</span>';
+                return;
+            }
+
+            profList.innerHTML = adminProfiles.map((u, i) => {
+                const isMe = u.id === currentUser.id;
+                const badge = u.approved
+                    ? '<span class="text-brand-400 bg-brand-950/60 border border-brand-500/20 px-2 py-0.5 rounded-lg">Approved</span>'
+                    : '<span class="text-amber-400 bg-amber-950/60 border border-amber-500/20 px-2 py-0.5 rounded-lg">Pending</span>';
+                const btn = isMe ? '<span class="text-slate-500 italic">You</span>' :
+                    `<button type="button" onclick="toggleApproval(${i})" class="${u.approved ? 'bg-red-600/80 hover:bg-red-500 text-white' : 'bg-brand-600 hover:bg-brand-500 text-slate-950'} font-bold px-3 py-1.5 rounded-lg cursor-pointer">${u.approved ? 'Revoke' : 'Approve'}</button>`;
+                return `
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex flex-wrap justify-between items-center gap-2">
+                        <div class="min-w-0">
+                            <div class="font-bold text-white truncate">${esc(u.full_name || u.email)}</div>
+                            <div class="text-slate-400 font-mono truncate">${esc(u.email)} • ${esc(u.role)}</div>
+                        </div>
+                        <div class="flex items-center gap-2">${badge}${btn}</div>
+                    </div>`;
+            }).join('') || '<span class="text-slate-500 italic">No users yet.</span>';
+
+            allowedList.innerHTML = adminAllowed.map((a2, i) => `
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex justify-between items-center gap-2">
+                    <div class="font-mono text-slate-300 truncate">${esc(a2.email)} <span class="text-slate-500">(${esc(a2.role)})</span></div>
+                    <button type="button" onclick="removeAllowedEmail(${i})" class="text-red-400 hover:text-red-300 font-bold cursor-pointer">Remove</button>
+                </div>`).join('') || '<span class="text-slate-500 italic">No pre-approved emails.</span>';
+        }
+
+        async function toggleApproval(i) {
+            const u = adminProfiles[i];
+            if (!u || u.id === currentUser.id) return;
+            const { error } = await _supabase.from('profiles').update({ approved: !u.approved }).eq('id', u.id);
+            if (error) { alert('Could not update: ' + error.message); return; }
+            loadAdminPanel();
+        }
+
+        async function addAllowedEmail() {
+            const email = document.getElementById('adminNewEmail').value.trim().toLowerCase();
+            const role = document.getElementById('adminNewRole').value;
+            if (!email || !email.includes('@')) { alert('Enter a valid email address.'); return; }
+
+            const { error } = await _supabase.from('allowed_emails').upsert({ email: email, role: role });
+            if (error) { alert('Could not add: ' + error.message); return; }
+
+            // If they have already signed in (and were turned away), approve their existing profile too.
+            await _supabase.from('profiles').update({ approved: true, role: role }).eq('email', email);
+
+            document.getElementById('adminNewEmail').value = '';
+            loadAdminPanel();
+        }
+
+        async function removeAllowedEmail(i) {
+            const a = adminAllowed[i];
+            if (!a) return;
+            if (!confirm('Remove ' + a.email + ' from the pre-approved list?\n(Revoke their access separately in the users list above.)')) return;
+            const { error } = await _supabase.from('allowed_emails').delete().eq('email', a.email);
+            if (error) { alert('Could not remove: ' + error.message); return; }
+            loadAdminPanel();
+        }
+
+        // ===================================================================
+        //  SYNC STATUS
+        // ===================================================================
         function setSyncStatus(status, message) {
             const badge = document.getElementById('syncStatusBadge');
             const dot = document.getElementById('syncDot');
@@ -475,17 +780,16 @@
             }
         }
 
-        // Periodic connectivity ping to google.com every 5 seconds using 'no-cors' image fetch mechanism
+        // Periodic connectivity ping every 5 seconds using 'no-cors' fetch
         async function checkInternetConnectivity() {
             if (!navigator.onLine) {
                 setSyncStatus('error');
                 return;
             }
             try {
-                // Fetch a small favicon or transparent pixel from google with cache buster
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 4000);
-                
+
                 await fetch('https://www.google.com/favicon.ico', {
                     mode: 'no-cors',
                     cache: 'no-store',
@@ -501,7 +805,6 @@
             }
         }
 
-        // Start 5-second interval heartbeat ping
         setInterval(checkInternetConnectivity, 5000);
 
         window.addEventListener('online', () => checkInternetConnectivity());
@@ -521,22 +824,56 @@
             reader.readAsDataURL(file);
         });
 
+        // ===================================================================
+        //  PRIVATE PHOTO STORAGE (signed URLs)
+        // ===================================================================
+        // Uploads to the private bucket and returns the storage PATH (not a public URL).
         async function uploadPhotoToBucket(file, barcode) {
             if (!file) return null;
-            const fileExt = file.name.split('.').pop() || 'jpg';
-            const fileName = `${selectedClient.id}/${barcode}_${Date.now()}.${fileExt}`;
+            const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase();
+            const safeBarcode = String(barcode).replace(/[^a-zA-Z0-9_-]/g, '_');
+            const path = `${selectedClient.id}/${safeBarcode}_${Date.now()}.${fileExt}`;
 
-            const { data, error } = await _supabase.storage
-                .from('station-photos')
-                .upload(fileName, file, { cacheControl: '3600', upsert: true });
+            const { error } = await _supabase.storage
+                .from(PHOTO_BUCKET)
+                .upload(path, file, { cacheControl: '3600', upsert: false });
 
-            if (error) {
-                console.warn("Bucket upload error:", error.message);
-                return null;
+            if (error) throw new Error('Photo upload failed: ' + error.message);
+            return path;
+        }
+
+        // Old records stored full public URLs; new ones store the path. Normalise both to a path.
+        function toStoragePath(p) {
+            if (!p) return null;
+            if (/^https?:\/\//i.test(p)) {
+                const marker = '/' + PHOTO_BUCKET + '/';
+                const i = p.indexOf(marker);
+                if (i === -1) return null;
+                return decodeURIComponent(p.substring(i + marker.length).split('?')[0]);
             }
+            return p;
+        }
 
-            const { data: publicData } = _supabase.storage.from('station-photos').getPublicUrl(fileName);
-            return publicData ? publicData.publicUrl : null;
+        async function signedUrlForPath(path) {
+            if (!path) return null;
+            const { data, error } = await _supabase.storage.from(PHOTO_BUCKET).createSignedUrl(path, SIGNED_URL_SECONDS);
+            if (error) { console.warn('Signed URL error:', error.message); return null; }
+            return data.signedUrl;
+        }
+
+        async function buildSignedUrlMap(rows) {
+            const paths = new Set();
+            rows.forEach(r => {
+                const p = toStoragePath(r.payload && (r.payload.photo || r.payload.image));
+                if (p) paths.add(p);
+            });
+            const map = new Map();
+            if (paths.size === 0) return map;
+
+            const { data, error } = await _supabase.storage.from(PHOTO_BUCKET).createSignedUrls(Array.from(paths), SIGNED_URL_SECONDS);
+            if (error) { console.warn('Batch signed URL error:', error.message); return map; }
+            (data || []).forEach(d => { if (d.signedUrl && !d.error) map.set(d.path, d.signedUrl); });
+            return map;
         }
 
         function viewFullImage(src, text) {
@@ -544,11 +881,10 @@
             const textDiv = document.getElementById('modalTextDisplay');
             if (text && text.trim() !== '') {
                 textDiv.textContent = text;
-                textDiv.classList.remove('hidden');
             } else {
                 textDiv.textContent = 'No description provided for this photo.';
-                textDiv.classList.remove('hidden');
             }
+            textDiv.classList.remove('hidden');
             document.getElementById('imageModal').classList.remove('hidden');
         }
 
@@ -556,6 +892,9 @@
             document.getElementById('imageModal').classList.add('hidden');
         }
 
+        // ===================================================================
+        //  CLIENTS
+        // ===================================================================
         async function loadClients() {
             const select = document.getElementById('clientSelect');
             try {
@@ -564,10 +903,11 @@
                 clientsData = data || [];
                 select.innerHTML = '<option value="">-- Select Site from Database --</option>';
                 clientsData.forEach(c => {
-                    select.innerHTML += `<option value="${c.id}">${c.Name} (${c.Address || 'No address'})</option>`;
+                    select.innerHTML += `<option value="${esc(c.id)}">${esc(c.Name)} (${esc(c.Address || 'No address')})</option>`;
                 });
             } catch (err) {
                 console.error("Error loading clients:", err.message);
+                alert('Could not load client sites: ' + err.message);
             }
         }
 
@@ -590,8 +930,8 @@
 
             try {
                 setSyncStatus('uploading', 'Saving Site...');
-                const { error } = await _supabase.from('clients').insert([{ 
-                    Name: name, 
+                const { error } = await _supabase.from('clients').insert([{
+                    Name: name,
                     Address: address,
                     Contact: contact || 'Manager',
                     Email: email || '',
@@ -622,7 +962,7 @@
             selectedClient = clientsData.find(c => c.id == clientId);
 
             document.getElementById('siteSelectorSection').classList.add('hidden');
-            
+
             const progressModal = document.getElementById('syncProgressModal');
             const progressBarFill = document.getElementById('progressBarFill');
             const progressPercent = document.getElementById('progressPercent');
@@ -648,6 +988,13 @@
 
                 if (error) throw error;
 
+                progressPercent.textContent = '80%';
+                progressBarFill.style.width = '80%';
+                progressStatusText.textContent = 'Securing issue photos...';
+
+                const rows = data || [];
+                const signedMap = await buildSignedUrlMap(rows);
+
                 progressPercent.textContent = '90%';
                 progressBarFill.style.width = '90%';
                 progressStatusText.textContent = 'Building site dashboard...';
@@ -657,18 +1004,19 @@
                 const activeScannedSet = new Set();
 
                 let latestVisitTimestamp = 0;
-                (data || []).forEach(row => {
+                rows.forEach(row => {
                     if (row.barcode_id === 'SITE_VISIT_SUMMARY') {
                         const t = new Date(row.created_at).getTime();
                         if (t > latestVisitTimestamp) latestVisitTimestamp = t;
                     }
                 });
 
-                (data || []).forEach(row => {
+                rows.forEach(row => {
                     if (row.barcode_id === 'SITE_VISIT_SUMMARY') {
                         visitMap.set(row.created_at, {
                             date: row.created_at,
-                            summaryNote: row.payload.siteNotes || 'No notes provided'
+                            summaryNote: row.payload.siteNotes || 'No notes provided',
+                            technician: row.payload.technician || ''
                         });
                         return;
                     }
@@ -688,11 +1036,12 @@
 
                     existing.locationName = row.payload.locationName || existing.locationName;
                     existing.deviceType = row.payload.deviceType || existing.deviceType;
-                    
-                    const recText = row.payload.recommendation || row.payload.recommendationNote || null;
-                    const photoUrl = row.payload.photo || row.payload.image || null;
 
-                    if (recText || photoUrl) {
+                    const recText = row.payload.recommendation || row.payload.recommendationNote || null;
+                    const rawPhoto = row.payload.photo || row.payload.image || null;
+                    const photoUrl = rawPhoto ? (signedMap.get(toStoragePath(rawPhoto)) || null) : null;
+
+                    if (recText || rawPhoto) {
                         existing.recommendationsHistory.push({
                             recommendation: recText || 'Issue photo attached',
                             photo: photoUrl,
@@ -715,7 +1064,7 @@
 
                 progressModal.classList.add('hidden');
                 setSyncStatus('synced');
-                
+
                 document.getElementById('siteLandingTitle').textContent = selectedClient.Name;
                 document.getElementById('siteLandingAddress').textContent = selectedClient.Address || 'No address specified';
                 document.getElementById('siteLandingContact').textContent = `Manager: ${selectedClient.Contact || 'Not Specified'}`;
@@ -750,34 +1099,42 @@
             if (allRecs.length === 0) {
                 recsContainer.innerHTML = '<span class="text-slate-500 italic">No active recommendations on record for this site.</span>';
             } else {
+                let html = '';
                 allRecs.forEach(item => {
-                    recsContainer.innerHTML += `
+                    const photoBtn = item.photo
+                        ? `<button type="button" onclick="openImg(${regImg(item.photo, item.recommendation)})" class="text-sky-400 text-xs underline font-semibold cursor-pointer shrink-0 ml-2">View Photo</button>`
+                        : '';
+                    html += `
                         <div class="bg-slate-900 p-3 rounded-xl border border-amber-500/20 flex justify-between items-center">
                             <div>
-                                <span class="font-bold text-amber-400">${item.station}:</span> ${item.recommendation}
+                                <span class="font-bold text-amber-400">${esc(item.station)}:</span> ${esc(item.recommendation)}
                             </div>
-                            ${item.photo ? `<button onclick="viewFullImage('${item.photo}', '${item.recommendation}')" class="text-sky-400 text-xs underline font-semibold cursor-pointer">View Photo</button>` : ''}
+                            ${photoBtn}
                         </div>
                     `;
                 });
+                recsContainer.innerHTML = html;
             }
 
             if (sitePastVisits.length === 0) {
                 visitsContainer.innerHTML = '<span class="text-slate-500 italic">No past visit history recorded yet.</span>';
             } else {
+                let html = '';
                 sitePastVisits.forEach((v, index) => {
                     const visitDateStr = new Date(v.date).toLocaleDateString();
-                    visitsContainer.innerHTML += `
-                        <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 flex justify-between items-center">
+                    const tech = v.technician ? ` <span class="text-slate-500">(${esc(v.technician)})</span>` : '';
+                    html += `
+                        <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 flex justify-between items-center gap-2">
                             <div>
-                                <span class="font-bold text-brand-400">${visitDateStr}:</span> ${v.summaryNote}
+                                <span class="font-bold text-brand-400">${esc(visitDateStr)}:</span> ${esc(v.summaryNote)}${tech}
                             </div>
-                            <button onclick="generatePDFReport(${index})" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow cursor-pointer">
+                            <button type="button" onclick="generatePDFReport(${index})" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow cursor-pointer shrink-0">
                                 Download PDF Report
                             </button>
                         </div>
                     `;
                 });
+                visitsContainer.innerHTML = html;
             }
         }
 
@@ -795,13 +1152,16 @@
             }
         }
 
-        // PROFESSIONAL PDF SERVICE REPORT GENERATOR (Includes Service Notes + 100% Bigger Images & Text Wrapping)
+        // PROFESSIONAL PDF SERVICE REPORT GENERATOR
         async function generatePDFReport(visitIndex = null) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
 
             const visitDateStr = visitIndex !== null && sitePastVisits[visitIndex] ? new Date(sitePastVisits[visitIndex].date).toLocaleDateString() : new Date().toLocaleDateString();
             const summaryNote = visitIndex !== null && sitePastVisits[visitIndex] ? sitePastVisits[visitIndex].summaryNote : (document.getElementById('closingSiteNotes').value.trim() || 'Current / Recent Visit');
+            const technicianName = (visitIndex !== null && sitePastVisits[visitIndex] && sitePastVisits[visitIndex].technician)
+                ? sitePastVisits[visitIndex].technician
+                : ((currentProfile && (currentProfile.full_name || currentProfile.email)) || '');
 
             let y = 15;
 
@@ -821,13 +1181,17 @@
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(12);
             doc.text("Customer & Location Details", 14, y);
-            
+
             y += 6;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(10);
             doc.text(`Client Name: ${selectedClient.Name}`, 14, y);
             doc.text(`Address: ${selectedClient.Address || 'N/A'}`, 14, y + 6);
             doc.text(`Primary Contact: ${selectedClient.Contact || 'N/A'} (${selectedClient.Email || 'No email'})`, 14, y + 12);
+            if (technicianName) {
+                doc.text(`Technician: ${technicianName}`, 14, y + 18);
+                y += 6;
+            }
 
             y += 24;
             doc.setFont('helvetica', 'bold');
@@ -836,7 +1200,7 @@
             y += 6;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(10);
-            
+
             const splitSummary = doc.splitTextToSize(summaryNote, 180);
             doc.text(splitSummary, 14, y);
             y += (splitSummary.length * 6) + 10;
@@ -882,6 +1246,7 @@
                 doc.setFillColor(241, 245, 249);
                 doc.rect(14, y - 4, 182, 30, 'F');
 
+                doc.setTextColor(15, 23, 42);
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(10);
                 doc.text(`${d.locationName} (${d.deviceType})`, 18, y + 1);
@@ -892,7 +1257,7 @@
                 y += 7;
                 doc.text(`Activity: ${d.lastPayload.activityLevel || 'None'}  |  Prep: ${d.lastPayload.prepUsed || 'None'}  |  Species: ${d.lastPayload.speciesCaught || 'None'}`, 18, y + 1);
                 y += 6;
-                
+
                 const noteText = `Service Notes: ${d.lastPayload.notes || 'None recorded'}`;
                 const splitNotes = doc.splitTextToSize(noteText, 174);
                 doc.text(splitNotes, 18, y + 1);
@@ -900,7 +1265,7 @@
                 y += (splitNotes.length * 5) + 12;
             }
 
-            // Recommendations & 100% Bigger Images (60x60mm) with Structured Wrapping
+            // Recommendations & Images
             let allRecsWithPhotos = [];
             siteDevices.forEach(d => {
                 d.recommendationsHistory.forEach(r => {
@@ -929,7 +1294,7 @@
                     doc.setFontSize(9);
                     doc.text(`Station: ${item.station} (${new Date(item.date).toLocaleDateString()})`, 14, y);
                     y += 5;
-                    
+
                     doc.setFont('helvetica', 'normal');
                     const splitRec = doc.splitTextToSize(item.recommendation, 110);
                     doc.text(splitRec, 14, y);
@@ -940,7 +1305,8 @@
                         try {
                             const base64Img = await getBase64ImageFromUrl(item.photo);
                             if (base64Img) {
-                                doc.addImage(base64Img, 'JPEG', 130, y - 4, 60, 60);
+                                const fmt = base64Img.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+                                doc.addImage(base64Img, fmt, 130, y - 4, 60, 60);
                                 spaceNeeded = Math.max(spaceNeeded, 65);
                             }
                         } catch (err) {
@@ -973,57 +1339,49 @@
             filterStationsList();
         }
 
+        function deviceRowHtml(d, isScanned) {
+            const hasRecs = d.recommendationsHistory.length > 0 ? `<span class="text-amber-400 text-xs font-semibold ml-1">[Issues Logged: ${d.recommendationsHistory.length}]</span>` : '';
+            const badge = isScanned
+                ? '<span class="text-brand-400 text-xs bg-brand-950/60 border border-brand-500/20 px-2.5 py-1 rounded-lg">Serviced ✓</span>'
+                : '<span class="text-amber-400 text-xs bg-amber-950/60 border border-amber-500/20 px-2.5 py-1 rounded-lg">Unscanned</span>';
+            return `
+                <div data-barcode="${esc(d.barcode_id)}" data-scanned="${isScanned ? '1' : '0'}" onclick="openDeviceFromEl(this)" class="bg-slate-900 hover:bg-slate-800/80 p-3.5 rounded-xl border border-slate-800 cursor-pointer transition-all flex justify-between items-center group">
+                    <div>
+                        <div class="font-bold text-white text-sm group-hover:text-brand-400 transition-colors">${esc(d.locationName)} ${hasRecs}</div>
+                        <div class="text-slate-400 text-xs">${esc(d.deviceType)} • <span class="font-mono text-sky-400">${esc(d.barcode_id)}</span></div>
+                    </div>
+                    ${badge}
+                </div>
+            `;
+        }
+
+        function openDeviceFromEl(el) {
+            const barcode = el.dataset.barcode;
+            const dev = siteDevices.find(d => d.barcode_id === barcode);
+            if (!dev) return;
+            openDeviceForm(dev.barcode_id, dev.locationName, dev.deviceType, el.dataset.scanned === '1');
+        }
+
         function filterStationsList() {
             const query = (document.getElementById('stationSearchInput').value || '').toLowerCase();
             const unscannedList = document.getElementById('unscannedList');
             const scannedList = document.getElementById('scannedList');
 
-            const unscanned = siteDevices.filter(d => !scannedBarcodesThisVisit.has(d.barcode_id) && 
-                (d.locationName.toLowerCase().includes(query) || d.barcode_id.toLowerCase().includes(query) || d.deviceType.toLowerCase().includes(query))
-            );
-            
-            const scanned = siteDevices.filter(d => scannedBarcodesThisVisit.has(d.barcode_id) && 
-                (d.locationName.toLowerCase().includes(query) || d.barcode_id.toLowerCase().includes(query) || d.deviceType.toLowerCase().includes(query))
-            );
+            const matches = d => d.locationName.toLowerCase().includes(query) || d.barcode_id.toLowerCase().includes(query) || d.deviceType.toLowerCase().includes(query);
+
+            const unscanned = siteDevices.filter(d => !scannedBarcodesThisVisit.has(d.barcode_id) && matches(d));
+            const scanned = siteDevices.filter(d => scannedBarcodesThisVisit.has(d.barcode_id) && matches(d));
 
             document.getElementById('unscannedCount').textContent = unscanned.length;
             document.getElementById('scannedCount').textContent = scanned.length;
 
-            if (unscanned.length === 0) {
-                unscannedList.innerHTML = '<span class="text-slate-500 italic">No matching unscanned devices found.</span>';
-            } else {
-                unscannedList.innerHTML = '';
-                unscanned.forEach(d => {
-                    const hasRecs = d.recommendationsHistory.length > 0 ? `<span class="text-amber-400 text-xs font-semibold ml-1">[Issues Logged: ${d.recommendationsHistory.length}]</span>` : '';
-                    unscannedList.innerHTML += `
-                        <div onclick="openDeviceForm('${d.barcode_id}', '${d.locationName}', '${d.deviceType}', false)" class="bg-slate-900 hover:bg-slate-800/80 p-3.5 rounded-xl border border-slate-800 cursor-pointer transition-all flex justify-between items-center group">
-                            <div>
-                                <div class="font-bold text-white text-sm group-hover:text-brand-400 transition-colors">${d.locationName} ${hasRecs}</div>
-                                <div class="text-slate-400 text-xs">${d.deviceType} • <span class="font-mono text-sky-400">${d.barcode_id}</span></div>
-                            </div>
-                            <span class="text-amber-400 text-xs bg-amber-950/60 border border-amber-500/20 px-2.5 py-1 rounded-lg">Unscanned</span>
-                        </div>
-                    `;
-                });
-            }
+            unscannedList.innerHTML = unscanned.length === 0
+                ? '<span class="text-slate-500 italic">No matching unscanned devices found.</span>'
+                : unscanned.map(d => deviceRowHtml(d, false)).join('');
 
-            if (scanned.length === 0) {
-                scannedList.innerHTML = '<span class="text-slate-500 italic">No matching scanned devices found.</span>';
-            } else {
-                scannedList.innerHTML = '';
-                scanned.forEach(d => {
-                    const hasRecs = d.recommendationsHistory.length > 0 ? `<span class="text-amber-400 text-xs font-semibold ml-1">[Issues Logged: ${d.recommendationsHistory.length}]</span>` : '';
-                    scannedList.innerHTML += `
-                        <div onclick="openDeviceForm('${d.barcode_id}', '${d.locationName}', '${d.deviceType}', true)" class="bg-slate-900 hover:bg-slate-800/80 p-3.5 rounded-xl border border-slate-800 cursor-pointer transition-all flex justify-between items-center group">
-                            <div>
-                                <div class="font-bold text-white text-sm group-hover:text-brand-400 transition-colors">${d.locationName} ${hasRecs}</div>
-                                <div class="text-slate-400 text-xs">${d.deviceType} • <span class="font-mono text-sky-400">${d.barcode_id}</span></div>
-                            </div>
-                            <span class="text-brand-400 text-xs bg-brand-950/60 border border-brand-500/20 px-2.5 py-1 rounded-lg">Serviced ✓</span>
-                        </div>
-                    `;
-                });
-            }
+            scannedList.innerHTML = scanned.length === 0
+                ? '<span class="text-slate-500 italic">No matching scanned devices found.</span>'
+                : scanned.map(d => deviceRowHtml(d, true)).join('');
         }
 
         async function startFullscreenCameraScanner() {
@@ -1036,12 +1394,12 @@
             }
             fullscreenHtml5QrCode = new Html5Qrcode("fullscreenReader");
             fullscreenHtml5QrCode.start(
-                { facingMode: "environment" }, 
-                { fps: 10, qrbox: { width: 300, height: 200 } }, 
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 300, height: 200 } },
                 async (decodedText) => {
                     await stopFullscreenCameraScanner();
                     handleScannedBarcode(decodedText);
-                }, 
+                },
                 (err) => {}
             ).catch(err => {
                 alert("Camera access error: " + err);
@@ -1058,6 +1416,7 @@
                 });
                 document.getElementById('flashToggleBtn').textContent = isFlashOn ? "Flash: ON" : "Flash: OFF";
             } catch (err) {
+                isFlashOn = false;
                 alert("Flashlight/Torch is not supported on this device/browser.");
             }
         }
@@ -1161,20 +1520,21 @@
 
             existingDev.recommendationsHistory.forEach(item => {
                 const formattedDate = item.date ? new Date(item.date).toLocaleDateString() : 'Past Visit';
-                const escapedText = item.recommendation.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                const idx = regImg(item.photo || '', item.recommendation);
 
                 const div = document.createElement('div');
                 div.className = 'bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center gap-2';
 
                 let imgHtml = '';
                 if (item.photo) {
-                    imgHtml = `<img src="${item.photo}" loading="lazy" class="h-12 w-12 rounded-lg object-cover cursor-pointer border border-slate-700 hover:border-amber-400 shadow" onclick="viewFullImage('${item.photo}', '${escapedText}')" title="Click to view full photo & text">`;
+                    imgHtml = `<img src="${esc(item.photo)}" loading="lazy" class="h-12 w-12 rounded-lg object-cover cursor-pointer border border-slate-700 hover:border-amber-400 shadow" onclick="openImg(${idx})" title="Click to view full photo & text">`;
                 }
 
                 div.innerHTML = `
                     <div class="flex-1">
-                        <div class="text-slate-400 font-medium">Issue Logged (${formattedDate})</div>
-                        <div class="text-sky-400 text-[11px] underline cursor-pointer" onclick="viewFullImage('${item.photo || ''}', '${escapedText}')">Tap to view note & photo</div>
+                        <div class="text-slate-400 font-medium">Issue Logged (${esc(formattedDate)})</div>
+                        <div class="text-slate-300 text-[11px] mt-0.5">${esc(item.recommendation)}</div>
+                        <div class="text-sky-400 text-[11px] underline cursor-pointer mt-0.5" onclick="openImg(${idx})">Tap to view note & photo</div>
                     </div>
                     ${imgHtml}
                 `;
@@ -1186,6 +1546,10 @@
             historyList.appendChild(fragment);
             historyList.classList.remove('hidden');
             loadBtn.textContent = "Hide History";
+        }
+
+        function technicianLabel() {
+            return (currentProfile && (currentProfile.full_name || currentProfile.email)) || (currentUser && currentUser.email) || '';
         }
 
         async function saveRecommendationOnly() {
@@ -1203,16 +1567,19 @@
 
             try {
                 setSyncStatus('uploading', 'Uploading Recommendation...');
+                let photoPath = null;
                 let photoUrl = null;
                 if (selectedFileBlob) {
-                    photoUrl = await uploadPhotoToBucket(selectedFileBlob, currentBarcode);
+                    photoPath = await uploadPhotoToBucket(selectedFileBlob, currentBarcode);
+                    photoUrl = await signedUrlForPath(photoPath);
                 }
 
                 const payloadData = {
                     locationName: locNameInput,
                     deviceType: devType,
                     recommendation: recNote || 'Issue photo attached',
-                    photo: photoUrl,
+                    photo: photoPath,           // stored as private storage path
+                    technician: technicianLabel(),
                     servicedAt: new Date().toISOString()
                 };
 
@@ -1284,6 +1651,7 @@
                     speciesCaught: species || 'None',
                     quantity: parseFloat(qty),
                     notes: notes,
+                    technician: technicianLabel(),
                     servicedAt: new Date().toISOString()
                 };
 
@@ -1349,6 +1717,7 @@
                     barcode_id: 'SITE_VISIT_SUMMARY',
                     payload: {
                         siteNotes: siteNotes || 'Visit completed successfully.',
+                        technician: technicianLabel(),
                         completedAt: new Date().toISOString()
                     }
                 };
@@ -1361,7 +1730,7 @@
                 setSyncStatus('synced');
                 closeCompleteVisitModal();
                 await stopFullscreenCameraScanner();
-                
+
                 document.getElementById('visitWorkspace').classList.add('hidden');
                 document.getElementById('siteLandingDashboard').classList.add('hidden');
                 document.getElementById('stationFormContainer').classList.add('hidden');
@@ -1379,7 +1748,8 @@
             }
         }
 
-        loadClients();
+        // ---------- START ----------
+        initAuth();
     </script>
 </body>
 </html>
