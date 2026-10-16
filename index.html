@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pestis - High-Performance Field Mode</title>
+    <title>Pestis - Fullscreen Camera Scanner Mode</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Html5Qrcode Scanner Library -->
@@ -15,7 +15,7 @@
     <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center shadow-md">
         <div class="flex items-center space-x-3">
             <span class="text-2xl">🛡️</span>
-            <h1 class="font-bold text-lg tracking-wide text-white">Pestis <span class="text-xs bg-emerald-500 text-slate-950 px-2 py-0.5 rounded font-bold">Fast Lazy Mode</span></h1>
+            <h1 class="font-bold text-lg tracking-wide text-white">Pestis <span class="text-xs bg-emerald-500 text-slate-950 px-2 py-0.5 rounded font-bold">Field Mode</span></h1>
         </div>
         <div class="text-sm bg-slate-700 px-3 py-1 rounded-full text-slate-300">
             Tech: J. Smith (Online)
@@ -74,27 +74,20 @@
             <div class="flex justify-between items-center border-b border-slate-700 pb-4">
                 <div>
                     <h3 class="font-bold text-lg text-emerald-400" id="activeClientTitle">Service Workspace</h3>
-                    <p class="text-xs text-slate-400">Scan devices or select from checklists below.</p>
+                    <p class="text-xs text-slate-400">Scan devices with camera or select from checklists below.</p>
                 </div>
                 <button type="button" onclick="openCompleteVisitModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow cursor-pointer">
                     Complete & Close Site Visit 📋
                 </button>
             </div>
 
-            <!-- Live Camera Scanner Box -->
-            <div class="bg-slate-900 p-5 rounded-xl border border-slate-700 space-y-4">
-                <div class="flex justify-between items-center">
-                    <h4 class="font-bold text-sm text-sky-400">Barcode Camera Scanner</h4>
-                    <div class="space-x-2">
-                        <button type="button" onclick="startCameraScanner()" class="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow">
-                            📷 Start Camera
-                        </button>
-                        <button type="button" onclick="stopCameraScanner()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow">
-                            ⏹️ Stop Camera
-                        </button>
-                    </div>
-                </div>
-                <div id="reader" class="w-full max-w-sm mx-auto overflow-hidden rounded-lg bg-black"></div>
+            <!-- Trigger Fullscreen Camera Scanner Button Box -->
+            <div class="bg-slate-900 p-5 rounded-xl border border-slate-700 flex flex-col items-center justify-center space-y-3">
+                <h4 class="font-bold text-sm text-sky-400">Barcode Scanner</h4>
+                <p class="text-xs text-slate-400 text-center">Tap below to launch fullscreen camera scanner.</p>
+                <button type="button" onclick="startFullscreenCameraScanner()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-3 rounded-xl text-sm transition shadow flex items-center gap-2 cursor-pointer">
+                    <span>📷</span> Launch Fullscreen Camera Scanner
+                </button>
             </div>
 
             <!-- Device Lists: Separated by Scanned and Unscanned -->
@@ -201,7 +194,7 @@
                     </button>
                 </div>
 
-                <!-- Lazy-Loaded Historical Recommendations Button & Section -->
+                <!-- Historical Recommendations & Issue Photos List -->
                 <div id="pastRecommendationsSection" class="hidden bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
                     <div class="flex justify-between items-center">
                         <h5 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -232,6 +225,22 @@
         </section>
 
     </main>
+
+    <!-- Fullscreen Camera Scanner Modal -->
+    <div id="fullscreenScannerModal" class="hidden fixed inset-0 bg-black z-50 flex flex-col justify-between p-4">
+        <div class="flex justify-between items-center bg-slate-900/80 p-4 rounded-xl border border-slate-700">
+            <h3 class="font-bold text-sm text-sky-400 flex items-center gap-2"><span>📷</span> Align Barcode within Frame</h3>
+            <button type="button" onclick="stopFullscreenCameraScanner()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow cursor-pointer">
+                ✕ Close Scanner
+            </button>
+        </div>
+        <div class="flex-1 flex items-center justify-center p-2">
+            <div id="fullscreenReader" class="w-full max-w-md overflow-hidden rounded-2xl bg-black border-2 border-emerald-500 shadow-2xl"></div>
+        </div>
+        <div class="text-center text-xs text-slate-400 pb-2">
+            Point camera at device barcode to scan automatically.
+        </div>
+    </div>
 
     <!-- Visit Closing Modal with Site Notes -->
     <div id="completeVisitModal" class="hidden fixed inset-0 bg-black/90 z-50 flex flex-col justify-center items-center p-4">
@@ -273,7 +282,7 @@
         let siteDevices = [];
         let sitePastVisits = [];
         let scannedBarcodesThisVisit = new Set();
-        let html5QrCode = null;
+        let fullscreenHtml5QrCode = null;
         let currentBarcode = null;
         let currentDeviceName = null;
         let currentDeviceType = null;
@@ -543,23 +552,33 @@
             });
         }
 
-        async function startCameraScanner() {
-            if (html5QrCode) {
-                try { await html5QrCode.stop(); } catch(e) {}
+        // Fullscreen Camera Scanner Functions
+        async function startFullscreenCameraScanner() {
+            document.getElementById('fullscreenScannerModal').classList.remove('hidden');
+            if (fullscreenHtml5QrCode) {
+                try { await fullscreenHtml5QrCode.stop(); } catch(e) {}
             }
-            html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } }, async (decodedText) => {
-                try { await html5QrCode.stop(); } catch(e) {}
-                handleScannedBarcode(decodedText);
-            }, (err) => {}).catch(err => {
+            fullscreenHtml5QrCode = new Html5Qrcode("fullscreenReader");
+            fullscreenHtml5QrCode.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: { width: 280, height: 180 } }, 
+                async (decodedText) => {
+                    await stopFullscreenCameraScanner();
+                    handleScannedBarcode(decodedText);
+                }, 
+                (err) => {}
+            ).catch(err => {
                 alert("Camera access error: " + err);
+                stopFullscreenCameraScanner();
             });
         }
 
-        async function stopCameraScanner() {
-            if (html5QrCode) {
-                try { await html5QrCode.stop(); } catch(e) {}
+        async function stopFullscreenCameraScanner() {
+            if (fullscreenHtml5QrCode) {
+                try { await fullscreenHtml5QrCode.stop(); } catch(e) {}
+                fullscreenHtml5QrCode = null;
             }
+            document.getElementById('fullscreenScannerModal').classList.add('hidden');
         }
 
         function handleScannedBarcode(barcode) {
@@ -571,7 +590,6 @@
             }
         }
 
-        // Fast Opening: Instantly displays station form without parsing heavy image arrays up front
         function openDeviceForm(barcode, locName, devType, markAsScanned, isNew = false) {
             currentBarcode = barcode;
             currentDeviceName = locName;
@@ -585,7 +603,6 @@
             document.getElementById('issuePhotoInput').value = '';
             document.getElementById('recommendationNote').value = '';
 
-            // Setup history button lazy state
             const existingDev = siteDevices.find(d => d.barcode_id === barcode);
             const historyList = document.getElementById('pastRecommendationsList');
             const historySection = document.getElementById('pastRecommendationsSection');
@@ -619,7 +636,6 @@
             window.scrollTo({ top: 600, behavior: 'smooth' });
         }
 
-        // Lazy loads history only on user click to preserve 60fps performance
         function lazyLoadStationHistory() {
             const existingDev = siteDevices.find(d => d.barcode_id === currentBarcode);
             const historyList = document.getElementById('pastRecommendationsList');
@@ -633,7 +649,6 @@
                 return;
             }
 
-            // Efficiently construct DOM via Document Fragment
             const fragment = document.createDocumentFragment();
 
             existingDev.recommendationsHistory.forEach(item => {
@@ -829,7 +844,7 @@
 
                 alert(`Visit for ${selectedClient.Name} successfully submitted and closed!`);
                 closeCompleteVisitModal();
-                stopCameraScanner();
+                await stopFullscreenCameraScanner();
                 
                 document.getElementById('visitWorkspace').classList.add('hidden');
                 document.getElementById('stationFormContainer').classList.add('hidden');
