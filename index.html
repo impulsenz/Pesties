@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pestis - Field Tech App with Photo History</title>
+    <title>Pestis - Field Tech App with All Photos Gallery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Html5Qrcode Scanner Library -->
@@ -164,17 +164,17 @@
 
                 <!-- Compressed Photo Capture & Preview -->
                 <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 space-y-2">
-                    <label class="block text-xs text-slate-400">Attach Photo (Camera / File)</label>
+                    <label class="block text-xs text-slate-400">Attach New Photo (Camera / File)</label>
                     <input type="file" id="stationPhotoInput" accept="image/*" capture="environment" class="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer">
                     <div id="photoPreviewContainer" class="hidden pt-2 flex items-center space-x-3">
                         <img id="photoPreview" class="h-16 rounded-lg border border-slate-700 object-cover cursor-pointer" onclick="viewFullImage(this.src)" alt="Preview">
-                        <span class="text-xs text-emerald-400">Photo ready ✓ (Click to zoom)</span>
+                        <span class="text-xs text-emerald-400">New photo ready ✓</span>
                     </div>
                 </div>
 
                 <!-- Historical Photos Gallery for this Station -->
                 <div id="pastPhotosSection" class="hidden bg-slate-800 p-3 rounded-lg border border-slate-700 space-y-2">
-                    <label class="block text-xs text-slate-400">Historical Photos from Past Visits</label>
+                    <label class="block text-xs text-slate-400">All Historical Photos for this Device</label>
                     <div id="pastPhotosGallery" class="flex flex-wrap gap-2"></div>
                 </div>
 
@@ -210,7 +210,6 @@
         let currentDeviceType = null;
         let compressedPhotoBase64 = null;
 
-        // Automatically compress photo using canvas to prevent database size errors
         document.getElementById('stationPhotoInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -347,7 +346,10 @@
                     
                     const photoUrl = row.payload.photo || row.payload.image || null;
                     if (photoUrl) {
-                        existing.allPhotos.push(photoUrl);
+                        // Push into allPhotos array if not already included
+                        if (!existing.allPhotos.includes(photoUrl)) {
+                            existing.allPhotos.push(photoUrl);
+                        }
                         existing.lastPayload = row.payload;
                     }
 
@@ -449,11 +451,10 @@
             document.getElementById('scannedBarcodeBadge').textContent = `Barcode: ${barcode}`;
             document.getElementById('stationFormContainer').classList.remove('hidden');
 
-            // Reset current preview
             document.getElementById('photoPreviewContainer').classList.add('hidden');
             document.getElementById('stationPhotoInput').value = '';
 
-            // Populate past photos gallery if this station has history
+            // Populate all historical photos in the gallery
             const existingDev = siteDevices.find(d => d.barcode_id === barcode);
             const gallery = document.getElementById('pastPhotosGallery');
             gallery.innerHTML = '';
@@ -533,7 +534,7 @@
                     const dev = siteDevices.find(d => d.barcode_id === currentBarcode);
                     dev.lastPayload = payloadData;
                     dev.locationName = locNameInput;
-                    if (compressedPhotoBase64) {
+                    if (compressedPhotoBase64 && !dev.allPhotos.includes(compressedPhotoBase64)) {
                         dev.allPhotos.push(compressedPhotoBase64);
                     }
                 }
