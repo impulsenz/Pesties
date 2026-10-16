@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pestis - Offline Site Cache & Field Mode</title>
+    <title>Pestis - High-Performance Field App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Html5Qrcode Scanner Library -->
@@ -15,7 +15,7 @@
     <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center shadow-md">
         <div class="flex items-center space-x-3">
             <span class="text-2xl">🛡️</span>
-            <h1 class="font-bold text-lg tracking-wide text-white">Pestis <span class="text-xs bg-emerald-500 text-slate-950 px-2 py-0.5 rounded font-bold">Offline Caching Mode</span></h1>
+            <h1 class="font-bold text-lg tracking-wide text-white">Pestis <span class="text-xs bg-emerald-500 text-slate-950 px-2 py-0.5 rounded font-bold">Storage Bucket Mode</span></h1>
         </div>
         <div class="text-sm bg-slate-700 px-3 py-1 rounded-full text-slate-300">
             Tech: J. Smith (Online)
@@ -25,7 +25,7 @@
     <!-- Main Content Container -->
     <main class="flex-1 max-w-4xl w-full mx-auto p-6 space-y-6">
 
-        <!-- 1. Client Site Selector & Add Client Section (Hides when site is open) -->
+        <!-- 1. Client Site Selector & Add Client Section -->
         <section id="siteSelectorSection" class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-xl space-y-4">
             <div class="flex justify-between items-center">
                 <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">1. Select or Register Customer Site</h2>
@@ -57,16 +57,16 @@
             </div>
         </section>
 
-        <!-- Loading Progress Bar Modal / Container -->
+        <!-- Loading Progress Bar Modal -->
         <div id="syncProgressModal" class="hidden bg-slate-800 border border-emerald-500/50 p-6 rounded-xl space-y-3 shadow-2xl">
             <div class="flex justify-between items-center">
-                <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-wide">📥 Downloading Site Data Locally...</h3>
+                <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-wide">📥 Downloading Site Data...</h3>
                 <span id="progressPercent" class="text-xs font-mono text-emerald-400 font-bold">0%</span>
             </div>
             <div class="w-full bg-slate-900 rounded-full h-3 overflow-hidden border border-slate-700">
                 <div id="progressBarFill" class="bg-emerald-500 h-full transition-all duration-200" style="width: 0%"></div>
             </div>
-            <p id="progressStatusText" class="text-xs text-slate-400 italic">Connecting to Supabase and caching device history...</p>
+            <p id="progressStatusText" class="text-xs text-slate-400 italic">Connecting to Supabase...</p>
         </div>
 
         <!-- 2. Active Technician Visit & Device Checklist Workspace -->
@@ -74,7 +74,7 @@
             <div class="flex justify-between items-center border-b border-slate-700 pb-4">
                 <div>
                     <h3 class="font-bold text-lg text-emerald-400" id="activeClientTitle">Service Workspace</h3>
-                    <p class="text-xs text-slate-400">All data cached locally. Scan devices or select from lists below.</p>
+                    <p class="text-xs text-slate-400">All station records pre-loaded. Instant station opening!</p>
                 </div>
                 <button type="button" onclick="completeVisit()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow">
                     Complete & Close Site Visit 📋
@@ -174,7 +174,7 @@
                     <textarea id="serviceNotes" rows="2" placeholder="Station inspected, fresh bait applied..." class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white"></textarea>
                 </div>
 
-                <!-- Recommendations & Issue Capture Section (Side-by-Side Layout) -->
+                <!-- Recommendations & Issue Capture Section -->
                 <div class="bg-slate-800 p-4 rounded-xl border border-amber-500/40 space-y-3">
                     <h5 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                         <span>⚠️</span> Log Recommendation & Issue Photo
@@ -196,8 +196,8 @@
                         </div>
                     </div>
 
-                    <button type="button" onclick="saveRecommendationOnly()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5 cursor-pointer">
-                        <span>💾</span> Save Recommendation & Photo to Local Cache
+                    <button type="button" id="saveRecBtn" onclick="saveRecommendationOnly()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5 cursor-pointer">
+                        <span>💾</span> Save Recommendation & Photo to Storage
                     </button>
                 </div>
 
@@ -217,7 +217,7 @@
 
     </main>
 
-    <!-- Fullscreen Image Modal Viewer with Associated Text -->
+    <!-- Fullscreen Image Modal Viewer -->
     <div id="imageModal" class="hidden fixed inset-0 bg-black/95 z-50 flex flex-col justify-center items-center p-6 space-y-4">
         <img id="fullImageDisplay" class="max-h-[65vh] max-w-full rounded-lg border border-slate-700 object-contain shadow-2xl">
         <div id="modalTextDisplay" class="bg-slate-800 border border-slate-700 p-4 rounded-xl text-slate-200 text-sm max-w-xl w-full text-center font-medium shadow-lg"></div>
@@ -240,49 +240,40 @@
         let currentBarcode = null;
         let currentDeviceName = null;
         let currentDeviceType = null;
-        let compressedPhotoBase64 = null;
+        let selectedFileBlob = null;
 
         document.getElementById('issuePhotoInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
+            selectedFileBlob = file;
             const reader = new FileReader();
             reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
-                    const MAX_HEIGHT = 800;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                    } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    compressedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                    
-                    const preview = document.getElementById('photoPreview');
-                    preview.src = compressedPhotoBase64;
-                    document.getElementById('photoPreviewContainer').classList.remove('hidden');
-                };
-                img.src = event.target.result;
+                const preview = document.getElementById('photoPreview');
+                preview.src = event.target.result;
+                document.getElementById('photoPreviewContainer').classList.remove('hidden');
             };
             reader.readAsDataURL(file);
         });
+
+        // Uploads image file to Supabase Bucket 'station-photos' and returns Public URL
+        async function uploadPhotoToBucket(file, barcode) {
+            if (!file) return null;
+            const fileExt = file.name.split('.').pop() || 'jpg';
+            const fileName = `${selectedClient.id}/${barcode}_${Date.now()}.${fileExt}`;
+
+            const { data, error } = await _supabase.storage
+                .from('station-photos')
+                .upload(fileName, file, { cacheControl: '3600', upsert: true });
+
+            if (error) {
+                console.warn("Bucket upload error (ensure 'station-photos' public bucket exists):", error.message);
+                return null;
+            }
+
+            const { data: publicData } = _supabase.storage.from('station-photos').getPublicUrl(fileName);
+            return publicData ? publicData.publicUrl : null;
+        }
 
         function viewFullImage(src, text) {
             document.getElementById('fullImageDisplay').src = src;
@@ -346,7 +337,6 @@
             }
         }
 
-        // Simulates downloading and caching all site data locally with a progress bar
         async function startSiteVisit() {
             const clientId = document.getElementById('clientSelect').value;
             if (!clientId) {
@@ -355,10 +345,8 @@
             }
             selectedClient = clientsData.find(c => c.id == clientId);
 
-            // Hide site selector section as requested
             document.getElementById('siteSelectorSection').classList.add('hidden');
             
-            // Show progress modal
             const progressModal = document.getElementById('syncProgressModal');
             const progressBarFill = document.getElementById('progressBarFill');
             const progressPercent = document.getElementById('progressPercent');
@@ -366,14 +354,14 @@
             progressModal.classList.remove('hidden');
 
             try {
-                progressPercent.textContent = '10%';
-                progressBarFill.style.width = '10%';
-                progressStatusText.textContent = `Connecting to Supabase for ${selectedClient.Name}...`;
-                await new Promise(r => setTimeout(r, 200));
+                progressPercent.textContent = '20%';
+                progressBarFill.style.width = '20%';
+                progressStatusText.textContent = `Connecting to database for ${selectedClient.Name}...`;
+                await new Promise(r => setTimeout(r, 100));
 
-                progressPercent.textContent = '35%';
-                progressBarFill.style.width = '35%';
-                progressStatusText.textContent = 'Fetching historical service logs...';
+                progressPercent.textContent = '60%';
+                progressBarFill.style.width = '60%';
+                progressStatusText.textContent = 'Fetching station records...';
 
                 const { data, error } = await _supabase
                     .from('service_logs')
@@ -383,10 +371,9 @@
 
                 if (error) throw error;
 
-                progressPercent.textContent = '70%';
-                progressBarFill.style.width = '70%';
-                progressStatusText.textContent = 'Caching devices and recommendation history locally...';
-                await new Promise(r => setTimeout(r, 250));
+                progressPercent.textContent = '90%';
+                progressBarFill.style.width = '90%';
+                progressStatusText.textContent = 'Building local station checklist...';
 
                 const map = new Map();
                 (data || []).forEach(row => {
@@ -420,11 +407,11 @@
 
                 progressPercent.textContent = '100%';
                 progressBarFill.style.width = '100%';
-                progressStatusText.textContent = 'Site data successfully cached locally!';
-                await new Promise(r => setTimeout(r, 300));
+                progressStatusText.textContent = 'Site loaded instantly!';
+                await new Promise(r => setTimeout(r, 150));
 
                 progressModal.classList.add('hidden');
-                document.getElementById('activeClientTitle').textContent = `Servicing Site: ${selectedClient.Name} (Cached Locally)`;
+                document.getElementById('activeClientTitle').textContent = `Servicing Site: ${selectedClient.Name}`;
                 document.getElementById('visitWorkspace').classList.remove('hidden');
                 scannedBarcodesThisVisit.clear();
                 renderDeviceLists();
@@ -516,7 +503,7 @@
             currentBarcode = barcode;
             currentDeviceName = locName;
             currentDeviceType = devType;
-            compressedPhotoBase64 = null;
+            selectedFileBlob = null;
 
             document.getElementById('scannedBarcodeBadge').textContent = `Barcode: ${barcode}`;
             document.getElementById('stationFormContainer').classList.remove('hidden');
@@ -578,17 +565,26 @@
             const devType = document.getElementById('newDeviceType').value || currentDeviceType;
             const recNote = document.getElementById('recommendationNote').value.trim();
 
-            if (!recNote && !compressedPhotoBase64) {
+            if (!recNote && !selectedFileBlob) {
                 alert('Please type a recommendation note or attach an issue photo first.');
                 return;
             }
 
+            const btn = document.getElementById('saveRecBtn');
+            btn.textContent = "Uploading Photo...";
+
             try {
+                // Upload to bucket first if photo attached
+                let photoUrl = null;
+                if (selectedFileBlob) {
+                    photoUrl = await uploadPhotoToBucket(selectedFileBlob, currentBarcode);
+                }
+
                 const payloadData = {
                     locationName: locNameInput,
                     deviceType: devType,
                     recommendation: recNote || 'Issue photo attached',
-                    photo: compressedPhotoBase64 || null,
+                    photo: photoUrl,
                     servicedAt: new Date().toISOString()
                 };
 
@@ -615,7 +611,7 @@
 
                 dev.recommendationsHistory.push({
                     recommendation: recNote || 'Issue photo attached',
-                    photo: compressedPhotoBase64,
+                    photo: photoUrl,
                     date: payloadData.servicedAt
                 });
 
@@ -625,11 +621,13 @@
                 document.getElementById('recommendationNote').value = '';
                 document.getElementById('issuePhotoInput').value = '';
                 document.getElementById('photoPreviewContainer').classList.add('hidden');
-                compressedPhotoBase64 = null;
+                selectedFileBlob = null;
+                btn.innerHTML = "<span>💾</span> Save Recommendation & Photo to Storage";
 
-                alert('Recommendation & photo saved locally & synced to Supabase!');
+                alert('Recommendation & photo saved successfully!');
 
             } catch (err) {
+                btn.innerHTML = "<span>💾</span> Save Recommendation & Photo to Storage";
                 alert('Error saving recommendation: ' + err.message);
             }
         }
@@ -693,7 +691,7 @@
                 document.getElementById('recommendationNote').value = '';
                 document.getElementById('issuePhotoInput').value = '';
                 document.getElementById('photoPreviewContainer').classList.add('hidden');
-                compressedPhotoBase64 = null;
+                selectedFileBlob = null;
 
                 alert('Device service record saved successfully!');
 
@@ -706,11 +704,8 @@
             alert(`Visit for ${selectedClient.Name} completed successfully!`);
             stopCameraScanner();
             
-            // Hide workspace & form
             document.getElementById('visitWorkspace').classList.add('hidden');
             document.getElementById('stationFormContainer').classList.add('hidden');
-
-            // Bring back site selector section
             document.getElementById('siteSelectorSection').classList.remove('hidden');
 
             siteDevices = [];
