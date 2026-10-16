@@ -165,7 +165,7 @@
                 <!-- Recommendations & Issue Capture Section -->
                 <div class="bg-slate-800 p-4 rounded-xl border border-amber-500/40 space-y-3">
                     <h5 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <span>⚠️</span> Log Recommendation or Issue Photo
+                        <span>⚠️</span> Log Recommendation & Issue Photo
                     </h5>
                     
                     <div>
@@ -181,6 +181,10 @@
                             <span class="text-xs text-amber-400">Issue photo compressed & attached ✓</span>
                         </div>
                     </div>
+
+                    <button type="button" onclick="saveRecommendationOnly()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
+                        <span>📷</span> Save Recommendation & Photo to Device History
+                    </button>
                 </div>
 
                 <!-- Historical Recommendations & Issue Photos List for this Station -->
@@ -192,7 +196,7 @@
                 </div>
 
                 <button type="button" onclick="saveStationServiceRecord()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 rounded-lg text-sm transition shadow">
-                    Save Station Service Record ✓
+                    Save Complete Service Record ✓
                 </button>
             </div>
         </section>
@@ -362,7 +366,7 @@
 
                     if (recText || photoUrl) {
                         existing.recommendationsHistory.push({
-                            recommendation: recText || 'No written note',
+                            recommendation: recText || 'Issue photo attached',
                             photo: photoUrl,
                             date: row.payload.servicedAt || row.created_at
                         });
@@ -469,7 +473,28 @@
             document.getElementById('issuePhotoInput').value = '';
             document.getElementById('recommendationNote').value = '';
 
-            // Populate all historical recommendations and issue photos
+            // Render past recommendations
+            renderPastRecommendations(barcode);
+
+            if (isNew || !locName) {
+                document.getElementById('formTitle').textContent = 'Register & Service New Device';
+                document.getElementById('newStationFields').classList.remove('hidden');
+                document.getElementById('newLocName').value = '';
+            } else {
+                document.getElementById('formTitle').textContent = `Servicing: ${locName} (${devType})`;
+                document.getElementById('newStationFields').classList.add('hidden');
+                document.getElementById('newLocName').value = locName;
+            }
+
+            if (markAsScanned) {
+                scannedBarcodesThisVisit.add(barcode);
+                renderDeviceLists();
+            }
+
+            window.scrollTo({ top: 600, behavior: 'smooth' });
+        }
+
+        function renderPastRecommendations(barcode) {
             const existingDev = siteDevices.find(d => d.barcode_id === barcode);
             const historyList = document.getElementById('pastRecommendationsList');
             historyList.innerHTML = '';
@@ -493,23 +518,69 @@
             } else {
                 document.getElementById('pastRecommendationsSection').classList.add('hidden');
             }
+        }
 
-            if (isNew || !locName) {
-                document.getElementById('formTitle').textContent = 'Register & Service New Device';
-                document.getElementById('newStationFields').classList.remove('hidden');
-                document.getElementById('newLocName').value = '';
-            } else {
-                document.getElementById('formTitle').textContent = `Servicing: ${locName} (${devType})`;
-                document.getElementById('newStationFields').classList.add('hidden');
-                document.getElementById('newLocName').value = locName;
+        // Dedicated button handler to save photo + recommendation note immediately
+        async function saveRecommendationOnly() {
+            const locNameInput = document.getElementById('newLocName').value.trim() || currentDeviceName;
+            const devType = document.getElementById('newDeviceType').value || currentDeviceType;
+            const recNote = document.getElementById('recommendationNote').value.trim();
+
+            if (!recNote && !compressedPhotoBase64) {
+                alert('Please type a recommendation note or attach an issue photo first.');
+                return;
             }
 
-            if (markAsScanned) {
-                scannedBarcodesThisVisit.add(barcode);
+            try {
+                const payloadData = {
+                    locationName: locNameInput,
+                    deviceType: devType,
+                    recommendation: recNote || 'Issue photo attached',
+                    photo: compressedPhotoBase64 || null,
+                    servicedAt: new Date().toISOString()
+                };
+
+                const record = {
+                    client_id: selectedClient.id,
+                    barcode_id: currentBarcode,
+                    payload: payloadData
+                };
+
+                const { error } = await _supabase.from('service_logs').insert([record]);
+                if (error) throw error;
+
+                let dev = siteDevices.find(d => d.barcode_id === currentBarcode);
+                if (!dev) {
+                    dev = {
+                        barcode_id: currentBarcode,
+                        locationName: locNameInput,
+                        deviceType: devType,
+                        recommendationsHistory: [],
+                        lastPayload: payloadData
+                    };
+                    siteDevices.push(dev);
+                }
+
+                dev.recommendationsHistory.push({
+                    recommendation: recNote || 'Issue photo attached',
+                    photo: compressedPhotoBase64,
+                    date: payloadData.servicedAt
+                });
+
+                renderPastRecommendations(currentBarcode);
                 renderDeviceLists();
-            }
 
-            window.scrollTo({ top: 600, behavior: 'smooth' });
+                // Clear input fields
+                document.getElementById('recommendationNote').value = '';
+                document.getElementById('issuePhotoInput').value = '';
+                document.getElementById('photoPreviewContainer').classList.add('hidden');
+                compressedPhotoBase64 = null;
+
+                alert('Recommendation & photo saved to database successfully!');
+
+            } catch (err) {
+                alert('Error saving recommendation: ' + err.message);
+            }
         }
 
         async function saveStationServiceRecord() {
@@ -567,7 +638,7 @@
 
                 if (recNote || compressedPhotoBase64) {
                     dev.recommendationsHistory.push({
-                        recommendation: recNote || 'No written note',
+                        recommendation: recNote || 'Issue photo attached',
                         photo: compressedPhotoBase64,
                         date: payloadData.servicedAt
                     });
