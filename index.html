@@ -45,10 +45,11 @@
             </div>
         </div>
         <div class="flex items-center space-x-3">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                Online & Synced
-            </span>
+            <!-- Dynamic Sync Status Indicator Badge -->
+            <div id="syncStatusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 transition-all duration-300">
+                <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span id="syncText">Online & Synced</span>
+            </div>
         </div>
     </header>
 
@@ -440,6 +441,30 @@
         let currentDeviceType = null;
         let selectedFileBlob = null;
 
+        // Sync Status Manager
+        function setSyncStatus(status, message) {
+            const badge = document.getElementById('syncStatusBadge');
+            const dot = document.getElementById('syncDot');
+            const text = document.getElementById('syncText');
+
+            if (status === 'uploading') {
+                badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 transition-all duration-300';
+                dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
+                text.textContent = message || 'Uploading...';
+            } else if (status === 'error' || !navigator.onLine) {
+                badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20 transition-all duration-300';
+                dot.className = 'w-2 h-2 rounded-full bg-red-500';
+                text.textContent = 'Sync Error / Offline';
+            } else {
+                badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 transition-all duration-300';
+                dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+                text.textContent = 'Online & Synced';
+            }
+        }
+
+        window.addEventListener('online', () => setSyncStatus('synced'));
+        window.addEventListener('offline', () => setSyncStatus('error'));
+
         document.getElementById('issuePhotoInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -522,6 +547,7 @@
             }
 
             try {
+                setSyncStatus('uploading', 'Saving Site...');
                 const { error } = await _supabase.from('clients').insert([{ 
                     Name: name, 
                     Address: address,
@@ -531,7 +557,7 @@
                 }]);
                 if (error) throw error;
 
-                alert('New client site successfully registered!');
+                setSyncStatus('synced');
                 document.getElementById('newClientName').value = '';
                 document.getElementById('newClientAddress').value = '';
                 document.getElementById('newClientContact').value = '';
@@ -540,6 +566,7 @@
                 toggleAddClientModal();
                 loadClients();
             } catch (err) {
+                setSyncStatus('error');
                 alert('Failed to save client: ' + err.message);
             }
         }
@@ -561,6 +588,7 @@
             progressModal.classList.remove('hidden');
 
             try {
+                setSyncStatus('uploading', 'Syncing Site Data...');
                 progressPercent.textContent = '20%';
                 progressBarFill.style.width = '20%';
                 progressStatusText.textContent = `Connecting to database...`;
@@ -644,6 +672,7 @@
                 await new Promise(r => setTimeout(r, 100));
 
                 progressModal.classList.add('hidden');
+                setSyncStatus('synced');
                 
                 document.getElementById('siteLandingTitle').textContent = selectedClient.Name;
                 document.getElementById('siteLandingAddress').textContent = selectedClient.Address || 'No address specified';
@@ -656,6 +685,7 @@
 
             } catch (err) {
                 progressModal.classList.add('hidden');
+                setSyncStatus('error');
                 document.getElementById('siteSelectorSection').classList.remove('hidden');
                 alert('Error downloading site data: ' + err.message);
             }
@@ -1127,9 +1157,10 @@
             }
 
             const btn = document.getElementById('saveRecBtn');
-            btn.textContent = "Saving...";
+            btn.textContent = "Uploading Recommendation...";
 
             try {
+                setSyncStatus('uploading', 'Uploading Recommendation...');
                 let photoUrl = null;
                 if (selectedFileBlob) {
                     photoUrl = await uploadPhotoToBucket(selectedFileBlob, currentBarcode);
@@ -1178,10 +1209,11 @@
 
                 renderDeviceLists();
                 renderLandingRecommendationsAndVisits();
-                alert('Recommendation saved successfully!');
+                setSyncStatus('synced');
 
             } catch (err) {
                 btn.textContent = "Save Recommendation & Photo Record";
+                setSyncStatus('error');
                 alert('Error saving recommendation: ' + err.message);
             }
         }
@@ -1201,6 +1233,7 @@
             }
 
             try {
+                setSyncStatus('uploading', 'Uploading Station Record...');
                 const payloadData = {
                     locationName: locNameInput,
                     deviceType: devType,
@@ -1247,9 +1280,10 @@
                 document.getElementById('photoPreviewContainer').classList.add('hidden');
                 selectedFileBlob = null;
 
-                alert('Device service record saved successfully!');
+                setSyncStatus('synced');
 
             } catch (err) {
+                setSyncStatus('error');
                 alert('Error saving record: ' + err.message);
             }
         }
@@ -1267,6 +1301,7 @@
             const siteNotes = document.getElementById('closingSiteNotes').value.trim();
 
             try {
+                setSyncStatus('uploading', 'Closing Visit & Generating PDF...');
                 const summaryRecord = {
                     client_id: selectedClient.id,
                     barcode_id: 'SITE_VISIT_SUMMARY',
@@ -1281,7 +1316,7 @@
 
                 await generatePDFReport();
 
-                alert(`Visit for ${selectedClient.Name} successfully submitted and closed! PDF report downloaded.`);
+                setSyncStatus('synced');
                 closeCompleteVisitModal();
                 await stopFullscreenCameraScanner();
                 
@@ -1297,6 +1332,7 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
             } catch (err) {
+                setSyncStatus('error');
                 alert('Error closing visit: ' + err.message);
             }
         }
@@ -1305,3 +1341,4 @@
     </script>
 </body>
 </html>
+
