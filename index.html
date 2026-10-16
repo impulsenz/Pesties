@@ -932,54 +932,64 @@
         // ===================================================================
         //  SYNC STATUS
         // ===================================================================
-        function setSyncStatus(status, message) {
-            const badge = document.getElementById('syncStatusBadge');
-            const dot = document.getElementById('syncDot');
-            const text = document.getElementById('syncText');
+ function setSyncStatus(status, message) {
+    const badge = document.getElementById('syncStatusBadge');
+    const dot = document.getElementById('syncDot');
+    const text = document.getElementById('syncText');
 
-            if (isUploadingActive && status !== 'error') return;
+    if (!badge || !dot || !text) return;
 
-            if (status === 'uploading') {
-                isUploadingActive = true;
-                badge.className = 'chip chip-amber transition-all duration-300';
-                dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
-                text.textContent = message || 'Uploading...';
-            } else if (status === 'error') {
-                isUploadingActive = false;
-                badge.className = 'chip chip-red transition-all duration-300';
-                dot.className = 'w-2 h-2 rounded-full bg-red-500';
-                text.textContent = 'Sync Error / Offline';
-            } else {
-                isUploadingActive = false;
-                badge.className = 'chip chip-green transition-all duration-300';
-                dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
-                text.textContent = 'Online & Synced';
-            }
+    switch (status) {
+
+        case 'uploading':
+            isUploadingActive = true;
+            badge.className = 'chip chip-amber transition-all duration-300';
+            dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
+            text.textContent = message || 'Synchronizing...';
+            break;
+
+        case 'error':
+            isUploadingActive = false;
+            badge.className = 'chip chip-red transition-all duration-300';
+            dot.className = 'w-2 h-2 rounded-full bg-red-500';
+            text.textContent = 'Sync Error / Offline';
+            break;
+
+        case 'synced':
+        default:
+            isUploadingActive = false;
+            badge.className = 'chip chip-green transition-all duration-300';
+            dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+            text.textContent = message || 'Online & Synced';
+            break;
+    }
+}
+
+  async function checkInternetConnectivity() {
+    if (!navigator.onLine) {
+        setSyncStatus('error');
+        return;
+    }
+
+    try {
+        const { error } = await _supabase
+            .from('clients')
+            .select('id')
+            .limit(1);
+
+        if (error) {
+            setSyncStatus('error');
+            return;
         }
 
-        async function checkInternetConnectivity() {
-            if (!navigator.onLine) {
-                setSyncStatus('error');
-                return;
-            }
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-                await fetch('https://www.google.com/favicon.ico', {
-                    mode: 'no-cors',
-                    cache: 'no-store',
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-
-                if (!isUploadingActive) {
-                    setSyncStatus('synced');
-                }
-            } catch (err) {
-                setSyncStatus('error');
-            }
+        if (!isUploadingActive) {
+            setSyncStatus('synced');
         }
+
+    } catch (err) {
+        setSyncStatus('error');
+    }
+}
 
         setInterval(checkInternetConnectivity, 5000);
 
