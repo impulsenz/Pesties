@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pestis - Professional Pest Control Field App</title>
+    <title>Pestis - Field Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Html5Qrcode Scanner Library -->
@@ -11,18 +11,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- Header Navigation -->
-    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center shadow-md w-full">
-        <div class="flex items-center space-x-3">
-            <div class="bg-emerald-600 text-slate-950 p-2 rounded-lg font-bold text-lg leading-none">P</div>
-            <h1 class="font-bold text-lg tracking-wide text-white">PESTIS <span class="text-xs bg-emerald-500 text-slate-950 px-2 py-0.5 rounded font-bold uppercase ml-2">Field Management System</span></h1>
-        </div>
-        <div class="text-xs bg-slate-700 px-3 py-1.5 rounded-full text-slate-300 font-medium">
-            Technician: J. Smith (Active Session)
-        </div>
-    </header>
-
-    <!-- Main Content Container (Full-screen width utilization) -->
+    <!-- Main Content Container (Full-screen edge-to-edge layout, top branding header removed) -->
     <main class="flex-1 w-full max-w-none px-4 md:px-8 py-6 space-y-6">
 
         <!-- 1. Client Site Selector & Add Client Section -->
@@ -78,7 +67,7 @@
                     <h2 class="text-2xl font-bold text-white" id="siteLandingTitle">Customer Site Overview</h2>
                     <p class="text-xs text-slate-400" id="siteLandingAddress">Address information</p>
                 </div>
-                <div class="flex gap-3">
+                <div class="flex flex-wrap gap-3">
                     <button type="button" onclick="proceedToWorkSpace()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-lg text-xs shadow cursor-pointer">
                         Start Station Checklist
                     </button>
@@ -110,9 +99,9 @@
                     </div>
                 </div>
 
-                <!-- Recent Visit Logs -->
+                <!-- Recent Visit Logs & Report Download -->
                 <div class="bg-slate-900 p-5 rounded-xl border border-slate-700 space-y-3">
-                    <h3 class="text-xs font-bold text-sky-400 uppercase tracking-wider">Historical Visit Notes</h3>
+                    <h3 class="text-xs font-bold text-sky-400 uppercase tracking-wider">Historical Visit Notes & Reports</h3>
                     <div id="siteLandingVisitsList" class="space-y-2 max-h-60 overflow-y-auto text-xs">
                         <span class="text-slate-500 italic">No previous visit records found.</span>
                     </div>
@@ -550,7 +539,6 @@
 
                 progressModal.classList.add('hidden');
                 
-                // Populate Site Landing Dashboard Data
                 document.getElementById('siteLandingTitle').textContent = selectedClient.Name;
                 document.getElementById('siteLandingAddress').textContent = selectedClient.Address || 'No address specified';
                 document.getElementById('siteLandingContact').textContent = selectedClient.Contact || 'Primary Contact: Manager';
@@ -575,7 +563,6 @@
             recsContainer.innerHTML = '';
             visitsContainer.innerHTML = '';
 
-            // Aggregate open recommendations
             let allRecs = [];
             siteDevices.forEach(d => {
                 d.recommendationsHistory.forEach(r => {
@@ -592,7 +579,7 @@
                             <div>
                                 <span class="font-bold text-amber-400">${item.station}:</span> ${item.recommendation}
                             </div>
-                            ${item.photo ? `<button onclick="viewFullImage('${item.photo}', '${item.recommendation}')" class="text-sky-400 text-xs underline font-semibold">View Photo</button>` : ''}
+                            ${item.photo ? `<button onclick="viewFullImage('${item.photo}', '${item.recommendation}')" class="text-sky-400 text-xs underline font-semibold cursor-pointer">View Photo</button>` : ''}
                         </div>
                     `;
                 });
@@ -601,14 +588,88 @@
             if (sitePastVisits.length === 0) {
                 visitsContainer.innerHTML = '<span class="text-slate-500 italic">No past visit history recorded yet.</span>';
             } else {
-                sitePastVisits.forEach(v => {
+                sitePastVisits.forEach((v, index) => {
+                    const visitDateStr = new Date(v.date).toLocaleDateString();
                     visitsContainer.innerHTML += `
-                        <div class="bg-slate-800 p-2.5 rounded-lg border border-slate-700">
-                            <span class="font-bold text-emerald-400">${new Date(v.date).toLocaleDateString()}:</span> ${v.summaryNote}
+                        <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 flex justify-between items-center">
+                            <div>
+                                <span class="font-bold text-emerald-400">${visitDateStr}:</span> ${v.summaryNote}
+                            </div>
+                            <button onclick="downloadServiceReport(${index})" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-3 py-1.5 rounded text-xs shadow cursor-pointer">
+                                Download Report
+                            </button>
                         </div>
                     `;
                 });
             }
+        }
+
+        // GENERATE & DOWNLOAD SERVICE REPORT TEXT/TXT FILE
+        function downloadServiceReport(visitIndex = null) {
+            let reportTitle = `SERVICE REPORT: ${selectedClient.Name}\n`;
+            reportTitle += `Address: ${selectedClient.Address || 'N/A'}\n`;
+            reportTitle += `Contact: ${selectedClient.Contact || 'N/A'}\n`;
+            
+            let summaryNote = "Current / Recent Visit";
+            let visitDateStr = new Date().toLocaleDateString();
+
+            if (visitIndex !== null && sitePastVisits[visitIndex]) {
+                const v = sitePastVisits[visitIndex];
+                summaryNote = v.summaryNote;
+                visitDateStr = new Date(v.date).toLocaleDateString();
+            }
+
+            reportTitle += `Visit Date: ${visitDateStr}\n`;
+            reportTitle += `Overall Site Notes: ${summaryNote}\n`;
+            reportTitle += `==================================================\n\n`;
+
+            let stationsText = "STATIONS SERVICED & ACTIVITY LOG:\n";
+            let prepsSet = new Set();
+            let allRecsList = [];
+
+            siteDevices.forEach(d => {
+                if (d.lastPayload) {
+                    prepsSet.add(d.lastPayload.prepUsed || 'None');
+                    stationsText += `- Location: ${d.locationName} (${d.deviceType})\n`;
+                    stationsText += `  Barcode ID: ${d.barcode_id}\n`;
+                    stationsText += `  Activity Level: ${d.lastPayload.activityLevel || 'None'}\n`;
+                    stationsText += `  Preparation Used: ${d.lastPayload.prepUsed || 'None'}\n`;
+                    stationsText += `  Species Caught: ${d.lastPayload.speciesCaught || 'None'}\n`;
+                    stationsText += `  Quantity: ${d.lastPayload.quantity || 0}\n`;
+                    stationsText += `  Service Notes: ${d.lastPayload.notes || 'None'}\n\n`;
+                }
+
+                d.recommendationsHistory.forEach(r => {
+                    allRecsList.push(`- [${d.locationName}] ${r.recommendation} (${new Date(r.date).toLocaleDateString()})`);
+                });
+            });
+
+            let prepsText = "PREPARATIONS / CHEMICALS USED:\n";
+            prepsSet.forEach(p => {
+                prepsText += `- ${p}\n`;
+            });
+            prepsText += `\n`;
+
+            let recsText = "RECOMMENDATIONS & CORRECTIVE ACTIONS:\n";
+            if (allRecsList.length === 0) {
+                recsText += `None recorded.\n`;
+            } else {
+                allRecsList.forEach(r => {
+                    recsText += `${r}\n`;
+                });
+            }
+
+            const fullReportContent = reportTitle + prepsText + stationsText + recsText;
+
+            const blob = new Blob([fullReportContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Service_Report_${selectedClient.Name.replace(/\s+/g, '_')}_${visitDateStr.replace(/\//g, '-')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         function showSiteDashboard() {
@@ -1009,7 +1070,10 @@
                 const { error } = await _supabase.from('service_logs').insert([summaryRecord]);
                 if (error) throw error;
 
-                alert(`Visit for ${selectedClient.Name} successfully submitted and closed!`);
+                // Prompt auto-download of the current service report upon closing visit
+                downloadServiceReport();
+
+                alert(`Visit for ${selectedClient.Name} successfully submitted and closed! Report downloaded.`);
                 closeCompleteVisitModal();
                 await stopFullscreenCameraScanner();
                 
