@@ -149,9 +149,9 @@
         .site-overlay { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.6rem .95rem .85rem; background: linear-gradient(to top, rgba(2, 6, 23, .94), rgba(2, 6, 23, 0)); display: flex; flex-direction: column; gap: .12rem; }
         .site-name { color: #fff; font-weight: 800; font-size: .95rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .site-addr { color: rgba(255, 255, 255, .78); font-size: .72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .site-chips { display: flex; flex-wrap: wrap; gap: .25rem; margin-bottom: .3rem; }
-        .site-chips .site-due { margin-bottom: 0; }
-        .site-tech { color: rgba(255, 255, 255, .7); font-size: .65rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .site-chips { position: absolute; right: .55rem; bottom: .6rem; z-index: 2; display: flex; flex-direction: column; align-items: flex-end; gap: .25rem; max-width: 55%; pointer-events: none; }
+        .site-chips .site-due { margin-bottom: 0; align-self: auto; text-align: right; box-shadow: 0 4px 12px -4px rgba(0, 0, 0, .6); }
+        .site-overlay.has-chips .site-name { padding-right: 45%; }
         .chip-purple { color: #6d28d9; background: #ede9fe; border-color: #c4b5fd; }
         html.dark .chip-purple { color: #c4b5fd; background: rgba(124, 58, 237, .15); border-color: rgba(124, 58, 237, .4); }
         .site-due { align-self: flex-start; font-size: .6rem; font-weight: 800; padding: .15rem .5rem; border-radius: .4rem; color: #fff; margin-bottom: .3rem; }
@@ -171,6 +171,8 @@
         .fab-secondary { background: var(--surface3); color: var(--text); border-color: var(--border); }
 
         /* ================= STATION FOCUS VIEW ================= */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { width: 1rem; height: 1rem; border-radius: 999px; border: 2.5px solid rgba(255, 255, 255, .45); border-top-color: #fff; animation: spin .8s linear infinite; }
         @keyframes sheetIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
         #stationFormContainer:not(.hidden) .station-sheet { animation: sheetIn .22s ease-out; }
         .thumb { position: relative; width: 5rem; height: 5rem; border-radius: .8rem; overflow: hidden; border: 1px solid var(--border); }
@@ -263,6 +265,14 @@
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3 md:items-center">
                     <select id="siteFilterSelect" onchange="setSiteFilter(this.value)" class="field sm:!w-56 cursor-pointer" title="Show sites"></select>
+                    <select id="dueRangeSelect" onchange="setDueRange(this.value)" class="field sm:!w-48 cursor-pointer hidden" title="Services due within">
+                        <option value="overdue">Overdue only</option>
+                        <option value="7">Due in the next week</option>
+                        <option value="14">Due in the next 2 weeks</option>
+                        <option value="30">Due in the next month</option>
+                        <option value="60">Due in the next 2 months</option>
+                        <option value="90">Due in the next 3 months</option>
+                    </select>
                     <div class="relative w-full sm:w-72">
                         <div class="absolute inset-y-0 left-3.5 flex items-center pointer-events-none t-faint">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -387,6 +397,7 @@
                             <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                             Active Open Recommendations
                         </h3>
+                        <button type="button" id="toggleCompletedRecsBtn" onclick="toggleCompletedRecs()" class="link-btn !no-underline !text-[11px]"></button>
                     </div>
                     <div id="siteLandingRecsList" class="space-y-2.5 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1">
                         <span class="t-faint italic">No active recommendations for this site.</span>
@@ -493,11 +504,11 @@
             <!-- Header -->
             <div class="flex justify-between items-start gap-3 p-4 sm:p-5 border-b divider shrink-0" style="background: var(--surface);">
                 <div class="min-w-0">
-                    <button type="button" onclick="hideStationForm()" class="link-btn !no-underline inline-flex items-center gap-1 mb-1.5">← Back to stations</button>
+                    <button type="button" onclick="requestCloseStation()" class="link-btn !no-underline inline-flex items-center gap-1 mb-1.5">← Back to stations</button>
                     <h4 class="font-black text-lg t-strong break-words" id="formTitle">Servicing Device</h4>
                     <span id="scannedBarcodeBadge" class="chip chip-orange font-mono mt-1.5"></span>
                 </div>
-                <button type="button" onclick="hideStationForm()" class="icon-btn shrink-0" title="Close">✕</button>
+                <button type="button" onclick="requestCloseStation()" class="icon-btn shrink-0" title="Close">✕</button>
             </div>
 
             <!-- Body -->
@@ -560,6 +571,7 @@
 
                     <div class="space-y-2">
                         <label class="lbl">Issue Photos <span class="t-faint">(add as many as you need)</span></label>
+                        <p id="visitEditNote" class="hidden text-[11px] font-semibold" style="color:#10b981;">Showing what you saved for this station earlier in this visit. Saving again updates it.</p>
                         <div class="grid grid-cols-2 gap-2">
                             <button type="button" onclick="document.getElementById('issuePhotoCamera').click()" class="btn btn-secondary !py-3">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -575,9 +587,7 @@
                         <div id="photoPreviewGrid" class="flex flex-wrap gap-2 pt-1"></div>
                     </div>
 
-                    <button type="button" id="saveRecBtn" onclick="saveRecommendationOnly()" class="btn btn-secondary w-full !py-3" style="border-color:#f97316;">
-                        Save Recommendation & Photos
-                    </button>
+                    <p class="text-[11px] t-faint">The recommendation and photos are saved with the service record below.</p>
                 </div>
 
                 <!-- Lazy-Loaded Historical Recommendations -->
@@ -596,7 +606,7 @@
 
             <!-- Footer -->
             <div class="p-4 sm:p-5 border-t divider shrink-0" style="background: var(--surface); padding-bottom: max(1rem, env(safe-area-inset-bottom));">
-                <button type="button" onclick="saveStationServiceRecord()" class="btn btn-primary w-full !py-3.5 !text-sm">
+                <button type="button" id="saveServiceBtn" onclick="saveStationServiceRecord()" class="btn btn-primary w-full !py-3.5 !text-sm">
                     Save Complete Service Record
                 </button>
             </div>
@@ -878,6 +888,89 @@
         </div>
     </div>
 
+    <!-- ===================== RECOMMENDATION DETAIL ===================== -->
+    <div id="recModal" class="hidden fixed inset-0 z-[56] overlay flex justify-center items-stretch sm:items-center sm:p-6">
+        <div class="station-sheet w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[92vh] flex flex-col sm:rounded-[1.25rem] overflow-hidden" style="background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);">
+            <div class="flex justify-between items-start gap-3 p-4 sm:p-5 border-b divider shrink-0">
+                <div class="min-w-0">
+                    <div id="recModalStation" class="eyebrow t-accent"></div>
+                    <h4 id="recModalTitle" class="font-black text-lg t-strong break-words mt-1"></h4>
+                    <div class="flex flex-wrap items-center gap-2 mt-1.5">
+                        <span id="recModalStatusChip" class="chip chip-blue">New</span>
+                        <span id="recModalMeta" class="text-[11px] t-faint"></span>
+                    </div>
+                </div>
+                <button type="button" onclick="closeRecModal()" class="icon-btn shrink-0" title="Close">✕</button>
+            </div>
+            <div class="flex-1 overflow-y-auto scroll-thin p-4 sm:p-6 space-y-5">
+                <div>
+                    <span class="eyebrow t-faint">Photos</span>
+                    <div id="recModalPhotos" class="flex flex-wrap gap-2 mt-2"></div>
+                    <p id="recModalPhotoNote" class="hidden text-xs font-semibold mt-1" style="color:#d97706;"></p>
+                </div>
+                <div>
+                    <span class="eyebrow t-faint">Notes & history</span>
+                    <div id="recModalHistory" class="space-y-2 mt-2 text-xs"></div>
+                </div>
+                <div class="inset p-4 space-y-3">
+                    <span class="eyebrow t-accent">Add an update</span>
+                    <div>
+                        <label class="lbl">Status</label>
+                        <select id="recModalStatus" class="field cursor-pointer">
+                            <option value="pending">Pending - still being worked on</option>
+                            <option value="complete">Complete - issue resolved</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="lbl">Note</label>
+                        <textarea id="recModalNote" rows="3" placeholder="e.g. Client has booked a builder to seal the gap next week" class="field"></textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="lbl">Add photos</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="document.getElementById('recPhotoCamera').click()" class="btn btn-secondary !py-2.5">Take Photo</button>
+                            <button type="button" onclick="document.getElementById('recPhotoGallery').click()" class="btn btn-secondary !py-2.5">Choose from Device</button>
+                        </div>
+                        <input type="file" id="recPhotoCamera" accept="image/*" capture="environment" class="hidden">
+                        <input type="file" id="recPhotoGallery" accept="image/*" multiple class="hidden">
+                        <div id="recPhotoPreview" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 sm:p-5 border-t divider shrink-0 flex gap-3" style="padding-bottom: max(1rem, env(safe-area-inset-bottom));">
+                <button type="button" onclick="closeRecModal()" class="btn btn-secondary">Close</button>
+                <button type="button" id="recModalSaveBtn" onclick="saveRecUpdate()" class="btn btn-primary flex-1 !py-3">Save Update</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== SAVE / DON'T SAVE / KEEP EDITING ===================== -->
+    <div id="choiceModal" class="hidden overlay fixed inset-0 z-[67] flex flex-col justify-center items-center p-4">
+        <div class="card p-6 sm:p-8 max-w-md w-full space-y-4">
+            <h3 id="choiceTitle" class="font-black text-lg t-strong"></h3>
+            <p id="choiceMessage" class="text-sm t-muted leading-relaxed"></p>
+            <div class="flex flex-wrap justify-end gap-2 pt-2">
+                <button type="button" id="choiceC" class="btn btn-secondary"></button>
+                <button type="button" id="choiceB" class="btn btn-outline-danger"></button>
+                <button type="button" id="choiceA" class="btn btn-primary"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== SYNC PROGRESS TOAST ===================== -->
+    <div id="syncToast" class="hidden fixed left-1/2 -translate-x-1/2 z-[45] card p-3.5" style="top: 5.75rem; width: min(92vw, 23rem);">
+        <div class="flex items-center gap-3">
+            <span id="syncToastIcon" class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-white font-black text-sm" style="background:#f97316;"></span>
+            <div class="flex-1 min-w-0">
+                <div id="syncToastText" class="text-xs font-bold t-strong truncate">Syncing site...</div>
+                <div class="w-full rounded-full h-1.5 overflow-hidden mt-1.5" style="background: var(--surface2);">
+                    <div id="syncToastBar" class="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400" style="width: 0%"></div>
+                </div>
+            </div>
+            <span id="syncToastPct" class="text-xs font-mono font-black t-accent shrink-0">0%</span>
+        </div>
+    </div>
+
     <!-- ===================== GENERIC CONFIRM (cancel visit / delete station) ===================== -->
     <div id="confirmModal" class="hidden overlay fixed inset-0 z-[66] flex flex-col justify-center items-center p-4">
         <div class="card p-6 sm:p-8 max-w-md w-full space-y-4" style="border-color:#dc2626;">
@@ -919,8 +1012,8 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 6 * 60 * 60;          // photo links stay valid for 6 hours
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.17-r6';
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "siteSearchInput", "renewalNotice", "siteCardsGrid", "syncProgressModal", "progressTitle", "progressPercent", "progressBarFill", "progressStatusText", "progressStats", "progressStatData", "progressStatSpeed", "progressStatItems", "progressStatItemsLabel", "progressSteps", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "siteServicesList", "statStations", "statServiced", "statIssues", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "siteLandingRecsList", "siteLandingVisitsList", "visitWorkspace", "activeWorkspaceTitle", "stationSearchInput", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTitle", "scannedBarcodeBadge", "stationSheetBody", "newStationFields", "newLocName", "newDeviceType", "activityLevel", "prepUsed", "speciesCaught", "qtyCount", "serviceNotes", "recommendationNote", "issuePhotoCamera", "issuePhotoGallery", "photoPreviewGrid", "saveRecBtn", "pastRecommendationsSection", "loadPastHistoryBtn", "pastRecommendationsList", "deleteStationBtn", "settingsModal", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "flashToggleBtn", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeServicesSection", "completeServicesList", "closingSiteNotes", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const APP_VERSION = '2026.10.17-r7';
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "renewalNotice", "siteCardsGrid", "syncProgressModal", "progressTitle", "progressPercent", "progressBarFill", "progressStatusText", "progressStats", "progressStatData", "progressStatSpeed", "progressStatItems", "progressStatItemsLabel", "progressSteps", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "siteServicesList", "statStations", "statServiced", "statIssues", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "toggleCompletedRecsBtn", "siteLandingRecsList", "siteLandingVisitsList", "visitWorkspace", "activeWorkspaceTitle", "stationSearchInput", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTitle", "scannedBarcodeBadge", "stationSheetBody", "newStationFields", "newLocName", "newDeviceType", "activityLevel", "prepUsed", "speciesCaught", "qtyCount", "serviceNotes", "recommendationNote", "visitEditNote", "issuePhotoCamera", "issuePhotoGallery", "photoPreviewGrid", "pastRecommendationsSection", "loadPastHistoryBtn", "pastRecommendationsList", "deleteStationBtn", "saveServiceBtn", "settingsModal", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "flashToggleBtn", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalStation", "recModalTitle", "recModalStatusChip", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoCamera", "recPhotoGallery", "recPhotoPreview", "recModalSaveBtn", "choiceModal", "choiceTitle", "choiceMessage", "syncToast", "syncToastIcon", "syncToastText", "syncToastBar", "syncToastPct", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -1513,6 +1606,61 @@
 
         function unsentItems() { return queueItems.filter(i => i.status !== 'sent'); }
 
+        // ---------- Sync activity: any download/refresh makes the header badge animate ----------
+        const syncActs = new Map(); // key -> label
+        function beginSync(key, label) { syncActs.set(key, label); updateSyncBadge(); }
+        function endSync(key) { syncActs.delete(key); updateSyncBadge(); }
+        async function withSyncBadge(key, label, fn) {
+            beginSync(key, label);
+            try { return await fn(); } finally { endSync(key); }
+        }
+
+        // ---------- Sync toast: visible progress for a site sync the user asked for ----------
+        const syncToast = (() => {
+            const el = id => document.getElementById(id);
+            const raf = (typeof requestAnimationFrame === 'function') ? requestAnimationFrame : (f => setTimeout(f, 16));
+            let shown = 0, target = 0, animating = false, hideTimer = null;
+            function draw() {
+                shown += (target - shown) * 0.15;
+                if (Math.abs(target - shown) < 0.2) shown = target;
+                el('syncToastBar').style.width = shown.toFixed(1) + '%';
+                el('syncToastPct').textContent = Math.round(shown) + '%';
+                if (shown !== target) raf(draw); else animating = false;
+            }
+            function setTarget(p) { target = Math.max(target, Math.min(100, p)); if (!animating) { animating = true; raf(draw); } }
+            function icon(kind) {
+                const i = el('syncToastIcon');
+                if (kind === 'busy') { i.style.background = '#f97316'; i.innerHTML = '<span class="spinner"></span>'; }
+                else if (kind === 'done') { i.style.background = '#10b981'; i.textContent = '✓'; }
+                else { i.style.background = '#dc2626'; i.textContent = '!'; }
+            }
+            return {
+                start(text) {
+                    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+                    shown = 0; target = 0;
+                    el('syncToastBar').style.width = '0%';
+                    el('syncToastPct').textContent = '0%';
+                    el('syncToastPct').classList.remove('hidden');
+                    el('syncToastText').textContent = text;
+                    icon('busy');
+                    el('syncToast').classList.remove('hidden');
+                },
+                set(p, text) { setTarget(p); if (text) el('syncToastText').textContent = text; },
+                done(text) {
+                    setTarget(100);
+                    icon('done');
+                    el('syncToastText').textContent = text;
+                    hideTimer = setTimeout(() => el('syncToast').classList.add('hidden'), 3500);
+                },
+                fail(text) {
+                    icon('fail');
+                    el('syncToastPct').classList.add('hidden');
+                    el('syncToastText').textContent = text;
+                    hideTimer = setTimeout(() => el('syncToast').classList.add('hidden'), 6000);
+                }
+            };
+        })();
+
         function updateSyncBadge() {
             const badge = document.getElementById('syncStatusBadge');
             const dot = document.getElementById('syncDot');
@@ -1527,8 +1675,9 @@
             if (!isOnline) {
                 chip = 'chip-red'; dotCls = 'bg-red-500';
                 label = unsent.length ? `Offline · ${unsent.length} saved on device` : 'Offline';
-            } else if (busyMessage) {
-                chip = 'chip-amber'; dotCls = 'bg-amber-400 animate-ping'; label = busyMessage;
+            } else if (busyMessage || syncActs.size) {
+                chip = 'chip-amber'; dotCls = 'bg-amber-400 animate-ping';
+                label = busyMessage || Array.from(syncActs.values()).pop();
             } else if (failed.length) {
                 chip = 'chip-red'; dotCls = 'bg-red-500'; label = `${failed.length} upload issue${failed.length === 1 ? '' : 's'}`;
             } else if (unsent.length) {
@@ -1592,7 +1741,13 @@
 
         function renderPhotoPreviews() {
             const grid = document.getElementById('photoPreviewGrid');
-            grid.innerHTML = pendingPhotos.map((p, i) => `
+            const kept = (typeof keptPhotos !== 'undefined' ? keptPhotos : []).map((k, i) => `
+                <div class="thumb" title="Already saved">
+                    ${k.url ? `<img src="${esc(k.url)}" alt="" onclick="viewFullImage(keptPhotos.map(x => x.url).filter(Boolean), 'Saved photo', 'Saved earlier this visit', '', ${i})">` : '<div class="w-full h-full flex items-center justify-center text-[10px] t-faint text-center p-1">Saved photo</div>'}
+                    <span class="absolute bottom-1 left-1 text-[9px] font-black text-white bg-emerald-600 rounded px-1">SAVED</span>
+                    <button type="button" class="thumb-x" onclick="keptPhotos.splice(${i}, 1); renderPhotoPreviews();" title="Remove photo">✕</button>
+                </div>`).join('');
+            grid.innerHTML = kept + pendingPhotos.map((p, i) => `
                 <div class="thumb">
                     <img src="${esc(p.url)}" alt="" onclick="previewPendingPhoto(${i})">
                     <button type="button" class="thumb-x" onclick="removePendingPhoto(${i})" title="Remove photo">✕</button>
@@ -1969,8 +2124,8 @@
                 path: `${selectedClient.id}/${safeBarcode}_${stamp}_${i + 1}.${extFor(blob)}`
             }));
             if (photos.length) {
-                payload.photos = photos.map(p => p.path);
-                payload.photo = photos[0].path; // kept for older records / reports
+                payload.photos = (payload.photos || []).concat(photos.map(p => p.path));
+                payload.photo = payload.photos[0]; // kept for older records / reports
             }
             return enqueue({
                 kind: 'insert_log',
@@ -2385,6 +2540,7 @@
 
             let loadErr = null;
             if (isOnline) {
+                beginSync('clients', 'Syncing sites...');
                 try {
                     const { data, error } = await withTimeout(_supabase.from('clients').select('*').order('Name', { ascending: true }), 12000, 'Loading sites');
                     if (error) throw error;
@@ -2399,6 +2555,8 @@
                 } catch (err) {
                     loadErr = err;
                     console.warn('Loading clients from server failed:', err.message || err);
+                } finally {
+                    endSync('clients');
                 }
             }
 
@@ -2463,6 +2621,7 @@
             }
             populateSiteFilter();
             if (isOnline) {
+                beginSync('team', 'Syncing team...');
                 try {
                     const { data, error } = await withTimeout(
                         _supabase.from('profiles').select('id, full_name, email, approved').eq('approved', true), 10000, 'Loading team');
@@ -2473,6 +2632,7 @@
                         await cacheSet('team', teamMembers);
                     }
                 } catch (e) { console.warn('Team list could not be loaded:', e.message || e); }
+                finally { endSync('team'); }
             }
             populateSiteFilter();
             renderSiteCards();
@@ -2518,17 +2678,44 @@
                 ['mine', 'My sites'],
                 ['all', 'All sites'],
                 ['unassigned', 'Unassigned sites'],
+                ['due', 'Sites due soon'],
                 ['renewals', `Contracts ending soon${renewals ? ' (' + renewals + ')' : ''}`]
             ].concat(teamMembers.filter(t => !currentUser || t.id !== currentUser.id).map(t => ['tech:' + t.id, t.name + "'s sites"]));
             sel.innerHTML = opts.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('');
             if (!opts.some(o => o[0] === siteFilter)) siteFilter = 'all';
             sel.value = siteFilter;
+            const range = document.getElementById('dueRangeSelect');
+            range.value = dueRange;
+            range.classList.toggle('hidden', siteFilter !== 'due');
         }
 
         function setSiteFilter(v) {
             siteFilter = v;
             saveJSON(SITE_FILTER_KEY, v);
+            document.getElementById('dueRangeSelect').classList.toggle('hidden', v !== 'due');
             renderSiteCards();
+        }
+
+        // "Sites due soon": how far ahead to look
+        const DUE_RANGE_KEY = 'pestis-due-range';
+        let dueRange = loadJSON(DUE_RANGE_KEY, '7');
+        function setDueRange(v) { dueRange = v; saveJSON(DUE_RANGE_KEY, v); renderSiteCards(); }
+
+        // Soonest due (or most overdue) service at a site, in days from today
+        function soonestDue(c) {
+            let best = null;
+            getServices(c).forEach(sv => {
+                const d = dueInfo(sv);
+                if (d.days === null) return;
+                if (best === null || d.days < best.days) best = { days: d.days, type: sv.type };
+            });
+            return best;
+        }
+        function siteDueInRange(c) {
+            const b = soonestDue(c);
+            if (!b) return false;
+            if (dueRange === 'overdue') return b.days < 0;
+            return b.days <= Number(dueRange);
         }
 
         function siteMatchesFilter(c) {
@@ -2536,6 +2723,7 @@
                 case siteFilter === 'mine': return !!currentUser && c.assigned_to === currentUser.id;
                 case siteFilter === 'unassigned': return !c.assigned_to;
                 case siteFilter === 'renewals': return renewalDue(c);
+                case siteFilter === 'due': return siteDueInRange(c);
                 case String(siteFilter).startsWith('tech:'): return c.assigned_to === String(siteFilter).slice(5);
                 default: return true;
             }
@@ -2553,9 +2741,9 @@
         }
 
         // Logo: back to the site list from anywhere
-        function goHome() {
-            const sheetOpen = !document.getElementById('stationFormContainer').classList.contains('hidden');
-            if (sheetOpen && pendingPhotos.length && !confirm("You have photos that haven't been saved to a recommendation yet. Leave and discard them?")) return;
+        async function goHome() {
+            if (!(await requestCloseStation())) return; // "Keep editing" chosen
+            if (!document.getElementById('recModal').classList.contains('hidden')) closeRecModal();
             clearPendingPhotos(true);
             ['addClientModal', 'editSiteModal', 'servicesModal', 'completeVisitModal', 'manualScanModal', 'imageModal', 'settingsModal', 'profileModal', 'queueModal']
                 .forEach(id => { const m = document.getElementById(id); if (m) m.classList.add('hidden'); });
@@ -2597,21 +2785,23 @@
                 const cover = coverUrl(c);
                 const due = dueCountForClient(c);
                 let dueChip = '';
-                if (due.overdue) dueChip = `<span class="site-due" style="background:#dc2626;">${due.overdue} service${due.overdue === 1 ? '' : 's'} overdue</span>`;
-                else if (due.soon) dueChip = `<span class="site-due" style="background:#d97706;">${due.soon} due this week</span>`;
+                if (siteFilter === 'due') {
+                    const b2 = soonestDue(c);
+                    if (b2) dueChip = `<span class="site-due" style="background:${b2.days < 0 ? '#dc2626' : '#ea580c'};">${b2.days < 0 ? 'Overdue ' + (-b2.days) + 'd' : b2.days === 0 ? 'Due today' : 'Due in ' + b2.days + 'd'}</span>`;
+                } else if (due.overdue) dueChip = `<span class="site-due" style="background:#dc2626;">${due.overdue} overdue</span>`;
+                else if (due.soon) dueChip = `<span class="site-due" style="background:#ea580c;">${due.soon} due this week</span>`;
                 const ci = contractInfo(c);
                 if (ci && ci.days <= RENEWAL_WARN_DAYS) dueChip += `<span class="site-due" style="background:${ci.days < 0 ? '#991b1b' : '#7c3aed'};">${esc(ci.short)}</span>`;
                 const tech = c.assigned_to ? teamName(c.assigned_to) : '';
+                const hover = [name, c.Address, tech ? 'Technician: ' + tech : ''].filter(Boolean).join(' - ');
                 return `
-                    <button type="button" class="site-card" data-id="${esc(c.id)}" onclick="startSiteVisit(this.dataset.id)" style="background:${grad}">
+                    <button type="button" class="site-card" data-id="${esc(c.id)}" onclick="startSiteVisit(this.dataset.id)" title="${esc(hover)}" style="background:${grad}">
                         ${cover
                             ? `<img src="${esc(cover)}" alt="" loading="lazy" class="site-cover" onerror="this.remove()">`
                             : `<span class="site-initials">${esc(initials)}</span>`}
-                        <span class="site-overlay">
-                            ${dueChip ? `<span class="site-chips">${dueChip}</span>` : ''}
+                        ${dueChip ? `<span class="site-chips">${dueChip}</span>` : ''}
+                        <span class="site-overlay${dueChip ? ' has-chips' : ''}">
                             <span class="site-name">${esc(name)}</span>
-                            <span class="site-addr">${esc(c.Address || 'No address')}</span>
-                            ${tech ? `<span class="site-tech">👤 ${esc(tech)}</span>` : ''}
                         </span>
                     </button>`;
             }).join('');
@@ -3231,20 +3421,28 @@
         }
 
         // Brings the saved copy of a site up to date. mode: 'auto' or 'full'
-        async function syncSiteCache(clientId, mode, prog) {
+        async function syncSiteCache(clientId, mode, prog, onStep) {
+            const step = (p, t) => { if (onStep) onStep(p, t); };
             let cache = await getSiteCache(clientId);
             const now = Date.now();
             const needFull = mode === 'full' || !cache || now - (cache.lastFullAt || 0) > SITE_FULL_RESYNC_MS;
             let changed = false;
+            let added = 0;
 
             if (needFull) {
+                step(55, 'Downloading the full site...');
+                const before = cache ? serverRows(cache.rows).length : 0;
                 const rows = await fetchRowsPaged(clientId, null, prog);
                 changed = !cache || rows.length !== serverRows(cache.rows).length || latestCreatedAt(rows) !== latestCreatedAt(cache.rows);
+                added = Math.max(0, rows.length - before);
                 cache = { rows: rows, lastSyncAt: now, lastFullAt: now };
             } else {
                 let rows = cache.rows;
                 let lastFullAt = cache.lastFullAt || now;
+                step(50, 'Downloading new records...');
                 const fresh = await fetchRowsPaged(clientId, latestCreatedAt(rows));
+                added = fresh.length;
+                step(72, fresh.length ? `${fresh.length} new record${fresh.length === 1 ? '' : 's'} downloaded` : 'No new records');
                 if (fresh.length) {
                     const freshRefs = new Set(fresh.map(r => r.payload && r.payload.clientRef).filter(Boolean));
                     rows = rows.filter(r => !(r._local && freshRefs.has(r.payload && r.payload.clientRef))).concat(fresh);
@@ -3254,7 +3452,9 @@
                     _supabase.from('service_logs').select('barcode_id', { count: 'exact', head: true }).eq('client_id', clientId),
                     15000, 'Checking site data');
                 if (error) throw error;
+                step(85, 'Double-checking nothing was removed...');
                 if (typeof count === 'number' && count !== serverRows(rows).length) {
+                    step(88, 'Refreshing the full site...');
                     rows = await fetchRowsPaged(clientId, null);
                     lastFullAt = now;
                     changed = true;
@@ -3263,7 +3463,7 @@
             }
 
             await saveSiteCache(clientId, cache);
-            return { cache, changed };
+            return { cache, changed, added };
         }
 
         // After a queued record uploads, add it to the saved copy so the site doesn't need re-downloading
@@ -3302,6 +3502,8 @@
             if (/not authori|permission|row-level|policy|denied|403/i.test(e)) return 'Storage refused access to this photo (' + e + '). Check the storage policies on the station-photos bucket.';
             return 'Photo unavailable: ' + e;
         }
+
+        const REC_UPDATE_ID = 'REC_UPDATE'; // service_logs rows that update a recommendation (status, notes, photos)
 
         // When a record was made on site (falls back to when it reached the server)
         function recTime(row) {
@@ -3355,6 +3557,18 @@
                 }
             });
 
+            // A station re-saved during the same visit replaces its earlier entry
+            const superseded = new Set(rows.map(r => r.payload && r.payload.supersedes).filter(Boolean));
+            const recUpdates = new Map(); // recommendation id -> its update rows
+            const resolvePhotos = slots => {
+                const photos = [], missing = [], slotUrls = [];
+                slots.forEach(sl => {
+                    const u = sl.local || signedMap.get(sl.path) || null;
+                    if (u) { photos.push(u); slotUrls.push({ path: sl.path, url: u }); } else missing.push(sl.path);
+                });
+                return { photos, missing, slotUrls };
+            };
+
             rows.forEach(row => {
                 const payload = row.payload || {};
                 if (row.barcode_id === 'SITE_VISIT_SUMMARY') {
@@ -3366,15 +3580,26 @@
                     });
                     return;
                 }
+                if (row.barcode_id === REC_UPDATE_ID) {
+                    if (!payload.recRef) return;
+                    if (!recUpdates.has(payload.recRef)) recUpdates.set(payload.recRef, []);
+                    recUpdates.get(payload.recRef).push(row);
+                    return;
+                }
+                if (payload.clientRef && superseded.has(payload.clientRef)) return;
 
-                if (recTime(row) > latestVisitTimestamp) activeScannedSet.add(row.barcode_id);
+                const inThisVisit = recTime(row) > latestVisitTimestamp;
+                if (inThisVisit) activeScannedSet.add(row.barcode_id);
 
                 const existing = map.get(row.barcode_id) || {
                     barcode_id: row.barcode_id,
                     locationName: payload.locationName || 'Unnamed Device',
                     deviceType: payload.deviceType || 'Rodent Bait Station',
                     recommendationsHistory: [],
-                    lastPayload: payload
+                    lastPayload: payload,
+                    visitPayload: null,
+                    visitRef: null,
+                    visitRec: null
                 };
 
                 existing.locationName = payload.locationName || existing.locationName;
@@ -3382,30 +3607,55 @@
 
                 const recText = payload.recommendation || payload.recommendationNote || null;
                 const slots = row._slots || [];
-                const photos = [];
-                const missing = [];
-                slots.forEach(s => {
-                    const u = s.local || signedMap.get(s.path) || null;
-                    if (u) photos.push(u); else missing.push(s.path);
-                });
+                const { photos, missing, slotUrls } = resolvePhotos(slots);
                 let photoError = '';
                 if (missing.length) {
                     photoError = (slots.length > 1 ? `${missing.length} of ${slots.length} photos unavailable. ` : '') + photoErrorText(missing[0]);
                 }
 
+                let rec = null;
                 if (recText || slots.length) {
-                    existing.recommendationsHistory.push({
+                    rec = {
+                        id: payload.recRef || payload.clientRef || (row.barcode_id + '@' + row.created_at),
+                        station: existing.locationName,
+                        barcode: row.barcode_id,
                         recommendation: recText || 'Issue photo attached',
                         photos: photos,
+                        photoSlots: slotUrls,
                         photoCount: slots.length,
                         photoError: photoError,
                         missingPaths: missing,
-                        date: payload.servicedAt || row.created_at
-                    });
+                        date: payload.servicedAt || row.created_at,
+                        technician: payload.technician || '',
+                        status: 'new',
+                        updates: []
+                    };
+                    existing.recommendationsHistory.push(rec);
+                }
+                if (inThisVisit && row.barcode_id !== REC_UPDATE_ID) {
+                    existing.visitPayload = payload;
+                    existing.visitRef = payload.clientRef || null;
+                    existing.visitRec = rec;
                 }
                 existing.lastPayload = payload;
                 map.set(row.barcode_id, existing);
             });
+
+            // Apply status changes, notes and extra photos to each recommendation
+            map.forEach(dev => dev.recommendationsHistory.forEach(rec => {
+                const ups = (recUpdates.get(rec.id) || []).slice().sort((x, y) => recTime(x) - recTime(y));
+                ups.forEach(u => {
+                    const p = u.payload || {};
+                    rec.status = p.status === 'complete' ? 'complete' : 'pending'; // any change makes it pending unless closed off
+                    const ph = resolvePhotos(u._slots || []);
+                    rec.photos = rec.photos.concat(ph.photos);
+                    rec.missingPaths = rec.missingPaths.concat(ph.missing);
+                    rec.photoCount += (u._slots || []).length;
+                    rec.updates.push({ note: p.note || '', status: rec.status, by: p.technician || '', at: p.servicedAt || u.created_at, photoCount: (u._slots || []).length });
+                });
+                if (rec.missingPaths.length && !rec.photoError) rec.photoError = photoErrorText(rec.missingPaths[0]);
+                rec.lastChange = ups.length ? (ups[ups.length - 1].payload.servicedAt || ups[ups.length - 1].created_at) : rec.date;
+            }));
 
             siteDevices = Array.from(map.values());
             sitePastVisits = Array.from(visitMap.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -3433,6 +3683,7 @@
                     // First time on this device: download with a detailed progress display
                     prog = createProgress();
                     prog.show();
+                    beginSync('download', 'Downloading site...');
                     prog.step('connect', 0.5, 'Connecting to the database...');
                     cache = (await syncSiteCache(client.id, 'full', prog)).cache;
                     prog.step('save', 1, 'Saved to this device');
@@ -3445,6 +3696,7 @@
                     await new Promise(r => setTimeout(r, 450));
                     prog.hide();
                     prog = null;
+                    endSync('download');
                 } else {
                     if (!cache) {
                         alert("You're offline and this site hasn't been opened on this device before, so its stations aren't saved here yet. You can still scan and record new stations.");
@@ -3479,6 +3731,7 @@
                 }
             } catch (err) {
                 if (prog) prog.hide();
+                endSync('download');
                 selectedClient = null;
                 document.getElementById('siteSelectorSection').classList.remove('hidden');
                 alert('Error downloading site data: ' + friendlyError(err));
@@ -3489,24 +3742,50 @@
 
         // Checks the server for changes to the open site without interrupting work.
         // mode: undefined (automatic), 'manual' (Sync Site button) or 'full'
+        // Checks the server for changes to the open site.
+        // mode: undefined (automatic, quiet), 'start' (Start Service), 'manual' (Sync Site button) or 'full'
+        let siteSyncPromise = null;
         async function backgroundSyncSite(mode) {
-            if (!selectedClient || siteSyncInfo.syncing) return;
+            if (!selectedClient) return;
+            const visible = mode === 'start' || mode === 'manual' || mode === 'full';
+            if (siteSyncInfo.syncing) {
+                if (!visible) return;
+                // A quiet sync is already running: wait for it, then do the one the user asked for
+                try { await siteSyncPromise; } catch (e) {}
+                if (!selectedClient) return;
+            }
             if (!isOnline) {
                 if (mode === 'manual' || mode === 'full') alert("You're offline. The saved copy of this site is being used, and it will sync when you're back online.");
+                if (mode === 'start') { syncToast.start('Offline'); syncToast.fail("Offline - using the copy saved on this device"); }
                 return;
             }
+            siteSyncPromise = runSiteSync(mode, visible);
+            return siteSyncPromise;
+        }
+
+        async function runSiteSync(mode, visible) {
             const clientId = selectedClient.id;
             const mySeq = siteSyncSeq;
+            const ui = visible ? syncToast : null;
+            const step = (p, t) => { if (ui && mySeq === siteSyncSeq) ui.set(p, t); };
             siteSyncInfo.syncing = true;
             siteSyncInfo.error = null;
             renderSiteSyncInfo();
+            beginSync('site', 'Syncing site...');
+            if (ui) ui.start('Syncing site with the latest data...');
             try {
-                if (mode) await flushQueue();
+                if (mode) {
+                    step(8, 'Sending anything waiting on this device...');
+                    await flushQueue();
+                }
+                step(25, 'Checking site details...');
                 const detailsChanged = await refreshClientRecord(clientId).catch(() => false);
-                const { cache, changed } = await syncSiteCache(clientId, mode === 'full' ? 'full' : 'auto');
+                step(40, 'Checking for new records...');
+                const { cache, changed, added } = await syncSiteCache(clientId, mode === 'full' ? 'full' : 'auto', null, step);
                 if (mySeq !== siteSyncSeq) return;
                 siteSyncInfo.lastSyncAt = cache.lastSyncAt;
                 if (changed || mode) {
+                    step(93, 'Updating the screen...');
                     await buildSiteState(clientId, cache.rows, new Set(scannedBarcodesThisVisit));
                     if (mySeq !== siteSyncSeq) return;
                     rerenderOpenSite();
@@ -3514,9 +3793,14 @@
                 } else if (detailsChanged) {
                     refreshLandingHeader();
                 }
+                if (ui) ui.done(added ? `Site up to date · ${added} new record${added === 1 ? '' : 's'}` : 'Site up to date · no changes');
             } catch (err) {
-                if (mySeq === siteSyncSeq) siteSyncInfo.error = isNetworkError(err) ? 'connection lost' : friendlyError(err);
+                const msg = isNetworkError(err) ? 'connection lost' : friendlyError(err);
+                if (mySeq === siteSyncSeq) siteSyncInfo.error = msg;
+                if (ui) ui.fail('Sync failed: ' + msg);
+                logAppError('Site sync', err);
             } finally {
+                endSync('site');
                 if (mySeq === siteSyncSeq) {
                     siteSyncInfo.syncing = false;
                     renderSiteSyncInfo();
@@ -3612,61 +3896,91 @@
             updateFab();
         }
 
+        // ---------- Recommendation status helpers ----------
+        const REC_STATUS = {
+            new: { label: 'New', cls: 'chip-blue' },
+            pending: { label: 'Pending', cls: 'chip-amber' },
+            complete: { label: 'Complete', cls: 'chip-green' }
+        };
+        function recStatusChip(st) { const s2 = REC_STATUS[st] || REC_STATUS.new; return `<span class="chip ${s2.cls} shrink-0">${s2.label}</span>`; }
+        function allSiteRecs() {
+            const out = [];
+            siteDevices.forEach(d => d.recommendationsHistory.forEach(r => { r.station = d.locationName; out.push(r); }));
+            return out;
+        }
+        function findRec(id) { return allSiteRecs().find(r => r.id === id) || null; }
+        function openRecCount(dev) { return dev.recommendationsHistory.filter(r => r.status !== 'complete').length; }
+
         function renderLandingStats() {
             const total = siteDevices.length;
             const serviced = siteDevices.filter(d => scannedBarcodesThisVisit.has(d.barcode_id)).length;
             let issues = 0;
-            siteDevices.forEach(d => { issues += d.recommendationsHistory.length; });
+            siteDevices.forEach(d => { issues += openRecCount(d); });
             document.getElementById('statStations').textContent = total;
             document.getElementById('statServiced').textContent = serviced;
             document.getElementById('statIssues').textContent = issues;
+        }
+
+        let showCompletedRecs = false;
+        function toggleCompletedRecs() { showCompletedRecs = !showCompletedRecs; renderLandingRecommendationsAndVisits(); }
+
+        function fmtDateTimeLong(iso) {
+            const d = new Date(iso);
+            return {
+                date: d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }),
+                time: d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+            };
+        }
+
+        function recRowHtml(item, opts) {
+            const dateStr = item.date ? new Date(item.date).toLocaleDateString() : '';
+            const photos = item.photos || [];
+            const countBadge = photos.length > 1 ? `<span class="absolute bottom-0.5 right-0.5 text-[10px] font-black text-white bg-black/70 rounded px-1">${photos.length}</span>` : '';
+            const right = photos.length
+                ? `<span class="relative shrink-0"><img src="${esc(photos[0])}" loading="lazy" alt="" class="h-12 w-12 rounded-lg object-cover" style="border:1px solid var(--border);">${countBadge}</span>`
+                : '<span class="link-btn !no-underline shrink-0">Open ▸</span>';
+            const bits = [esc(dateStr)];
+            if (item.photoCount) bits.push(`${item.photoCount} photo${item.photoCount === 1 ? '' : 's'}`);
+            if (item.updates && item.updates.length) bits.push(`${item.updates.length} update${item.updates.length === 1 ? '' : 's'}`);
+            if (item.photoError) bits.push('<span style="color:#d97706;">Photo unavailable</span>');
+            const stationLabel = opts && opts.hideStation ? '' : `<span class="font-bold t-accent">${esc(item.station)}:</span> `;
+            return `
+                <button type="button" data-rec="${esc(item.id)}" onclick="openRecModal(this.dataset.rec)" class="row-item clickable w-full text-left p-3 flex justify-between items-center gap-3" style="border-color: ${item.status === 'complete' ? 'var(--border)' : 'rgba(249,115,22,.35)'};${item.status === 'complete' ? 'opacity:.75;' : ''}">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-start gap-2">
+                            <div class="t-muted break-words flex-1">${stationLabel}${esc(item.recommendation)}</div>
+                            ${recStatusChip(item.status)}
+                        </div>
+                        <div class="t-faint text-[11px] mt-0.5">${bits.join(' · ')}</div>
+                    </div>
+                    ${right}
+                </button>`;
         }
 
         function renderLandingRecommendationsAndVisits() {
             const recsContainer = document.getElementById('siteLandingRecsList');
             const visitsContainer = document.getElementById('siteLandingVisitsList');
 
-            let allRecs = [];
-            siteDevices.forEach(d => {
-                d.recommendationsHistory.forEach(r => {
-                    allRecs.push({ station: d.locationName, ...r });
-                });
-            });
-            allRecs.sort((a, b) => new Date(b.date) - new Date(a.date));
+            const allRecs = allSiteRecs().sort((a, b) => new Date(b.lastChange || b.date) - new Date(a.lastChange || a.date));
+            const completed = allRecs.filter(r => r.status === 'complete');
+            const shown = showCompletedRecs ? allRecs : allRecs.filter(r => r.status !== 'complete');
+            const toggle = document.getElementById('toggleCompletedRecsBtn');
+            toggle.textContent = completed.length ? (showCompletedRecs ? 'Hide completed' : `Show completed (${completed.length})`) : '';
 
-            if (allRecs.length === 0) {
-                recsContainer.innerHTML = '<span class="t-faint italic">No active recommendations on record for this site.</span>';
-            } else {
-                recsContainer.innerHTML = allRecs.map(item => {
-                    const dateStr = item.date ? new Date(item.date).toLocaleDateString() : '';
-                    const photos = item.photos || [];
-                    const idx = regImg(photos, item.recommendation, `${item.station}${dateStr ? ' · ' + dateStr : ''}`, item.photoError, item.missingPaths);
-                    const countBadge = photos.length > 1 ? `<span class="absolute bottom-0.5 right-0.5 text-[10px] font-black text-white bg-black/70 rounded px-1">${photos.length}</span>` : '';
-                    const right = photos.length
-                        ? `<span class="relative shrink-0"><img src="${esc(photos[0])}" loading="lazy" alt="" class="h-12 w-12 rounded-lg object-cover" style="border:1px solid var(--border);">${countBadge}</span>`
-                        : '<span class="link-btn !no-underline shrink-0">View ▸</span>';
-                    const photoInfo = item.photoCount ? ` · ${item.photoCount} photo${item.photoCount === 1 ? '' : 's'}` : '';
-                    return `
-                        <button type="button" onclick="openImg(${idx})" class="row-item clickable w-full text-left p-3 flex justify-between items-center gap-3" style="border-color: rgba(249,115,22,.35);">
-                            <div class="min-w-0">
-                                <div class="t-muted break-words"><span class="font-bold t-accent">${esc(item.station)}:</span> ${esc(item.recommendation)}</div>
-                                <div class="t-faint text-[11px] mt-0.5">${esc(dateStr)}${photoInfo}${item.photoError ? ' · <span style="color:#d97706;">Photo unavailable</span>' : ''}</div>
-                            </div>
-                            ${right}
-                        </button>`;
-                }).join('');
-            }
+            recsContainer.innerHTML = shown.length
+                ? shown.map(r => recRowHtml(r)).join('')
+                : `<span class="t-faint italic">${completed.length ? 'All recommendations are complete.' : 'No active recommendations on record for this site.'}</span>`;
 
             if (sitePastVisits.length === 0) {
                 visitsContainer.innerHTML = '<span class="t-faint italic">No past visit history recorded yet.</span>';
             } else {
                 visitsContainer.innerHTML = sitePastVisits.map((v, index) => {
-                    const visitDateStr = new Date(v.date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                    const dt = fmtDateTimeLong(v.date);
                     return `
                         <div class="row-item p-3.5 flex justify-between items-center gap-3">
                             <div class="min-w-0">
-                                <div class="font-bold t-strong">${esc(visitDateStr)}</div>
-                                <div class="t-muted truncate">${esc(v.technician || 'Technician not recorded')}</div>
+                                <div class="font-bold t-strong">${esc(dt.date)}</div>
+                                <div class="t-muted truncate">Closed ${esc(dt.time)} · ${esc(v.technician || 'Technician not recorded')}</div>
                             </div>
                             <button type="button" onclick="generatePDFReport(${index})" class="btn btn-blue !px-3.5 !py-2 shrink-0">Download</button>
                         </div>`;
@@ -3674,6 +3988,116 @@
             }
 
             renderLandingStats();
+        }
+
+        // ---------- Recommendation detail: notes, extra photos, status ----------
+        let openRecId = null;
+        let recPendingPhotos = [];
+
+        ['recPhotoCamera', 'recPhotoGallery'].forEach(id => {
+            document.getElementById(id).addEventListener('change', async e => {
+                for (const f of Array.from(e.target.files || [])) {
+                    const blob = await compressImage(f);
+                    recPendingPhotos.push({ blob: blob, url: URL.createObjectURL(blob) });
+                }
+                e.target.value = '';
+                renderRecPendingPhotos();
+            });
+        });
+        function renderRecPendingPhotos() {
+            document.getElementById('recPhotoPreview').innerHTML = recPendingPhotos.map((p, i) => `
+                <div class="thumb">
+                    <img src="${esc(p.url)}" alt="" onclick="viewFullImage(recPendingPhotos.map(x => x.url), 'New photo', 'Not saved yet', '', ${i})">
+                    <button type="button" class="thumb-x" onclick="recPendingPhotos.splice(${i}, 1); renderRecPendingPhotos();" title="Remove photo">✕</button>
+                </div>`).join('');
+        }
+
+        function openRecModal(id) {
+            const rec = findRec(id);
+            if (!rec) return;
+            openRecId = id;
+            recPendingPhotos = [];
+            renderRecPendingPhotos();
+            document.getElementById('recModalStation').textContent = rec.station + ' · ' + rec.barcode;
+            document.getElementById('recModalTitle').textContent = rec.recommendation;
+            document.getElementById('recModalStatusChip').outerHTML = `<span id="recModalStatusChip" class="chip ${(REC_STATUS[rec.status] || REC_STATUS.new).cls}">${(REC_STATUS[rec.status] || REC_STATUS.new).label}</span>`;
+            const dt = fmtDateTimeLong(rec.date);
+            document.getElementById('recModalMeta').textContent = `Logged ${dt.date} ${dt.time}${rec.technician ? ' by ' + rec.technician : ''}`;
+
+            const idx = regImg(rec.photos, rec.recommendation, rec.station, rec.photoError, rec.missingPaths);
+            document.getElementById('recModalPhotos').innerHTML = rec.photos.length
+                ? rec.photos.map((u, i) => `<div class="thumb"><img src="${esc(u)}" alt="" onclick="openImgAt(${idx}, ${i})"></div>`).join('')
+                : '<span class="text-xs t-faint italic">No photos yet.</span>';
+            const pn = document.getElementById('recModalPhotoNote');
+            pn.textContent = rec.photoError || '';
+            pn.classList.toggle('hidden', !rec.photoError);
+
+            const hist = [`<div class="row-item p-3"><div class="t-faint">${esc(dt.date)} ${esc(dt.time)}${rec.technician ? ' · ' + esc(rec.technician) : ''}</div><div class="t-strong mt-0.5">Logged: ${esc(rec.recommendation)}</div></div>`]
+                .concat(rec.updates.map(u => {
+                    const d2 = fmtDateTimeLong(u.at);
+                    return `<div class="row-item p-3"><div class="flex justify-between gap-2"><span class="t-faint">${esc(d2.date)} ${esc(d2.time)}${u.by ? ' · ' + esc(u.by) : ''}</span>${recStatusChip(u.status)}</div>
+                        ${u.note ? `<div class="t-strong mt-1 whitespace-pre-line break-words">${esc(u.note)}</div>` : ''}
+                        ${u.photoCount ? `<div class="t-faint mt-0.5">+${u.photoCount} photo${u.photoCount === 1 ? '' : 's'}</div>` : ''}</div>`;
+                }));
+            document.getElementById('recModalHistory').innerHTML = hist.join('');
+
+            document.getElementById('recModalStatus').value = rec.status === 'complete' ? 'complete' : 'pending';
+            document.getElementById('recModalNote').value = '';
+            document.getElementById('recModal').classList.remove('hidden');
+        }
+
+        function openImgAt(i, start) {
+            const r = imageRegistry[i];
+            if (r) viewFullImage(r.src, r.text, r.title, r.note, start);
+        }
+
+        function closeRecModal() {
+            if (recPendingPhotos.length && !confirm("Discard the photos you haven't saved?")) return;
+            recPendingPhotos.forEach(p => URL.revokeObjectURL(p.url));
+            recPendingPhotos = [];
+            document.getElementById('recModal').classList.add('hidden');
+            openRecId = null;
+        }
+
+        async function saveRecUpdate() {
+            const rec = findRec(openRecId);
+            if (!rec) return;
+            const note = document.getElementById('recModalNote').value.trim();
+            const chosen = document.getElementById('recModalStatus').value;
+            const status = chosen === 'complete' ? 'complete' : 'pending';
+            const nothingNew = !note && recPendingPhotos.length === 0 && status === rec.status;
+            if (nothingNew) { closeRecModal(); return; }
+
+            const btn = document.getElementById('recModalSaveBtn');
+            btn.disabled = true;
+            try {
+                const blobs = recPendingPhotos.map(p => p.blob);
+                await queueLog(REC_UPDATE_ID, {
+                    recRef: rec.id,
+                    stationBarcode: rec.barcode,
+                    locationName: rec.station,
+                    status: status,
+                    note: note,
+                    technician: technicianLabel(),
+                    servicedAt: new Date().toISOString()
+                }, blobs, `Recommendation ${status === 'complete' ? 'completed' : 'updated'} · ${rec.station}`);
+                recPendingPhotos = [];
+                await refreshSiteStateFromCache();
+                document.getElementById('recModal').classList.add('hidden');
+                openRecId = null;
+            } catch (err) {
+                alert('Could not save the update on this device: ' + (err.message || err));
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // Rebuild the open site from the saved copy plus anything waiting in the upload queue
+        async function refreshSiteStateFromCache() {
+            if (!selectedClient) return;
+            const cache = await getSiteCache(selectedClient.id);
+            await buildSiteState(selectedClient.id, cache ? cache.rows : [], new Set(scannedBarcodesThisVisit));
+            rerenderOpenSite();
         }
 
         async function getBase64ImageFromUrl(imageUrl) {
@@ -3698,6 +4122,7 @@
 
             const pastVisit = visitIndex !== null ? sitePastVisits[visitIndex] : null;
             const visitDateStr = pastVisit ? new Date(pastVisit.date).toLocaleDateString() : new Date().toLocaleDateString();
+            const visitTimeStr = (pastVisit ? new Date(pastVisit.date) : new Date()).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
             const summaryNote = pastVisit ? pastVisit.summaryNote : (document.getElementById('closingSiteNotes').value.trim() || 'Current / Recent Visit');
             const technicianName = (pastVisit && pastVisit.technician)
                 ? pastVisit.technician
@@ -3717,7 +4142,8 @@
             doc.text("PEST CONTROL SERVICE REPORT", 14, 18);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Date: ${visitDateStr}`, 150, 18);
+            doc.text(`Date: ${visitDateStr}`, 150, 14);
+            doc.text(`Closed: ${visitTimeStr}`, 150, 20);
 
             y = 42;
             doc.setTextColor(15, 23, 42);
@@ -3838,13 +4264,22 @@
 
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(9);
-                    doc.text(`Station: ${item.station} (${new Date(item.date).toLocaleDateString()})`, 14, y);
+                    const stLabel = (REC_STATUS[item.status] || REC_STATUS.new).label;
+                    doc.text(`Station: ${item.station} (${new Date(item.date).toLocaleDateString()})  -  Status: ${stLabel}`, 14, y);
                     y += 5;
 
                     doc.setFont('helvetica', 'normal');
                     const splitRec = doc.splitTextToSize(item.recommendation, 180);
                     doc.text(splitRec, 14, y);
                     y += (splitRec.length * 5) + 2;
+                    // Notes added since it was logged
+                    for (const u of (item.updates || []).filter(u => u.note)) {
+                        if (y > 270) { doc.addPage(); y = 20; }
+                        const line = doc.splitTextToSize(`${new Date(u.at).toLocaleDateString()} ${u.by ? '(' + u.by + ')' : ''}: ${u.note}`, 176);
+                        doc.text(line, 18, y);
+                        y += line.length * 5;
+                    }
+                    y += 1;
 
                     // Photos in rows of four under the recommendation
                     const imgs = [];
@@ -3894,7 +4329,8 @@
         }
 
         function deviceRowHtml(d, isScanned) {
-            const hasRecs = d.recommendationsHistory.length > 0 ? `<span class="t-accent text-xs font-semibold ml-1">[Issues: ${d.recommendationsHistory.length}]</span>` : '';
+            const openN = openRecCount(d);
+            const hasRecs = openN > 0 ? `<span class="t-accent text-xs font-semibold ml-1">[Open issues: ${openN}]</span>` : '';
             const badge = isScanned
                 ? '<span class="chip chip-green shrink-0">Serviced ✓</span>'
                 : '<span class="chip chip-amber shrink-0">Unscanned</span>';
@@ -4016,6 +4452,25 @@
         }
 
         // ---------- Station focus view ----------
+        let keptPhotos = [];      // photos already saved for this station earlier in this visit: [{ path, url }]
+        let formSnapshot = '';    // what the form looked like when opened, to spot unsaved changes
+
+        function readStationForm() {
+            return {
+                activityLevel: document.getElementById('activityLevel').value,
+                prepUsed: document.getElementById('prepUsed').value,
+                speciesCaught: (document.getElementById('speciesCaught').value || '').trim(),
+                qty: document.getElementById('qtyCount').value,
+                notes: document.getElementById('serviceNotes').value.trim(),
+                recommendation: document.getElementById('recommendationNote').value.trim(),
+                name: document.getElementById('newLocName').value.trim(),
+                kept: keptPhotos.map(k => k.path).join('|')
+            };
+        }
+        function stationFormDirty() {
+            return pendingPhotos.length > 0 || JSON.stringify(readStationForm()) !== formSnapshot;
+        }
+
         function resetServiceFields() {
             populateOptionSelects();
             document.getElementById('activityLevel').value = 'None';
@@ -4024,7 +4479,38 @@
             document.getElementById('qtyCount').value = 1;
             document.getElementById('serviceNotes').value = '';
             document.getElementById('recommendationNote').value = '';
+            keptPhotos = [];
             clearPendingPhotos(true);
+        }
+
+        function setSelectValue(id, value) {
+            const sel = document.getElementById(id);
+            if (value && !Array.from(sel.options || []).some(o => o.value === value)) {
+                const o = document.createElement('option');
+                o.value = value; o.textContent = value;
+                sel.appendChild(o);
+            }
+            if (value) sel.value = value;
+        }
+
+        // Shows what was saved for this station earlier in the same visit (a new visit starts clean)
+        function prefillFromThisVisit(dev) {
+            const p = dev && dev.visitPayload;
+            document.getElementById('visitEditNote').classList.toggle('hidden', !p);
+            if (!p) return;
+            if (p.activityLevel) setSelectValue('activityLevel', p.activityLevel);
+            if (p.prepUsed) setSelectValue('prepUsed', p.prepUsed);
+            if (p.speciesCaught) setSelectValue('speciesCaught', p.speciesCaught);
+            if (p.quantity != null && !isNaN(p.quantity)) document.getElementById('qtyCount').value = p.quantity;
+            document.getElementById('serviceNotes').value = p.notes || '';
+            const rec = dev.visitRec;
+            if (rec && p.recommendation) {
+                document.getElementById('recommendationNote').value = p.recommendation === 'Issue photo attached' && rec.photoCount ? '' : p.recommendation;
+                keptPhotos = (rec.photoSlots || []).slice(0, (p.photos || []).length);
+                // photos that couldn't be linked are still kept on the record
+                payloadPhotoPaths(p).forEach(path => { if (!keptPhotos.some(k => k.path === path)) keptPhotos.push({ path: path, url: '' }); });
+            }
+            renderPhotoPreviews();
         }
 
         function updateFab() {
@@ -4033,20 +4519,53 @@
             document.getElementById('scanFab').classList.toggle('hidden', !inWorkspace || sheetOpen);
         }
 
+        // Closes the station view straight away (no questions)
         function hideStationForm() {
-            if (pendingPhotos.length && !confirm('You have photos that haven\'t been saved to a recommendation yet. Close and discard them?')) return;
             clearPendingPhotos(true);
+            keptPhotos = [];
             document.getElementById('stationFormContainer').classList.add('hidden');
             document.body.style.overflow = '';
             currentBarcode = null;
             updateFab();
         }
 
+        // Three-way question: resolves to 'a', 'b' or 'c'
+        function askChoice(o) {
+            return new Promise(resolve => {
+                document.getElementById('choiceTitle').textContent = o.title;
+                document.getElementById('choiceMessage').textContent = o.message;
+                const keys = { a: o.a, b: o.b, c: o.c };
+                Object.keys(keys).forEach(k => {
+                    const btn = document.getElementById('choice' + k.toUpperCase());
+                    btn.textContent = keys[k];
+                    btn.onclick = () => { document.getElementById('choiceModal').classList.add('hidden'); resolve(k); };
+                });
+                document.getElementById('choiceModal').classList.remove('hidden');
+            });
+        }
+
+        // X / Back / Escape: offer to save anything entered
+        async function requestCloseStation() {
+            if (document.getElementById('stationFormContainer').classList.contains('hidden')) return true;
+            if (!stationFormDirty()) { hideStationForm(); return true; }
+            const name = document.getElementById('newLocName').value.trim() || currentDeviceName || 'this station';
+            const pick = await askChoice({
+                title: 'Save before closing?',
+                message: `You've entered information for ${name} that hasn't been saved yet.`,
+                a: 'Save', b: "Don't save", c: 'Keep editing'
+            });
+            if (pick === 'a') return await saveStationServiceRecord();
+            if (pick === 'b') { hideStationForm(); return true; }
+            return false;
+        }
+
         document.addEventListener('keydown', e => {
             if (e.key !== 'Escape') return;
+            if (!document.getElementById('choiceModal').classList.contains('hidden')) return;
             if (!document.getElementById('imageModal').classList.contains('hidden')) { closeImageModal(); return; }
             if (!document.getElementById('confirmModal').classList.contains('hidden')) return;
-            if (!document.getElementById('stationFormContainer').classList.contains('hidden')) hideStationForm();
+            if (!document.getElementById('recModal').classList.contains('hidden')) { closeRecModal(); return; }
+            if (!document.getElementById('stationFormContainer').classList.contains('hidden')) requestCloseStation();
         });
 
         function openDeviceForm(barcode, locName, devType, markAsScanned, isNew = false) {
@@ -4087,6 +4606,9 @@
                 document.getElementById('newDeviceType').value = devType;
             }
 
+            prefillFromThisVisit(existingDev);
+            formSnapshot = JSON.stringify(readStationForm());
+
             if (markAsScanned) {
                 scannedBarcodesThisVisit.add(barcode);
                 renderDeviceLists();
@@ -4110,23 +4632,8 @@
                 loadBtn.textContent = `View History (${existingDev.recommendationsHistory.length})`;
                 return;
             }
-
-            historyList.innerHTML = existingDev.recommendationsHistory.slice().reverse().map(item => {
-                const formattedDate = item.date ? new Date(item.date).toLocaleDateString() : 'Past Visit';
-                const photos = item.photos || [];
-                const idx = regImg(photos, item.recommendation, `${existingDev.locationName} · ${formattedDate}`, item.photoError, item.missingPaths);
-                const thumbs = photos.slice(0, 3).map(u => `<img src="${esc(u)}" loading="lazy" alt="" class="h-12 w-12 rounded-lg object-cover" style="border:1px solid var(--border);">`).join('');
-                const more = photos.length > 3 ? `<span class="t-faint font-bold">+${photos.length - 3}</span>` : '';
-                return `
-                    <button type="button" onclick="openImg(${idx})" class="row-item clickable w-full text-left p-3 flex justify-between items-center gap-2">
-                        <div class="flex-1 min-w-0">
-                            <div class="t-muted font-medium">Issue Logged (${esc(formattedDate)})</div>
-                            <div class="t-strong text-[11px] mt-0.5 break-words">${esc(item.recommendation)}</div>
-                            ${item.photoError ? '<div class="text-[11px] mt-0.5" style="color:#d97706;">Photo unavailable</div>' : ''}
-                        </div>
-                        <div class="flex items-center gap-1.5 shrink-0">${thumbs}${more}</div>
-                    </button>`;
-            }).join('');
+            existingDev.recommendationsHistory.forEach(r => { r.station = existingDev.locationName; });
+            historyList.innerHTML = existingDev.recommendationsHistory.slice().reverse().map(r => recRowHtml(r, { hideStation: true })).join('');
             historyList.classList.remove('hidden');
             loadBtn.textContent = "Hide History";
         }
@@ -4135,126 +4642,63 @@
             return (currentProfile && (currentProfile.full_name || currentProfile.email)) || (currentUser && currentUser.email) || '';
         }
 
-        async function saveRecommendationOnly() {
-            const locNameInput = document.getElementById('newLocName').value.trim() || currentDeviceName;
-            const devType = document.getElementById('newDeviceType').value || currentDeviceType;
-            const recNote = document.getElementById('recommendationNote').value.trim();
-
-            if (!locNameInput) {
-                alert('Please enter a device/location name first.');
-                return;
-            }
-            if (!recNote && pendingPhotos.length === 0) {
-                alert('Please type a recommendation note or attach an issue photo first.');
-                return;
-            }
-
-            const btn = document.getElementById('saveRecBtn');
-            btn.textContent = "Saving Recommendation...";
-            btn.disabled = true;
-
-            try {
-                const picked = pendingPhotos.slice();
-                const blobs = picked.map(p => p.blob);
-                const localUrls = picked.map(p => p.url);
-
-                const payloadData = {
-                    locationName: locNameInput,
-                    deviceType: devType,
-                    recommendation: recNote || 'Issue photo attached',
-                    technician: technicianLabel(),
-                    servicedAt: new Date().toISOString()
-                };
-
-                const photoLabel = blobs.length ? ` + ${blobs.length} photo${blobs.length === 1 ? '' : 's'}` : '';
-                await queueLog(currentBarcode, payloadData, blobs, `Recommendation${photoLabel} · ${locNameInput}`);
-
-                let dev = siteDevices.find(d => d.barcode_id === currentBarcode);
-                if (!dev) {
-                    dev = {
-                        barcode_id: currentBarcode,
-                        locationName: locNameInput,
-                        deviceType: devType,
-                        recommendationsHistory: [],
-                        lastPayload: payloadData
-                    };
-                    siteDevices.push(dev);
-                    document.getElementById('deleteStationBtn').classList.remove('hidden');
-                }
-
-                dev.recommendationsHistory.push({
-                    recommendation: recNote || 'Issue photo attached',
-                    photos: localUrls,
-                    photoCount: localUrls.length,
-                    photoError: '',
-                    date: payloadData.servicedAt
-                });
-
-                document.getElementById('recommendationNote').value = '';
-                clearPendingPhotos(false); // keep the previews alive - they're shown until the upload finishes
-
-                renderDeviceLists();
-                renderLandingRecommendationsAndVisits();
-            } catch (err) {
-                alert('Error saving recommendation on this device: ' + (err.message || err));
-            } finally {
-                btn.textContent = "Save Recommendation & Photos";
-                btn.disabled = false;
-            }
-        }
-
+        let savingStation = false;
         async function saveStationServiceRecord() {
+            if (savingStation) return false;
             const locNameInput = document.getElementById('newLocName').value.trim() || currentDeviceName;
             const devType = document.getElementById('newDeviceType').value || currentDeviceType;
-            const activityLevel = document.getElementById('activityLevel').value;
-            const prepUsed = document.getElementById('prepUsed').value;
-            const species = document.getElementById('speciesCaught').value.trim();
-            const qty = document.getElementById('qtyCount').value;
-            const notes = document.getElementById('serviceNotes').value.trim();
+            const f = readStationForm();
 
             if (!locNameInput) {
                 alert('Please enter a device/location name.');
-                return;
+                return false;
             }
 
+            savingStation = true;
+            const btn = document.getElementById('saveServiceBtn');
+            btn.disabled = true;
             try {
+                const dev = siteDevices.find(d => d.barcode_id === currentBarcode);
                 const payloadData = {
                     locationName: locNameInput,
                     deviceType: devType,
-                    activityLevel: activityLevel,
-                    prepUsed: prepUsed,
-                    speciesCaught: species || 'None',
-                    quantity: parseFloat(qty),
-                    notes: notes,
+                    activityLevel: f.activityLevel,
+                    prepUsed: f.prepUsed,
+                    speciesCaught: f.speciesCaught || 'None',
+                    quantity: parseFloat(f.qty),
+                    notes: f.notes,
                     technician: technicianLabel(),
                     servicedAt: new Date().toISOString()
                 };
 
-                await queueLog(currentBarcode, payloadData, [], `Service record · ${locNameInput}`);
-
-                let dev = siteDevices.find(d => d.barcode_id === currentBarcode);
-                if (!dev) {
-                    dev = {
-                        barcode_id: currentBarcode,
-                        locationName: locNameInput,
-                        deviceType: devType,
-                        recommendationsHistory: [],
-                        lastPayload: payloadData
-                    };
-                    siteDevices.push(dev);
+                // Recommendation + photos travel with the service record
+                const newBlobs = pendingPhotos.map(p => p.blob);
+                const keptPaths = keptPhotos.map(k => k.path);
+                if (f.recommendation || keptPaths.length || newBlobs.length) {
+                    payloadData.recommendation = f.recommendation || 'Issue photo attached';
+                    payloadData.recRef = (dev && dev.visitRec && dev.visitRec.id) || uid();
+                    payloadData.photos = keptPaths;
+                    payloadData.photo = keptPaths[0] || null;
                 }
+                // Saved already this visit? This entry replaces that one
+                if (dev && dev.visitRef) payloadData.supersedes = dev.visitRef;
 
-                dev.lastPayload = payloadData;
-                dev.locationName = locNameInput;
+                const recBit = payloadData.recommendation ? ' + recommendation' : '';
+                const photoBit = newBlobs.length ? ` + ${newBlobs.length} photo${newBlobs.length === 1 ? '' : 's'}` : '';
+                await queueLog(currentBarcode, payloadData, newBlobs, `Service record${recBit}${photoBit} · ${locNameInput}`);
 
+                clearPendingPhotos(false); // previews stay visible until the upload finishes
+                keptPhotos = [];
                 scannedBarcodesThisVisit.add(currentBarcode);
-                renderDeviceLists();
-                renderLandingStats();
-
                 hideStationForm();
-                resetServiceFields();
+                await refreshSiteStateFromCache();
+                return true;
             } catch (err) {
                 alert('Error saving record on this device: ' + (err.message || err));
+                return false;
+            } finally {
+                savingStation = false;
+                btn.disabled = false;
             }
         }
 
@@ -4513,6 +4957,7 @@
             renderSettingsLists();
 
             if (!isOnline) return;
+            beginSync('options', 'Syncing settings...');
             try {
                 const { data, error } = await withTimeout(
                     _supabase.from('app_options').select('id, kind, label, sort').order('sort', { ascending: true }).order('label', { ascending: true }),
@@ -4525,6 +4970,8 @@
             } catch (err) {
                 optionsLoadError = isNetworkError(err) ? null : friendlyOptionsError(err);
                 console.warn('Settings lists could not be loaded:', err.message || err);
+            } finally {
+                endSync('options');
             }
             populateOptionSelects();
             renderSettingsLists();
