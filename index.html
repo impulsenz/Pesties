@@ -8,10 +8,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Html5Qrcode Scanner Library -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- jsPDF for Professional Client PDF Service Reports -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- Main Content Container (Full-screen edge-to-edge layout, top branding header removed) -->
+    <!-- Main Content Container (Full-screen edge-to-edge layout, top header removed) -->
     <main class="flex-1 w-full max-w-none px-4 md:px-8 py-6 space-y-6">
 
         <!-- 1. Client Site Selector & Add Client Section -->
@@ -99,9 +101,9 @@
                     </div>
                 </div>
 
-                <!-- Recent Visit Logs & Report Download -->
+                <!-- Recent Visit Logs & PDF Report Download -->
                 <div class="bg-slate-900 p-5 rounded-xl border border-slate-700 space-y-3">
-                    <h3 class="text-xs font-bold text-sky-400 uppercase tracking-wider">Historical Visit Notes & Reports</h3>
+                    <h3 class="text-xs font-bold text-sky-400 uppercase tracking-wider">Historical Visit Notes & PDF Reports</h3>
                     <div id="siteLandingVisitsList" class="space-y-2 max-h-60 overflow-y-auto text-xs">
                         <span class="text-slate-500 italic">No previous visit records found.</span>
                     </div>
@@ -269,11 +271,9 @@
         <div class="flex justify-between items-center bg-slate-900/90 p-4 rounded-xl border border-slate-700">
             <h3 class="font-bold text-sm text-sky-400">Align Barcode in Frame</h3>
             <div class="flex gap-2">
-                <!-- Flash / Torch Toggle Button -->
                 <button type="button" id="flashToggleBtn" onclick="toggleFlashlight()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-2 rounded-lg text-xs shadow cursor-pointer">
                     Flash: OFF
                 </button>
-                <!-- Close Button -->
                 <button type="button" onclick="stopFullscreenCameraScanner()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow cursor-pointer">
                     Close Scanner
                 </button>
@@ -595,8 +595,8 @@
                             <div>
                                 <span class="font-bold text-emerald-400">${visitDateStr}:</span> ${v.summaryNote}
                             </div>
-                            <button onclick="downloadServiceReport(${index})" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-3 py-1.5 rounded text-xs shadow cursor-pointer">
-                                Download Report
+                            <button onclick="generatePDFReport(${index})" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-3 py-1.5 rounded text-xs shadow cursor-pointer">
+                                Download PDF Report
                             </button>
                         </div>
                     `;
@@ -604,72 +604,173 @@
             }
         }
 
-        // GENERATE & DOWNLOAD SERVICE REPORT TEXT/TXT FILE
-        function downloadServiceReport(visitIndex = null) {
-            let reportTitle = `SERVICE REPORT: ${selectedClient.Name}\n`;
-            reportTitle += `Address: ${selectedClient.Address || 'N/A'}\n`;
-            reportTitle += `Contact: ${selectedClient.Contact || 'N/A'}\n`;
-            
-            let summaryNote = "Current / Recent Visit";
-            let visitDateStr = new Date().toLocaleDateString();
+        // HELPER TO CONVERT IMAGE URL TO BASE64 FOR jsPDF EMBEDDING
+        async function getBase64ImageFromUrl(imageUrl) {
+            try {
+                const response = await fetch(imageUrl);
+                const blob = await response.blob();
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+            } catch (e) {
+                return null;
+            }
+        }
 
-            if (visitIndex !== null && sitePastVisits[visitIndex]) {
-                const v = sitePastVisits[visitIndex];
-                summaryNote = v.summaryNote;
-                visitDateStr = new Date(v.date).toLocaleDateString();
+        // PROFESSIONAL PDF SERVICE REPORT GENERATOR (jsPDF)
+        async function generatePDFReport(visitIndex = null) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
+            const visitDateStr = visitIndex !== null && sitePastVisits[visitIndex] ? new Date(sitePastVisits[visitIndex].date).toLocaleDateString() : new Date().toLocaleDateString();
+            const summaryNote = visitIndex !== null && sitePastVisits[visitIndex] ? sitePastVisits[visitIndex].summaryNote : 'Current / Recent Visit';
+
+            let y = 15;
+
+            // Header Banner Styling
+            doc.setFillColor(15, 23, 42); // slate-900
+            doc.rect(0, 0, 210, 30, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(18);
+            doc.text("PEST CONTROL SERVICE REPORT", 14, 18);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Date: ${visitDateStr}`, 150, 18);
+
+            y = 40;
+            doc.setTextColor(15, 23, 42);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.text("Customer & Location Details", 14, y);
+            
+            y += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.text(`Client Name: ${selectedClient.Name}`, 14, y);
+            doc.text(`Address: ${selectedClient.Address || 'N/A'}`, 14, y + 6);
+            doc.text(`Primary Contact: ${selectedClient.Contact || 'N/A'}`, 14, y + 12);
+
+            y += 24;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.text("Overall Visit Summary", 14, y);
+            y += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            
+            const splitSummary = doc.splitTextToSize(summaryNote, 180);
+            doc.text(splitSummary, 14, y);
+            y += (splitSummary.length * 6) + 10;
+
+            // Preparations Used Summary
+            let prepsSet = new Set();
+            siteDevices.forEach(d => {
+                if (d.lastPayload && d.lastPayload.prepUsed) {
+                    prepsSet.add(d.lastPayload.prepUsed);
+                }
+            });
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.text("Preparations & Chemicals Used", 14, y);
+            y += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            if (prepsSet.size === 0) {
+                doc.text("None recorded.", 14, y);
+                y += 10;
+            } else {
+                prepsSet.forEach(p => {
+                    doc.text(`- ${p}`, 14, y);
+                    y += 6;
+                });
+                y += 4;
             }
 
-            reportTitle += `Visit Date: ${visitDateStr}\n`;
-            reportTitle += `Overall Site Notes: ${summaryNote}\n`;
-            reportTitle += `==================================================\n\n`;
+            // Stations & Activity Details
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.text("Station Inspection & Activity Log", 14, y);
+            y += 8;
 
-            let stationsText = "STATIONS SERVICED & ACTIVITY LOG:\n";
-            let prepsSet = new Set();
-            let allRecsList = [];
+            for (const d of siteDevices) {
+                if (!d.lastPayload) continue;
 
-            siteDevices.forEach(d => {
-                if (d.lastPayload) {
-                    prepsSet.add(d.lastPayload.prepUsed || 'None');
-                    stationsText += `- Location: ${d.locationName} (${d.deviceType})\n`;
-                    stationsText += `  Barcode ID: ${d.barcode_id}\n`;
-                    stationsText += `  Activity Level: ${d.lastPayload.activityLevel || 'None'}\n`;
-                    stationsText += `  Preparation Used: ${d.lastPayload.prepUsed || 'None'}\n`;
-                    stationsText += `  Species Caught: ${d.lastPayload.speciesCaught || 'None'}\n`;
-                    stationsText += `  Quantity: ${d.lastPayload.quantity || 0}\n`;
-                    stationsText += `  Service Notes: ${d.lastPayload.notes || 'None'}\n\n`;
+                if (y > 250) {
+                    doc.addPage();
+                    y = 20;
                 }
 
-                d.recommendationsHistory.forEach(r => {
-                    allRecsList.push(`- [${d.locationName}] ${r.recommendation} (${new Date(r.date).toLocaleDateString()})`);
-                });
-            });
+                doc.setFillColor(241, 245, 249);
+                doc.rect(14, y - 4, 182, 22, 'F');
 
-            let prepsText = "PREPARATIONS / CHEMICALS USED:\n";
-            prepsSet.forEach(p => {
-                prepsText += `- ${p}\n`;
-            });
-            prepsText += `\n`;
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(10);
+                doc.text(`${d.locationName} (${d.deviceType})`, 18, y + 1);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                doc.text(`Barcode: ${d.barcode_id}`, 140, y + 1);
 
-            let recsText = "RECOMMENDATIONS & CORRECTIVE ACTIONS:\n";
-            if (allRecsList.length === 0) {
-                recsText += `None recorded.\n`;
-            } else {
-                allRecsList.forEach(r => {
-                    recsText += `${r}\n`;
-                });
+                y += 7;
+                doc.text(`Activity Level: ${d.lastPayload.activityLevel || 'None'}  |  Prep Used: ${d.lastPayload.prepUsed || 'None'}`, 18, y + 1);
+                y += 6;
+                doc.text(`Species Caught: ${d.lastPayload.speciesCaught || 'None'}  |  Qty: ${d.lastPayload.quantity || 0}  |  Notes: ${d.lastPayload.notes || 'None'}`, 18, y + 1);
+                y += 12;
             }
 
-            const fullReportContent = reportTitle + prepsText + stationsText + recsText;
+            // Recommendations & Embedded Photos Section
+            let allRecsWithPhotos = [];
+            siteDevices.forEach(d => {
+                d.recommendationsHistory.forEach(r => {
+                    allRecsWithPhotos.push({ station: d.locationName, ...r });
+                });
+            });
 
-            const blob = new Blob([fullReportContent], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Service_Report_${selectedClient.Name.replace(/\s+/g, '_')}_${visitDateStr.replace(/\//g, '-')}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            if (allRecsWithPhotos.length > 0) {
+                if (y > 230) {
+                    doc.addPage();
+                    y = 20;
+                }
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.text("Corrective Actions & Issue Photos", 14, y);
+                y += 8;
+
+                for (const item of allRecsWithPhotos) {
+                    if (y > 220) {
+                        doc.addPage();
+                        y = 20;
+                    }
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(9);
+                    doc.text(`Station: ${item.station} (${new Date(item.date).toLocaleDateString()})`, 14, y);
+                    y += 5;
+                    doc.setFont('helvetica', 'normal');
+                    const splitRec = doc.splitTextToSize(item.recommendation, 120);
+                    doc.text(splitRec, 14, y);
+
+                    if (item.photo) {
+                        try {
+                            const base64Img = await getBase64ImageFromUrl(item.photo);
+                            if (base64Img) {
+                                doc.addImage(base64Img, 'JPEG', 145, y - 4, 30, 30);
+                            }
+                        } catch (err) {
+                            console.warn("Could not embed image in PDF:", err);
+                        }
+                    }
+
+                    y += Math.max(splitRec.length * 5, 30) + 8;
+                }
+            }
+
+            // Save PDF
+            doc.save(`Service_Report_${selectedClient.Name.replace(/\s+/g, '_')}_${visitDateStr.replace(/\//g, '-')}.pdf`);
         }
 
         function showSiteDashboard() {
@@ -1070,10 +1171,10 @@
                 const { error } = await _supabase.from('service_logs').insert([summaryRecord]);
                 if (error) throw error;
 
-                // Prompt auto-download of the current service report upon closing visit
-                downloadServiceReport();
+                // Auto-generate and download professional PDF report upon closing visit
+                await generatePDFReport();
 
-                alert(`Visit for ${selectedClient.Name} successfully submitted and closed! Report downloaded.`);
+                alert(`Visit for ${selectedClient.Name} successfully submitted and closed! PDF report downloaded.`);
                 closeCompleteVisitModal();
                 await stopFullscreenCameraScanner();
                 
