@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pestis - Device Checklist & Camera Scanner</title>
+    <title>Pestis - Field Tech App with Photo Viewer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Html5Qrcode Scanner Library -->
@@ -15,7 +15,7 @@
     <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center shadow-md">
         <div class="flex items-center space-x-3">
             <span class="text-2xl">🛡️</span>
-            <h1 class="font-bold text-lg tracking-wide text-white">Pestis <span class="text-xs bg-emerald-500 text-slate-950 px-2 py-0.5 rounded font-bold">Site Device Manager</span></h1>
+            <h1 class="font-bold text-lg tracking-wide text-white">Pestis <span class="text-xs bg-emerald-500 text-slate-950 px-2 py-0.5 rounded font-bold">Field Mode</span></h1>
         </div>
         <div class="text-sm bg-slate-700 px-3 py-1 rounded-full text-slate-300">
             Tech: J. Smith (Online)
@@ -62,7 +62,7 @@
             <div class="flex justify-between items-center border-b border-slate-700 pb-4">
                 <div>
                     <h3 class="font-bold text-lg text-emerald-400" id="activeClientTitle">Service Workspace</h3>
-                    <p class="text-xs text-slate-400">Scan devices with camera or click directly from the device checklist below.</p>
+                    <p class="text-xs text-slate-400">Scan devices with camera or select directly from the lists below.</p>
                 </div>
                 <button type="button" onclick="completeVisit()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow">
                     Complete & Submit Visit 📋
@@ -99,12 +99,12 @@
                 <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
                     <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">✓ Scanned / Serviced Today (<span id="scannedCount">0</span>)</h4>
                     <div id="scannedList" class="space-y-2 max-h-60 overflow-y-auto text-xs">
-                        <span class="text-slate-500 italic">None scanned yet in this visit.</span>
+                        <span class="text-slate-500 italic">None scanned yet in this session.</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Station Editing Form (Appears when a device is clicked or scanned) -->
+            <!-- Station Editing Form -->
             <div id="stationFormContainer" class="bg-slate-900 p-5 rounded-xl border border-slate-700 space-y-4 hidden">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                     <h4 class="font-bold text-sm text-emerald-400" id="formTitle">Servicing Device</h4>
@@ -162,11 +162,13 @@
                     <textarea id="serviceNotes" rows="2" placeholder="Station cleaned, fresh bait applied..." class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white"></textarea>
                 </div>
 
+                <!-- Compressed Photo Capture & Preview -->
                 <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 space-y-2">
-                    <label class="block text-xs text-slate-400">Attach Photo (Camera)</label>
-                    <input type="file" id="stationPhoto" accept="image/*" capture="environment" class="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer">
-                    <div id="photoPreviewContainer" class="hidden pt-2">
-                        <img id="photoPreview" class="h-20 rounded-lg border border-slate-700 object-cover" alt="Preview">
+                    <label class="block text-xs text-slate-400">Attach Photo (Camera / File)</label>
+                    <input type="file" id="stationPhotoInput" accept="image/*" capture="environment" class="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer">
+                    <div id="photoPreviewContainer" class="hidden pt-2 flex items-center space-x-3">
+                        <img id="photoPreview" class="h-16 rounded-lg border border-slate-700 object-cover cursor-pointer" onclick="viewFullImage(this.src)" alt="Preview">
+                        <span class="text-xs text-emerald-400">Photo compressed & ready ✓</span>
                     </div>
                 </div>
 
@@ -178,6 +180,12 @@
 
     </main>
 
+    <!-- Fullscreen Image Modal Viewer -->
+    <div id="imageModal" class="hidden fixed inset-0 bg-black/90 z-50 flex flex-col justify-center items-center p-4">
+        <img id="fullImageDisplay" class="max-h-[80vh] max-w-full rounded-lg border border-slate-700 object-contain mb-4">
+        <button type="button" onclick="closeImageModal()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-5 py-2 rounded-lg">Close Viewer</button>
+    </div>
+
     <!-- App Logic Script -->
     <script>
         const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
@@ -188,26 +196,66 @@
 
         let clientsData = [];
         let selectedClient = null;
-        let siteDevices = []; // All known devices for this client pulled from service_logs history
+        let siteDevices = [];
         let scannedBarcodesThisVisit = new Set();
         let html5QrCode = null;
         let currentBarcode = null;
         let currentDeviceName = null;
         let currentDeviceType = null;
-        let capturedPhotoBase64 = null;
+        let compressedPhotoBase64 = null;
 
-        document.getElementById('stationPhoto').addEventListener('change', function(e) {
+        // Automatically compress photo using canvas to prevent database size errors
+        document.getElementById('stationPhotoInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
-            reader.onload = function(uploadEvent) {
-                capturedPhotoBase64 = uploadEvent.target.result;
-                const preview = document.getElementById('photoPreview');
-                preview.src = capturedPhotoBase64;
-                document.getElementById('photoPreviewContainer').classList.remove('hidden');
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Compress to JPEG with 0.7 quality
+                    compressedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    const preview = document.getElementById('photoPreview');
+                    preview.src = compressedPhotoBase64;
+                    document.getElementById('photoPreviewContainer').classList.remove('hidden');
+                };
+                img.src = event.target.result;
             };
             reader.readAsDataURL(file);
         });
+
+        function viewFullImage(src) {
+            document.getElementById('fullImageDisplay').src = src;
+            document.getElementById('imageModal').classList.remove('hidden');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+        }
 
         async function loadClients() {
             const select = document.getElementById('clientSelect');
@@ -269,7 +317,6 @@
             window.scrollTo({ top: 400, behavior: 'smooth' });
         }
 
-        // Fetch unique devices previously logged for this client
         async function fetchSiteDevices(clientId) {
             try {
                 const { data, error } = await _supabase
@@ -280,7 +327,6 @@
 
                 if (error) throw error;
 
-                // Extract unique devices by barcode_id, keeping the latest metadata
                 const map = new Map();
                 (data || []).forEach(row => {
                     if (!map.has(row.barcode_id)) {
@@ -312,7 +358,6 @@
             document.getElementById('unscannedCount').textContent = unscanned.length;
             document.getElementById('scannedCount').textContent = scanned.length;
 
-            // Render Unscanned
             if (unscanned.length === 0) {
                 unscannedList.innerHTML = '<span class="text-slate-500 italic">All known devices scanned or none registered.</span>';
             } else {
@@ -330,16 +375,16 @@
                 });
             }
 
-            // Render Scanned
             if (scanned.length === 0) {
                 scannedList.innerHTML = '<span class="text-slate-500 italic">None scanned yet in this session.</span>';
             } else {
                 scannedList.innerHTML = '';
                 scanned.forEach(d => {
+                    const hasPhotoBadge = d.lastPayload.photo ? '<span class="text-sky-300 ml-1">📸</span>' : '';
                     scannedList.innerHTML += `
                         <div onclick="openDeviceForm('${d.barcode_id}', '${d.locationName}', '${d.deviceType}', true)" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-lg border border-slate-700 cursor-pointer transition flex justify-between items-center">
                             <div>
-                                <div class="font-bold text-white text-sm">${d.locationName}</div>
+                                <div class="font-bold text-white text-sm">${d.locationName} ${hasPhotoBadge}</div>
                                 <div class="text-slate-400 text-xs">${d.deviceType} • <span class="font-mono text-sky-400">${d.barcode_id}</span></div>
                             </div>
                             <span class="text-emerald-400 text-xs bg-emerald-950 px-2 py-1 rounded">Serviced ✓</span>
@@ -369,12 +414,10 @@
         }
 
         function handleScannedBarcode(barcode) {
-            // Check if device already exists in siteDevices
             const existing = siteDevices.find(d => d.barcode_id === barcode);
             if (existing) {
                 openDeviceForm(existing.barcode_id, existing.locationName, existing.deviceType, true);
             } else {
-                // Brand new barcode scanned
                 openDeviceForm(barcode, '', 'Rodent Bait Station', true, true);
             }
         }
@@ -428,7 +471,7 @@
                     speciesCaught: species || 'None',
                     quantity: parseFloat(qty),
                     notes: notes,
-                    photo: capturedPhotoBase64 || null,
+                    photo: compressedPhotoBase64 || null,
                     servicedAt: new Date().toISOString()
                 };
 
@@ -441,7 +484,6 @@
                 const { error: logErr } = await _supabase.from('service_logs').insert([record]);
                 if (logErr) throw logErr;
 
-                // Add to siteDevices if not already there
                 if (!siteDevices.some(d => d.barcode_id === currentBarcode)) {
                     siteDevices.push({
                         barcode_id: currentBarcode,
@@ -449,6 +491,10 @@
                         deviceType: devType,
                         lastPayload: payloadData
                     });
+                } else {
+                    const dev = siteDevices.find(d => d.barcode_id === currentBarcode);
+                    dev.lastPayload = payloadData;
+                    dev.locationName = locNameInput;
                 }
 
                 scannedBarcodesThisVisit.add(currentBarcode);
@@ -458,11 +504,11 @@
                 document.getElementById('stationFormContainer').classList.add('hidden');
                 document.getElementById('speciesCaught').value = '';
                 document.getElementById('serviceNotes').value = '';
-                document.getElementById('stationPhoto').value = '';
+                document.getElementById('stationPhotoInput').value = '';
                 document.getElementById('photoPreviewContainer').classList.add('hidden');
-                capturedPhotoBase64 = null;
+                compressedPhotoBase64 = null;
 
-                alert('Device service record saved successfully!');
+                alert('Device service record and compressed photo saved successfully!');
 
             } catch (err) {
                 alert('Error saving record: ' + err.message);
