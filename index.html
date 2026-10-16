@@ -778,6 +778,7 @@
         <div class="card p-4 max-w-xl w-full text-center space-y-1">
             <div id="modalTitleDisplay" class="eyebrow t-accent hidden"></div>
             <div id="modalTextDisplay" class="text-sm font-medium t-strong whitespace-pre-line"></div>
+            <div id="modalPhotoNote" class="hidden text-xs font-semibold pt-1" style="color:#d97706;"></div>
         </div>
         <button type="button" onclick="closeImageModal()" class="btn btn-secondary !px-6 !py-3">Close Viewer</button>
     </div>
@@ -873,13 +874,13 @@
         }
 
         const imageRegistry = [];
-        function regImg(src, text, title) {
-            imageRegistry.push({ src: src, text: text, title: title || '' });
+        function regImg(src, text, title, note) {
+            imageRegistry.push({ src: src, text: text, title: title || '', note: note || '' });
             return imageRegistry.length - 1;
         }
         function openImg(i) {
             const r = imageRegistry[i];
-            if (r) viewFullImage(r.src, r.text, r.title);
+            if (r) viewFullImage(r.src, r.text, r.title, r.note);
         }
 
         function hashString(str) {
@@ -1507,23 +1508,66 @@
             updateSyncBadge();
         }
 
+        // True if the photo is in storage AND this user can open it. Throws on a network problem.
+        async function photoExistsOnServer(path) {
+            const { data, error } = await _supabase.storage.from(PHOTO_BUCKET).createSignedUrl(path, 60);
+            if (error) {
+                if (isNetworkError(error)) throw error;
+                item_lastPhotoCheckError = error.message || String(error);
+                return false;
+            }
+            return !!(data && data.signedUrl);
+        }
+        let item_lastPhotoCheckError = '';
+
         async function uploadQueuedBlob(item) {
             const blob = item.blobKey ? await loadBlob(item.blobKey) : null;
             if (!blob) {
-                // The photo was lost from this device; keep the text record rather than blocking the queue.
-                if (item.kind === 'insert_log') item.data.payload.photo = null;
-                item.photoUploaded = true;
+                // Never drop a photo silently. It may already be on the server from an earlier attempt.
+                if (await photoExistsOnServer(item.photoPath)) {
+                    item.photoUploaded = true;
+                    await persistItem(item);
+                    return true;
+                }
+                item.photoMissing = true;
                 await persistItem(item);
-                return false;
+                throw new Error("The photo for this item is no longer stored on this device, so it can't be uploaded. Use \"Send without photo\" to keep the text, or Discard it and take the photo again.");
             }
+
             const { error } = await _supabase.storage.from(PHOTO_BUCKET)
                 .upload(item.photoPath, blob, { cacheControl: '3600', upsert: false, contentType: blob.type || 'image/jpeg' });
-            if (error && !/exist|duplicate/i.test(error.message || '') && String(error.statusCode) !== '409') {
-                throw new Error('Photo upload failed: ' + error.message);
+            if (error) {
+                const msg = error.message || error.error || JSON.stringify(error);
+                const alreadyThere = /already exists|duplicate/i.test(msg) || String(error.statusCode) === '409';
+                if (!alreadyThere) {
+                    if (isNetworkError(error)) throw error;
+                    throw new Error('Photo upload was refused by storage: ' + msg + (/row-level security|policy|unauthori/i.test(msg) ? ' (check the storage policies on the station-photos bucket).' : ''));
+                }
             }
+
+            // Confirm the photo really landed before the record is allowed to go up without it
+            if (!(await photoExistsOnServer(item.photoPath))) {
+                throw new Error('The photo upload could not be confirmed on the server' + (item_lastPhotoCheckError ? ': ' + item_lastPhotoCheckError : '') + '. It will be retried.');
+            }
+
             item.photoUploaded = true;
+            item.photoMissing = false;
             await persistItem(item);
             return true;
+        }
+
+        async function sendWithoutPhoto(key) {
+            const item = queueItems.find(i => i.key === key);
+            if (!item) return;
+            if (item.kind === 'insert_log') item.data.payload.photo = null;
+            item.photoPath = null;
+            item.photoUploaded = true;
+            item.photoMissing = false;
+            item.status = 'pending';
+            item.error = null;
+            await persistItem(item);
+            lastFailAt = 0;
+            flushQueue();
         }
 
         async function processItem(item) {
@@ -1535,12 +1579,13 @@
                 if (ref && (item.attempts > 0 || item.maybeSent)) {
                     const { data, error } = await _supabase.from('service_logs').select('barcode_id')
                         .eq('client_id', item.data.client_id).eq('payload->>clientRef', ref).limit(1);
-                    if (!error && data && data.length) return;
+                    if (!error && data && data.length) { await addSentRowToSiteCache(item); return; }
                 }
                 item.maybeSent = true;
                 await persistItem(item);
                 const { error } = await _supabase.from('service_logs').insert([item.data]);
                 if (error) throw error;
+                await addSentRowToSiteCache(item);
                 return;
             }
 
@@ -1553,10 +1598,8 @@
             }
 
             if (item.kind === 'client_image') {
-                if (!item.photoUploaded) {
-                    const ok = await uploadQueuedBlob(item);
-                    if (!ok) return; // nothing to attach
-                }
+                if (!item.photoPath) return; // sent without a photo: nothing to attach
+                if (!item.photoUploaded) await uploadQueuedBlob(item);
                 const { data, error } = await _supabase.from('clients').update({ image_path: item.photoPath }).eq('id', item.clientId).select('id');
                 if (error) throw error;
                 if (!data || data.length === 0) throw new Error('The database refused the site photo update (permission denied).' + SQL_HINT);
@@ -1649,10 +1692,18 @@
 
                 const times = `Saved ${esc(fmtDateTime(item.createdAt))}` + (item.sentAt && item.status === 'sent' ? ` · Sent ${esc(fmtDateTime(item.sentAt))}` : '');
                 const err = item.error && item.status !== 'sent' ? `<div class="mt-1" style="color:#ef4444;">${esc(item.error)}</div>` : '';
-                const photo = item.blobKey && item.status !== 'sent' ? ' <span class="t-faint">· includes photo</span>' : '';
+                let photo = '';
+                if (item.photoPath) {
+                    photo = item.photoUploaded
+                        ? '<div class="mt-0.5 font-semibold" style="color:#10b981;">📷 Photo uploaded & confirmed ✓</div>'
+                        : `<div class="mt-0.5 font-semibold" style="color:#d97706;">📷 Photo ${item.status === 'uploading' ? 'uploading…' : 'not uploaded yet'}</div>`;
+                } else if (item.blobKey) {
+                    photo = '<div class="mt-0.5 t-faint">📷 Sent without photo</div>';
+                }
                 const actions = item.status === 'sent' || item.status === 'uploading' ? '' : `
-                    <div class="flex gap-2 mt-2">
+                    <div class="flex flex-wrap gap-2 mt-2">
                         ${item.status === 'failed' ? `<button type="button" data-key="${esc(item.key)}" onclick="retryQueueItem(this.dataset.key)" class="btn btn-primary !px-3 !py-1.5">Retry</button>` : ''}
+                        ${item.status === 'failed' && item.photoPath && !item.photoUploaded ? `<button type="button" data-key="${esc(item.key)}" onclick="sendWithoutPhoto(this.dataset.key)" class="btn btn-secondary !px-3 !py-1.5">Send without photo</button>` : ''}
                         <button type="button" data-key="${esc(item.key)}" onclick="discardQueueItem(this.dataset.key)" class="btn btn-outline-danger !px-3 !py-1.5">Discard</button>
                     </div>`;
 
@@ -1660,9 +1711,10 @@
                     <div class="row-item p-3.5">
                         <div class="flex justify-between items-start gap-3">
                             <div class="min-w-0">
-                                <div class="font-bold t-strong break-words">${esc(item.label || item.kind)}${photo}</div>
+                                <div class="font-bold t-strong break-words">${esc(item.label || item.kind)}</div>
                                 <div class="t-muted break-words">${esc(item.siteName || '')}</div>
                                 <div class="t-faint mt-0.5">${times}</div>
+                                ${photo}
                                 ${err}
                             </div>
                             ${chip}
@@ -1729,6 +1781,8 @@
             saveJSON(SIGNED_CACHE_KEY, signedCache);
         }
 
+        const signedErrors = new Map(); // storage path -> why a link could not be made (e.g. "Object not found")
+
         async function getSignedUrls(paths) {
             const now = Date.now();
             const out = new Map();
@@ -1745,6 +1799,9 @@
                         if (d.signedUrl && !d.error) {
                             out.set(d.path, d.signedUrl);
                             signedCache[d.path] = { u: d.signedUrl, e: now + SIGNED_URL_SECONDS * 1000 };
+                            signedErrors.delete(d.path);
+                        } else if (d.path) {
+                            signedErrors.set(d.path, d.error || 'unknown error');
                         }
                     });
                     pruneSignedCache();
@@ -1773,12 +1830,23 @@
             if (error) console.warn('Photo cleanup warning:', error.message);
         }
 
-        function viewFullImage(src, text, title) {
+        function viewFullImage(src, text, title, photoNote) {
             const img = document.getElementById('fullImageDisplay');
+            const note = document.getElementById('modalPhotoNote');
+            note.textContent = photoNote || '';
+            note.classList.toggle('hidden', !photoNote);
             if (src) {
+                img.onerror = () => {
+                    img.classList.add('hidden');
+                    note.textContent = isOnline
+                        ? "The photo couldn't be loaded from storage. Tap Sync Site on the dashboard and try again."
+                        : "This photo hasn't been saved on this device yet, so it can't be shown offline.";
+                    note.classList.remove('hidden');
+                };
                 img.src = src;
                 img.classList.remove('hidden');
             } else {
+                img.onerror = null;
                 img.removeAttribute('src');
                 img.classList.add('hidden');
             }
