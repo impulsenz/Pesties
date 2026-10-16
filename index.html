@@ -140,4 +140,174 @@
 <body class="font-sans antialiased min-h-screen flex flex-col">
 
     <!-- ===================== LOGIN SCREEN ===================== -->
-    <div id="loginScreen" class="fixed inset-0 z-[70] flex items
+    <div id="loginScreen" class="fixed inset-0 z-[70] flex items-center justify-center p-6" style="background: var(--bg);">
+        <button type="button" onclick="toggleTheme()" class="icon-btn absolute top-4 right-4" title="Toggle day / night mode">
+            <svg class="icon-sun w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414m12.728 0l-1.414-1.414M7.05 7.05L5.636 5.636M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <svg class="icon-moon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+        </button>
+
+        <div class="card p-8 max-w-sm w-full text-center space-y-5">
+            <div class="logo-tile mx-auto"><img src="images/pesties-logo.png" alt="Pesties" class="w-52 max-w-full object-contain rounded-lg"></div>
+            <p id="authLoading" class="text-xs t-muted italic">Checking session...</p>
+            <div id="loginPanel" class="hidden space-y-4">
+                <p class="text-xs t-muted">Sign in with your authorized Google account to continue.</p>
+                <button type="button" onclick="signInWithGoogle()" class="btn btn-white w-full !py-3 !text-sm">
+                    <svg class="w-5 h-5" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                    Sign in with Google
+                </button>
+            </div>
+            <p id="loginMessage" class="text-xs hidden leading-relaxed" style="color:#ef4444;"></p>
+        </div>
+    </div>
+
+    <!-- ===================== APP HEADER ===================== -->
+    <header id="appHeader" class="app-header hidden sticky top-0 z-40 w-full">
+        <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 py-2.5 flex justify-between items-center gap-3">
+            <div class="logo-tile"><img src="images/pesties-logo.png" alt="Pesties" class="h-12 sm:h-14 w-auto rounded-lg"></div>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div id="syncStatusBadge" class="chip chip-green transition-all duration-300">
+                    <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="syncText" class="hidden sm:inline">Online & Synced</span>
+                </div>
+                <button type="button" onclick="toggleTheme()" class="icon-btn" title="Toggle day / night mode">
+                    <svg class="icon-sun w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414m12.728 0l-1.414-1.414M7.05 7.05L5.636 5.636M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg class="icon-moon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+                <button type="button" onclick="openProfileModal()" class="flex items-center gap-2.5 rounded-xl pl-1.5 pr-3 py-1.5 cursor-pointer transition-all" style="background: var(--surface3); border: 1px solid var(--border);">
+                    <img id="headerAvatar" src="" alt="" class="w-8 h-8 rounded-lg object-cover hidden">
+                    <span id="headerAvatarFallback" class="w-8 h-8 rounded-lg bg-brand-500 text-white font-black text-xs flex items-center justify-center">?</span>
+                    <span id="headerName" class="text-xs font-bold t-strong hidden sm:block max-w-[9rem] truncate"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===================== MAIN ===================== -->
+    <main id="appRoot" class="hidden flex-1 w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8 space-y-6">
+        <section id="siteSelectorSection" class="space-y-5">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <span class="eyebrow t-accent">Site Management</span>
+                    <h2 class="text-2xl lg:text-3xl font-black t-strong mt-1">Choose a Customer Site</h2>
+                    <p class="text-xs t-muted mt-1">Tap a site to open its dashboard.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 md:items-center">
+                    <div class="relative w-full sm:w-72">
+                        <div class="absolute inset-y-0 left-3.5 flex items-center pointer-events-none t-faint">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <input type="text" id="siteSearchInput" oninput="renderSiteCards()" placeholder="Search sites..." class="field !pl-10">
+                    </div>
+                    <button type="button" onclick="openAddClientModal()" class="btn btn-primary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                        Register New Site
+                    </button>
+                </div>
+            </div>
+            <div id="siteCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 lg:gap-5">
+                <span class="text-xs t-muted italic col-span-full">Loading sites...</span>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // SINGLE SUPABASE INITIALIZATION (Using 'db' to avoid namespace conflicts)
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        
+        window.supabaseClient = window.supabaseClient || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: { persistSession: true, autoRefreshToken: true }
+        });
+        const db = window.supabaseClient;
+
+        // Chunked signed URL map builder to fix 413 Payload Too Large errors
+        async function buildSignedUrlMap(paths) {
+            const chunkSize = 50;
+            const urlMap = {};
+            for (let i = 0; i < paths.length; i += chunkSize) {
+                const chunk = paths.slice(i, i + chunkSize);
+                try {
+                    const { data, error } = await db.storage.from('station-photos').createSignedUrls(chunk, 3600);
+                    if (!error && data) {
+                        data.forEach(item => {
+                            if (item.signedUrl) {
+                                urlMap[item.path] = item.signedUrl;
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error("Batch signed URL error chunk:", err);
+                }
+            }
+            return urlMap;
+        }
+
+        async function initAuth() {
+            const authLoading = document.getElementById('authLoading');
+            const loginPanel = document.getElementById('loginPanel');
+            const loginScreen = document.getElementById('loginScreen');
+            const appHeader = document.getElementById('appHeader');
+            const appRoot = document.getElementById('appRoot');
+
+            try {
+                const { data: { session }, error } = await db.auth.getSession();
+                if (error) throw error;
+
+                if (session && session.user) {
+                    loginScreen.classList.add('hidden');
+                    appHeader.classList.remove('hidden');
+                    appRoot.classList.remove('hidden');
+                    
+                    const user = session.user;
+                    const meta = user.user_metadata || {};
+                    const avatarUrl = meta.avatar_url || meta.picture;
+                    const fullName = meta.full_name || user.email;
+
+                    if (avatarUrl) {
+                        const img = document.getElementById('headerAvatar');
+                        img.src = avatarUrl;
+                        img.classList.remove('hidden');
+                        document.getElementById('headerAvatarFallback').classList.add('hidden');
+                    } else {
+                        document.getElementById('headerAvatarFallback').textContent = user.email ? user.email[0].toUpperCase() : '?';
+                    }
+                    document.getElementById('headerName').textContent = fullName;
+                } else {
+                    authLoading.classList.add('hidden');
+                    loginPanel.classList.remove('hidden');
+                }
+            } catch (err) {
+                authLoading.classList.add('hidden');
+                loginPanel.classList.remove('hidden');
+                document.getElementById('loginMessage').textContent = err.message;
+                document.getElementById('loginMessage').classList.remove('hidden');
+            }
+        }
+
+        async function signInWithGoogle() {
+            const { error } = await db.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin }
+            });
+            if (error) {
+                const msg = document.getElementById('loginMessage');
+                msg.textContent = error.message;
+                msg.classList.remove('hidden');
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('pestis-theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('pestis-theme', 'dark');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initAuth);
+    </script>
+</body>
+</html>
