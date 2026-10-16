@@ -236,6 +236,10 @@
                 </button>
             </div>
         </div>
+        <div id="updateBanner" class="hidden text-center text-xs font-bold px-4 py-1.5" style="background:#1d4ed8;color:#fff;">
+            A new version of Pestis is ready.
+            <button type="button" onclick="location.reload()" class="underline ml-2">Reload now</button>
+        </div>
         <div id="offlineBanner" class="offline-banner hidden text-center text-xs font-bold px-4 py-1.5">
             You're offline. Everything you record is saved on this device and will upload automatically when the connection returns.
         </div>
@@ -272,15 +276,21 @@
         </section>
 
         <!-- Loading Progress -->
-        <div id="syncProgressModal" class="hidden card p-8 space-y-4 w-full max-w-3xl mx-auto">
-            <div class="flex justify-between items-center">
-                <h3 class="text-sm font-bold t-accent uppercase tracking-widest">Synchronizing Site Assets & Data...</h3>
+        <div id="syncProgressModal" class="hidden card p-6 sm:p-8 space-y-4 w-full max-w-3xl mx-auto">
+            <div class="flex justify-between items-center gap-3">
+                <h3 class="text-sm font-bold t-accent uppercase tracking-widest">Downloading Site</h3>
                 <span id="progressPercent" class="text-sm font-mono t-accent font-extrabold">0%</span>
             </div>
             <div class="w-full rounded-full h-3 overflow-hidden p-0.5" style="background: var(--surface2); border: 1px solid var(--border);">
-                <div id="progressBarFill" class="bg-gradient-to-r from-brand-600 to-brand-400 h-full rounded-full transition-all duration-200" style="width: 0%"></div>
+                <div id="progressBarFill" class="bg-gradient-to-r from-brand-600 to-brand-400 h-full rounded-full" style="width: 0%"></div>
             </div>
-            <p id="progressStatusText" class="text-xs t-muted italic">Pre-caching offline device registers...</p>
+            <p id="progressStatusText" class="text-xs t-strong font-semibold">Preparing...</p>
+            <div class="grid grid-cols-3 gap-3 text-center">
+                <div class="inset p-2.5"><div id="progressStatData" class="text-sm font-black font-mono t-strong">0 KB</div><div class="eyebrow t-faint mt-0.5">Downloaded</div></div>
+                <div class="inset p-2.5"><div id="progressStatSpeed" class="text-sm font-black font-mono t-strong">-</div><div class="eyebrow t-faint mt-0.5">Speed</div></div>
+                <div class="inset p-2.5"><div id="progressStatItems" class="text-sm font-black font-mono t-strong">-</div><div class="eyebrow t-faint mt-0.5" id="progressStatItemsLabel">Records</div></div>
+            </div>
+            <ol id="progressSteps" class="space-y-1.5 text-xs"></ol>
         </div>
 
         <!-- 2. SITE LANDING DASHBOARD -->
@@ -581,6 +591,7 @@
             <div class="flex justify-between items-start gap-3">
                 <div>
                     <h3 class="font-black text-lg t-accent">Settings</h3>
+                    <p class="text-[11px] t-faint">App version <span class="app-version font-mono"></span></p>
                     <p class="text-xs t-muted mt-1">These lists are shared with your whole team and appear in the station service form. Removing an item doesn't change records that already use it.</p>
                 </div>
                 <button type="button" onclick="closeSettingsModal()" class="t-faint hover:opacity-70 text-xs font-semibold cursor-pointer shrink-0">✕ Close</button>
@@ -603,6 +614,20 @@
                     </div>
                     <div id="speciesOptionsList" class="space-y-2 text-xs"></div>
                 </div>
+            </div>
+
+            <div class="border-t divider pt-5 space-y-3">
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <div>
+                        <h4 class="eyebrow t-faint">Diagnostics</h4>
+                        <p id="diagSummary" class="text-xs t-muted mt-1"></p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="copyDiagnostics()" class="btn btn-secondary !py-2">Copy details</button>
+                        <button type="button" onclick="clearDiagnostics()" class="btn btn-secondary !py-2">Clear</button>
+                    </div>
+                </div>
+                <div id="diagList" class="space-y-2 text-[11px] font-mono max-h-56 overflow-y-auto scroll-thin"></div>
             </div>
         </div>
     </div>
@@ -727,6 +752,7 @@
                     <p id="profileNameLarge" class="text-base font-black t-strong truncate"></p>
                     <p id="profileEmailLarge" class="text-xs t-muted font-mono truncate"></p>
                     <span id="profileRoleBadge" class="chip chip-orange mt-1.5 uppercase tracking-widest"></span>
+                    <p class="text-[11px] t-faint mt-1.5">App version <span class="app-version font-mono"></span></p>
                 </div>
             </div>
 
@@ -860,6 +886,8 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 6 * 60 * 60;          // photo links stay valid for 6 hours
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
+        const APP_VERSION = '2026.10.17-r5';
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteSearchInput", "siteCardsGrid", "syncProgressModal", "progressPercent", "progressBarFill", "progressStatusText", "progressStatData", "progressStatSpeed", "progressStatItems", "progressStatItemsLabel", "progressSteps", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "siteServicesList", "statStations", "statServiced", "statIssues", "siteLandingContact", "siteLandingEmail", "siteLandingNotes", "siteLandingRecsList", "siteLandingVisitsList", "visitWorkspace", "activeWorkspaceTitle", "stationSearchInput", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTitle", "scannedBarcodeBadge", "stationSheetBody", "newStationFields", "newLocName", "newDeviceType", "activityLevel", "prepUsed", "speciesCaught", "qtyCount", "serviceNotes", "recommendationNote", "issuePhotoCamera", "issuePhotoGallery", "photoPreviewGrid", "saveRecBtn", "pastRecommendationsSection", "loadPastHistoryBtn", "pastRecommendationsList", "deleteStationBtn", "settingsModal", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "flashToggleBtn", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeServicesSection", "completeServicesList", "closingSiteNotes", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -942,13 +970,28 @@
         }
 
         const imageRegistry = [];
-        function regImg(src, text, title, note) {
-            imageRegistry.push({ src: src, text: text, title: title || '', note: note || '' });
+        function regImg(src, text, title, note, missingPaths) {
+            imageRegistry.push({ src: src, text: text, title: title || '', note: note || '', missing: missingPaths || [] });
             return imageRegistry.length - 1;
         }
-        function openImg(i) {
+        async function openImg(i) {
             const r = imageRegistry[i];
-            if (r) viewFullImage(r.src, r.text, r.title, r.note);
+            if (!r) return;
+            viewFullImage(r.src, r.text, r.title, r.note);
+            // A photo that couldn't be linked earlier: ask storage again now
+            if (r.missing.length && isOnline) {
+                r.missing.forEach(p => { delete signedCache[p]; });
+                const found = await getSignedUrls(r.missing);
+                const srcs = (Array.isArray(r.src) ? r.src : [r.src]).filter(Boolean);
+                const still = r.missing.filter(p => !found.has(p));
+                r.missing.forEach(p => { if (found.has(p)) srcs.push(found.get(p)); });
+                r.src = srcs;
+                r.missing = still;
+                r.note = still.length ? photoErrorText(still[0]) : '';
+                if (!document.getElementById('imageModal').classList.contains('hidden')) {
+                    viewFullImage(r.src, r.text, r.title, r.note, viewerIndex);
+                }
+            }
         }
 
         function hashString(str) {
@@ -1803,31 +1846,43 @@
             }
 
             if (item.kind === 'cancel_visit') {
-                // Removes this technician's records made after the site's most recent completed visit
                 const cid = item.clientId;
+                const removed = [];
+                const deleteWhere = async build => {
+                    const { data: rows, error: selErr } = await build(_supabase.from('service_logs').select('payload'));
+                    if (selErr) throw selErr;
+                    if (!rows || rows.length === 0) return;
+                    const { data: deleted, error: delErr } = await build(_supabase.from('service_logs').delete()).select('barcode_id');
+                    if (delErr) throw delErr;
+                    if ((deleted || []).length === 0) {
+                        throw new Error('Permission denied. Run the delete-permissions SQL script in Supabase (pestis_update_delete_permissions.sql).');
+                    }
+                    removed.push(...rows);
+                };
+
+                // Records this visit made, identified exactly (safe even if uploads arrived out of order)
+                const refs = item.data.refs || [];
+                for (let i = 0; i < refs.length; i += 100) {
+                    const chunk = refs.slice(i, i + 100);
+                    await deleteWhere(qb => qb.eq('client_id', cid).in('payload->>clientRef', chunk));
+                }
+
+                // Older records made before offline support have no reference - fall back to "since the last completed visit"
                 const { data: last, error: lastErr } = await _supabase.from('service_logs').select('created_at')
                     .eq('client_id', cid).eq('barcode_id', 'SITE_VISIT_SUMMARY')
                     .order('created_at', { ascending: false }).limit(1);
                 if (lastErr) throw lastErr;
                 const cutoff = last && last[0] ? last[0].created_at : null;
+                const hasRefList = Array.isArray(item.data.refs); // cancels queued by an older version have no list
+                await deleteWhere(qb => {
+                    let q2 = qb.eq('client_id', cid).eq('technician_id', item.data.technicianId)
+                        .neq('barcode_id', 'SITE_VISIT_SUMMARY');
+                    if (hasRefList) q2 = q2.is('payload->>clientRef', null);
+                    if (cutoff) q2 = q2.gt('created_at', cutoff);
+                    return q2;
+                });
 
-                let selQ = _supabase.from('service_logs').select('payload')
-                    .eq('client_id', cid).eq('technician_id', item.data.technicianId).neq('barcode_id', 'SITE_VISIT_SUMMARY');
-                if (cutoff) selQ = selQ.gt('created_at', cutoff);
-                const { data: rows, error: selErr } = await selQ;
-                if (selErr) throw selErr;
-
-                if ((rows || []).length > 0) {
-                    let delQ = _supabase.from('service_logs').delete()
-                        .eq('client_id', cid).eq('technician_id', item.data.technicianId).neq('barcode_id', 'SITE_VISIT_SUMMARY');
-                    if (cutoff) delQ = delQ.gt('created_at', cutoff);
-                    const { data: deleted, error: delErr } = await delQ.select('barcode_id');
-                    if (delErr) throw delErr;
-                    if ((deleted || []).length === 0) {
-                        throw new Error('Permission denied. Run the delete-permissions SQL script in Supabase (pestis_update_delete_permissions.sql).');
-                    }
-                    await removePhotos(allPhotoPaths(rows));
-                }
+                await removePhotos(allPhotoPaths(removed));
                 if (await getSiteCache(cid)) syncSiteCache(cid, 'full').catch(() => {});
                 return;
             }
@@ -1947,11 +2002,14 @@
                 let chip;
                 if (item.status === 'sent') chip = '<span class="chip chip-green">Sent ✓</span>';
                 else if (item.status === 'uploading') chip = '<span class="chip chip-blue">Uploading…</span>';
+                else if (item.status === 'failed' && item.parked) chip = '<span class="chip chip-red">Set aside</span>';
                 else if (item.status === 'failed') chip = '<span class="chip chip-red">Not sent</span>';
                 else chip = `<span class="chip chip-amber">${isOnline ? 'Waiting' : 'Waiting for connection'}</span>`;
 
                 const times = `Saved ${esc(fmtDateTime(item.createdAt))}` + (item.sentAt && item.status === 'sent' ? ` · Sent ${esc(fmtDateTime(item.sentAt))}` : '');
                 const err = item.error && item.status !== 'sent' ? `<div class="mt-1" style="color:#ef4444;">${esc(item.error)}</div>` : '';
+                const parkedNote = item.parked && item.status !== 'sent'
+                    ? '<div class="mt-1 t-muted">Set aside so the rest of the queue keeps uploading. It retries by itself every 5 minutes, or tap Retry.</div>' : '';
                 const phs = itemPhotos(item);
                 const done = phs.filter(p => p.uploaded).length;
                 let photo = '';
@@ -1978,6 +2036,7 @@
                                 <div class="t-faint mt-0.5">${times}</div>
                                 ${photo}
                                 ${err}
+                                ${parkedNote}
                             </div>
                             ${chip}
                         </div>
@@ -1989,7 +2048,7 @@
         async function manualSyncNow() {
             isOnline = await probeOnline();
             if (!isOnline) { updateSyncBadge(); alert("Still offline. Your items are safe on this device and will upload when the connection returns."); return; }
-            queueItems.forEach(i => { if (i.status === 'failed') i.status = 'pending'; });
+            queueItems.forEach(i => { if (i.status === 'failed') { i.status = 'pending'; i.parked = false; i.lastTriedAt = 0; } });
             lastFailAt = 0;
             await flushQueue();
         }
@@ -1999,6 +2058,8 @@
             if (!item) return;
             item.status = 'pending';
             item.error = null;
+            item.parked = false;
+            item.lastTriedAt = 0;
             await persistItem(item);
             lastFailAt = 0;
             isOnline = await probeOnline();
@@ -2054,20 +2115,39 @@
                 if (c && c.e - now > 30 * 60 * 1000) out.set(p, c.u); else need.push(p);
             });
             if (need.length && isOnline) {
+                const remember = (path, url) => {
+                    out.set(path, url);
+                    signedCache[path] = { u: url, e: now + SIGNED_URL_SECONDS * 1000 };
+                    signedErrors.delete(path);
+                };
+                let batchOk = false;
                 try {
                     const { data, error } = await _supabase.storage.from(PHOTO_BUCKET).createSignedUrls(need, SIGNED_URL_SECONDS);
                     if (error) throw error;
-                    (data || []).forEach(d => {
-                        if (d.signedUrl && !d.error) {
-                            out.set(d.path, d.signedUrl);
-                            signedCache[d.path] = { u: d.signedUrl, e: now + SIGNED_URL_SECONDS * 1000 };
-                            signedErrors.delete(d.path);
-                        } else if (d.path) {
-                            signedErrors.set(d.path, d.error || 'unknown error');
-                        }
+                    (data || []).forEach((d, i) => {
+                        // Results come back in the same order as requested; storage doesn't always echo the path on errors
+                        const path = d.path || need[i];
+                        if (d.signedUrl && !d.error) remember(path, d.signedUrl);
+                        else if (path) signedErrors.set(path, d.error || 'storage gave no reason');
                     });
+                    batchOk = true;
                     pruneSignedCache();
-                } catch (e) { console.warn('Signed URL error:', e.message || e); }
+                } catch (e) {
+                    console.warn('Batch photo link request failed, trying one by one:', e.message || e);
+                }
+                if (!batchOk) {
+                    // Fall back to one request per photo so one bad entry can't hide every photo, and so each gets a real reason
+                    for (const path of need) {
+                        try {
+                            const { data, error } = await _supabase.storage.from(PHOTO_BUCKET).createSignedUrl(path, SIGNED_URL_SECONDS);
+                            if (error) signedErrors.set(path, error.message || String(error));
+                            else if (data && data.signedUrl) remember(path, data.signedUrl);
+                        } catch (e) {
+                            signedErrors.set(path, e.message || String(e));
+                        }
+                    }
+                    pruneSignedCache();
+                }
             }
             // Offline: fall back to the last link we had - the app's offline cache may still hold the image
             need.forEach(p => { if (!out.has(p) && signedCache[p]) out.set(p, signedCache[p].u); });
@@ -2683,7 +2763,224 @@
             return best;
         }
 
-        async function fetchRowsPaged(clientId, since) {
+        // ---------- Download progress (first time a site is opened on a device) ----------
+        function fmtBytes(n) {
+            if (!n || n < 1) return '0 KB';
+            if (n < 1024) return n + ' B';
+            if (n < 1024 * 1024) return (n / 1024).toFixed(n < 10 * 1024 ? 1 : 0) + ' KB';
+            return (n / 1024 / 1024).toFixed(n < 100 * 1024 * 1024 ? 1 : 0) + ' MB';
+        }
+
+        const PROGRESS_STEPS = [
+            { key: 'connect', label: 'Connecting to the database', from: 0, to: 3 },
+            { key: 'count', label: 'Checking how much there is to download', from: 3, to: 6 },
+            { key: 'records', label: 'Downloading station records', from: 6, to: 70 },
+            { key: 'save', label: 'Saving the site to this device', from: 70, to: 74 },
+            { key: 'links', label: 'Securing photo links', from: 74, to: 78 },
+            { key: 'photos', label: 'Saving photos for offline use', from: 78, to: 97 },
+            { key: 'build', label: 'Building the dashboard', from: 97, to: 100 }
+        ];
+
+        function createProgress() {
+            const el = id => document.getElementById(id);
+            const raf = (typeof requestAnimationFrame === 'function') ? requestAnimationFrame : (f => setTimeout(f, 16));
+            const state = {};
+            PROGRESS_STEPS.forEach(s => { state[s.key] = 'todo'; });
+            let shown = 0, target = 0, animating = false;
+            let bytes = 0, items = 0, itemsTotal = 0, itemsLabel = 'Records';
+            const startedAt = Date.now();
+            const samples = [[startedAt, 0]];
+            let statsTimer = null;
+
+            function animate() {
+                shown += (target - shown) * 0.12;
+                if (target - shown < 0.05) shown = target;
+                el('progressBarFill').style.width = shown.toFixed(2) + '%';
+                el('progressPercent').textContent = Math.floor(shown) + '%';
+                if (shown < target) raf(animate); else animating = false;
+            }
+            function setPct(p) {
+                target = Math.max(target, Math.min(100, p));
+                if (!animating) { animating = true; raf(animate); }
+            }
+            function speed() {
+                const now = Date.now();
+                while (samples.length > 2 && now - samples[0][0] > 3000) samples.shift();
+                const [t0, b0] = samples[0];
+                const dt = (now - t0) / 1000;
+                const recent = dt >= 0.5 ? (bytes - b0) / dt : 0;
+                if (recent > 0) return recent;
+                // Too quick to measure a recent rate (or paused between steps): show the average so far
+                return bytes / Math.max((now - startedAt) / 1000, 0.25);
+            }
+            function renderStats() {
+                el('progressStatData').textContent = fmtBytes(bytes);
+                const sp = speed();
+                el('progressStatSpeed').textContent = sp > 0 ? fmtBytes(sp) + '/s' : '-';
+                el('progressStatItems').textContent = itemsTotal ? `${items.toLocaleString()} / ${itemsTotal.toLocaleString()}` : (items ? items.toLocaleString() : '-');
+                el('progressStatItemsLabel').textContent = itemsLabel;
+            }
+            function renderSteps() {
+                el('progressSteps').innerHTML = PROGRESS_STEPS.map(s => {
+                    const st = state[s.key];
+                    const icon = st === 'done' ? '<span style="color:#10b981;">✓</span>'
+                        : st === 'active' ? '<span class="inline-block w-2.5 h-2.5 rounded-full bg-brand-500 animate-pulse"></span>'
+                        : st === 'skipped' ? '<span class="t-faint">–</span>'
+                        : '<span class="inline-block w-2.5 h-2.5 rounded-full" style="border:1px solid var(--border);"></span>';
+                    const cls = st === 'active' ? 't-strong font-bold' : st === 'done' ? 't-muted' : 't-faint';
+                    return `<li class="flex items-center gap-2.5 ${cls}"><span class="w-4 flex justify-center">${icon}</span>${esc(s.label)}${st === 'skipped' ? ' <span class="t-faint">(not needed)</span>' : ''}</li>`;
+                }).join('');
+            }
+
+            return {
+                show() {
+                    el('syncProgressModal').classList.remove('hidden');
+                    el('progressBarFill').style.width = '0%';
+                    el('progressPercent').textContent = '0%';
+                    renderSteps();
+                    renderStats();
+                    statsTimer = setInterval(renderStats, 400);
+                },
+                step(key, frac, text) {
+                    const idx = PROGRESS_STEPS.findIndex(s => s.key === key);
+                    PROGRESS_STEPS.forEach((s, i) => {
+                        if (i < idx && state[s.key] !== 'skipped') state[s.key] = 'done';
+                        if (i === idx) state[s.key] = 'active';
+                    });
+                    const s = PROGRESS_STEPS[idx];
+                    setPct(s.from + (s.to - s.from) * Math.max(0, Math.min(1, frac || 0)));
+                    if (text) el('progressStatusText').textContent = text;
+                    renderSteps();
+                },
+                skip(key) { state[key] = 'skipped'; renderSteps(); },
+                addBytes(n) { bytes += n; samples.push([Date.now(), bytes]); },
+                items(n, total, label) {
+                    items = n;
+                    if (total != null) itemsTotal = total;
+                    if (label) itemsLabel = label;
+                },
+                finish() {
+                    PROGRESS_STEPS.forEach(s => { if (state[s.key] !== 'skipped') state[s.key] = 'done'; });
+                    renderSteps();
+                    renderStats();
+                    setPct(100);
+                    el('progressStatusText').textContent = 'Site ready - saved on this device';
+                },
+                hide() {
+                    if (statsTimer) clearInterval(statsTimer);
+                    el('syncProgressModal').classList.add('hidden');
+                }
+            };
+        }
+
+        // Reads a response body chunk by chunk so download speed can be shown
+        async function readBodyWithProgress(res, onBytes) {
+            if (!res.body || !res.body.getReader) {
+                const t = await res.text();
+                onBytes(t.length);
+                return t;
+            }
+            const reader = res.body.getReader();
+            const chunks = [];
+            let total = 0;
+            for (;;) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                chunks.push(value);
+                total += value.length;
+                onBytes(value.length);
+            }
+            const buf = new Uint8Array(total);
+            let o = 0;
+            chunks.forEach(c => { buf.set(c, o); o += c.length; });
+            return new TextDecoder().decode(buf);
+        }
+
+        // Full download of a site's records, page by page, reporting records and bytes as it goes
+        async function fetchRowsWithProgress(clientId, since, prog) {
+            prog.step('count', 0, 'Checking how much there is to download...');
+            let cq = _supabase.from('service_logs').select('barcode_id', { count: 'exact', head: true }).eq('client_id', clientId);
+            if (since) cq = cq.gt('created_at', since);
+            const { count, error } = await withTimeout(cq, 15000, 'Checking site data');
+            if (error) throw error;
+            const total = count || 0;
+            prog.items(0, total, 'Records');
+            prog.step('records', 0, total ? `Downloading station records... 0 of ${total.toLocaleString()}` : 'This site has no records yet');
+
+            let token = SUPABASE_ANON_KEY;
+            try { const ss = (await _supabase.auth.getSession()).data.session; if (ss) token = ss.access_token; } catch (e) {}
+
+            const out = [];
+            const PAGE = 200;
+            for (let offset = 0; offset < Math.max(total, 1); offset += PAGE) {
+                const params = new URLSearchParams({
+                    select: 'barcode_id,payload,created_at',
+                    client_id: 'eq.' + clientId,
+                    order: 'created_at.asc',
+                    limit: String(PAGE),
+                    offset: String(offset)
+                });
+                if (since) params.set('created_at', 'gt.' + since);
+                const res = await withTimeout(fetch(`${SUPABASE_URL}/rest/v1/service_logs?${params}`, {
+                    headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token, Accept: 'application/json' },
+                    cache: 'no-store'
+                }), 30000, 'Downloading site data');
+                const text = await readBodyWithProgress(res, n => prog.addBytes(n));
+                if (!res.ok) {
+                    let msg = res.statusText || ('HTTP ' + res.status);
+                    try { msg = JSON.parse(text).message || msg; } catch (e) {}
+                    throw new Error(msg);
+                }
+                const page = JSON.parse(text || '[]');
+                out.push(...page);
+                prog.items(out.length, Math.max(total, out.length));
+                prog.step('records', total ? out.length / total : 1,
+                    `Downloading station records... ${out.length.toLocaleString()} of ${Math.max(total, out.length).toLocaleString()}`);
+                if (page.length < PAGE) break;
+            }
+            return out;
+        }
+
+        // Downloads photos once so they can be viewed with no signal (the offline cache keeps them)
+        const prefetchedUrls = new Set();
+        function sitePhotoUrls() {
+            const recs = [];
+            siteDevices.forEach(d => d.recommendationsHistory.forEach(r => recs.push(r)));
+            recs.sort((a, b) => new Date(b.date) - new Date(a.date));
+            return recs.flatMap(r => r.photos || []);
+        }
+        async function prefetchPhotos(urls, prog) {
+            const canKeep = typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller;
+            const list = Array.from(new Set(urls)).filter(u => u && !u.startsWith('blob:') && !prefetchedUrls.has(u)).slice(0, 200);
+            if (!canKeep || list.length === 0) {
+                if (prog) prog.skip('photos');
+                return;
+            }
+            let done = 0;
+            let next = 0;
+            if (prog) { prog.items(0, list.length, 'Photos'); prog.step('photos', 0, `Saving photos for offline use... 0 of ${list.length}`); }
+            const worker = async () => {
+                while (next < list.length) {
+                    const u = list[next++];
+                    try {
+                        const res = await fetch(u, { mode: 'cors', credentials: 'omit' });
+                        if (res.ok) {
+                            await readBodyWithProgress(res, n => { if (prog) prog.addBytes(n); });
+                            prefetchedUrls.add(u);
+                        }
+                    } catch (e) { /* skip - it can still load later */ }
+                    done++;
+                    if (prog) {
+                        prog.items(done, list.length, 'Photos');
+                        prog.step('photos', done / list.length, `Saving photos for offline use... ${done} of ${list.length}`);
+                    }
+                }
+            };
+            await Promise.all(Array.from({ length: Math.min(4, list.length) }, worker));
+        }
+
+        async function fetchRowsPaged(clientId, since, prog) {
+            if (prog) return fetchRowsWithProgress(clientId, since, prog);
             const out = [];
             for (let from = 0; ; from += PAGE_SIZE) {
                 let q = _supabase.from('service_logs').select('barcode_id, payload, created_at').eq('client_id', clientId);
@@ -2699,14 +2996,14 @@
         }
 
         // Brings the saved copy of a site up to date. mode: 'auto' or 'full'
-        async function syncSiteCache(clientId, mode) {
+        async function syncSiteCache(clientId, mode, prog) {
             let cache = await getSiteCache(clientId);
             const now = Date.now();
             const needFull = mode === 'full' || !cache || now - (cache.lastFullAt || 0) > SITE_FULL_RESYNC_MS;
             let changed = false;
 
             if (needFull) {
-                const rows = await fetchRowsPaged(clientId, null);
+                const rows = await fetchRowsPaged(clientId, null, prog);
                 changed = !cache || rows.length !== serverRows(cache.rows).length || latestCreatedAt(rows) !== latestCreatedAt(cache.rows);
                 cache = { rows: rows, lastSyncAt: now, lastFullAt: now };
             } else {
@@ -2765,9 +3062,17 @@
 
         function photoErrorText(path) {
             const e = signedErrors.get(path);
-            if (!e) return isOnline ? "The photo link couldn't be created." : "This photo hasn't been saved on this device yet, so it can't be shown offline.";
-            if (/not.?found/i.test(e)) return 'The photo file is missing from storage - it never finished uploading. Add the photo to this station again.';
+            if (!e) return isOnline ? "The photo link couldn't be created (no reason given). Tap Sync Site and try again." : "This photo hasn't been saved on this device yet, so it can't be shown offline.";
+            if (/not.?found|does not exist|no such/i.test(e)) return 'The photo file is missing from storage - it never finished uploading. Add the photo to this station again.';
+            if (/not authori|permission|row-level|policy|denied|403/i.test(e)) return 'Storage refused access to this photo (' + e + '). Check the storage policies on the station-photos bucket.';
             return 'Photo unavailable: ' + e;
+        }
+
+        // When a record was made on site (falls back to when it reached the server)
+        function recTime(row) {
+            const p = row.payload || {};
+            const t = Date.parse(p.completedAt || p.servicedAt || row.created_at);
+            return isNaN(t) ? 0 : t;
         }
 
         // Turns saved rows (+ anything still in the upload queue) into the site dashboard state
@@ -2784,7 +3089,8 @@
                     const blobKeys = i.status !== 'sent' ? itemPhotos(i).map(p => p.blobKey) : [];
                     rows.push({ barcode_id: i.data.barcode_id, payload: i.data.payload, created_at: i.createdAt, _blobKeys: blobKeys });
                 });
-            rows.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            // Order by when each record was made on site, so an item that uploaded late still lands in the right visit
+            rows.sort((a, b) => recTime(a) - recTime(b));
 
             // Each photo: the copy on this device if it hasn't uploaded yet, otherwise a link from storage
             for (const r of rows) {
@@ -2805,8 +3111,8 @@
             let latestVisitRaw = null;
             rows.forEach(row => {
                 if (row.barcode_id === 'SITE_VISIT_SUMMARY') {
-                    const t = new Date(row.created_at).getTime();
-                    if (t > latestVisitTimestamp) { latestVisitTimestamp = t; latestVisitRaw = row.created_at; }
+                    const t = recTime(row);
+                    if (t > latestVisitTimestamp) { latestVisitTimestamp = t; latestVisitRaw = new Date(t).toISOString(); }
                 }
             });
 
@@ -2822,7 +3128,7 @@
                     return;
                 }
 
-                if (new Date(row.created_at).getTime() > latestVisitTimestamp) activeScannedSet.add(row.barcode_id);
+                if (recTime(row) > latestVisitTimestamp) activeScannedSet.add(row.barcode_id);
 
                 const existing = map.get(row.barcode_id) || {
                     barcode_id: row.barcode_id,
@@ -2854,6 +3160,7 @@
                         photos: photos,
                         photoCount: slots.length,
                         photoError: photoError,
+                        missingPaths: missing,
                         date: payload.servicedAt || row.created_at
                     });
                 }
@@ -2868,14 +3175,6 @@
             lastVisitCutoffRaw = latestVisitRaw;
         }
 
-        function showProgress(pct, text) {
-            document.getElementById('syncProgressModal').classList.remove('hidden');
-            document.getElementById('progressPercent').textContent = pct + '%';
-            document.getElementById('progressBarFill').style.width = pct + '%';
-            document.getElementById('progressStatusText').textContent = text;
-        }
-        function hideProgress() { document.getElementById('syncProgressModal').classList.add('hidden'); }
-
         async function startSiteVisit(clientId) {
             if (isLoadingSite || !clientId) return;
 
@@ -2884,26 +3183,38 @@
             selectedClient = client;
             isLoadingSite = true;
             const mySeq = ++siteSyncSeq;
+            let prog = null;
 
             document.getElementById('siteSelectorSection').classList.add('hidden');
 
             try {
                 let cache = await getSiteCache(client.id);
 
-                if (!cache) {
-                    if (isOnline) {
-                        showProgress(30, 'First time on this device - downloading and saving this site...');
-                        cache = (await syncSiteCache(client.id, 'full')).cache;
-                        showProgress(90, 'Building site dashboard...');
-                    } else {
+                if (!cache && isOnline) {
+                    // First time on this device: download with a detailed progress display
+                    prog = createProgress();
+                    prog.show();
+                    prog.step('connect', 0.5, 'Connecting to the database...');
+                    cache = (await syncSiteCache(client.id, 'full', prog)).cache;
+                    prog.step('save', 1, 'Saved to this device');
+                    prog.step('links', 0, 'Securing photo links...');
+                    await buildSiteState(client.id, cache.rows);
+                    prog.step('links', 1);
+                    await prefetchPhotos(sitePhotoUrls(), prog);
+                    prog.step('build', 0.5, 'Building the dashboard...');
+                    prog.finish();
+                    await new Promise(r => setTimeout(r, 450));
+                    prog.hide();
+                    prog = null;
+                } else {
+                    if (!cache) {
                         alert("You're offline and this site hasn't been opened on this device before, so its stations aren't saved here yet. You can still scan and record new stations.");
                         cache = { rows: [], lastSyncAt: 0, lastFullAt: 0 };
                     }
+                    await buildSiteState(client.id, cache.rows);
                 }
 
                 siteSyncInfo = { lastSyncAt: cache.lastSyncAt || 0, syncing: false, error: null };
-                await buildSiteState(client.id, cache.rows);
-                hideProgress();
 
                 refreshLandingHeader();
                 renderLandingRecommendationsAndVisits();
@@ -2914,7 +3225,7 @@
                     backgroundSyncSite();
                 }
             } catch (err) {
-                hideProgress();
+                if (prog) prog.hide();
                 selectedClient = null;
                 document.getElementById('siteSelectorSection').classList.remove('hidden');
                 alert('Error downloading site data: ' + friendlyError(err));
@@ -2946,6 +3257,7 @@
                     await buildSiteState(clientId, cache.rows, new Set(scannedBarcodesThisVisit));
                     if (mySeq !== siteSyncSeq) return;
                     rerenderOpenSite();
+                    prefetchPhotos(sitePhotoUrls());
                 } else if (detailsChanged) {
                     refreshLandingHeader();
                 }
@@ -3065,7 +3377,7 @@
                 recsContainer.innerHTML = allRecs.map(item => {
                     const dateStr = item.date ? new Date(item.date).toLocaleDateString() : '';
                     const photos = item.photos || [];
-                    const idx = regImg(photos, item.recommendation, `${item.station}${dateStr ? ' · ' + dateStr : ''}`, item.photoError);
+                    const idx = regImg(photos, item.recommendation, `${item.station}${dateStr ? ' · ' + dateStr : ''}`, item.photoError, item.missingPaths);
                     const countBadge = photos.length > 1 ? `<span class="absolute bottom-0.5 right-0.5 text-[10px] font-black text-white bg-black/70 rounded px-1">${photos.length}</span>` : '';
                     const right = photos.length
                         ? `<span class="relative shrink-0"><img src="${esc(photos[0])}" loading="lazy" alt="" class="h-12 w-12 rounded-lg object-cover" style="border:1px solid var(--border);">${countBadge}</span>`
@@ -3538,7 +3850,7 @@
             historyList.innerHTML = existingDev.recommendationsHistory.slice().reverse().map(item => {
                 const formattedDate = item.date ? new Date(item.date).toLocaleDateString() : 'Past Visit';
                 const photos = item.photos || [];
-                const idx = regImg(photos, item.recommendation, `${existingDev.locationName} · ${formattedDate}`, item.photoError);
+                const idx = regImg(photos, item.recommendation, `${existingDev.locationName} · ${formattedDate}`, item.photoError, item.missingPaths);
                 const thumbs = photos.slice(0, 3).map(u => `<img src="${esc(u)}" loading="lazy" alt="" class="h-12 w-12 rounded-lg object-cover" style="border:1px solid var(--border);">`).join('');
                 const more = photos.length > 3 ? `<span class="t-faint font-bold">+${photos.length - 3}</span>` : '';
                 return `
@@ -3758,33 +4070,36 @@
             if (!client) return;
             const cid = client.id;
             const cutoffT = lastVisitCutoffRaw ? new Date(lastVisitCutoffRaw).getTime() : 0;
+            const me = technicianLabel();
             const inThisVisit = i => i.kind === 'insert_log' && String(i.clientId) === String(cid) &&
-                i.data.barcode_id !== 'SITE_VISIT_SUMMARY' && new Date(i.createdAt).getTime() > cutoffT;
+                i.data.barcode_id !== 'SITE_VISIT_SUMMARY' && recTime({ payload: i.data.payload, created_at: i.createdAt }) > cutoffT;
+            const rowInThisVisit = r => r.barcode_id !== 'SITE_VISIT_SUMMARY' && recTime(r) > cutoffT && (r.payload && r.payload.technician) === me;
 
             try {
                 // 1. Records from this visit that never left the device: just remove them
                 for (const i of queueItems.filter(i => inThisVisit(i) && (i.status === 'pending' || i.status === 'failed'))) {
                     await removeQueueItem(i);
                 }
+
+                // 2. Note exactly which uploaded records belong to this visit, so only those are removed from the server
+                const cache = await getSiteCache(cid);
+                const refs = new Set();
+                (cache ? cache.rows : []).filter(rowInThisVisit).forEach(r => { if (r.payload && r.payload.clientRef) refs.add(r.payload.clientRef); });
+                queueItems.filter(i => inThisVisit(i) && (i.status === 'sent' || i.status === 'uploading'))
+                    .forEach(i => { if (i.data.payload.clientRef) refs.add(i.data.payload.clientRef); });
                 await markSentCancelled(inThisVisit);
 
-                // 2. Anything already uploaded is removed from the server (now if online, otherwise on reconnect)
                 await enqueue({
                     kind: 'cancel_visit',
                     clientId: cid,
                     siteName: client.Name,
                     label: 'Visit cancelled',
-                    data: { technicianId: currentUser.id, cancelledAt: new Date().toISOString() }
+                    data: { technicianId: currentUser.id, refs: Array.from(refs), cancelledAt: new Date().toISOString() }
                 });
 
                 // 3. Take this visit's records out of the saved copy so they disappear straight away
-                const cache = await getSiteCache(cid);
                 if (cache) {
-                    const me = technicianLabel();
-                    cache.rows = cache.rows.filter(r => !(
-                        r.barcode_id !== 'SITE_VISIT_SUMMARY' &&
-                        new Date(r.created_at).getTime() > cutoffT &&
-                        (r.payload && r.payload.technician) === me));
+                    cache.rows = cache.rows.filter(r => !rowInThisVisit(r));
                     await saveSiteCache(cid, cache);
                 }
 
@@ -3826,15 +4141,18 @@
             document.getElementById('completeVisitModal').classList.add('hidden');
         }
 
+        let closingVisit = false;
         async function finalizeAndSubmitVisit() {
+            if (closingVisit) return; // stop a double tap saving the visit twice
+            closingVisit = true;
             const siteNotes = document.getElementById('closingSiteNotes').value.trim();
             const doneIds = new Set(Array.from(document.querySelectorAll('#completeServicesList .svc-done:checked')).map(cb => cb.value));
             const services = getServices(selectedClient);
             const doneTypes = services.filter(s => doneIds.has(s.id)).map(s => s.type);
 
+            // 1. Save the visit (the part that matters). Only this step can "fail" the close.
             try {
-                setSyncStatus('uploading', 'Closing Visit & Generating PDF...');
-
+                setSyncStatus('uploading', 'Closing visit...');
                 await queueLog('SITE_VISIT_SUMMARY', {
                     siteNotes: siteNotes || 'Visit completed successfully.',
                     technician: technicianLabel(),
@@ -3849,22 +4167,44 @@
                         : s);
                     await queueClientUpdate(selectedClient, { services: updated }, 'Service schedule rolled forward');
                 }
-
-                await generatePDFReport(null, doneTypes);
-
+            } catch (err) {
+                logAppError('Saving visit', err);
                 setSyncStatus('synced');
+                closingVisit = false;
+                alert('The visit could not be saved on this device: ' + (err.message || err));
+                return;
+            }
+
+            // 2. The report. A problem here doesn't undo the saved visit.
+            let pdfProblem = null;
+            try {
+                setSyncStatus('uploading', 'Generating PDF...');
+                await generatePDFReport(null, doneTypes);
+            } catch (err) {
+                pdfProblem = err;
+                logAppError('PDF report', err);
+            }
+
+            // 3. Back to the site list
+            try {
                 closeCompleteVisitModal();
                 await stopFullscreenCameraScanner();
-
                 resetSiteState();
                 document.getElementById('siteSelectorSection').classList.remove('hidden');
                 renderSiteCards();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                if (!isOnline) alert("Visit saved on this device. It will upload automatically when you're back online - tap the sync badge at the top to check.");
             } catch (err) {
-                setSyncStatus('synced');
-                alert('Error closing visit: ' + (err.message || err));
+                logAppError('Returning to site list', err);
+                const m = document.getElementById('completeVisitModal');
+                if (m) m.classList.add('hidden');
+            }
+            setSyncStatus('synced');
+            closingVisit = false;
+
+            if (pdfProblem) {
+                alert('The visit was saved, but the PDF report could not be created (' + (pdfProblem.message || pdfProblem) + '). You can download it later from Historical Visit Notes on the site dashboard.');
+            } else if (!isOnline) {
+                alert("Visit saved on this device. It will upload automatically when you're back online - tap the sync badge at the top to check.");
             }
         }
 
@@ -3949,6 +4289,7 @@
 
         function openSettingsModal() {
             renderSettingsLists();
+            renderDiagnostics();
             document.getElementById('settingsModal').classList.remove('hidden');
             if (isOnline) loadOptions();
         }
@@ -4011,9 +4352,87 @@
             renderSettingsLists();
         }
 
+        // ===================================================================
+        //  DIAGNOSTICS - keeps the last few errors (with detail) so they can be copied and sent for fixing
+        // ===================================================================
+        const DIAG_KEY = 'pestis-errors';
+        function logAppError(where, err) {
+            try {
+                console.error(where + ':', err);
+                const list = loadJSON(DIAG_KEY, []);
+                list.unshift({
+                    at: new Date().toISOString(),
+                    where: where,
+                    message: String((err && err.message) || err),
+                    stack: String((err && err.stack) || '').split('\n').slice(0, 6).join('\n')
+                });
+                saveJSON(DIAG_KEY, list.slice(0, 20));
+                renderDiagnostics();
+            } catch (e) {}
+        }
+        window.addEventListener('error', e => logAppError('Page error', e.error || e.message));
+        window.addEventListener('unhandledrejection', e => logAppError('Background task', e.reason));
+
+        function diagnosticsText() {
+            const list = loadJSON(DIAG_KEY, []);
+            const lines = [
+                'Pestis ' + APP_VERSION,
+                'Browser: ' + navigator.userAgent,
+                'Online: ' + isOnline + ' | Queue waiting: ' + unsentItems().length,
+                'Missing page parts: ' + (missingPageParts.length ? missingPageParts.join(', ') : 'none'),
+                ''
+            ];
+            list.forEach(x => lines.push(`[${x.at}] ${x.where}: ${x.message}\n${x.stack}\n`));
+            return lines.join('\n');
+        }
+        function renderDiagnostics() {
+            const el = document.getElementById('diagList');
+            const sum = document.getElementById('diagSummary');
+            if (!el || !sum) return;
+            const list = loadJSON(DIAG_KEY, []);
+            sum.textContent = `Version ${APP_VERSION} · ${list.length ? list.length + ' recent error' + (list.length === 1 ? '' : 's') : 'no recent errors'}` +
+                (missingPageParts.length ? ` · page file incomplete (${missingPageParts.length} parts missing)` : '');
+            el.innerHTML = list.map(x => `
+                <div class="row-item p-2.5">
+                    <div class="t-faint">${esc(fmtDateTime(x.at))} · ${esc(x.where)}</div>
+                    <div class="t-strong break-words">${esc(x.message)}</div>
+                </div>`).join('') || '<div class="t-faint italic">Nothing recorded.</div>';
+        }
+        async function copyDiagnostics() {
+            const text = diagnosticsText();
+            try { await navigator.clipboard.writeText(text); alert('Diagnostics copied - paste them into your message.'); }
+            catch (e) { prompt('Copy these details:', text); }
+        }
+        function clearDiagnostics() { saveJSON(DIAG_KEY, []); renderDiagnostics(); }
+
+        // ---------- Page integrity check ----------
+        // If index.html was only partly replaced, newer code runs against older page markup and fails in odd ways.
+        let missingPageParts = [];
+        function checkPageIntegrity() {
+            missingPageParts = REQUIRED_IDS.filter(id => !document.getElementById(id));
+            if (!missingPageParts.length) return;
+            console.error('Pestis page is incomplete. Missing:', missingPageParts);
+            const bar = document.createElement('div');
+            bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#b91c1c;color:#fff;font:700 13px system-ui,sans-serif;padding:10px 14px;text-align:center;';
+            bar.textContent = `This copy of Pestis (${APP_VERSION}) is incomplete - ${missingPageParts.length} page part(s) are missing (${missingPageParts.slice(0, 4).join(', ')}${missingPageParts.length > 4 ? ', ...' : ''}). Replace index.html in the repo with the complete file, then reload.`;
+            document.body.appendChild(bar);
+        }
+
         // ---------- START ----------
+        checkPageIntegrity();
+        document.querySelectorAll('.app-version').forEach(el => { el.textContent = APP_VERSION; });
+        console.log('Pestis version', APP_VERSION);
+
         if ('serviceWorker' in navigator && location.protocol === 'https:') {
-            navigator.serviceWorker.register('sw.js').catch(err => console.warn('Offline app cache not available:', err));
+            const hadController = !!navigator.serviceWorker.controller;
+            navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+                // Check for a newer version now and every 30 minutes
+                reg.update().catch(() => {});
+                setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000);
+            }).catch(err => console.warn('Offline app cache not available:', err));
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (hadController) document.getElementById('updateBanner').classList.remove('hidden');
+            });
         }
 
         (async () => {
