@@ -2,10 +2,10 @@
 // Keeps the app, its libraries and recently viewed photos available with no connection.
 // Database calls are NOT cached here - the app's own upload queue handles data.
 
-const SHELL_CACHE = 'pestis-shell-v1';
-const RUNTIME_CACHE = 'pestis-runtime-v1';
-const PHOTO_CACHE = 'pestis-photos-v1';
-const MAX_PHOTOS = 250;
+const SHELL_CACHE = 'pestis-shell-v2';
+const RUNTIME_CACHE = 'pestis-runtime-v2';
+const PHOTO_CACHE = 'pestis-photos-v2';
+const MAX_PHOTOS = 600;
 
 const SHELL = ['./', './index.html', './images/pesties-logo.png'];
 const CDN = [
@@ -67,14 +67,17 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Private photos (signed links): keep a copy so they can be viewed offline
+    // Private photos (signed links): keep a copy so they can be viewed offline.
+    // Saved by file path (not the expiring link), so a photo seen once stays viewable offline
+    // even after its link has expired or been renewed.
     if (url.hostname.endsWith('.supabase.co') && url.pathname.includes('/storage/v1/object/sign/')) {
+        const key = url.origin + url.pathname;
         event.respondWith((async () => {
             const cache = await caches.open(PHOTO_CACHE);
-            const hit = await cache.match(req.url);
+            const hit = await cache.match(key);
             if (hit) return hit;
             const res = await fetch(new Request(req.url, { mode: 'cors', credentials: 'omit' }));
-            if (res.ok) { cache.put(req.url, res.clone()); trimCache(PHOTO_CACHE, MAX_PHOTOS); }
+            if (res.ok) { cache.put(key, res.clone()); trimCache(PHOTO_CACHE, MAX_PHOTOS); }
             return res;
         })());
         return;
