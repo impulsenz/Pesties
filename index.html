@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pestis - Field Tech App with All Photos Gallery</title>
+    <title>Pestis - Field Tech App with Recommendations & Issues</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Html5Qrcode Scanner Library -->
@@ -158,24 +158,37 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">Technician Notes & Corrective Actions</label>
-                    <textarea id="serviceNotes" rows="2" placeholder="Station cleaned, fresh bait applied..." class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white"></textarea>
+                    <label class="block text-xs text-slate-400 mb-1">Technician Service Notes</label>
+                    <textarea id="serviceNotes" rows="2" placeholder="Station inspected, fresh bait applied..." class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white"></textarea>
                 </div>
 
-                <!-- Compressed Photo Capture & Preview -->
-                <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 space-y-2">
-                    <label class="block text-xs text-slate-400">Attach New Photo (Camera / File)</label>
-                    <input type="file" id="stationPhotoInput" accept="image/*" capture="environment" class="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer">
-                    <div id="photoPreviewContainer" class="hidden pt-2 flex items-center space-x-3">
-                        <img id="photoPreview" class="h-16 rounded-lg border border-slate-700 object-cover cursor-pointer" onclick="viewFullImage(this.src)" alt="Preview">
-                        <span class="text-xs text-emerald-400">New photo ready ✓</span>
+                <!-- Recommendations & Issue Capture Section -->
+                <div class="bg-slate-800 p-4 rounded-xl border border-amber-500/40 space-y-3">
+                    <h5 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <span>⚠️</span> Log Recommendation or Issue Photo
+                    </h5>
+                    
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Corrective Action / Recommendation for Client</label>
+                        <input type="text" id="recommendationNote" placeholder="e.g. Seal gap around pipes, repair damaged seal..." class="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Attach Issue Photo (Camera / File)</label>
+                        <input type="file" id="issuePhotoInput" accept="image/*" capture="environment" class="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-500 cursor-pointer">
+                        <div id="photoPreviewContainer" class="hidden pt-2 flex items-center space-x-3">
+                            <img id="photoPreview" class="h-16 rounded-lg border border-slate-700 object-cover cursor-pointer" onclick="viewFullImage(this.src)" alt="Issue Preview">
+                            <span class="text-xs text-amber-400">Issue photo compressed & attached ✓</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Historical Photos Gallery for this Station -->
-                <div id="pastPhotosSection" class="hidden bg-slate-800 p-3 rounded-lg border border-slate-700 space-y-2">
-                    <label class="block text-xs text-slate-400">All Historical Photos for this Device</label>
-                    <div id="pastPhotosGallery" class="flex flex-wrap gap-2"></div>
+                <!-- Historical Recommendations & Issue Photos List for this Station -->
+                <div id="pastRecommendationsSection" class="hidden bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <h5 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <span>📋</span> Past Recommendations & Issue History
+                    </h5>
+                    <div id="pastRecommendationsList" class="space-y-2 max-h-48 overflow-y-auto text-xs"></div>
                 </div>
 
                 <button type="button" onclick="saveStationServiceRecord()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 rounded-lg text-sm transition shadow">
@@ -210,7 +223,7 @@
         let currentDeviceType = null;
         let compressedPhotoBase64 = null;
 
-        document.getElementById('stationPhotoInput').addEventListener('change', function(e) {
+        document.getElementById('issuePhotoInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
@@ -337,19 +350,22 @@
                         barcode_id: row.barcode_id,
                         locationName: row.payload.locationName || 'Unnamed Device',
                         deviceType: row.payload.deviceType || 'Rodent Bait Station',
-                        allPhotos: [],
+                        recommendationsHistory: [],
                         lastPayload: row.payload
                     };
 
                     existing.locationName = row.payload.locationName || existing.locationName;
                     existing.deviceType = row.payload.deviceType || existing.deviceType;
                     
+                    const recText = row.payload.recommendation || row.payload.recommendationNote || null;
                     const photoUrl = row.payload.photo || row.payload.image || null;
-                    if (photoUrl) {
-                        // Push into allPhotos array if not already included
-                        if (!existing.allPhotos.includes(photoUrl)) {
-                            existing.allPhotos.push(photoUrl);
-                        }
+
+                    if (recText || photoUrl) {
+                        existing.recommendationsHistory.push({
+                            recommendation: recText || 'No written note',
+                            photo: photoUrl,
+                            date: row.payload.servicedAt || row.created_at
+                        });
                         existing.lastPayload = row.payload;
                     }
 
@@ -380,12 +396,11 @@
             } else {
                 unscannedList.innerHTML = '';
                 unscanned.forEach(d => {
-                    const latestPhoto = d.allPhotos.length > 0 ? d.allPhotos[d.allPhotos.length - 1] : null;
-                    const photoThumb = latestPhoto ? `<img src="${latestPhoto}" class="w-8 h-8 rounded object-cover cursor-pointer inline-block ml-2 border border-slate-600" onclick="event.stopPropagation(); viewFullImage('${latestPhoto}')" title="View attached photo">` : '';
+                    const hasRecs = d.recommendationsHistory.length > 0 ? `<span class="text-amber-400 font-normal text-xs ml-1 font-semibold">⚠️ ${d.recommendationsHistory.length} Issue(s)</span>` : '';
                     unscannedList.innerHTML += `
                         <div onclick="openDeviceForm('${d.barcode_id}', '${d.locationName}', '${d.deviceType}', false)" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-lg border border-slate-700 cursor-pointer transition flex justify-between items-center">
                             <div>
-                                <div class="font-bold text-white text-sm flex items-center">${d.locationName} ${photoThumb}</div>
+                                <div class="font-bold text-white text-sm flex items-center">${d.locationName} ${hasRecs}</div>
                                 <div class="text-slate-400 text-xs">${d.deviceType} • <span class="font-mono text-sky-400">${d.barcode_id}</span></div>
                             </div>
                             <span class="text-amber-400 text-xs bg-amber-950 px-2 py-1 rounded">Unscanned</span>
@@ -399,12 +414,11 @@
             } else {
                 scannedList.innerHTML = '';
                 scanned.forEach(d => {
-                    const latestPhoto = d.allPhotos.length > 0 ? d.allPhotos[d.allPhotos.length - 1] : null;
-                    const photoThumb = latestPhoto ? `<img src="${latestPhoto}" class="w-8 h-8 rounded object-cover cursor-pointer inline-block ml-2 border border-slate-600" onclick="event.stopPropagation(); viewFullImage('${latestPhoto}')" title="View attached photo">` : '';
+                    const hasRecs = d.recommendationsHistory.length > 0 ? `<span class="text-amber-400 font-normal text-xs ml-1 font-semibold">⚠️ ${d.recommendationsHistory.length} Issue(s)</span>` : '';
                     scannedList.innerHTML += `
                         <div onclick="openDeviceForm('${d.barcode_id}', '${d.locationName}', '${d.deviceType}', true)" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-lg border border-slate-700 cursor-pointer transition flex justify-between items-center">
                             <div>
-                                <div class="font-bold text-white text-sm flex items-center">${d.locationName} ${photoThumb}</div>
+                                <div class="font-bold text-white text-sm flex items-center">${d.locationName} ${hasRecs}</div>
                                 <div class="text-slate-400 text-xs">${d.deviceType} • <span class="font-mono text-sky-400">${d.barcode_id}</span></div>
                             </div>
                             <span class="text-emerald-400 text-xs bg-emerald-950 px-2 py-1 rounded">Serviced ✓</span>
@@ -452,20 +466,32 @@
             document.getElementById('stationFormContainer').classList.remove('hidden');
 
             document.getElementById('photoPreviewContainer').classList.add('hidden');
-            document.getElementById('stationPhotoInput').value = '';
+            document.getElementById('issuePhotoInput').value = '';
+            document.getElementById('recommendationNote').value = '';
 
-            // Populate all historical photos in the gallery
+            // Populate all historical recommendations and issue photos
             const existingDev = siteDevices.find(d => d.barcode_id === barcode);
-            const gallery = document.getElementById('pastPhotosGallery');
-            gallery.innerHTML = '';
+            const historyList = document.getElementById('pastRecommendationsList');
+            historyList.innerHTML = '';
 
-            if (existingDev && existingDev.allPhotos && existingDev.allPhotos.length > 0) {
-                document.getElementById('pastPhotosSection').classList.remove('hidden');
-                existingDev.allPhotos.forEach(pUrl => {
-                    gallery.innerHTML += `<img src="${pUrl}" class="h-16 w-16 rounded object-cover cursor-pointer border border-slate-600 hover:border-emerald-400 transition" onclick="viewFullImage('${pUrl}')" title="Historical photo">`;
+            if (existingDev && existingDev.recommendationsHistory && existingDev.recommendationsHistory.length > 0) {
+                document.getElementById('pastRecommendationsSection').classList.remove('hidden');
+                existingDev.recommendationsHistory.forEach(item => {
+                    const formattedDate = item.date ? new Date(item.date).toLocaleDateString() : 'Past Visit';
+                    const photoHtml = item.photo ? `<img src="${item.photo}" class="h-12 w-12 rounded object-cover cursor-pointer border border-slate-600 hover:border-amber-400" onclick="viewFullImage('${item.photo}')" title="Click to view full photo">` : '';
+                    
+                    historyList.innerHTML += `
+                        <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-700 flex justify-between items-center gap-2">
+                            <div class="flex-1">
+                                <div class="text-amber-400 font-semibold">${item.recommendation}</div>
+                                <div class="text-slate-500 text-[10px]">${formattedDate}</div>
+                            </div>
+                            ${photoHtml}
+                        </div>
+                    `;
                 });
             } else {
-                document.getElementById('pastPhotosSection').classList.add('hidden');
+                document.getElementById('pastRecommendationsSection').classList.add('hidden');
             }
 
             if (isNew || !locName) {
@@ -494,6 +520,7 @@
             const species = document.getElementById('speciesCaught').value.trim();
             const qty = document.getElementById('qtyCount').value;
             const notes = document.getElementById('serviceNotes').value.trim();
+            const recNote = document.getElementById('recommendationNote').value.trim();
 
             if (!locNameInput) {
                 alert('Please enter a device/location name.');
@@ -509,6 +536,7 @@
                     speciesCaught: species || 'None',
                     quantity: parseFloat(qty),
                     notes: notes,
+                    recommendation: recNote || null,
                     photo: compressedPhotoBase64 || null,
                     servicedAt: new Date().toISOString()
                 };
@@ -522,21 +550,27 @@
                 const { error: logErr } = await _supabase.from('service_logs').insert([record]);
                 if (logErr) throw logErr;
 
-                if (!siteDevices.some(d => d.barcode_id === currentBarcode)) {
-                    siteDevices.push({
+                let dev = siteDevices.find(d => d.barcode_id === currentBarcode);
+                if (!dev) {
+                    dev = {
                         barcode_id: currentBarcode,
                         locationName: locNameInput,
                         deviceType: devType,
-                        allPhotos: compressedPhotoBase64 ? [compressedPhotoBase64] : [],
+                        recommendationsHistory: [],
                         lastPayload: payloadData
+                    };
+                    siteDevices.push(dev);
+                }
+
+                dev.lastPayload = payloadData;
+                dev.locationName = locNameInput;
+
+                if (recNote || compressedPhotoBase64) {
+                    dev.recommendationsHistory.push({
+                        recommendation: recNote || 'No written note',
+                        photo: compressedPhotoBase64,
+                        date: payloadData.servicedAt
                     });
-                } else {
-                    const dev = siteDevices.find(d => d.barcode_id === currentBarcode);
-                    dev.lastPayload = payloadData;
-                    dev.locationName = locNameInput;
-                    if (compressedPhotoBase64 && !dev.allPhotos.includes(compressedPhotoBase64)) {
-                        dev.allPhotos.push(compressedPhotoBase64);
-                    }
                 }
 
                 scannedBarcodesThisVisit.add(currentBarcode);
@@ -546,11 +580,12 @@
                 document.getElementById('stationFormContainer').classList.add('hidden');
                 document.getElementById('speciesCaught').value = '';
                 document.getElementById('serviceNotes').value = '';
-                document.getElementById('stationPhotoInput').value = '';
+                document.getElementById('recommendationNote').value = '';
+                document.getElementById('issuePhotoInput').value = '';
                 document.getElementById('photoPreviewContainer').classList.add('hidden');
                 compressedPhotoBase64 = null;
 
-                alert('Device service record and compressed photo saved successfully!');
+                alert('Device service record and recommendation saved successfully!');
 
             } catch (err) {
                 alert('Error saving record: ' + err.message);
