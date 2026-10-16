@@ -162,28 +162,32 @@
                     <textarea id="serviceNotes" rows="2" placeholder="Station inspected, fresh bait applied..." class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white"></textarea>
                 </div>
 
-                <!-- Recommendations & Issue Capture Section -->
+                <!-- Recommendations & Issue Capture Section (Side-by-Side Layout) -->
                 <div class="bg-slate-800 p-4 rounded-xl border border-amber-500/40 space-y-3">
                     <h5 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                         <span>⚠️</span> Log Recommendation & Issue Photo
                     </h5>
                     
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Corrective Action / Recommendation for Client</label>
-                        <input type="text" id="recommendationNote" placeholder="e.g. Seal gap around pipes, repair damaged seal..." class="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
-                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                        <!-- Text Input (Takes 2 cols) -->
+                        <div class="sm:col-span-2 space-y-2">
+                            <label class="block text-xs text-slate-400">Corrective Action / Recommendation</label>
+                            <textarea id="recommendationNote" rows="3" placeholder="e.g. Seal gap around pipes, repair damaged seal..." class="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-lg text-sm text-white"></textarea>
+                        </div>
 
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Attach Issue Photo (Camera / File)</label>
-                        <input type="file" id="issuePhotoInput" accept="image/*" capture="environment" class="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-500 cursor-pointer">
-                        <div id="photoPreviewContainer" class="hidden pt-2 flex items-center space-x-3">
-                            <img id="photoPreview" class="h-16 rounded-lg border border-slate-700 object-cover cursor-pointer" onclick="viewFullImage(this.src)" alt="Issue Preview">
-                            <span class="text-xs text-amber-400">Issue photo compressed & attached ✓</span>
+                        <!-- Image Input & Side-by-side Preview (Takes 1 col) -->
+                        <div class="space-y-2 flex flex-col items-center sm:items-start">
+                            <label class="block text-xs text-slate-400">Issue Photo</label>
+                            <input type="file" id="issuePhotoInput" accept="image/*" capture="environment" class="text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-500 cursor-pointer w-full">
+                            
+                            <div id="photoPreviewContainer" class="hidden pt-1">
+                                <img id="photoPreview" class="h-20 w-20 rounded-lg border border-slate-700 object-cover cursor-pointer" onclick="viewFullImage(this.src)" alt="Issue Preview">
+                            </div>
                         </div>
                     </div>
 
-                    <button type="button" onclick="saveRecommendationOnly()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
-                        <span>📷</span> Save Recommendation & Photo to Device History
+                    <button type="button" onclick="saveRecommendationOnly()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5 cursor-pointer">
+                        <span>💾</span> Save Recommendation & Photo to History
                     </button>
                 </div>
 
@@ -473,7 +477,6 @@
             document.getElementById('issuePhotoInput').value = '';
             document.getElementById('recommendationNote').value = '';
 
-            // Render past recommendations
             renderPastRecommendations(barcode);
 
             if (isNew || !locName) {
@@ -520,7 +523,6 @@
             }
         }
 
-        // Dedicated button handler to save photo + recommendation note immediately
         async function saveRecommendationOnly() {
             const locNameInput = document.getElementById('newLocName').value.trim() || currentDeviceName;
             const devType = document.getElementById('newDeviceType').value || currentDeviceType;
@@ -591,7 +593,6 @@
             const species = document.getElementById('speciesCaught').value.trim();
             const qty = document.getElementById('qtyCount').value;
             const notes = document.getElementById('serviceNotes').value.trim();
-            const recNote = document.getElementById('recommendationNote').value.trim();
 
             if (!locNameInput) {
                 alert('Please enter a device/location name.');
@@ -607,8 +608,6 @@
                     speciesCaught: species || 'None',
                     quantity: parseFloat(qty),
                     notes: notes,
-                    recommendation: recNote || null,
-                    photo: compressedPhotoBase64 || null,
                     servicedAt: new Date().toISOString()
                 };
 
@@ -636,14 +635,6 @@
                 dev.lastPayload = payloadData;
                 dev.locationName = locNameInput;
 
-                if (recNote || compressedPhotoBase64) {
-                    dev.recommendationsHistory.push({
-                        recommendation: recNote || 'Issue photo attached',
-                        photo: compressedPhotoBase64,
-                        date: payloadData.servicedAt
-                    });
-                }
-
                 scannedBarcodesThisVisit.add(currentBarcode);
                 renderDeviceLists();
 
@@ -656,7 +647,7 @@
                 document.getElementById('photoPreviewContainer').classList.add('hidden');
                 compressedPhotoBase64 = null;
 
-                alert('Device service record and recommendation saved successfully!');
+                alert('Device service record saved successfully!');
 
             } catch (err) {
                 alert('Error saving record: ' + err.message);
