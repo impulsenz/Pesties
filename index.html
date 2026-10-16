@@ -106,21 +106,8 @@
         html.dark .icon-moon { display: none; }
 
         .chip { display: inline-flex; align-items: center; gap: .35rem; padding: .22rem .65rem; border-radius: .65rem; font-size: .7rem; font-weight: 700; border: 1px solid; white-space: nowrap; }
-        .chip-amber { color: #b45309; background: #fef3c7; border-color: #fcd34d; }
         .chip-green { color: #047857; background: #d1fae5; border-color: #6ee7b7; }
-        .chip-blue { color: #1d4ed8; background: #dbeafe; border-color: #93c5fd; }
-        .chip-red { color: #b91c1c; background: #fee2e2; border-color: #fca5a5; }
-        .chip-orange { color: #c2410c; background: #ffedd5; border-color: #fdba74; }
-        html.dark .chip-amber { color: #fbbf24; background: rgba(245, 158, 11, .12); border-color: rgba(245, 158, 11, .3); }
         html.dark .chip-green { color: #34d399; background: rgba(16, 185, 129, .12); border-color: rgba(16, 185, 129, .3); }
-        html.dark .chip-blue { color: #7db4ff; background: rgba(59, 130, 246, .14); border-color: rgba(59, 130, 246, .35); }
-        html.dark .chip-red { color: #f87171; background: rgba(239, 68, 68, .12); border-color: rgba(239, 68, 68, .3); }
-        html.dark .chip-orange { color: #fb923c; background: rgba(249, 115, 22, .14); border-color: rgba(249, 115, 22, .35); }
-
-        .row-item { background: var(--surface2); border: 1px solid var(--border); border-radius: .8rem; transition: border-color .15s, background .15s; }
-        .row-item.clickable { cursor: pointer; }
-        .row-item.clickable:hover { border-color: #f97316; background: var(--surface3); }
-        .link-btn { color: var(--accent-text); font-weight: 700; text-decoration: underline; cursor: pointer; font-size: .75rem; }
 
         .site-card { position: relative; display: block; width: 100%; aspect-ratio: 4 / 3; border-radius: 1rem; overflow: hidden; text-align: left; cursor: pointer; border: 1px solid rgba(255, 255, 255, .08); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; box-shadow: var(--shadow); }
         .site-card:hover, .site-card:focus-visible { transform: translateY(-4px) scale(1.03); box-shadow: 0 18px 40px -14px rgba(249, 115, 22, .6); border-color: #fb923c; outline: none; }
@@ -133,7 +120,6 @@
         .site-card-add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; aspect-ratio: 4 / 3; width: 100%; border-radius: 1rem; border: 2px dashed var(--border); color: var(--muted); font-weight: 800; font-size: .8rem; cursor: pointer; transition: all .2s ease; background: transparent; }
         .site-card-add:hover { border-color: #f97316; color: var(--accent-text); transform: translateY(-3px); }
 
-        .ph-hidden { display: none !important; }
         .scroll-thin { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
     </style>
 </head>
@@ -173,11 +159,7 @@
                     <svg class="icon-sun w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414m12.728 0l-1.414-1.414M7.05 7.05L5.636 5.636M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     <svg class="icon-moon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                 </button>
-                <button type="button" onclick="openProfileModal()" class="flex items-center gap-2.5 rounded-xl pl-1.5 pr-3 py-1.5 cursor-pointer transition-all" style="background: var(--surface3); border: 1px solid var(--border);">
-                    <img id="headerAvatar" src="" alt="" class="w-8 h-8 rounded-lg object-cover hidden">
-                    <span id="headerAvatarFallback" class="w-8 h-8 rounded-lg bg-brand-500 text-white font-black text-xs flex items-center justify-center">?</span>
-                    <span id="headerName" class="text-xs font-bold t-strong hidden sm:block max-w-[9rem] truncate"></span>
-                </button>
+                <button type="button" onclick="signOut()" class="btn btn-secondary !py-2 !px-3 text-xs">Sign Out</button>
             </div>
         </div>
     </header>
@@ -198,20 +180,15 @@
                         </div>
                         <input type="text" id="siteSearchInput" oninput="renderSiteCards()" placeholder="Search sites..." class="field !pl-10">
                     </div>
-                    <button type="button" onclick="openAddClientModal()" class="btn btn-primary">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                        Register New Site
-                    </button>
                 </div>
             </div>
             <div id="siteCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 lg:gap-5">
-                <span class="text-xs t-muted italic col-span-full">Loading sites...</span>
+                <span class="text-xs t-muted italic col-span-full">Loading sites from database...</span>
             </div>
         </section>
     </main>
 
     <script>
-        // UPDATED WITH YOUR PROJECT URL AND PUBLISHABLE KEY
         const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
         
@@ -220,27 +197,7 @@
         });
         const db = window.supabaseClient;
 
-        // Chunked signed URL map builder to fix 413 Payload Too Large errors
-        async function buildSignedUrlMap(paths) {
-            const chunkSize = 50;
-            const urlMap = {};
-            for (let i = 0; i < paths.length; i += chunkSize) {
-                const chunk = paths.slice(i, i + chunkSize);
-                try {
-                    const { data, error } = await db.storage.from('station-photos').createSignedUrls(chunk, 3600);
-                    if (!error && data) {
-                        data.forEach(item => {
-                            if (item.signedUrl) {
-                                urlMap[item.path] = item.signedUrl;
-                            }
-                        });
-                    }
-                } catch (err) {
-                    console.error("Batch signed URL error chunk:", err);
-                }
-            }
-            return urlMap;
-        }
+        let sitesData = [];
 
         async function initAuth() {
             const authLoading = document.getElementById('authLoading');
@@ -258,20 +215,8 @@
                     appHeader.classList.remove('hidden');
                     appRoot.classList.remove('hidden');
                     
-                    const user = session.user;
-                    const meta = user.user_metadata || {};
-                    const avatarUrl = meta.avatar_url || meta.picture;
-                    const fullName = meta.full_name || user.email;
-
-                    if (avatarUrl) {
-                        const img = document.getElementById('headerAvatar');
-                        img.src = avatarUrl;
-                        img.classList.remove('hidden');
-                        document.getElementById('headerAvatarFallback').classList.add('hidden');
-                    } else {
-                        document.getElementById('headerAvatarFallback').textContent = user.email ? user.email[0].toUpperCase() : '?';
-                    }
-                    document.getElementById('headerName').textContent = fullName;
+                    // Fetch sites from database now that we are logged in
+                    await fetchSites();
                 } else {
                     authLoading.classList.add('hidden');
                     loginPanel.classList.remove('hidden');
@@ -284,6 +229,61 @@
             }
         }
 
+        async function fetchSites() {
+            const grid = document.getElementById('siteCardsGrid');
+            try {
+                const { data, error } = await db.from('sites').select('*');
+                if (error) throw error;
+
+                sitesData = data || [];
+                renderSiteCards();
+            } catch (err) {
+                console.error("Error fetching sites:", err);
+                grid.innerHTML = `<span class="text-xs text-red-500 italic col-span-full">Error loading sites: ${err.message}</span>`;
+            }
+        }
+
+        function renderSiteCards() {
+            const grid = document.getElementById('siteCardsGrid');
+            const query = (document.getElementById('siteSearchInput').value || '').toLowerCase();
+            
+            const filtered = sitesData.filter(s => 
+                (s.name && s.name.toLowerCase().includes(query)) || 
+                (s.address && s.address.toLowerCase().includes(query))
+            );
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<span class="text-xs t-muted italic col-span-full">No customer sites found.</span>`;
+                return;
+            }
+
+            const gradients = [
+                'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)',
+                'linear-gradient(135deg, #7c2d12 0%, #431407 100%)',
+                'linear-gradient(135deg, #065f46 0%, #022c22 100%)',
+                'linear-gradient(135deg, #581c87 0%, #3b0764 100%)'
+            ];
+
+            grid.innerHTML = filtered.map((site, idx) => {
+                const bg = gradients[idx % gradients.length];
+                const initials = (site.name || 'Site').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+                return `
+                    <div class="site-card" style="background: ${bg};" onclick="alert('Opened site: ${site.name}')">
+                        <span class="site-initials">${initials}</span>
+                        <div class="site-open">Open Site</div>
+                        <div class="site-overlay">
+                            <h3 class="site-name">${escapeHtml(site.name || 'Unnamed Site')}</h3>
+                            <p class="site-addr">${escapeHtml(site.address || 'No address specified')}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
         async function signInWithGoogle() {
             const { error } = await db.auth.signInWithOAuth({
                 provider: 'google',
@@ -294,6 +294,11 @@
                 msg.textContent = error.message;
                 msg.classList.remove('hidden');
             }
+        }
+
+        async function signOut() {
+            await db.auth.signOut();
+            window.location.reload();
         }
 
         function toggleTheme() {
