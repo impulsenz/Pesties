@@ -2,8 +2,8 @@
 // Keeps the app, its libraries and recently viewed photos available with no connection.
 // Database calls are NOT cached here - the app's own upload queue handles data.
 
-const SHELL_CACHE = 'pestis-shell-v3';
-const RUNTIME_CACHE = 'pestis-runtime-v3';
+const SHELL_CACHE = 'pestis-shell-v4';
+const RUNTIME_CACHE = 'pestis-runtime-v4';
 const PHOTO_CACHE = 'pestis-photos-v2';
 const MAX_PHOTOS = 600;
 
@@ -20,7 +20,7 @@ self.addEventListener('install', event => {
     event.waitUntil((async () => {
         const cache = await caches.open(SHELL_CACHE);
         await Promise.all([
-            ...SHELL.map(u => cache.add(u).catch(() => {})),
+            ...SHELL.map(u => cache.add(new Request(u, { cache: 'reload' })).catch(() => {})),
             ...CDN.map(u => fetch(u, { mode: 'no-cors' }).then(r => cache.put(u, r)).catch(() => {}))
         ]);
         await self.skipWaiting();
@@ -50,7 +50,8 @@ self.addEventListener('fetch', event => {
     if (req.mode === 'navigate') {
         event.respondWith((async () => {
             try {
-                const res = await fetch(req);
+                // Always check the server for a newer copy of the app (skips the browser's own cache)
+                const res = await fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' });
                 if (res.ok) {
                     const cache = await caches.open(SHELL_CACHE);
                     cache.put(url.origin + url.pathname, res.clone());
