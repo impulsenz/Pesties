@@ -2,8 +2,8 @@
 // Keeps the app, its libraries and recently viewed photos available with no connection.
 // Database calls are NOT cached here - the app's own upload queue handles data.
 
-const SHELL_CACHE = 'pestis-shell-v2';
-const RUNTIME_CACHE = 'pestis-runtime-v2';
+const SHELL_CACHE = 'pestis-shell-v3';
+const RUNTIME_CACHE = 'pestis-runtime-v3';
 const PHOTO_CACHE = 'pestis-photos-v2';
 const MAX_PHOTOS = 600;
 
