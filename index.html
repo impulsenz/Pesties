@@ -13,7 +13,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- Main Content Container (Full-screen edge-to-edge layout, top header removed) -->
+    <!-- Main Content Container -->
     <main class="flex-1 w-full max-w-none px-4 md:px-8 py-6 space-y-6">
 
         <!-- 1. Client Site Selector & Add Client Section -->
@@ -37,10 +37,11 @@
             <!-- Add Client Modal Form -->
             <div id="addClientModal" class="hidden bg-slate-900 border border-slate-700 p-5 rounded-xl space-y-3 mt-4">
                 <h3 class="font-bold text-xs text-emerald-400 uppercase">Add New Customer Site to Supabase</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                     <input type="text" id="newClientName" placeholder="Customer / Business Name" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
                     <input type="text" id="newClientAddress" placeholder="Physical Address" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
                     <input type="text" id="newClientContact" placeholder="Site Contact & Phone" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                    <input type="email" id="newClientEmail" placeholder="Client Email for Reports" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
                     <input type="text" id="newClientNotes" placeholder="Access / Safety Notes" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
                 </div>
                 <div class="flex justify-end space-x-2 pt-2">
@@ -82,8 +83,9 @@
             <!-- Site Information & Notes Grid -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-1">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Site Contact</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Site Contact & Email</span>
                     <p class="text-sm font-semibold text-sky-400" id="siteLandingContact">Manager: Not Specified</p>
+                    <p class="text-xs text-slate-300" id="siteLandingEmail">Email: Not Specified</p>
                 </div>
                 <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-1 md:col-span-2">
                     <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Site-Specific Safety & Access Notes</span>
@@ -427,6 +429,7 @@
             const name = document.getElementById('newClientName').value.trim();
             const address = document.getElementById('newClientAddress').value.trim();
             const contact = document.getElementById('newClientContact').value.trim();
+            const email = document.getElementById('newClientEmail').value.trim();
             const notes = document.getElementById('newClientNotes').value.trim();
 
             if (!name || !address) {
@@ -439,6 +442,7 @@
                     Name: name, 
                     Address: address,
                     Contact: contact || 'Manager',
+                    Email: email || '',
                     Notes: notes || 'No safety notes.'
                 }]);
                 if (error) throw error;
@@ -446,6 +450,9 @@
                 alert('New client site successfully registered!');
                 document.getElementById('newClientName').value = '';
                 document.getElementById('newClientAddress').value = '';
+                document.getElementById('newClientContact').value = '';
+                document.getElementById('newClientEmail').value = '';
+                document.getElementById('newClientNotes').value = '';
                 toggleAddClientModal();
                 loadClients();
             } catch (err) {
@@ -493,6 +500,16 @@
 
                 const map = new Map();
                 const visitMap = new Map();
+                const activeScannedSet = new Set();
+
+                // Determine latest visit session timestamp or boundary
+                let latestVisitTimestamp = 0;
+                (data || []).forEach(row => {
+                    if (row.barcode_id === 'SITE_VISIT_SUMMARY') {
+                        const t = new Date(row.created_at).getTime();
+                        if (t > latestVisitTimestamp) latestVisitTimestamp = t;
+                    }
+                });
 
                 (data || []).forEach(row => {
                     if (row.barcode_id === 'SITE_VISIT_SUMMARY') {
@@ -501,6 +518,12 @@
                             summaryNote: row.payload.siteNotes || 'No notes provided'
                         });
                         return;
+                    }
+
+                    // If a station log was created after the last visit summary, it belongs to the current active session
+                    const rowTime = new Date(row.created_at).getTime();
+                    if (rowTime > latestVisitTimestamp) {
+                        activeScannedSet.add(row.barcode_id);
                     }
 
                     const existing = map.get(row.barcode_id) || {
@@ -531,6 +554,7 @@
 
                 siteDevices = Array.from(map.values());
                 sitePastVisits = Array.from(visitMap.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
+                scannedBarcodesThisVisit = activeScannedSet;
 
                 progressPercent.textContent = '100%';
                 progressBarFill.style.width = '100%';
@@ -541,12 +565,11 @@
                 
                 document.getElementById('siteLandingTitle').textContent = selectedClient.Name;
                 document.getElementById('siteLandingAddress').textContent = selectedClient.Address || 'No address specified';
-                document.getElementById('siteLandingContact').textContent = selectedClient.Contact || 'Primary Contact: Manager';
+                document.getElementById('siteLandingContact').textContent = `Manager: ${selectedClient.Contact || 'Not Specified'}`;
+                document.getElementById('siteLandingEmail').textContent = `Email: ${selectedClient.Email || 'Not Specified'}`;
                 document.getElementById('siteLandingNotes').textContent = selectedClient.Notes || 'No site-specific safety instructions on file.';
 
                 renderLandingRecommendationsAndVisits();
-                
-                scannedBarcodesThisVisit.clear();
                 showSiteDashboard();
 
             } catch (err) {
@@ -604,7 +627,6 @@
             }
         }
 
-        // HELPER TO CONVERT IMAGE URL TO BASE64 FOR jsPDF EMBEDDING
         async function getBase64ImageFromUrl(imageUrl) {
             try {
                 const response = await fetch(imageUrl);
@@ -619,7 +641,7 @@
             }
         }
 
-        // PROFESSIONAL PDF SERVICE REPORT GENERATOR (jsPDF)
+        // PROFESSIONAL PDF SERVICE REPORT GENERATOR (jsPDF with 100% bigger images & structured text wrapping)
         async function generatePDFReport(visitIndex = null) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
@@ -630,7 +652,7 @@
             let y = 15;
 
             // Header Banner Styling
-            doc.setFillColor(15, 23, 42); // slate-900
+            doc.setFillColor(15, 23, 42);
             doc.rect(0, 0, 210, 30, 'F');
             doc.setTextColor(255, 255, 255);
             doc.setFont('helvetica', 'bold');
@@ -651,7 +673,7 @@
             doc.setFontSize(10);
             doc.text(`Client Name: ${selectedClient.Name}`, 14, y);
             doc.text(`Address: ${selectedClient.Address || 'N/A'}`, 14, y + 6);
-            doc.text(`Primary Contact: ${selectedClient.Contact || 'N/A'}`, 14, y + 12);
+            doc.text(`Primary Contact: ${selectedClient.Contact || 'N/A'} (${selectedClient.Email || 'No email'})`, 14, y + 12);
 
             y += 24;
             doc.setFont('helvetica', 'bold');
@@ -665,7 +687,6 @@
             doc.text(splitSummary, 14, y);
             y += (splitSummary.length * 6) + 10;
 
-            // Preparations Used Summary
             let prepsSet = new Set();
             siteDevices.forEach(d => {
                 if (d.lastPayload && d.lastPayload.prepUsed) {
@@ -690,7 +711,7 @@
                 y += 4;
             }
 
-            // Stations & Activity Details
+            // Stations & Activity Details with Clean Text Wrapping
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(12);
             doc.text("Station Inspection & Activity Log", 14, y);
@@ -699,13 +720,13 @@
             for (const d of siteDevices) {
                 if (!d.lastPayload) continue;
 
-                if (y > 250) {
+                if (y > 240) {
                     doc.addPage();
                     y = 20;
                 }
 
                 doc.setFillColor(241, 245, 249);
-                doc.rect(14, y - 4, 182, 22, 'F');
+                doc.rect(14, y - 4, 182, 28, 'F');
 
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(10);
@@ -715,13 +736,17 @@
                 doc.text(`Barcode: ${d.barcode_id}`, 140, y + 1);
 
                 y += 7;
-                doc.text(`Activity Level: ${d.lastPayload.activityLevel || 'None'}  |  Prep Used: ${d.lastPayload.prepUsed || 'None'}`, 18, y + 1);
+                doc.text(`Activity: ${d.lastPayload.activityLevel || 'None'}  |  Prep: ${d.lastPayload.prepUsed || 'None'}  |  Species: ${d.lastPayload.speciesCaught || 'None'}`, 18, y + 1);
                 y += 6;
-                doc.text(`Species Caught: ${d.lastPayload.speciesCaught || 'None'}  |  Qty: ${d.lastPayload.quantity || 0}  |  Notes: ${d.lastPayload.notes || 'None'}`, 18, y + 1);
-                y += 12;
+                
+                const noteText = `Service Notes: ${d.lastPayload.notes || 'None'}`;
+                const splitNotes = doc.splitTextToSize(noteText, 174);
+                doc.text(splitNotes, 18, y + 1);
+
+                y += (splitNotes.length * 5) + 10;
             }
 
-            // Recommendations & Embedded Photos Section
+            // Recommendations & 100% Bigger Images (60x60mm) with Structured Wrapping
             let allRecsWithPhotos = [];
             siteDevices.forEach(d => {
                 d.recommendationsHistory.forEach(r => {
@@ -730,7 +755,7 @@
             });
 
             if (allRecsWithPhotos.length > 0) {
-                if (y > 230) {
+                if (y > 200) {
                     doc.addPage();
                     y = 20;
                 }
@@ -741,7 +766,7 @@
                 y += 8;
 
                 for (const item of allRecsWithPhotos) {
-                    if (y > 220) {
+                    if (y > 200) {
                         doc.addPage();
                         y = 20;
                     }
@@ -750,26 +775,30 @@
                     doc.setFontSize(9);
                     doc.text(`Station: ${item.station} (${new Date(item.date).toLocaleDateString()})`, 14, y);
                     y += 5;
+                    
                     doc.setFont('helvetica', 'normal');
-                    const splitRec = doc.splitTextToSize(item.recommendation, 120);
+                    const splitRec = doc.splitTextToSize(item.recommendation, 110);
                     doc.text(splitRec, 14, y);
+
+                    let spaceNeeded = (splitRec.length * 5) + 10;
 
                     if (item.photo) {
                         try {
                             const base64Img = await getBase64ImageFromUrl(item.photo);
                             if (base64Img) {
-                                doc.addImage(base64Img, 'JPEG', 145, y - 4, 30, 30);
+                                // 100% Bigger Image: 60mm x 60mm
+                                doc.addImage(base64Img, 'JPEG', 130, y - 4, 60, 60);
+                                spaceNeeded = Math.max(spaceNeeded, 65);
                             }
                         } catch (err) {
                             console.warn("Could not embed image in PDF:", err);
                         }
                     }
 
-                    y += Math.max(splitRec.length * 5, 30) + 8;
+                    y += spaceNeeded;
                 }
             }
 
-            // Save PDF
             doc.save(`Service_Report_${selectedClient.Name.replace(/\s+/g, '_')}_${visitDateStr.replace(/\//g, '-')}.pdf`);
         }
 
@@ -844,7 +873,6 @@
             }
         }
 
-        // FULLSCREEN CAMERA SCANNER WITH FLASH / TORCH TOGGLE
         async function startFullscreenCameraScanner() {
             document.getElementById('fullscreenScannerModal').classList.remove('hidden');
             isFlashOn = false;
@@ -889,7 +917,6 @@
             document.getElementById('fullscreenScannerModal').classList.add('hidden');
         }
 
-        // MANUAL BARCODE ENTRY MODAL FUNCTIONS
         function openManualScanModal() {
             document.getElementById('manualBarcodeEntryInput').value = '';
             document.getElementById('manualScanModal').classList.remove('hidden');
@@ -1171,7 +1198,6 @@
                 const { error } = await _supabase.from('service_logs').insert([summaryRecord]);
                 if (error) throw error;
 
-                // Auto-generate and download professional PDF report upon closing visit
                 await generatePDFReport();
 
                 alert(`Visit for ${selectedClient.Name} successfully submitted and closed! PDF report downloaded.`);
