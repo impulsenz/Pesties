@@ -152,6 +152,11 @@
         .site-chips { position: absolute; right: .55rem; bottom: .6rem; z-index: 2; display: flex; flex-direction: column; align-items: flex-end; gap: .25rem; max-width: 55%; pointer-events: none; }
         .site-chips .site-due { margin-bottom: 0; align-self: auto; text-align: right; box-shadow: 0 4px 12px -4px rgba(0, 0, 0, .6); }
         .site-overlay.has-chips .site-name { padding-right: 45%; }
+        .site-grid.size-0 .site-due { font-size: .5rem; padding: .1rem .35rem; }
+        .site-grid.size-0 .site-initials { font-size: 2.6rem; }
+        .site-grid.size-0 .site-overlay { padding: 1.6rem .55rem .5rem; }
+        .site-grid.size-0 .site-overlay.has-chips .site-name { padding-right: 0; margin-bottom: 1.1rem; }
+        .site-grid.size-2 .site-initials { font-size: 6rem; }
         .chip-purple { color: #6d28d9; background: #ede9fe; border-color: #c4b5fd; }
         html.dark .chip-purple { color: #c4b5fd; background: rgba(124, 58, 237, .15); border-color: rgba(124, 58, 237, .4); }
         .site-due { align-self: flex-start; font-size: .6rem; font-weight: 800; padding: .15rem .5rem; border-radius: .4rem; color: #fff; margin-bottom: .3rem; }
@@ -215,7 +220,13 @@
     <header id="appHeader" class="app-header hidden sticky top-0 z-40 w-full">
         <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 py-2.5 flex justify-between items-center gap-3">
             <!-- Left: Logo -->
-            <button type="button" onclick="goHome()" class="logo-tile cursor-pointer" title="Back to all sites"><img src="images/pesties-logo.png" alt="Pesties - back to all sites" class="h-12 sm:h-14 w-auto rounded-lg"></button>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button type="button" onclick="goHome()" class="logo-tile cursor-pointer" title="Back to all sites"><img src="images/pesties-logo.png" alt="Pesties - back to all sites" class="h-12 sm:h-14 w-auto rounded-lg"></button>
+                <button type="button" id="notifBtn" onclick="openNotifModal()" class="icon-btn relative" title="Notifications">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    <span id="notifCount" class="hidden absolute -top-1.5 -right-1.5 min-w-[1.2rem] h-[1.2rem] px-1 rounded-full text-[10px] font-black text-white flex items-center justify-center" style="background:#dc2626;">0</span>
+                </button>
+            </div>
 
             <!-- Right: sync status (opens upload queue), theme toggle, profile -->
             <div class="flex items-center gap-2 sm:gap-3">
@@ -286,6 +297,24 @@
                 </div>
             </div>
 
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2 text-xs">
+                    <label for="siteSortSelect" class="t-muted font-semibold">Sort by</label>
+                    <select id="siteSortSelect" onchange="setSiteSort(this.value)" class="field !w-auto !py-2 cursor-pointer">
+                        <option value="due">Next service due</option>
+                        <option value="name">Name (A-Z)</option>
+                        <option value="contract">Contract end date</option>
+                        <option value="tech">Technician</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="t-muted font-semibold">Card size</span>
+                    <button type="button" onclick="changeCardSize(-1)" class="icon-btn !w-9 !h-9 text-lg font-black" title="Smaller cards">−</button>
+                    <span id="cardSizeLabel" class="t-strong font-bold w-14 text-center">Medium</span>
+                    <button type="button" onclick="changeCardSize(1)" class="icon-btn !w-9 !h-9 text-lg font-black" title="Bigger cards">+</button>
+                </div>
+            </div>
+
             <div id="renewalNotice" class="hidden"></div>
 
             <div id="siteCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 lg:gap-5">
@@ -341,18 +370,6 @@
                 </div>
             </div>
 
-            <!-- Contracted services & schedule -->
-            <div class="card p-5 sm:p-6 space-y-4">
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b divider pb-3">
-                    <h3 class="eyebrow flex items-center gap-2" style="color:#10b981;">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        Contracted Services & Schedule
-                    </h3>
-                    <button type="button" onclick="openServicesModal()" class="btn btn-secondary !px-3.5 !py-2">Manage Services</button>
-                </div>
-                <div id="siteServicesList" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3"></div>
-            </div>
-
             <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-12 gap-6">
                 <!-- Left column: stats, contact, safety -->
                 <div class="lg:col-span-2 xl:col-span-3 grid gap-4 sm:grid-cols-3 xl:grid-cols-1 content-start">
@@ -362,6 +379,14 @@
                             <div><div id="statServiced" class="text-2xl font-black" style="color:#10b981;">0</div><div class="eyebrow t-faint mt-0.5">Serviced</div></div>
                             <div><div id="statIssues" class="text-2xl font-black t-accent">0</div><div class="eyebrow t-faint mt-0.5">Issues</div></div>
                         </div>
+                    </div>
+                    <!-- Contracted services & schedule (compact, in the side column) -->
+                    <div class="card p-4 sm:p-5 space-y-3 sm:col-span-3 xl:col-span-1">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="eyebrow flex items-center gap-2" style="color:#10b981;"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Services & Schedule</span>
+                            <button type="button" onclick="openServicesModal()" class="link-btn !no-underline">Manage</button>
+                        </div>
+                        <div id="siteServicesList" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2"></div>
                     </div>
                     <div class="card p-5 space-y-1.5 sm:col-span-1">
                         <div class="flex justify-between items-center gap-2">
@@ -944,6 +969,27 @@
         </div>
     </div>
 
+    <!-- ===================== NOTIFICATIONS ===================== -->
+    <div id="notifModal" class="hidden overlay fixed inset-0 z-50 flex flex-col justify-center items-center p-4" onclick="if(event.target===this) closeNotifModal()">
+        <div class="card p-6 sm:p-7 max-w-xl w-full max-h-[90vh] overflow-y-auto scroll-thin space-y-4">
+            <div class="flex justify-between items-start gap-3">
+                <div>
+                    <h3 class="font-black text-lg t-accent">Notifications</h3>
+                    <p class="text-xs t-muted mt-1">Missed and upcoming services, and contracts to renegotiate.</p>
+                </div>
+                <button type="button" onclick="closeNotifModal()" class="t-faint hover:opacity-70 text-xs font-semibold cursor-pointer shrink-0">✕ Close</button>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="t-muted font-semibold">Show for</span>
+                <select id="notifScope" onchange="setNotifScope(this.value)" class="field !w-auto !py-2 cursor-pointer">
+                    <option value="mine">My sites + unassigned</option>
+                    <option value="all">All sites</option>
+                </select>
+            </div>
+            <div id="notifList" class="space-y-4 text-xs"></div>
+        </div>
+    </div>
+
     <!-- ===================== SAVE / DON'T SAVE / KEEP EDITING ===================== -->
     <div id="choiceModal" class="hidden overlay fixed inset-0 z-[67] flex flex-col justify-center items-center p-4">
         <div class="card p-6 sm:p-8 max-w-md w-full space-y-4">
@@ -1010,10 +1056,13 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
         const PHOTO_BUCKET = 'station-photos';
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
-        const SIGNED_URL_SECONDS = 6 * 60 * 60;          // photo links stay valid for 6 hours
+        const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.17-r7';
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "renewalNotice", "siteCardsGrid", "syncProgressModal", "progressTitle", "progressPercent", "progressBarFill", "progressStatusText", "progressStats", "progressStatData", "progressStatSpeed", "progressStatItems", "progressStatItemsLabel", "progressSteps", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "siteServicesList", "statStations", "statServiced", "statIssues", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "toggleCompletedRecsBtn", "siteLandingRecsList", "siteLandingVisitsList", "visitWorkspace", "activeWorkspaceTitle", "stationSearchInput", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTitle", "scannedBarcodeBadge", "stationSheetBody", "newStationFields", "newLocName", "newDeviceType", "activityLevel", "prepUsed", "speciesCaught", "qtyCount", "serviceNotes", "recommendationNote", "visitEditNote", "issuePhotoCamera", "issuePhotoGallery", "photoPreviewGrid", "pastRecommendationsSection", "loadPastHistoryBtn", "pastRecommendationsList", "deleteStationBtn", "saveServiceBtn", "settingsModal", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "flashToggleBtn", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalStation", "recModalTitle", "recModalStatusChip", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoCamera", "recPhotoGallery", "recPhotoPreview", "recModalSaveBtn", "choiceModal", "choiceTitle", "choiceMessage", "syncToast", "syncToastIcon", "syncToastText", "syncToastBar", "syncToastPct", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const APP_VERSION = '2026.10.17-r9';
+        // New Zealand date style everywhere: day/month/year
+        const LOCALE = 'en-NZ';
+        const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "syncProgressModal", "progressTitle", "progressPercent", "progressBarFill", "progressStatusText", "progressStats", "progressStatData", "progressStatSpeed", "progressStatItems", "progressStatItemsLabel", "progressSteps", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "statStations", "statServiced", "statIssues", "siteServicesList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "toggleCompletedRecsBtn", "siteLandingRecsList", "siteLandingVisitsList", "visitWorkspace", "activeWorkspaceTitle", "stationSearchInput", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTitle", "scannedBarcodeBadge", "stationSheetBody", "newStationFields", "newLocName", "newDeviceType", "activityLevel", "prepUsed", "speciesCaught", "qtyCount", "serviceNotes", "recommendationNote", "visitEditNote", "issuePhotoCamera", "issuePhotoGallery", "photoPreviewGrid", "pastRecommendationsSection", "loadPastHistoryBtn", "pastRecommendationsList", "deleteStationBtn", "saveServiceBtn", "settingsModal", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "flashToggleBtn", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalStation", "recModalTitle", "recModalStatusChip", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoCamera", "recPhotoGallery", "recPhotoPreview", "recModalSaveBtn", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "syncToast", "syncToastIcon", "syncToastText", "syncToastBar", "syncToastPct", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -1136,7 +1185,7 @@
         function fmtDateTime(iso) {
             if (!iso) return '';
             const d = new Date(iso);
-            return d.toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+            return d.toLocaleString(LOCALE, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
         }
 
         function isNetworkError(err) {
@@ -1145,9 +1194,21 @@
             return /failed to fetch|networkerror|network request failed|load failed|timed out|fetch failed|aborted|retryable/i.test(msg);
         }
 
+        // Which SQL script adds which column
+        const COLUMN_FIX_SCRIPT = {
+            image_path: 'pestis_offline_sites_update.sql', services: 'pestis_offline_sites_update.sql',
+            contract_start: 'pestis_contracts_team_update.sql', contract_end: 'pestis_contracts_team_update.sql',
+            contract_notes: 'pestis_contracts_team_update.sql', assigned_to: 'pestis_contracts_team_update.sql'
+        };
         function friendlyError(err) {
             const msg = (err && err.message) || String(err);
-            if (/column .* does not exist|schema cache|could not find the .* column/i.test(msg)) return msg + '.' + SQL_HINT;
+            const m = msg.match(/could not find the '([^']+)' column of '([^']+)'/i) || msg.match(/column "?([\w ]+)"? of relation "?(\w+)"? does not exist/i);
+            if (m) {
+                const col = m[1], table = m[2];
+                const script = COLUMN_FIX_SCRIPT[col] || 'pestis_fix_client_columns.sql';
+                return `The "${table}" table in the database has no "${col}" column. Run ${script} in the Supabase SQL editor, then tap Retry.`;
+            }
+            if (/column .* does not exist|schema cache/i.test(msg)) return msg + '.' + SQL_HINT;
             return msg;
         }
 
@@ -2014,7 +2075,7 @@
             }
 
             if (item.kind === 'update_client') {
-                const { data, error } = await _supabase.from('clients').update(item.data.fields).eq('id', item.clientId).select('id');
+                const { data, error } = await _supabase.from('clients').update(toDbClientFields(item.data.fields)).eq('id', item.clientId).select('id');
                 if (error) throw error;
                 if (!data || data.length === 0) throw new Error('The database refused the site update (permission denied).' + SQL_HINT);
                 if (item.data.removePaths) await removePhotos(item.data.removePaths);
@@ -2289,11 +2350,21 @@
             const now = Date.now();
             const entries = Object.entries(signedCache).filter(([, v]) => v && v.e > now - 3 * 24 * 60 * 60 * 1000);
             entries.sort((a, b) => b[1].e - a[1].e);
-            signedCache = Object.fromEntries(entries.slice(0, 500));
+            signedCache = Object.fromEntries(entries.slice(0, 3000));
             saveJSON(SIGNED_CACHE_KEY, signedCache);
         }
 
-        const signedErrors = new Map(); // storage path -> why a link could not be made (e.g. "Object not found")
+        const signedErrors = new Map();
+        function getCachedSignedUrls(paths) {
+            const now = Date.now();
+            const out = new Map();
+            paths.forEach(p => {
+                const c = signedCache[p];
+                // offline, an expired link is still fine: the offline photo store looks photos up by file name
+                if (c && (c.e - now > 5 * 60 * 1000 || !isOnline)) out.set(p, c.u);
+            });
+            return out;
+        } // storage path -> why a link could not be made (e.g. "Object not found")
 
         async function getSignedUrls(paths) {
             const now = Date.now();
@@ -2301,7 +2372,7 @@
             const need = [];
             Array.from(new Set(paths.filter(Boolean))).forEach(p => {
                 const c = signedCache[p];
-                if (c && c.e - now > 30 * 60 * 1000) out.set(p, c.u); else need.push(p);
+                if (c && c.e - now > 12 * 60 * 60 * 1000) out.set(p, c.u); else need.push(p); // renew links with under 12h left
             });
             if (need.length && isOnline) {
                 const remember = (path, url) => {
@@ -2465,7 +2536,7 @@
         }
         function fmtDay(s) {
             const d = parseDay(s);
-            return d ? d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+            return d ? d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
         }
         function freqLabel(v) { return (FREQ_MAP[v] && FREQ_MAP[v].label) || 'Frequency not set'; }
 
@@ -2544,6 +2615,7 @@
                 try {
                     const { data, error } = await withTimeout(_supabase.from('clients').select('*').order('Name', { ascending: true }), 12000, 'Loading sites');
                     if (error) throw error;
+                    learnClientColumns(data || []);
                     mergeClients(data || []);
                     await applyPendingClientEdits();
                     await cacheSet('clients', clientsData);
@@ -2566,10 +2638,43 @@
             }
         }
 
+        // The app's names for the site text fields, and other names the same column might have in the database
+        const CLIENT_COLUMN_ALIASES = {
+            Name: ['name', 'site_name', 'client_name', 'business_name'],
+            Address: ['address', 'site_address', 'physical_address'],
+            Contact: ['contact', 'site_contact', 'contact_name', 'manager', 'site_manager'],
+            Email: ['email', 'contact_email', 'client_email'],
+            Notes: ['notes', 'safety_notes', 'access_notes', 'site_notes']
+        };
+        let clientColumnMap = loadJSON('pestis-client-columns', {}); // app name -> real column name
+        function learnClientColumns(rows) {
+            if (!rows || !rows.length) return;
+            const keys = new Set();
+            rows.slice(0, 25).forEach(r => Object.keys(r).forEach(k => keys.add(k)));
+            const map = {};
+            Object.entries(CLIENT_COLUMN_ALIASES).forEach(([canon, aliases]) => {
+                if (keys.has(canon)) return;
+                const alt = Array.from(keys).find(k => aliases.includes(k.toLowerCase()) || k.toLowerCase() === canon.toLowerCase());
+                if (alt) map[canon] = alt;
+            });
+            clientColumnMap = map;
+            saveJSON('pestis-client-columns', map);
+        }
+        function normalizeClientRow(c) {
+            Object.entries(clientColumnMap).forEach(([canon, actual]) => { if (actual in c) c[canon] = c[actual]; });
+            return c;
+        }
+        function toDbClientFields(fields) {
+            const out = {};
+            Object.entries(fields).forEach(([k, v]) => { out[clientColumnMap[k] || k] = v; });
+            return out;
+        }
+
         // Updates the site list in place so an open site keeps working while the list refreshes
         function mergeClients(list) {
             const byId = new Map(clientsData.map(c => [String(c.id), c]));
             clientsData = list.map(c => {
+                normalizeClientRow(c);
                 const existing = byId.get(String(c.id));
                 if (!existing) return Object.assign({}, c);
                 Object.keys(existing).forEach(k => { if (!(k in c)) delete existing[k]; });
@@ -2768,15 +2873,113 @@
 
         function dateOrNull(id) { const v = document.getElementById(id).value; return v ? v : null; }
 
+        // ---------- Site card order ----------
+        const SITE_SORT_KEY = 'pestis-site-sort';
+        let siteSort = loadJSON(SITE_SORT_KEY, 'due');
+        function setSiteSort(v) { siteSort = v; saveJSON(SITE_SORT_KEY, v); renderSiteCards(); }
+        function sortSites(list) {
+            const byName = (a, b) => String(a.Name || '').localeCompare(String(b.Name || ''), LOCALE, { sensitivity: 'base' });
+            const far = 1e9; // sites with nothing scheduled go last
+            const keyed = list.map(c => {
+                let k = far;
+                if (siteSort === 'due') { const d = soonestDue(c); k = d ? d.days : far; }
+                else if (siteSort === 'contract') { const ci = contractInfo(c); k = ci ? ci.days : far; }
+                return { c, k, tech: c.assigned_to ? teamName(c.assigned_to) : '\uffff' };
+            });
+            keyed.sort((a, b) => {
+                if (siteSort === 'name') return byName(a.c, b.c);
+                if (siteSort === 'tech') return a.tech.localeCompare(b.tech, LOCALE) || byName(a.c, b.c);
+                return (a.k - b.k) || byName(a.c, b.c);
+            });
+            return keyed.map(x => x.c);
+        }
+
+        // ---------- Card size ----------
+        const CARD_SIZES = [
+            { label: 'Small', cls: 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2.5 lg:gap-3', name: 'text-[11px]' },
+            { label: 'Medium', cls: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 lg:gap-5', name: '' },
+            { label: 'Large', cls: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6', name: 'text-lg' }
+        ];
+        const CARD_SIZE_KEY = 'pestis-card-size';
+        let cardSize = loadJSON(CARD_SIZE_KEY, 1);
+        function changeCardSize(d) {
+            cardSize = Math.max(0, Math.min(CARD_SIZES.length - 1, cardSize + d));
+            saveJSON(CARD_SIZE_KEY, cardSize);
+            renderSiteCards();
+        }
+        function applyCardSize() {
+            const sz = CARD_SIZES[cardSize] || CARD_SIZES[1];
+            document.getElementById('siteCardsGrid').className = 'site-grid size-' + cardSize + ' grid ' + sz.cls;
+            document.getElementById('cardSizeLabel').textContent = sz.label;
+            document.getElementById('siteSortSelect').value = siteSort;
+        }
+
+        // ---------- Notifications (services missed / due soon, contracts) ----------
+        const NOTIF_SCOPE_KEY = 'pestis-notif-scope';
+        let notifScope = loadJSON(NOTIF_SCOPE_KEY, 'mine');
+        const NOTIF_DUE_DAYS = 7;
+        function setNotifScope(v) { notifScope = v; saveJSON(NOTIF_SCOPE_KEY, v); renderNotifications(); }
+        function notifSites() {
+            if (notifScope === 'all' || !currentUser) return clientsData;
+            return clientsData.filter(c => !c.assigned_to || c.assigned_to === currentUser.id);
+        }
+        function buildNotifications() {
+            const missed = [], dueSoon = [], contracts = [];
+            notifSites().forEach(c => {
+                getServices(c).forEach(sv => {
+                    const d = dueInfo(sv);
+                    if (d.days === null) return;
+                    if (d.days < 0) missed.push({ c, sv, days: d.days });
+                    else if (d.days <= NOTIF_DUE_DAYS) dueSoon.push({ c, sv, days: d.days });
+                });
+                const ci = contractInfo(c);
+                if (ci && ci.days <= RENEWAL_WARN_DAYS) contracts.push({ c, ci });
+            });
+            missed.sort((a, b) => a.days - b.days);
+            dueSoon.sort((a, b) => a.days - b.days);
+            contracts.sort((a, b) => a.ci.days - b.ci.days);
+            return { missed, dueSoon, contracts, total: missed.length + dueSoon.length + contracts.length };
+        }
+        function renderNotifications() {
+            const n = buildNotifications();
+            const badge = document.getElementById('notifCount');
+            badge.textContent = n.total > 99 ? '99+' : n.total;
+            badge.classList.toggle('hidden', n.total === 0);
+            badge.style.background = (n.missed.length || n.contracts.some(x => x.ci.days < 0)) ? '#dc2626' : '#ea580c';
+            document.getElementById('notifBtn').title = n.total ? `${n.total} notification${n.total === 1 ? '' : 's'}` : 'No notifications';
+
+            const list = document.getElementById('notifList');
+            if (!list || document.getElementById('notifModal').classList.contains('hidden')) return;
+            document.getElementById('notifScope').value = notifScope;
+            const row = (c, text, chipCls, chipText) => `
+                <button type="button" data-id="${esc(c.id)}" onclick="closeNotifModal(); startSiteVisit(this.dataset.id)" class="row-item clickable w-full text-left p-3 flex justify-between items-center gap-3">
+                    <div class="min-w-0"><div class="font-bold t-strong truncate">${esc(c.Name || 'Unnamed site')}</div><div class="t-muted">${esc(text)}</div></div>
+                    <span class="chip ${chipCls} shrink-0">${esc(chipText)}</span>
+                </button>`;
+            const section = (title, color, items) => items.length ? `
+                <div class="space-y-2"><div class="eyebrow" style="color:${color};">${title} (${items.length})</div>${items.join('')}</div>` : '';
+            const html = [
+                section('Missed services', '#dc2626', n.missed.map(x => row(x.c, `${x.sv.type} · was due ${fmtDay(x.sv.nextDue)}`, 'chip-red', `${-x.days}d overdue`))),
+                section(`Due in the next ${NOTIF_DUE_DAYS} days`, '#ea580c', n.dueSoon.map(x => row(x.c, `${x.sv.type} · due ${fmtDay(x.sv.nextDue)}`, 'chip-amber', x.days === 0 ? 'Today' : `In ${x.days}d`))),
+                section('Contracts to renegotiate', '#7c3aed', n.contracts.map(x => row(x.c, x.ci.text, x.ci.days < 0 ? 'chip-red' : 'chip-purple', x.ci.days < 0 ? 'Expired' : `${x.ci.days}d left`)))
+            ].join('');
+            list.innerHTML = html || '<div class="row-item p-4 t-faint italic text-center">Nothing needs attention right now.</div>';
+        }
+        function openNotifModal() { document.getElementById('notifModal').classList.remove('hidden'); renderNotifications(); }
+        function closeNotifModal() { document.getElementById('notifModal').classList.add('hidden'); }
+
         function renderSiteCards() {
             const grid = document.getElementById('siteCardsGrid');
             const q = (document.getElementById('siteSearchInput').value || '').trim().toLowerCase();
 
             if (siteFilter === null) populateSiteFilter();
             renderRenewalNotice();
-            const list = clientsData.filter(c => siteMatchesFilter(c) && (
+            renderNotifications();
+            applyCardSize();
+            const nameCls = (CARD_SIZES[cardSize] || CARD_SIZES[1]).name;
+            const list = sortSites(clientsData.filter(c => siteMatchesFilter(c) && (
                 !q || (c.Name || '').toLowerCase().includes(q) || (c.Address || '').toLowerCase().includes(q) || (c.Contact || '').toLowerCase().includes(q)
-            ));
+            )));
 
             let html = list.map(c => {
                 const name = c.Name || 'Unnamed site';
@@ -2801,7 +3004,7 @@
                             : `<span class="site-initials">${esc(initials)}</span>`}
                         ${dueChip ? `<span class="site-chips">${dueChip}</span>` : ''}
                         <span class="site-overlay${dueChip ? ' has-chips' : ''}">
-                            <span class="site-name">${esc(name)}</span>
+                            <span class="site-name ${nameCls}">${esc(name)}</span>
                         </span>
                     </button>`;
             }).join('');
@@ -2876,7 +3079,7 @@
             btn.disabled = true;
             try {
                 setSyncStatus('uploading', 'Saving Site...');
-                const { data, error } = await _supabase.from('clients').insert([{
+                const { data, error } = await _supabase.from('clients').insert([toDbClientFields({
                     Name: name,
                     Address: address,
                     Contact: contact || '',
@@ -2887,7 +3090,8 @@
                     contract_end: dateOrNull('newContractEnd'),
                     contract_notes: document.getElementById('newContractNotes').value.trim() || null,
                     assigned_to: document.getElementById('newAssignedTo').value || null
-                }]).select('*').single();
+                })]).select('*').single();
+                if (data) normalizeClientRow(data);
                 if (error) throw error;
 
                 clientsData.push(data);
@@ -3190,7 +3394,7 @@
 
         const LOCAL_OPEN_STEPS = [
             { key: 'read', label: 'Reading the copy saved on this device', from: 0, to: 35 },
-            { key: 'links', label: 'Securing photo links', from: 35, to: 80 },
+            { key: 'links', label: 'Preparing photos', from: 35, to: 80 },
             { key: 'build', label: 'Building the dashboard', from: 80, to: 100 }
         ];
 
@@ -3486,6 +3690,7 @@
             if (!c) return false;
             const before = JSON.stringify(c);
             const oldImage = c.image_path;
+            normalizeClientRow(data);
             Object.keys(data).forEach(k => { c[k] = data[k]; });
             // keep edits made on this device that haven't uploaded yet
             queueItems.filter(i => i.kind === 'update_client' && i.status !== 'sent' && String(i.clientId) === String(clientId))
@@ -3513,7 +3718,9 @@
         }
 
         // Turns saved rows (+ anything still in the upload queue) into the site dashboard state
-        async function buildSiteState(clientId, cachedRows, keepScanned, prog) {
+        let photosAwaitingLinks = [];   // photo paths shown as "loading" until their links arrive
+        async function buildSiteState(clientId, cachedRows, keepScanned, prog, opts) {
+            const quick = !!(opts && opts.quick);
             const rows = (cachedRows || []).map(r => Object.assign({}, r));
 
             const refs = new Set(rows.map(r => r.payload && r.payload.clientRef).filter(Boolean));
@@ -3541,7 +3748,9 @@
             const toSign = rows.flatMap(r => r._slots.filter(s => !s.local).map(s => s.path));
             if (prog) prog.step('links', 0.1, toSign.length ? `Securing ${toSign.length} photo link${toSign.length === 1 ? '' : 's'}...` : 'No photos to link');
             await new Promise(r => setTimeout(r, 0)); // let the loading screen paint
-            const signedMap = await getSignedUrls(toSign);
+            const signedMap = quick ? getCachedSignedUrls(toSign) : await getSignedUrls(toSign);
+            photosAwaitingLinks = quick && isOnline ? Array.from(new Set(toSign.filter(p => !signedMap.has(p) && !signedErrors.has(p)))) : [];
+            const awaiting = new Set(photosAwaitingLinks);
             if (prog) prog.step('links', 1);
 
             const map = new Map();
@@ -3609,8 +3818,9 @@
                 const slots = row._slots || [];
                 const { photos, missing, slotUrls } = resolvePhotos(slots);
                 let photoError = '';
-                if (missing.length) {
-                    photoError = (slots.length > 1 ? `${missing.length} of ${slots.length} photos unavailable. ` : '') + photoErrorText(missing[0]);
+                const realMissing = missing.filter(m => !awaiting.has(m));
+                if (realMissing.length) {
+                    photoError = (slots.length > 1 ? `${realMissing.length} of ${slots.length} photos unavailable. ` : '') + photoErrorText(realMissing[0]);
                 }
 
                 let rec = null;
@@ -3653,7 +3863,9 @@
                     rec.photoCount += (u._slots || []).length;
                     rec.updates.push({ note: p.note || '', status: rec.status, by: p.technician || '', at: p.servicedAt || u.created_at, photoCount: (u._slots || []).length });
                 });
-                if (rec.missingPaths.length && !rec.photoError) rec.photoError = photoErrorText(rec.missingPaths[0]);
+                const stillMissing = rec.missingPaths.filter(m => !awaiting.has(m));
+                if (stillMissing.length && !rec.photoError) rec.photoError = photoErrorText(stillMissing[0]);
+                rec.photosLoading = rec.missingPaths.length - stillMissing.length;
                 rec.lastChange = ups.length ? (ups[ups.length - 1].payload.servicedAt || ups[ups.length - 1].created_at) : rec.date;
             }));
 
@@ -3708,7 +3920,7 @@
                     prog.step('read', 0.5, `Reading ${cache.rows.length.toLocaleString()} saved record${cache.rows.length === 1 ? '' : 's'}...`);
                     await new Promise(r => setTimeout(r, 0));
                     prog.step('read', 1);
-                    await buildSiteState(client.id, cache.rows, null, prog);
+                    await buildSiteState(client.id, cache.rows, null, prog, { quick: true });
                     prog.step('build', 0.6, 'Building the dashboard...');
                 }
 
@@ -3725,6 +3937,7 @@
                 }
                 showSiteDashboard();
                 renderSiteSyncInfo();
+                fetchMissingPhotoLinks();
 
                 if (isOnline && mySeq === siteSyncSeq && Date.now() - (cache.lastSyncAt || 0) > SITE_AUTO_SYNC_MS) {
                     backgroundSyncSite();
@@ -3786,10 +3999,11 @@
                 siteSyncInfo.lastSyncAt = cache.lastSyncAt;
                 if (changed || mode) {
                     step(93, 'Updating the screen...');
-                    await buildSiteState(clientId, cache.rows, new Set(scannedBarcodesThisVisit));
+                    await buildSiteState(clientId, cache.rows, new Set(scannedBarcodesThisVisit), null, { quick: true });
                     if (mySeq !== siteSyncSeq) return;
                     rerenderOpenSite();
                     prefetchPhotos(sitePhotoUrls());
+                    fetchMissingPhotoLinks();
                 } else if (detailsChanged) {
                     refreshLandingHeader();
                 }
@@ -3821,7 +4035,7 @@
             if (mins < 60) return mins + ' min ago';
             const hrs = Math.round(mins / 60);
             if (hrs < 24) return hrs + ' h ago';
-            return new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+            return new Date(ms).toLocaleDateString(LOCALE, { day: 'numeric', month: 'short' });
         }
 
         function renderSiteSyncInfo() {
@@ -3927,13 +4141,13 @@
         function fmtDateTimeLong(iso) {
             const d = new Date(iso);
             return {
-                date: d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }),
-                time: d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+                date: d.toLocaleDateString(LOCALE, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }),
+                time: d.toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' })
             };
         }
 
         function recRowHtml(item, opts) {
-            const dateStr = item.date ? new Date(item.date).toLocaleDateString() : '';
+            const dateStr = item.date ? new Date(item.date).toLocaleDateString(LOCALE, NZ_DATE) : '';
             const photos = item.photos || [];
             const countBadge = photos.length > 1 ? `<span class="absolute bottom-0.5 right-0.5 text-[10px] font-black text-white bg-black/70 rounded px-1">${photos.length}</span>` : '';
             const right = photos.length
@@ -3943,6 +4157,7 @@
             if (item.photoCount) bits.push(`${item.photoCount} photo${item.photoCount === 1 ? '' : 's'}`);
             if (item.updates && item.updates.length) bits.push(`${item.updates.length} update${item.updates.length === 1 ? '' : 's'}`);
             if (item.photoError) bits.push('<span style="color:#d97706;">Photo unavailable</span>');
+            else if (item.photosLoading) bits.push('<span class="t-faint">Loading photos...</span>');
             const stationLabel = opts && opts.hideStation ? '' : `<span class="font-bold t-accent">${esc(item.station)}:</span> `;
             return `
                 <button type="button" data-rec="${esc(item.id)}" onclick="openRecModal(this.dataset.rec)" class="row-item clickable w-full text-left p-3 flex justify-between items-center gap-3" style="border-color: ${item.status === 'complete' ? 'var(--border)' : 'rgba(249,115,22,.35)'};${item.status === 'complete' ? 'opacity:.75;' : ''}">
@@ -4096,8 +4311,32 @@
         async function refreshSiteStateFromCache() {
             if (!selectedClient) return;
             const cache = await getSiteCache(selectedClient.id);
-            await buildSiteState(selectedClient.id, cache ? cache.rows : [], new Set(scannedBarcodesThisVisit));
+            await buildSiteState(selectedClient.id, cache ? cache.rows : [], new Set(scannedBarcodesThisVisit), null, { quick: true });
             rerenderOpenSite();
+            fetchMissingPhotoLinks();
+        }
+
+        // Photos without a saved link show as "loading" and are filled in here, after the screen is up
+        let fetchingLinks = false;
+        async function fetchMissingPhotoLinks() {
+            if (fetchingLinks || !selectedClient || !photosAwaitingLinks.length || !isOnline) return;
+            fetchingLinks = true;
+            const seq = siteSyncSeq;
+            try {
+                const paths = photosAwaitingLinks.slice();
+                await withSyncBadge('photos', `Loading ${paths.length} photo${paths.length === 1 ? '' : 's'}...`, () => getSignedUrls(paths));
+                if (seq !== siteSyncSeq || !selectedClient) return;
+                const cache = await getSiteCache(selectedClient.id);
+                await buildSiteState(selectedClient.id, cache ? cache.rows : [], new Set(scannedBarcodesThisVisit), null, { quick: true });
+                if (seq !== siteSyncSeq) return;
+                photosAwaitingLinks = []; // anything still missing now has a real reason recorded
+                rerenderOpenSite();
+                prefetchPhotos(sitePhotoUrls());
+            } catch (e) {
+                logAppError('Loading photo links', e);
+            } finally {
+                fetchingLinks = false;
+            }
         }
 
         async function getBase64ImageFromUrl(imageUrl) {
@@ -4121,8 +4360,8 @@
             const doc = new jsPDF('p', 'mm', 'a4');
 
             const pastVisit = visitIndex !== null ? sitePastVisits[visitIndex] : null;
-            const visitDateStr = pastVisit ? new Date(pastVisit.date).toLocaleDateString() : new Date().toLocaleDateString();
-            const visitTimeStr = (pastVisit ? new Date(pastVisit.date) : new Date()).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+            const visitDateStr = pastVisit ? new Date(pastVisit.date).toLocaleDateString(LOCALE, NZ_DATE) : new Date().toLocaleDateString(LOCALE, NZ_DATE);
+            const visitTimeStr = (pastVisit ? new Date(pastVisit.date) : new Date()).toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' });
             const summaryNote = pastVisit ? pastVisit.summaryNote : (document.getElementById('closingSiteNotes').value.trim() || 'Current / Recent Visit');
             const technicianName = (pastVisit && pastVisit.technician)
                 ? pastVisit.technician
@@ -4265,7 +4504,7 @@
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(9);
                     const stLabel = (REC_STATUS[item.status] || REC_STATUS.new).label;
-                    doc.text(`Station: ${item.station} (${new Date(item.date).toLocaleDateString()})  -  Status: ${stLabel}`, 14, y);
+                    doc.text(`Station: ${item.station} (${new Date(item.date).toLocaleDateString(LOCALE, NZ_DATE)})  -  Status: ${stLabel}`, 14, y);
                     y += 5;
 
                     doc.setFont('helvetica', 'normal');
@@ -4275,7 +4514,7 @@
                     // Notes added since it was logged
                     for (const u of (item.updates || []).filter(u => u.note)) {
                         if (y > 270) { doc.addPage(); y = 20; }
-                        const line = doc.splitTextToSize(`${new Date(u.at).toLocaleDateString()} ${u.by ? '(' + u.by + ')' : ''}: ${u.note}`, 176);
+                        const line = doc.splitTextToSize(`${new Date(u.at).toLocaleDateString(LOCALE, NZ_DATE)} ${u.by ? '(' + u.by + ')' : ''}: ${u.note}`, 176);
                         doc.text(line, 18, y);
                         y += line.length * 5;
                     }
