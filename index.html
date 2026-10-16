@@ -447,6 +447,7 @@
         let currentDeviceName = null;
         let currentDeviceType = null;
         let selectedFileBlob = null;
+        let isUploadingActive = false;
 
         // Sync Status Manager
         function setSyncStatus(status, message) {
@@ -454,22 +455,56 @@
             const dot = document.getElementById('syncDot');
             const text = document.getElementById('syncText');
 
+            if (isUploadingActive && status !== 'error') return; // Don't override upload status message unless error
+
             if (status === 'uploading') {
+                isUploadingActive = true;
                 badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 transition-all duration-300';
                 dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
                 text.textContent = message || 'Uploading...';
-            } else if (status === 'error' || !navigator.onLine) {
+            } else if (status === 'error') {
+                isUploadingActive = false;
                 badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20 transition-all duration-300';
                 dot.className = 'w-2 h-2 rounded-full bg-red-500';
                 text.textContent = 'Sync Error / Offline';
             } else {
+                isUploadingActive = false;
                 badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 transition-all duration-300';
                 dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
                 text.textContent = 'Online & Synced';
             }
         }
 
-        window.addEventListener('online', () => setSyncStatus('synced'));
+        // Periodic connectivity ping to google.com every 5 seconds using 'no-cors' image fetch mechanism
+        async function checkInternetConnectivity() {
+            if (!navigator.onLine) {
+                setSyncStatus('error');
+                return;
+            }
+            try {
+                // Fetch a small favicon or transparent pixel from google with cache buster
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                
+                await fetch('https://www.google.com/favicon.ico', {
+                    mode: 'no-cors',
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (!isUploadingActive) {
+                    setSyncStatus('synced');
+                }
+            } catch (err) {
+                setSyncStatus('error');
+            }
+        }
+
+        // Start 5-second interval heartbeat ping
+        setInterval(checkInternetConnectivity, 5000);
+
+        window.addEventListener('online', () => checkInternetConnectivity());
         window.addEventListener('offline', () => setSyncStatus('error'));
 
         document.getElementById('issuePhotoInput').addEventListener('change', function(e) {
@@ -1348,4 +1383,3 @@
     </script>
 </body>
 </html>
-
