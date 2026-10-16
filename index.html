@@ -169,19 +169,17 @@
                     </h5>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
-                        <!-- Text Input (Takes 2 cols) -->
                         <div class="sm:col-span-2 space-y-2">
                             <label class="block text-xs text-slate-400">Corrective Action / Recommendation</label>
                             <textarea id="recommendationNote" rows="3" placeholder="e.g. Seal gap around pipes, repair damaged seal..." class="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-lg text-sm text-white"></textarea>
                         </div>
 
-                        <!-- Image Input & Side-by-side Preview (Takes 1 col) -->
                         <div class="space-y-2 flex flex-col items-center sm:items-start">
                             <label class="block text-xs text-slate-400">Issue Photo</label>
                             <input type="file" id="issuePhotoInput" accept="image/*" capture="environment" class="text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-500 cursor-pointer w-full">
                             
                             <div id="photoPreviewContainer" class="hidden pt-1">
-                                <img id="photoPreview" class="h-20 w-20 rounded-lg border border-slate-700 object-cover cursor-pointer" onclick="viewFullImage(this.src)" alt="Issue Preview">
+                                <img id="photoPreview" class="h-20 w-20 rounded-lg border border-slate-700 object-cover cursor-pointer" onclick="viewFullImage(this.src, document.getElementById('recommendationNote').value)" alt="Issue Preview">
                             </div>
                         </div>
                     </div>
@@ -207,10 +205,11 @@
 
     </main>
 
-    <!-- Fullscreen Image Modal Viewer -->
-    <div id="imageModal" class="hidden fixed inset-0 bg-black/90 z-50 flex flex-col justify-center items-center p-4">
-        <img id="fullImageDisplay" class="max-h-[80vh] max-w-full rounded-lg border border-slate-700 object-contain mb-4">
-        <button type="button" onclick="closeImageModal()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-5 py-2 rounded-lg">Close Viewer</button>
+    <!-- Fullscreen Image Modal Viewer with Associated Text -->
+    <div id="imageModal" class="hidden fixed inset-0 bg-black/95 z-50 flex flex-col justify-center items-center p-6 space-y-4">
+        <img id="fullImageDisplay" class="max-h-[65vh] max-w-full rounded-lg border border-slate-700 object-contain shadow-2xl">
+        <div id="modalTextDisplay" class="bg-slate-800 border border-slate-700 p-4 rounded-xl text-slate-200 text-sm max-w-xl w-full text-center font-medium shadow-lg"></div>
+        <button type="button" onclick="closeImageModal()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-6 py-2.5 rounded-lg cursor-pointer transition">Close Viewer</button>
     </div>
 
     <!-- App Logic Script -->
@@ -273,8 +272,16 @@
             reader.readAsDataURL(file);
         });
 
-        function viewFullImage(src) {
+        function viewFullImage(src, text) {
             document.getElementById('fullImageDisplay').src = src;
+            const textDiv = document.getElementById('modalTextDisplay');
+            if (text && text.trim() !== '') {
+                textDiv.textContent = text;
+                textDiv.classList.remove('hidden');
+            } else {
+                textDiv.textContent = 'No description provided for this photo.';
+                textDiv.classList.remove('hidden');
+            }
             document.getElementById('imageModal').classList.remove('hidden');
         }
 
@@ -506,17 +513,20 @@
                 document.getElementById('pastRecommendationsSection').classList.remove('hidden');
                 existingDev.recommendationsHistory.forEach(item => {
                     const formattedDate = item.date ? new Date(item.date).toLocaleDateString() : 'Past Visit';
-                    const photoHtml = item.photo ? `<img src="${item.photo}" class="h-12 w-12 rounded object-cover cursor-pointer border border-slate-600 hover:border-amber-400" onclick="viewFullImage('${item.photo}')" title="Click to view full photo">` : '';
+                    const escapedText = item.recommendation.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
                     
-                    historyList.innerHTML += `
-                        <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-700 flex justify-between items-center gap-2">
-                            <div class="flex-1">
-                                <div class="text-amber-400 font-semibold">${item.recommendation}</div>
-                                <div class="text-slate-500 text-[10px]">${formattedDate}</div>
+                    // Only display thumbnail/button in history list, clicking it pops up photo AND text together
+                    if (item.photo) {
+                        historyList.innerHTML += `
+                            <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-700 flex justify-between items-center gap-2">
+                                <div class="flex-1">
+                                    <div class="text-slate-400 font-medium">Issue Logged (${formattedDate})</div>
+                                    <div class="text-sky-400 text-[11px] underline cursor-pointer" onclick="viewFullImage('${item.photo}', '${escapedText}')">Tap to view photo & recommendations</div>
+                                </div>
+                                <img src="${item.photo}" class="h-12 w-12 rounded object-cover cursor-pointer border border-slate-600 hover:border-amber-400" onclick="viewFullImage('${item.photo}', '${escapedText}')" title="Click to view full photo & text">
                             </div>
-                            ${photoHtml}
-                        </div>
-                    `;
+                        `;
+                    }
                 });
             } else {
                 document.getElementById('pastRecommendationsSection').classList.add('hidden');
