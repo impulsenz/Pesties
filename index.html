@@ -149,6 +149,11 @@
         .site-overlay { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.6rem .95rem .85rem; background: linear-gradient(to top, rgba(2, 6, 23, .94), rgba(2, 6, 23, 0)); display: flex; flex-direction: column; gap: .12rem; }
         .site-name { color: #fff; font-weight: 800; font-size: .95rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .site-addr { color: rgba(255, 255, 255, .78); font-size: .72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .site-chips { display: flex; flex-wrap: wrap; gap: .25rem; margin-bottom: .3rem; }
+        .site-chips .site-due { margin-bottom: 0; }
+        .site-tech { color: rgba(255, 255, 255, .7); font-size: .65rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chip-purple { color: #6d28d9; background: #ede9fe; border-color: #c4b5fd; }
+        html.dark .chip-purple { color: #c4b5fd; background: rgba(124, 58, 237, .15); border-color: rgba(124, 58, 237, .4); }
         .site-due { align-self: flex-start; font-size: .6rem; font-weight: 800; padding: .15rem .5rem; border-radius: .4rem; color: #fff; margin-bottom: .3rem; }
         .site-card-add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; aspect-ratio: 4 / 3; width: 100%; border-radius: 1rem; border: 2px dashed var(--border); color: var(--muted); font-weight: 800; font-size: .8rem; cursor: pointer; transition: all .2s ease; background: transparent; }
         .site-card-add:hover { border-color: #f97316; color: var(--accent-text); transform: translateY(-3px); }
@@ -208,7 +213,7 @@
     <header id="appHeader" class="app-header hidden sticky top-0 z-40 w-full">
         <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 py-2.5 flex justify-between items-center gap-3">
             <!-- Left: Logo -->
-            <div class="logo-tile"><img src="images/pesties-logo.png" alt="Pesties" class="h-12 sm:h-14 w-auto rounded-lg"></div>
+            <button type="button" onclick="goHome()" class="logo-tile cursor-pointer" title="Back to all sites"><img src="images/pesties-logo.png" alt="Pesties - back to all sites" class="h-12 sm:h-14 w-auto rounded-lg"></button>
 
             <!-- Right: sync status (opens upload queue), theme toggle, profile -->
             <div class="flex items-center gap-2 sm:gap-3">
@@ -257,6 +262,7 @@
                     <p class="text-xs t-muted mt-1">Tap a site to open its dashboard.</p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3 md:items-center">
+                    <select id="siteFilterSelect" onchange="setSiteFilter(this.value)" class="field sm:!w-56 cursor-pointer" title="Show sites"></select>
                     <div class="relative w-full sm:w-72">
                         <div class="absolute inset-y-0 left-3.5 flex items-center pointer-events-none t-faint">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -270,6 +276,8 @@
                 </div>
             </div>
 
+            <div id="renewalNotice" class="hidden"></div>
+
             <div id="siteCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 lg:gap-5">
                 <span class="text-xs t-muted italic col-span-full">Loading sites...</span>
             </div>
@@ -278,14 +286,14 @@
         <!-- Loading Progress -->
         <div id="syncProgressModal" class="hidden card p-6 sm:p-8 space-y-4 w-full max-w-3xl mx-auto">
             <div class="flex justify-between items-center gap-3">
-                <h3 class="text-sm font-bold t-accent uppercase tracking-widest">Downloading Site</h3>
+                <h3 id="progressTitle" class="text-sm font-bold t-accent uppercase tracking-widest">Downloading Site</h3>
                 <span id="progressPercent" class="text-sm font-mono t-accent font-extrabold">0%</span>
             </div>
             <div class="w-full rounded-full h-3 overflow-hidden p-0.5" style="background: var(--surface2); border: 1px solid var(--border);">
                 <div id="progressBarFill" class="bg-gradient-to-r from-brand-600 to-brand-400 h-full rounded-full" style="width: 0%"></div>
             </div>
             <p id="progressStatusText" class="text-xs t-strong font-semibold">Preparing...</p>
-            <div class="grid grid-cols-3 gap-3 text-center">
+            <div id="progressStats" class="grid grid-cols-3 gap-3 text-center">
                 <div class="inset p-2.5"><div id="progressStatData" class="text-sm font-black font-mono t-strong">0 KB</div><div class="eyebrow t-faint mt-0.5">Downloaded</div></div>
                 <div class="inset p-2.5"><div id="progressStatSpeed" class="text-sm font-black font-mono t-strong">-</div><div class="eyebrow t-faint mt-0.5">Speed</div></div>
                 <div class="inset p-2.5"><div id="progressStatItems" class="text-sm font-black font-mono t-strong">-</div><div class="eyebrow t-faint mt-0.5" id="progressStatItemsLabel">Records</div></div>
@@ -353,7 +361,17 @@
                         <p class="text-sm font-bold t-strong break-words" id="siteLandingContact">Site Contact: Not Specified</p>
                         <p class="text-xs t-accent font-mono break-all" id="siteLandingEmail">Email: Not Specified</p>
                     </div>
-                    <div class="card p-5 space-y-1.5 sm:col-span-2 xl:col-span-1">
+                    <div class="card p-5 space-y-2 sm:col-span-1">
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="eyebrow" style="color:#7c3aed;">Contract & Technician</span>
+                            <button type="button" onclick="openEditSiteModal('editContractEnd')" class="link-btn !no-underline">Edit</button>
+                        </div>
+                        <div id="siteContractChip"></div>
+                        <p class="text-xs t-muted" id="siteContractDates">No contract dates recorded.</p>
+                        <p class="text-xs t-muted whitespace-pre-line hidden" id="siteContractNotes"></p>
+                        <p class="text-xs t-muted">Assigned technician: <span class="t-strong font-bold" id="siteAssignedTech">Unassigned</span></p>
+                    </div>
+                    <div class="card p-5 space-y-1.5 sm:col-span-3 xl:col-span-1">
                         <div class="flex justify-between items-center gap-2">
                             <span class="eyebrow" style="color:#d97706;">Safety & Site Access Instructions</span>
                             <button type="button" onclick="openEditSiteModal('editNotes')" class="link-btn !no-underline">Edit</button>
@@ -645,6 +663,16 @@
                 <div><label class="lbl">Site Contact & Phone</label><input type="text" id="newClientContact" placeholder="Site Contact & Phone" class="field"></div>
                 <div><label class="lbl">Client Email for Reports</label><input type="email" id="newClientEmail" placeholder="Client Email for Reports" class="field"></div>
                 <div class="sm:col-span-2"><label class="lbl">Safety & Site Access Instructions</label><textarea id="newClientNotes" rows="2" placeholder="Access / Safety Notes" class="field"></textarea></div>
+                <div class="sm:col-span-2 border-t divider pt-4 mt-1"><span class="eyebrow" style="color:#7c3aed;">Contract & Technician</span></div>
+                <div><label class="lbl">Contract start</label><input type="date" id="newContractStart" class="field"></div>
+                <div><label class="lbl">Contract end / renewal date</label><input type="date" id="newContractEnd" class="field"></div>
+                <div class="sm:col-span-2"><label class="lbl">Contract notes</label><input type="text" id="newContractNotes" placeholder="e.g. 12-month agreement, price review at renewal" class="field"></div>
+                <div class="sm:col-span-2"><label class="lbl">Assigned technician</label><select id="newAssignedTo" class="field cursor-pointer"></select></div>
+                <div class="sm:col-span-2 border-t divider pt-4 mt-1 flex flex-wrap justify-between items-center gap-2">
+                    <span class="eyebrow" style="color:#10b981;">Contracted Services & Schedule</span>
+                    <button type="button" onclick="openServicesModal('new')" class="btn btn-secondary !py-2">Add / Edit Services</button>
+                </div>
+                <div id="newClientServicesList" class="sm:col-span-2 space-y-2 text-xs"></div>
                 <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                     <div>
                         <label class="lbl">Site Photo (shown on the site card)</label>
@@ -673,6 +701,11 @@
                 <div><label class="lbl">Site Contact & Phone</label><input type="text" id="editContact" placeholder="e.g. Jane Smith 021 123 4567" class="field"></div>
                 <div><label class="lbl">Client Email for Reports</label><input type="email" id="editEmail" class="field"></div>
                 <div class="sm:col-span-2"><label class="lbl">Safety & Site Access Instructions</label><textarea id="editNotes" rows="4" placeholder="Gate codes, sign-in requirements, PPE, hazards..." class="field"></textarea></div>
+                <div class="sm:col-span-2 border-t divider pt-4 mt-1"><span class="eyebrow" style="color:#7c3aed;">Contract & Technician</span></div>
+                <div><label class="lbl">Contract start</label><input type="date" id="editContractStart" class="field"></div>
+                <div><label class="lbl">Contract end / renewal date</label><input type="date" id="editContractEnd" class="field"></div>
+                <div class="sm:col-span-2"><label class="lbl">Contract notes</label><input type="text" id="editContractNotes" placeholder="e.g. 12-month agreement, price review at renewal" class="field"></div>
+                <div class="sm:col-span-2"><label class="lbl">Assigned technician</label><select id="editAssignedTo" class="field cursor-pointer"></select></div>
                 <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                     <div class="space-y-2">
                         <label class="lbl">Site Photo (shown on the site card)</label>
@@ -886,8 +919,8 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 6 * 60 * 60;          // photo links stay valid for 6 hours
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.17-r5';
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteSearchInput", "siteCardsGrid", "syncProgressModal", "progressPercent", "progressBarFill", "progressStatusText", "progressStatData", "progressStatSpeed", "progressStatItems", "progressStatItemsLabel", "progressSteps", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "siteServicesList", "statStations", "statServiced", "statIssues", "siteLandingContact", "siteLandingEmail", "siteLandingNotes", "siteLandingRecsList", "siteLandingVisitsList", "visitWorkspace", "activeWorkspaceTitle", "stationSearchInput", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTitle", "scannedBarcodeBadge", "stationSheetBody", "newStationFields", "newLocName", "newDeviceType", "activityLevel", "prepUsed", "speciesCaught", "qtyCount", "serviceNotes", "recommendationNote", "issuePhotoCamera", "issuePhotoGallery", "photoPreviewGrid", "saveRecBtn", "pastRecommendationsSection", "loadPastHistoryBtn", "pastRecommendationsList", "deleteStationBtn", "settingsModal", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "flashToggleBtn", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeServicesSection", "completeServicesList", "closingSiteNotes", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const APP_VERSION = '2026.10.17-r6';
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "siteSearchInput", "renewalNotice", "siteCardsGrid", "syncProgressModal", "progressTitle", "progressPercent", "progressBarFill", "progressStatusText", "progressStats", "progressStatData", "progressStatSpeed", "progressStatItems", "progressStatItemsLabel", "progressSteps", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "siteServicesList", "statStations", "statServiced", "statIssues", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "siteLandingRecsList", "siteLandingVisitsList", "visitWorkspace", "activeWorkspaceTitle", "stationSearchInput", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTitle", "scannedBarcodeBadge", "stationSheetBody", "newStationFields", "newLocName", "newDeviceType", "activityLevel", "prepUsed", "speciesCaught", "qtyCount", "serviceNotes", "recommendationNote", "issuePhotoCamera", "issuePhotoGallery", "photoPreviewGrid", "saveRecBtn", "pastRecommendationsSection", "loadPastHistoryBtn", "pastRecommendationsList", "deleteStationBtn", "settingsModal", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "flashToggleBtn", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeServicesSection", "completeServicesList", "closingSiteNotes", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -1250,6 +1283,7 @@
             updateSyncBadge();
             loadClients();
             loadOptions();
+            loadTeam();
             flushQueue();
         }
 
@@ -1530,7 +1564,7 @@
             updateSyncBadge();
             try { await _supabase.auth.getSession(); } catch (e) {}
             await flushQueue();
-            if (appStarted) loadOptions();
+            if (appStarted) { loadOptions(); loadTeam(); }
             if (appStarted && !selectedClient) loadClients();
             else if (appStarted) { refreshCoverUrls(); backgroundSyncSite(); }
         }
@@ -2122,7 +2156,8 @@
                 };
                 let batchOk = false;
                 try {
-                    const { data, error } = await _supabase.storage.from(PHOTO_BUCKET).createSignedUrls(need, SIGNED_URL_SECONDS);
+                    const { data, error } = await withTimeout(
+                        _supabase.storage.from(PHOTO_BUCKET).createSignedUrls(need, SIGNED_URL_SECONDS), 15000, 'Photo links');
                     if (error) throw error;
                     (data || []).forEach((d, i) => {
                         // Results come back in the same order as requested; storage doesn't always echo the path on errors
@@ -2136,16 +2171,22 @@
                     console.warn('Batch photo link request failed, trying one by one:', e.message || e);
                 }
                 if (!batchOk) {
-                    // Fall back to one request per photo so one bad entry can't hide every photo, and so each gets a real reason
-                    for (const path of need) {
-                        try {
-                            const { data, error } = await _supabase.storage.from(PHOTO_BUCKET).createSignedUrl(path, SIGNED_URL_SECONDS);
-                            if (error) signedErrors.set(path, error.message || String(error));
-                            else if (data && data.signedUrl) remember(path, data.signedUrl);
-                        } catch (e) {
-                            signedErrors.set(path, e.message || String(e));
+                    // Fall back to individual requests (several at once) so one bad entry can't hide every photo
+                    let next = 0;
+                    const worker = async () => {
+                        while (next < need.length) {
+                            const path = need[next++];
+                            try {
+                                const { data, error } = await withTimeout(
+                                    _supabase.storage.from(PHOTO_BUCKET).createSignedUrl(path, SIGNED_URL_SECONDS), 10000, 'Photo link');
+                                if (error) signedErrors.set(path, error.message || String(error));
+                                else if (data && data.signedUrl) remember(path, data.signedUrl);
+                            } catch (e) {
+                                signedErrors.set(path, e.message || String(e));
+                            }
                         }
-                    }
+                    };
+                    await Promise.all(Array.from({ length: Math.min(6, need.length) }, worker));
                     pruneSignedCache();
                 }
             }
@@ -2350,6 +2391,7 @@
                     mergeClients(data || []);
                     await applyPendingClientEdits();
                     await cacheSet('clients', clientsData);
+                    populateSiteFilter();
                     renderSiteCards();
                     refreshCoverUrls();
                     if (selectedClient) refreshLandingHeader();
@@ -2405,13 +2447,148 @@
             return localCovers.get(String(c.id)) || (c.image_path ? coverSigned.get(c.image_path) : null) || null;
         }
 
+        // ===================================================================
+        //  TEAM, SITE ASSIGNMENT & CONTRACT RENEWALS
+        // ===================================================================
+        let teamMembers = [];          // [{ id, name, email }]
+        const RENEWAL_WARN_DAYS = 30;  // warn at least a month before a contract ends
+        const SITE_FILTER_KEY = 'pestis-site-filter';
+        let siteFilter = null;         // 'mine' | 'all' | 'unassigned' | 'renewals' | 'tech:<id>'
+
+        async function loadTeam() {
+            const cached = await cacheGetEntry('team');
+            if (cached && Array.isArray(cached.data)) teamMembers = cached.data;
+            if (!teamMembers.some(t => currentUser && t.id === currentUser.id) && currentUser) {
+                teamMembers.push({ id: currentUser.id, name: (currentProfile && currentProfile.full_name) || currentUser.email, email: currentUser.email });
+            }
+            populateSiteFilter();
+            if (isOnline) {
+                try {
+                    const { data, error } = await withTimeout(
+                        _supabase.from('profiles').select('id, full_name, email, approved').eq('approved', true), 10000, 'Loading team');
+                    if (error) throw error;
+                    if (data && data.length) {
+                        teamMembers = data.map(p => ({ id: p.id, name: p.full_name || p.email, email: p.email }))
+                            .sort((a, b) => String(a.name).localeCompare(String(b.name)));
+                        await cacheSet('team', teamMembers);
+                    }
+                } catch (e) { console.warn('Team list could not be loaded:', e.message || e); }
+            }
+            populateSiteFilter();
+            renderSiteCards();
+            if (selectedClient) refreshLandingHeader();
+        }
+
+        function teamName(id) {
+            if (!id) return '';
+            const t = teamMembers.find(x => x.id === id);
+            if (t) return t.name;
+            return currentUser && id === currentUser.id ? ((currentProfile && currentProfile.full_name) || currentUser.email) : 'Unknown technician';
+        }
+
+        function populateTechSelect(selectId, value) {
+            const sel = document.getElementById(selectId);
+            if (!sel) return;
+            const opts = [{ id: '', name: 'Unassigned' }].concat(teamMembers);
+            if (value && !opts.some(o => o.id === value)) opts.push({ id: value, name: teamName(value) });
+            sel.innerHTML = opts.map(o => `<option value="${esc(o.id)}">${esc(o.name)}${currentUser && o.id === currentUser.id ? ' (me)' : ''}</option>`).join('');
+            sel.value = value || '';
+        }
+
+        function contractInfo(c) {
+            if (!c || !c.contract_end) return null;
+            const end = parseDay(String(c.contract_end).slice(0, 10));
+            if (!end) return null;
+            const days = Math.round((end - parseDay(todayStr())) / 86400000);
+            if (days < 0) return { days, cls: 'chip-red', short: 'Contract expired', text: `Contract expired ${-days} day${days === -1 ? '' : 's'} ago - renegotiate` };
+            if (days === 0) return { days, cls: 'chip-red', short: 'Contract ends today', text: 'Contract ends today - renegotiate' };
+            if (days <= RENEWAL_WARN_DAYS) return { days, cls: 'chip-purple', short: `Renewal in ${days}d`, text: `Contract ends in ${days} day${days === 1 ? '' : 's'} - time to renegotiate` };
+            return { days, cls: 'chip-green', short: '', text: `Contract runs until ${fmtDay(String(c.contract_end).slice(0, 10))}` };
+        }
+        function renewalDue(c) { const ci = contractInfo(c); return !!ci && ci.days <= RENEWAL_WARN_DAYS; }
+
+        function populateSiteFilter() {
+            const sel = document.getElementById('siteFilterSelect');
+            if (!sel) return;
+            const saved = loadJSON(SITE_FILTER_KEY, null);
+            if (saved) siteFilter = saved;
+            else siteFilter = currentUser && clientsData.some(c => c.assigned_to === currentUser.id) ? 'mine' : 'all';
+            const renewals = clientsData.filter(renewalDue).length;
+            const opts = [
+                ['mine', 'My sites'],
+                ['all', 'All sites'],
+                ['unassigned', 'Unassigned sites'],
+                ['renewals', `Contracts ending soon${renewals ? ' (' + renewals + ')' : ''}`]
+            ].concat(teamMembers.filter(t => !currentUser || t.id !== currentUser.id).map(t => ['tech:' + t.id, t.name + "'s sites"]));
+            sel.innerHTML = opts.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('');
+            if (!opts.some(o => o[0] === siteFilter)) siteFilter = 'all';
+            sel.value = siteFilter;
+        }
+
+        function setSiteFilter(v) {
+            siteFilter = v;
+            saveJSON(SITE_FILTER_KEY, v);
+            renderSiteCards();
+        }
+
+        function siteMatchesFilter(c) {
+            switch (true) {
+                case siteFilter === 'mine': return !!currentUser && c.assigned_to === currentUser.id;
+                case siteFilter === 'unassigned': return !c.assigned_to;
+                case siteFilter === 'renewals': return renewalDue(c);
+                case String(siteFilter).startsWith('tech:'): return c.assigned_to === String(siteFilter).slice(5);
+                default: return true;
+            }
+        }
+
+        function renderRenewalNotice() {
+            const el = document.getElementById('renewalNotice');
+            if (!el) return;
+            const due = clientsData.filter(renewalDue);
+            if (!due.length || siteFilter === 'renewals') { el.className = 'hidden'; el.innerHTML = ''; return; }
+            el.className = 'row-item p-3 flex flex-wrap justify-between items-center gap-2 text-xs';
+            el.style.borderColor = 'rgba(124,58,237,.5)';
+            el.innerHTML = `<span class="t-strong"><span class="font-black" style="color:#7c3aed;">${due.length} site contract${due.length === 1 ? '' : 's'}</span> end${due.length === 1 ? 's' : ''} within ${RENEWAL_WARN_DAYS} days or ha${due.length === 1 ? 's' : 've'} expired - time to renegotiate.</span>
+                <button type="button" onclick="setSiteFilter('renewals'); populateSiteFilter();" class="link-btn">Show them</button>`;
+        }
+
+        // Logo: back to the site list from anywhere
+        function goHome() {
+            const sheetOpen = !document.getElementById('stationFormContainer').classList.contains('hidden');
+            if (sheetOpen && pendingPhotos.length && !confirm("You have photos that haven't been saved to a recommendation yet. Leave and discard them?")) return;
+            clearPendingPhotos(true);
+            ['addClientModal', 'editSiteModal', 'servicesModal', 'completeVisitModal', 'manualScanModal', 'imageModal', 'settingsModal', 'profileModal', 'queueModal']
+                .forEach(id => { const m = document.getElementById(id); if (m) m.classList.add('hidden'); });
+            stopFullscreenCameraScanner().catch(() => {});
+            if (isLoadingSite) return;
+            backToSites();
+        }
+
+        // Services list shown inside the "Register New Site" form
+        let newSiteServices = [];
+        let servicesTarget = 'site';
+        function renderNewClientServices() {
+            const el = document.getElementById('newClientServicesList');
+            if (!el) return;
+            el.innerHTML = newSiteServices.length ? newSiteServices.map(s => `
+                <div class="row-item p-3 flex flex-wrap justify-between items-center gap-2">
+                    <span class="font-bold t-strong">${esc(s.type)}</span>
+                    <span class="t-muted">${esc(freqLabel(s.frequency))}${s.nextDue ? ' · next due ' + esc(fmtDay(s.nextDue)) : ''}</span>
+                </div>`).join('')
+                : '<div class="t-faint italic">No services added yet. Tap "Add / Edit Services" to choose what this site pays for.</div>';
+        }
+
+        function dateOrNull(id) { const v = document.getElementById(id).value; return v ? v : null; }
+
         function renderSiteCards() {
             const grid = document.getElementById('siteCardsGrid');
             const q = (document.getElementById('siteSearchInput').value || '').trim().toLowerCase();
 
-            const list = clientsData.filter(c =>
+            if (siteFilter === null) populateSiteFilter();
+            renderRenewalNotice();
+            const list = clientsData.filter(c => siteMatchesFilter(c) && (
                 !q || (c.Name || '').toLowerCase().includes(q) || (c.Address || '').toLowerCase().includes(q) || (c.Contact || '').toLowerCase().includes(q)
-            );
+            ));
 
             let html = list.map(c => {
                 const name = c.Name || 'Unnamed site';
@@ -2422,15 +2599,19 @@
                 let dueChip = '';
                 if (due.overdue) dueChip = `<span class="site-due" style="background:#dc2626;">${due.overdue} service${due.overdue === 1 ? '' : 's'} overdue</span>`;
                 else if (due.soon) dueChip = `<span class="site-due" style="background:#d97706;">${due.soon} due this week</span>`;
+                const ci = contractInfo(c);
+                if (ci && ci.days <= RENEWAL_WARN_DAYS) dueChip += `<span class="site-due" style="background:${ci.days < 0 ? '#991b1b' : '#7c3aed'};">${esc(ci.short)}</span>`;
+                const tech = c.assigned_to ? teamName(c.assigned_to) : '';
                 return `
                     <button type="button" class="site-card" data-id="${esc(c.id)}" onclick="startSiteVisit(this.dataset.id)" style="background:${grad}">
                         ${cover
                             ? `<img src="${esc(cover)}" alt="" loading="lazy" class="site-cover" onerror="this.remove()">`
                             : `<span class="site-initials">${esc(initials)}</span>`}
                         <span class="site-overlay">
-                            ${dueChip}
+                            ${dueChip ? `<span class="site-chips">${dueChip}</span>` : ''}
                             <span class="site-name">${esc(name)}</span>
                             <span class="site-addr">${esc(c.Address || 'No address')}</span>
+                            ${tech ? `<span class="site-tech">👤 ${esc(tech)}</span>` : ''}
                         </span>
                     </button>`;
             }).join('');
@@ -2443,6 +2624,8 @@
 
             if (list.length === 0 && q) {
                 html = '<span class="text-xs t-muted italic col-span-full">No sites match your search.</span>' + html;
+            } else if (list.length === 0 && siteFilter !== 'all' && clientsData.length) {
+                html = '<span class="text-xs t-muted italic col-span-full">No sites in this view. Choose "All sites" above to see every site.</span>' + html;
             }
             grid.innerHTML = html;
         }
@@ -2469,6 +2652,10 @@
 
         function openAddClientModal() {
             newClientImageBlob = null;
+            newSiteServices = [];
+            renderNewClientServices();
+            ['newContractStart', 'newContractEnd', 'newContractNotes'].forEach(id => { document.getElementById(id).value = ''; });
+            populateTechSelect('newAssignedTo', currentUser ? currentUser.id : '');
             document.getElementById('newClientImageInput').value = '';
             document.getElementById('newClientImagePreview').classList.add('hidden');
             document.getElementById('newClientImagePlaceholder').classList.remove('hidden');
@@ -2504,7 +2691,12 @@
                     Address: address,
                     Contact: contact || '',
                     Email: email || '',
-                    Notes: notes || 'No safety notes.'
+                    Notes: notes || 'No safety notes.',
+                    services: newSiteServices,
+                    contract_start: dateOrNull('newContractStart'),
+                    contract_end: dateOrNull('newContractEnd'),
+                    contract_notes: document.getElementById('newContractNotes').value.trim() || null,
+                    assigned_to: document.getElementById('newAssignedTo').value || null
                 }]).select('*').single();
                 if (error) throw error;
 
@@ -2515,7 +2707,9 @@
 
                 setSyncStatus('synced');
                 ['newClientName', 'newClientAddress', 'newClientContact', 'newClientEmail', 'newClientNotes'].forEach(id => document.getElementById(id).value = '');
+                newSiteServices = [];
                 closeAddClientModal();
+                populateSiteFilter();
                 renderSiteCards();
             } catch (err) {
                 setSyncStatus('synced');
@@ -2534,6 +2728,10 @@
             document.getElementById('editContact').value = c.Contact || '';
             document.getElementById('editEmail').value = c.Email || '';
             document.getElementById('editNotes').value = c.Notes || '';
+            document.getElementById('editContractStart').value = c.contract_start ? String(c.contract_start).slice(0, 10) : '';
+            document.getElementById('editContractEnd').value = c.contract_end ? String(c.contract_end).slice(0, 10) : '';
+            document.getElementById('editContractNotes').value = c.contract_notes || '';
+            populateTechSelect('editAssignedTo', c.assigned_to || '');
 
             editImageBlob = null;
             editImageRemove = false;
@@ -2581,6 +2779,16 @@
 
             const changed = {};
             Object.keys(fields).forEach(k => { if ((c[k] || '') !== fields[k]) changed[k] = fields[k]; });
+            const extra = {
+                contract_start: dateOrNull('editContractStart'),
+                contract_end: dateOrNull('editContractEnd'),
+                contract_notes: document.getElementById('editContractNotes').value.trim() || null,
+                assigned_to: document.getElementById('editAssignedTo').value || null
+            };
+            Object.keys(extra).forEach(k => {
+                const before = c[k] == null ? null : (k.startsWith('contract_') && k !== 'contract_notes' ? String(c[k]).slice(0, 10) : c[k]);
+                if (before !== extra[k]) changed[k] = extra[k];
+            });
 
             let removePaths = null;
             if (editImageRemove && !editImageBlob) {
@@ -2598,13 +2806,15 @@
 
             closeEditSiteModal();
             refreshLandingHeader();
+            populateSiteFilter();
             renderSiteCards();
         }
 
         // ---------- Services editor ----------
-        function openServicesModal() {
-            if (!selectedClient) return;
-            editingServices = getServices(selectedClient).map(s => Object.assign({}, s));
+        function openServicesModal(target) {
+            servicesTarget = target === 'new' ? 'new' : 'site';
+            if (servicesTarget === 'site' && !selectedClient) return;
+            editingServices = (servicesTarget === 'new' ? newSiteServices : getServices(selectedClient)).map(s => Object.assign({}, s));
             document.getElementById('svcTypeOptions').innerHTML = SERVICE_TYPES.map(t => `<option value="${esc(t)}"></option>`).join('');
             renderServicesEditor();
             document.getElementById('servicesModal').classList.remove('hidden');
@@ -2690,6 +2900,13 @@
             const cleaned = editingServices
                 .map(s => Object.assign({}, s, { type: (s.type || '').trim(), notes: (s.notes || '').trim() }))
                 .filter(s => s.type);
+            if (servicesTarget === 'new') {
+                // Registering a new site: keep the list in the form until the site is saved
+                newSiteServices = cleaned;
+                renderNewClientServices();
+                closeServicesModal();
+                return;
+            }
             try {
                 await queueClientUpdate(selectedClient, { services: cleaned }, 'Services & schedule updated');
             } catch (err) {
@@ -2771,7 +2988,7 @@
             return (n / 1024 / 1024).toFixed(n < 100 * 1024 * 1024 ? 1 : 0) + ' MB';
         }
 
-        const PROGRESS_STEPS = [
+        const DOWNLOAD_STEPS = [
             { key: 'connect', label: 'Connecting to the database', from: 0, to: 3 },
             { key: 'count', label: 'Checking how much there is to download', from: 3, to: 6 },
             { key: 'records', label: 'Downloading station records', from: 6, to: 70 },
@@ -2781,7 +2998,16 @@
             { key: 'build', label: 'Building the dashboard', from: 97, to: 100 }
         ];
 
-        function createProgress() {
+        const LOCAL_OPEN_STEPS = [
+            { key: 'read', label: 'Reading the copy saved on this device', from: 0, to: 35 },
+            { key: 'links', label: 'Securing photo links', from: 35, to: 80 },
+            { key: 'build', label: 'Building the dashboard', from: 80, to: 100 }
+        ];
+
+        function createProgress(steps, opts) {
+            const PROGRESS_STEPS = steps || DOWNLOAD_STEPS;
+            opts = opts || {};
+            let showTimer = null;
             const el = id => document.getElementById(id);
             const raf = (typeof requestAnimationFrame === 'function') ? requestAnimationFrame : (f => setTimeout(f, 16));
             const state = {};
@@ -2833,13 +3059,20 @@
             }
 
             return {
-                show() {
-                    el('syncProgressModal').classList.remove('hidden');
+                show(delayMs) {
+                    const reveal = () => {
+                        showTimer = null;
+                        el('progressTitle').textContent = opts.title || 'Downloading Site';
+                        el('progressStats').classList.toggle('hidden', opts.stats === false);
+                        el('syncProgressModal').classList.remove('hidden');
+                        renderSteps();
+                        renderStats();
+                    };
                     el('progressBarFill').style.width = '0%';
                     el('progressPercent').textContent = '0%';
-                    renderSteps();
-                    renderStats();
                     statsTimer = setInterval(renderStats, 400);
+                    // A quick load (under the delay) never flashes the panel
+                    if (delayMs) showTimer = setTimeout(reveal, delayMs); else reveal();
                 },
                 step(key, frac, text) {
                     const idx = PROGRESS_STEPS.findIndex(s => s.key === key);
@@ -2864,12 +3097,14 @@
                     renderSteps();
                     renderStats();
                     setPct(100);
-                    el('progressStatusText').textContent = 'Site ready - saved on this device';
+                    el('progressStatusText').textContent = opts.doneText || 'Site ready - saved on this device';
                 },
                 hide() {
                     if (statsTimer) clearInterval(statsTimer);
+                    if (showTimer) clearTimeout(showTimer);
                     el('syncProgressModal').classList.add('hidden');
-                }
+                },
+                get visible() { return !el('syncProgressModal').classList.contains('hidden'); }
             };
         }
 
@@ -3076,7 +3311,7 @@
         }
 
         // Turns saved rows (+ anything still in the upload queue) into the site dashboard state
-        async function buildSiteState(clientId, cachedRows, keepScanned) {
+        async function buildSiteState(clientId, cachedRows, keepScanned, prog) {
             const rows = (cachedRows || []).map(r => Object.assign({}, r));
 
             const refs = new Set(rows.map(r => r.payload && r.payload.clientRef).filter(Boolean));
@@ -3101,7 +3336,11 @@
                     r._slots.push({ path: paths[i], local: local });
                 }
             }
-            const signedMap = await getSignedUrls(rows.flatMap(r => r._slots.filter(s => !s.local).map(s => s.path)));
+            const toSign = rows.flatMap(r => r._slots.filter(s => !s.local).map(s => s.path));
+            if (prog) prog.step('links', 0.1, toSign.length ? `Securing ${toSign.length} photo link${toSign.length === 1 ? '' : 's'}...` : 'No photos to link');
+            await new Promise(r => setTimeout(r, 0)); // let the loading screen paint
+            const signedMap = await getSignedUrls(toSign);
+            if (prog) prog.step('links', 1);
 
             const map = new Map();
             const visitMap = new Map();
@@ -3198,7 +3437,7 @@
                     cache = (await syncSiteCache(client.id, 'full', prog)).cache;
                     prog.step('save', 1, 'Saved to this device');
                     prog.step('links', 0, 'Securing photo links...');
-                    await buildSiteState(client.id, cache.rows);
+                    await buildSiteState(client.id, cache.rows, null, prog);
                     prog.step('links', 1);
                     await prefetchPhotos(sitePhotoUrls(), prog);
                     prog.step('build', 0.5, 'Building the dashboard...');
@@ -3211,13 +3450,27 @@
                         alert("You're offline and this site hasn't been opened on this device before, so its stations aren't saved here yet. You can still scan and record new stations.");
                         cache = { rows: [], lastSyncAt: 0, lastFullAt: 0 };
                     }
-                    await buildSiteState(client.id, cache.rows);
+                    // Already saved on this device: show a loading screen while it's read and prepared
+                    prog = createProgress(LOCAL_OPEN_STEPS, { title: 'Opening Site', stats: false, doneText: 'Site ready' });
+                    prog.show(150);
+                    prog.step('read', 0.5, `Reading ${cache.rows.length.toLocaleString()} saved record${cache.rows.length === 1 ? '' : 's'}...`);
+                    await new Promise(r => setTimeout(r, 0));
+                    prog.step('read', 1);
+                    await buildSiteState(client.id, cache.rows, null, prog);
+                    prog.step('build', 0.6, 'Building the dashboard...');
                 }
 
                 siteSyncInfo = { lastSyncAt: cache.lastSyncAt || 0, syncing: false, error: null };
 
                 refreshLandingHeader();
                 renderLandingRecommendationsAndVisits();
+                if (prog) {
+                    const wasVisible = prog.visible;
+                    prog.finish();
+                    if (wasVisible) await new Promise(r => setTimeout(r, 250));
+                    prog.hide();
+                    prog = null;
+                }
                 showSiteDashboard();
                 renderSiteSyncInfo();
 
@@ -3239,7 +3492,7 @@
         async function backgroundSyncSite(mode) {
             if (!selectedClient || siteSyncInfo.syncing) return;
             if (!isOnline) {
-                if (mode) alert("You're offline. The saved copy of this site is being used, and it will sync when you're back online.");
+                if (mode === 'manual' || mode === 'full') alert("You're offline. The saved copy of this site is being used, and it will sync when you're back online.");
                 return;
             }
             const clientId = selectedClient.id;
@@ -3313,6 +3566,16 @@
             document.getElementById('siteLandingContact').textContent = `Site Contact: ${c.Contact || 'Not specified'}`;
             document.getElementById('siteLandingEmail').textContent = `Email: ${c.Email || 'Not specified'}`;
             document.getElementById('siteLandingNotes').textContent = c.Notes || 'No site-specific safety instructions on file.';
+
+            const ci = contractInfo(c);
+            document.getElementById('siteContractChip').innerHTML = ci ? `<span class="chip ${ci.cls}">${esc(ci.text)}</span>` : '<span class="chip chip-blue">No contract end date set</span>';
+            const cs = c.contract_start ? fmtDay(String(c.contract_start).slice(0, 10)) : '';
+            const ce = c.contract_end ? fmtDay(String(c.contract_end).slice(0, 10)) : '';
+            document.getElementById('siteContractDates').textContent = (cs || ce) ? `${cs || 'Start not set'} → ${ce || 'End not set'}` : 'No contract dates recorded.';
+            const cn = document.getElementById('siteContractNotes');
+            cn.textContent = c.contract_notes || '';
+            cn.classList.toggle('hidden', !c.contract_notes);
+            document.getElementById('siteAssignedTech').textContent = c.assigned_to ? teamName(c.assigned_to) + (currentUser && c.assigned_to === currentUser.id ? ' (me)' : '') : 'Unassigned';
 
             const cover = coverUrl(c);
             const wrap = document.getElementById('siteLandingImageWrap');
@@ -3623,6 +3886,7 @@
             hideStationForm();
             renderDeviceLists();
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (isOnline) backgroundSyncSite('start'); // pick up anything recorded elsewhere before servicing
         }
 
         function renderDeviceLists() {
