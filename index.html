@@ -1206,6 +1206,7 @@
             if (offlineMode) isOnline = false;
             updateSyncBadge();
             loadClients();
+            loadOptions();
             flushQueue();
         }
 
@@ -1486,6 +1487,7 @@
             updateSyncBadge();
             try { await _supabase.auth.getSession(); } catch (e) {}
             await flushQueue();
+            if (appStarted) loadOptions();
             if (appStarted && !selectedClient) loadClients();
             else if (appStarted) { refreshCoverUrls(); backgroundSyncSite(); }
         }
@@ -1618,6 +1620,10 @@
             return flushPromise;
         }
 
+        const PARK_AFTER_ATTEMPTS = 3;               // after 3 failed tries an item is set aside
+        const PARKED_RETRY_MS = 5 * 60 * 1000;       // set-aside items are retried every 5 minutes
+        function laneOf(item) { return item.clientId != null ? 'site:' + item.clientId : 'settings'; }
+
         async function runFlush() {
             const pending = () => queueItems.filter(i => i.status !== 'sent').sort((a, b) => a.seq - b.seq);
             if (pending().length === 0) { updateSyncBadge(); return; }
@@ -1631,25 +1637,43 @@
                 return;
             }
 
+            // Each site (and Settings) is its own lane. A problem in one lane never holds up another,
+            // and an item that keeps failing is set aside so the rest of its own site can carry on.
+            const blockedLanes = new Set();
             for (const item of pending()) {
+                const lane = laneOf(item);
+                if (blockedLanes.has(lane)) continue;
+                if (item.parked && Date.now() - (item.lastTriedAt || 0) < PARKED_RETRY_MS) continue;
+
                 item.status = 'uploading';
+                item.lastTriedAt = Date.now();
                 updateSyncBadge();
                 try {
                     await withTimeout(processItem(item), 90000, 'Upload');
                     item.status = 'sent';
                     item.sentAt = new Date().toISOString();
                     item.error = null;
+                    item.parked = false;
                     await persistItem(item);
                     for (const k of itemBlobKeys(item)) { try { await IDB.del('blobs', k); } catch (e) {} }
                 } catch (err) {
                     item.status = 'failed';
                     item.attempts = (item.attempts || 0) + 1;
-                    item.error = isNetworkError(err) ? 'Connection lost - will retry automatically.' : friendlyError(err);
+                    if (isNetworkError(err)) {
+                        // No connection: nothing else will get through either, so stop and wait
+                        item.error = 'Connection lost - will retry automatically.';
+                        await persistItem(item);
+                        isOnline = await probeOnline();
+                        break;
+                    }
+                    const appBug = err instanceof ReferenceError || (err instanceof TypeError && !isNetworkError(err));
+                    item.error = appBug
+                        ? 'App error: ' + (err.message || err) + '. Reload the page to get the latest version of Pestis, then tap Retry.'
+                        : friendlyError(err);
                     lastFailAt = Date.now();
+                    if (appBug || item.attempts >= PARK_AFTER_ATTEMPTS) item.parked = true;
+                    else blockedLanes.add(lane); // keep this site's records in order while it retries
                     await persistItem(item);
-                    if (isNetworkError(err)) { isOnline = await probeOnline(); }
-                    // Stop here so changes always reach the server in the order they were made
-                    break;
                 }
             }
             await pruneSent();
@@ -3010,6 +3034,7 @@
             siteSyncInfo = { lastSyncAt: 0, syncing: false, error: null };
             const s = document.getElementById('stationSearchInput');
             if (s) s.value = '';
+            updateFab();
         }
 
         function renderLandingStats() {
@@ -3275,6 +3300,7 @@
             document.getElementById('visitWorkspace').classList.add('hidden');
             document.getElementById('siteLandingDashboard').classList.remove('hidden');
             renderLandingRecommendationsAndVisits();
+            updateFab();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -3413,24 +3439,39 @@
             }
         }
 
-        // ---------- Station form ----------
+        // ---------- Station focus view ----------
         function resetServiceFields() {
+            populateOptionSelects();
             document.getElementById('activityLevel').value = 'None';
-            document.getElementById('prepUsed').value = 'None - Monitoring Only';
-            document.getElementById('speciesCaught').value = '';
+            document.getElementById('prepUsed').value = NONE_PREP;
+            document.getElementById('speciesCaught').value = NONE_SPECIES;
             document.getElementById('qtyCount').value = 1;
             document.getElementById('serviceNotes').value = '';
             document.getElementById('recommendationNote').value = '';
-            document.getElementById('issuePhotoInput').value = '';
-            document.getElementById('photoPreviewContainer').classList.add('hidden');
-            selectedFileBlob = null;
+            clearPendingPhotos(true);
+        }
+
+        function updateFab() {
+            const inWorkspace = !document.getElementById('visitWorkspace').classList.contains('hidden');
+            const sheetOpen = !document.getElementById('stationFormContainer').classList.contains('hidden');
+            document.getElementById('scanFab').classList.toggle('hidden', !inWorkspace || sheetOpen);
         }
 
         function hideStationForm() {
+            if (pendingPhotos.length && !confirm('You have photos that haven\'t been saved to a recommendation yet. Close and discard them?')) return;
+            clearPendingPhotos(true);
             document.getElementById('stationFormContainer').classList.add('hidden');
-            document.getElementById('stationPlaceholder').classList.remove('ph-hidden');
+            document.body.style.overflow = '';
             currentBarcode = null;
+            updateFab();
         }
+
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Escape') return;
+            if (!document.getElementById('imageModal').classList.contains('hidden')) { closeImageModal(); return; }
+            if (!document.getElementById('confirmModal').classList.contains('hidden')) return;
+            if (!document.getElementById('stationFormContainer').classList.contains('hidden')) hideStationForm();
+        });
 
         function openDeviceForm(barcode, locName, devType, markAsScanned, isNew = false) {
             currentBarcode = barcode;
@@ -3440,8 +3481,6 @@
             resetServiceFields();
 
             document.getElementById('scannedBarcodeBadge').textContent = `Barcode: ${barcode}`;
-            document.getElementById('stationFormContainer').classList.remove('hidden');
-            document.getElementById('stationPlaceholder').classList.add('ph-hidden');
 
             const existingDev = siteDevices.find(d => d.barcode_id === barcode);
             const historyList = document.getElementById('pastRecommendationsList');
@@ -3466,7 +3505,7 @@
                 document.getElementById('newStationFields').classList.remove('hidden');
                 document.getElementById('newLocName').value = '';
             } else {
-                document.getElementById('formTitle').textContent = `Servicing: ${locName} (${devType})`;
+                document.getElementById('formTitle').textContent = `${locName} (${devType})`;
                 document.getElementById('newStationFields').classList.add('hidden');
                 document.getElementById('newLocName').value = locName;
                 document.getElementById('newDeviceType').value = devType;
@@ -3477,10 +3516,10 @@
                 renderDeviceLists();
             }
 
-            // On phones/tablets the form sits below the lists, so scroll to it. On desktop it is beside them.
-            if (window.innerWidth < 1024) {
-                document.getElementById('stationFormContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+            document.getElementById('stationFormContainer').classList.remove('hidden');
+            document.getElementById('stationSheetBody').scrollTop = 0;
+            document.body.style.overflow = 'hidden';
+            updateFab();
         }
 
         function lazyLoadStationHistory() {
@@ -3496,33 +3535,22 @@
                 return;
             }
 
-            const fragment = document.createDocumentFragment();
-
-            existingDev.recommendationsHistory.forEach(item => {
+            historyList.innerHTML = existingDev.recommendationsHistory.slice().reverse().map(item => {
                 const formattedDate = item.date ? new Date(item.date).toLocaleDateString() : 'Past Visit';
-                const idx = regImg(item.photo || '', item.recommendation, `${existingDev.locationName} · ${formattedDate}`, item.photoError);
-
-                const div = document.createElement('div');
-                div.className = 'row-item p-3 flex justify-between items-center gap-2';
-
-                let imgHtml = '';
-                if (item.photo) {
-                    imgHtml = `<img src="${esc(item.photo)}" loading="lazy" class="h-12 w-12 rounded-lg object-cover cursor-pointer shadow" style="border:1px solid var(--border);" onclick="openImg(${idx})" title="Click to view full photo & text">`;
-                }
-
-                div.innerHTML = `
-                    <div class="flex-1">
-                        <div class="t-muted font-medium">Issue Logged (${esc(formattedDate)})</div>
-                        <div class="t-strong text-[11px] mt-0.5">${esc(item.recommendation)}</div>
-                        <div class="link-btn !text-[11px] mt-0.5" onclick="openImg(${idx})">Tap to view note & photo</div>
-                    </div>
-                    ${imgHtml}`;
-
-                fragment.appendChild(div);
-            });
-
-            historyList.innerHTML = '';
-            historyList.appendChild(fragment);
+                const photos = item.photos || [];
+                const idx = regImg(photos, item.recommendation, `${existingDev.locationName} · ${formattedDate}`, item.photoError);
+                const thumbs = photos.slice(0, 3).map(u => `<img src="${esc(u)}" loading="lazy" alt="" class="h-12 w-12 rounded-lg object-cover" style="border:1px solid var(--border);">`).join('');
+                const more = photos.length > 3 ? `<span class="t-faint font-bold">+${photos.length - 3}</span>` : '';
+                return `
+                    <button type="button" onclick="openImg(${idx})" class="row-item clickable w-full text-left p-3 flex justify-between items-center gap-2">
+                        <div class="flex-1 min-w-0">
+                            <div class="t-muted font-medium">Issue Logged (${esc(formattedDate)})</div>
+                            <div class="t-strong text-[11px] mt-0.5 break-words">${esc(item.recommendation)}</div>
+                            ${item.photoError ? '<div class="text-[11px] mt-0.5" style="color:#d97706;">Photo unavailable</div>' : ''}
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">${thumbs}${more}</div>
+                    </button>`;
+            }).join('');
             historyList.classList.remove('hidden');
             loadBtn.textContent = "Hide History";
         }
@@ -3540,7 +3568,7 @@
                 alert('Please enter a device/location name first.');
                 return;
             }
-            if (!recNote && !selectedFileBlob) {
+            if (!recNote && pendingPhotos.length === 0) {
                 alert('Please type a recommendation note or attach an issue photo first.');
                 return;
             }
@@ -3550,23 +3578,20 @@
             btn.disabled = true;
 
             try {
-                let blob = null;
-                let localUrl = null;
-                if (selectedFileBlob) {
-                    blob = await compressImage(selectedFileBlob);
-                    localUrl = URL.createObjectURL(blob);
-                }
+                const picked = pendingPhotos.slice();
+                const blobs = picked.map(p => p.blob);
+                const localUrls = picked.map(p => p.url);
 
                 const payloadData = {
                     locationName: locNameInput,
                     deviceType: devType,
                     recommendation: recNote || 'Issue photo attached',
-                    photo: null,
                     technician: technicianLabel(),
                     servicedAt: new Date().toISOString()
                 };
 
-                await queueLog(currentBarcode, payloadData, blob, `Recommendation${blob ? ' + photo' : ''} · ${locNameInput}`);
+                const photoLabel = blobs.length ? ` + ${blobs.length} photo${blobs.length === 1 ? '' : 's'}` : '';
+                await queueLog(currentBarcode, payloadData, blobs, `Recommendation${photoLabel} · ${locNameInput}`);
 
                 let dev = siteDevices.find(d => d.barcode_id === currentBarcode);
                 if (!dev) {
@@ -3583,21 +3608,21 @@
 
                 dev.recommendationsHistory.push({
                     recommendation: recNote || 'Issue photo attached',
-                    photo: localUrl,
+                    photos: localUrls,
+                    photoCount: localUrls.length,
+                    photoError: '',
                     date: payloadData.servicedAt
                 });
 
                 document.getElementById('recommendationNote').value = '';
-                document.getElementById('issuePhotoInput').value = '';
-                document.getElementById('photoPreviewContainer').classList.add('hidden');
-                selectedFileBlob = null;
+                clearPendingPhotos(false); // keep the previews alive - they're shown until the upload finishes
 
                 renderDeviceLists();
                 renderLandingRecommendationsAndVisits();
             } catch (err) {
                 alert('Error saving recommendation on this device: ' + (err.message || err));
             } finally {
-                btn.textContent = "Save Recommendation & Photo Record";
+                btn.textContent = "Save Recommendation & Photos";
                 btn.disabled = false;
             }
         }
@@ -3629,7 +3654,7 @@
                     servicedAt: new Date().toISOString()
                 };
 
-                await queueLog(currentBarcode, payloadData, null, `Service record · ${locNameInput}`);
+                await queueLog(currentBarcode, payloadData, [], `Service record · ${locNameInput}`);
 
                 let dev = siteDevices.find(d => d.barcode_id === currentBarcode);
                 if (!dev) {
@@ -3658,31 +3683,17 @@
         }
 
         // ===================================================================
-        //  DELETING (needs a connection - the server copy has to be removed)
+        //  DELETING - works offline too. Records that never left this device are
+        //  simply removed; anything already uploaded is removed from the server
+        //  by a queued step that runs as soon as there's a connection.
         // ===================================================================
-        function requireOnline(action) {
-            if (isOnline) return true;
-            alert(`You're offline. ${action} needs an internet connection so the records can be removed from the server. Try again once you're back online.`);
-            return false;
-        }
-
-        async function ensureSiteQueueSent() {
-            await flushQueue();
-            const stuck = queueItems.some(i => i.status !== 'sent' && selectedClient && String(i.clientId) === String(selectedClient.id));
-            if (stuck) {
-                alert('Some records for this site are still waiting to upload (tap the sync badge to see them). Try again once they have been sent.');
-                return false;
-            }
-            return true;
-        }
-
         function deleteCurrentStation() {
             const dev = siteDevices.find(d => d.barcode_id === currentBarcode);
             if (!dev) return;
-            if (!requireOnline('Deleting a station')) return;
             openConfirm({
                 title: 'Delete this station?',
-                message: `"${dev.locationName}" (${dev.barcode_id}) will be permanently removed from this site, along with ALL of its service history, issue notes and photos. This cannot be undone.`,
+                message: `"${dev.locationName}" (${dev.barcode_id}) will be permanently removed from this site, along with ALL of its service history, issue notes and photos. This cannot be undone.` +
+                    (isOnline ? '' : " You're offline, so it's removed here now and from the server when you reconnect."),
                 confirmLabel: 'Yes, delete station',
                 cancelLabel: 'No, keep it',
                 onConfirm: () => performDeleteStation(dev.barcode_id)
@@ -3690,54 +3701,52 @@
         }
 
         async function performDeleteStation(barcode) {
+            const client = selectedClient;
+            if (!client) return;
+            const cid = client.id;
+            const isThisStation = i => i.kind === 'insert_log' && String(i.clientId) === String(cid) && i.data.barcode_id === barcode;
             try {
-                setSyncStatus('uploading', 'Deleting station...');
-                if (!(await ensureSiteQueueSent())) { setSyncStatus('synced'); return; }
-
-                const { data: rows, error: selErr } = await _supabase
-                    .from('service_logs').select('payload')
-                    .eq('client_id', selectedClient.id).eq('barcode_id', barcode);
-                if (selErr) throw selErr;
-
-                const { data: deleted, error: delErr } = await _supabase
-                    .from('service_logs').delete()
-                    .eq('client_id', selectedClient.id).eq('barcode_id', barcode)
-                    .select('barcode_id');
-                if (delErr) throw delErr;
-
-                if ((rows || []).length > 0 && (deleted || []).length === 0) {
-                    throw new Error('Permission denied. Run the delete-permissions SQL script in Supabase (pestis_update_delete_permissions.sql).');
+                // 1. Records for this station still waiting on this device: just remove them
+                for (const i of queueItems.filter(i => isThisStation(i) && (i.status === 'pending' || i.status === 'failed'))) {
+                    await removeQueueItem(i);
                 }
+                await markSentCancelled(isThisStation);
 
-                await removePhotos((rows || []).map(r => toStoragePath(r.payload && (r.payload.photo || r.payload.image))));
-                // Remove it from the saved copy too, then let the background sync confirm with the server
-                const delCache = await getSiteCache(selectedClient.id);
-                if (delCache) {
-                    delCache.rows = delCache.rows.filter(r => r.barcode_id !== barcode);
-                    await saveSiteCache(selectedClient.id, delCache);
+                // 2. Remove it from the server (straight away if online, otherwise when reconnected)
+                await enqueue({
+                    kind: 'delete_station',
+                    clientId: cid,
+                    siteName: client.Name,
+                    label: `Delete station · ${(siteDevices.find(d => d.barcode_id === barcode) || {}).locationName || barcode}`,
+                    data: { barcode: barcode }
+                });
+
+                // 3. Remove it from the saved copy and the screen now
+                const cache = await getSiteCache(cid);
+                if (cache) {
+                    cache.rows = cache.rows.filter(r => r.barcode_id !== barcode);
+                    await saveSiteCache(cid, cache);
                 }
-
                 siteDevices = siteDevices.filter(d => d.barcode_id !== barcode);
                 scannedBarcodesThisVisit.delete(barcode);
 
+                clearPendingPhotos(true);
                 hideStationForm();
                 renderDeviceLists();
                 renderLandingRecommendationsAndVisits();
-                setSyncStatus('synced');
             } catch (err) {
-                setSyncStatus('synced');
-                alert('Could not delete station: ' + err.message);
+                alert('Could not delete station: ' + (err.message || err));
             }
         }
 
         // ===================================================================
-        //  CANCEL VISIT (deletes only this session's data, keeps past visits)
+        //  CANCEL VISIT (deletes only this visit's records, keeps past visits)
         // ===================================================================
         function openCancelVisitModal() {
-            if (!requireOnline('Cancelling a visit')) return;
             openConfirm({
                 title: 'Cancel this visit?',
-                message: `Everything you recorded at ${selectedClient ? selectedClient.Name : 'this site'} since the last completed visit (service records, new stations, recommendations and photos) will be permanently deleted. Data from earlier visits is not affected.`,
+                message: `Everything you recorded at ${selectedClient ? selectedClient.Name : 'this site'} since the last completed visit (service records, new stations, recommendations and photos) will be permanently deleted. Data from earlier visits is not affected.` +
+                    (isOnline ? '' : " You're offline, so it's removed here now and from the server when you reconnect."),
                 confirmLabel: 'Yes, cancel & delete',
                 cancelLabel: 'No, keep working',
                 onConfirm: performCancelVisit
@@ -3745,42 +3754,50 @@
         }
 
         async function performCancelVisit() {
+            const client = selectedClient;
+            if (!client) return;
+            const cid = client.id;
+            const cutoffT = lastVisitCutoffRaw ? new Date(lastVisitCutoffRaw).getTime() : 0;
+            const inThisVisit = i => i.kind === 'insert_log' && String(i.clientId) === String(cid) &&
+                i.data.barcode_id !== 'SITE_VISIT_SUMMARY' && new Date(i.createdAt).getTime() > cutoffT;
+
             try {
-                setSyncStatus('uploading', 'Cancelling visit...');
-                if (!(await ensureSiteQueueSent())) { setSyncStatus('synced'); return; }
+                // 1. Records from this visit that never left the device: just remove them
+                for (const i of queueItems.filter(i => inThisVisit(i) && (i.status === 'pending' || i.status === 'failed'))) {
+                    await removeQueueItem(i);
+                }
+                await markSentCancelled(inThisVisit);
 
-                let selQ = _supabase.from('service_logs').select('payload')
-                    .eq('client_id', selectedClient.id).eq('technician_id', currentUser.id);
-                if (lastVisitCutoffRaw) selQ = selQ.gt('created_at', lastVisitCutoffRaw);
-                const { data: rows, error: selErr } = await selQ;
-                if (selErr) throw selErr;
+                // 2. Anything already uploaded is removed from the server (now if online, otherwise on reconnect)
+                await enqueue({
+                    kind: 'cancel_visit',
+                    clientId: cid,
+                    siteName: client.Name,
+                    label: 'Visit cancelled',
+                    data: { technicianId: currentUser.id, cancelledAt: new Date().toISOString() }
+                });
 
-                if ((rows || []).length > 0) {
-                    let delQ = _supabase.from('service_logs').delete()
-                        .eq('client_id', selectedClient.id).eq('technician_id', currentUser.id);
-                    if (lastVisitCutoffRaw) delQ = delQ.gt('created_at', lastVisitCutoffRaw);
-                    const { data: deleted, error: delErr } = await delQ.select('barcode_id');
-                    if (delErr) throw delErr;
-
-                    if ((deleted || []).length === 0) {
-                        throw new Error('Permission denied. Run the delete-permissions SQL script in Supabase (pestis_update_delete_permissions.sql).');
-                    }
-
-                    await removePhotos(rows.map(r => toStoragePath(r.payload && (r.payload.photo || r.payload.image))));
+                // 3. Take this visit's records out of the saved copy so they disappear straight away
+                const cache = await getSiteCache(cid);
+                if (cache) {
+                    const me = technicianLabel();
+                    cache.rows = cache.rows.filter(r => !(
+                        r.barcode_id !== 'SITE_VISIT_SUMMARY' &&
+                        new Date(r.created_at).getTime() > cutoffT &&
+                        (r.payload && r.payload.technician) === me));
+                    await saveSiteCache(cid, cache);
                 }
 
-                // Refresh the saved copy so the cancelled records disappear from it as well
-                const cancelledId = selectedClient.id;
-                syncSiteCache(cancelledId, 'full').catch(() => cacheDel('site_' + cancelledId));
+                clearPendingPhotos(true);
                 await stopFullscreenCameraScanner();
                 resetSiteState();
                 document.getElementById('siteSelectorSection').classList.remove('hidden');
                 renderSiteCards();
-                setSyncStatus('synced');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                if (!isOnline) alert("Visit cancelled on this device. Anything that had already uploaded will be removed from the server when you're back online - you can watch it in the upload queue.");
             } catch (err) {
-                setSyncStatus('synced');
-                alert('Could not cancel visit: ' + err.message);
+                alert('Could not cancel visit: ' + (err.message || err));
             }
         }
 
@@ -3849,6 +3866,149 @@
                 setSyncStatus('synced');
                 alert('Error closing visit: ' + (err.message || err));
             }
+        }
+
+        // ===================================================================
+        //  SETTINGS - preparations / chemicals and species lists
+        //  Stored in the app_options table, saved on the device for offline use,
+        //  and changed through the upload queue like everything else.
+        // ===================================================================
+        const NONE_PREP = 'None - Monitoring Only';
+        const NONE_SPECIES = 'None';
+        const DEFAULT_OPTIONS = {
+            prep: ['Brodifacoum Rodent Blocks', 'Alpha-Cypermethrin Spray', 'Cockroach Gel Bait'],
+            species: ['Norway Rat', 'Ship Rat', 'House Mouse', 'German Cockroach', 'American Cockroach', 'House Fly', 'Ants']
+        };
+        let appOptions = [];        // [{ id, kind: 'prep' | 'species', label, sort }]
+        let optionsLoadError = null;
+
+        function friendlyOptionsError(err) {
+            const msg = (err && err.message) || String(err);
+            if (/app_options|relation .* does not exist|schema cache/i.test(msg)) return msg + '. Run pestis_settings_update.sql in the Supabase SQL editor.';
+            return msg;
+        }
+
+        function defaultOptions() {
+            const out = [];
+            ['prep', 'species'].forEach(kind => DEFAULT_OPTIONS[kind].forEach((label, i) => out.push({ id: 'default-' + kind + '-' + i, kind, label, sort: i })));
+            return out;
+        }
+
+        function applyPendingOptionEdits() {
+            queueItems.filter(i => i.status !== 'sent').sort((a, b) => a.seq - b.seq).forEach(i => {
+                if (i.kind === 'add_option' && !appOptions.some(o => o.id === i.data.id)) appOptions.push(i.data);
+                if (i.kind === 'delete_option') appOptions = appOptions.filter(o => o.id !== i.data.id);
+            });
+        }
+
+        async function loadOptions() {
+            const cached = await cacheGetEntry('app_options');
+            appOptions = cached && Array.isArray(cached.data) ? cached.data : defaultOptions();
+            applyPendingOptionEdits();
+            populateOptionSelects();
+            renderSettingsLists();
+
+            if (!isOnline) return;
+            try {
+                const { data, error } = await withTimeout(
+                    _supabase.from('app_options').select('id, kind, label, sort').order('sort', { ascending: true }).order('label', { ascending: true }),
+                    10000, 'Loading settings');
+                if (error) throw error;
+                optionsLoadError = null;
+                appOptions = data || [];
+                await cacheSet('app_options', appOptions);
+                applyPendingOptionEdits();
+            } catch (err) {
+                optionsLoadError = isNetworkError(err) ? null : friendlyOptionsError(err);
+                console.warn('Settings lists could not be loaded:', err.message || err);
+            }
+            populateOptionSelects();
+            renderSettingsLists();
+        }
+
+        function optionLabels(kind) {
+            return appOptions.filter(o => o.kind === kind)
+                .sort((a, b) => (a.sort || 0) - (b.sort || 0) || String(a.label).localeCompare(String(b.label)))
+                .map(o => o.label);
+        }
+
+        // Fills the service form dropdowns, keeping whatever is currently selected
+        function populateOptionSelects() {
+            const fill = (id, noneLabel, kind) => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                const current = sel.value;
+                const labels = [noneLabel].concat(optionLabels(kind).filter(l => l !== noneLabel));
+                if (current && !labels.includes(current)) labels.push(current);
+                sel.innerHTML = labels.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+                sel.value = current && labels.includes(current) ? current : noneLabel;
+            };
+            fill('prepUsed', NONE_PREP, 'prep');
+            fill('speciesCaught', NONE_SPECIES, 'species');
+        }
+
+        function openSettingsModal() {
+            renderSettingsLists();
+            document.getElementById('settingsModal').classList.remove('hidden');
+            if (isOnline) loadOptions();
+        }
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function renderSettingsLists() {
+            const render = (kind, elId) => {
+                const el = document.getElementById(elId);
+                if (!el) return;
+                const items = appOptions.filter(o => o.kind === kind)
+                    .sort((a, b) => (a.sort || 0) - (b.sort || 0) || String(a.label).localeCompare(String(b.label)));
+                const warn = optionsLoadError ? `<div class="row-item p-3" style="color:#ef4444;">${esc(optionsLoadError)}</div>` : '';
+                const pending = id => queueItems.some(i => i.status !== 'sent' && i.kind === 'add_option' && i.data.id === id);
+                el.innerHTML = warn + (items.map(o => `
+                    <div class="row-item p-3 flex justify-between items-center gap-2">
+                        <div class="min-w-0 t-strong font-semibold break-words">${esc(o.label)}${pending(o.id) ? ' <span class="t-faint font-normal">(waiting to upload)</span>' : ''}</div>
+                        <button type="button" data-id="${esc(o.id)}" onclick="removeOption(this.dataset.id)" class="font-bold cursor-pointer shrink-0" style="color:#ef4444;">Remove</button>
+                    </div>`).join('') || '<div class="row-item p-3 t-faint italic">Nothing added yet.</div>');
+            };
+            render('prep', 'prepOptionsList');
+            render('species', 'speciesOptionsList');
+        }
+
+        async function addOption(kind) {
+            const input = document.getElementById(kind === 'prep' ? 'newPrepInput' : 'newSpeciesInput');
+            const label = input.value.trim();
+            if (!label) return;
+            const none = kind === 'prep' ? NONE_PREP : NONE_SPECIES;
+            if (label.toLowerCase() === none.toLowerCase() || appOptions.some(o => o.kind === kind && o.label.toLowerCase() === label.toLowerCase())) {
+                alert('"' + label + '" is already in the list.');
+                return;
+            }
+            const maxSort = Math.max(0, ...appOptions.filter(o => o.kind === kind).map(o => o.sort || 0));
+            const row = { id: uid(), kind: kind, label: label, sort: maxSort + 1 };
+            appOptions.push(row);
+            input.value = '';
+            await cacheSet('app_options', appOptions);
+            await enqueue({ kind: 'add_option', siteName: 'Settings', label: `Added ${kind === 'prep' ? 'preparation' : 'species'} "${label}"`, data: row });
+            populateOptionSelects();
+            renderSettingsLists();
+        }
+
+        async function removeOption(id) {
+            const o = appOptions.find(x => x.id === id);
+            if (!o) return;
+            if (!confirm(`Remove "${o.label}" from the list? Records that already use it are not changed.`)) return;
+            appOptions = appOptions.filter(x => x.id !== id);
+            await cacheSet('app_options', appOptions);
+
+            // If it was only added on this device and hasn't uploaded, just cancel that
+            const unsentAdd = queueItems.find(i => i.status !== 'sent' && i.status !== 'uploading' && i.kind === 'add_option' && i.data.id === id);
+            if (unsentAdd) await removeQueueItem(unsentAdd);
+            else if (!String(id).startsWith('default-')) {
+                await enqueue({ kind: 'delete_option', siteName: 'Settings', label: `Removed ${o.kind === 'prep' ? 'preparation' : 'species'} "${o.label}"`, data: { id: id } });
+            }
+            updateSyncBadge();
+            populateOptionSelects();
+            renderSettingsLists();
         }
 
         // ---------- START ----------
