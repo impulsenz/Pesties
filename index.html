@@ -30,7 +30,9 @@
         try { if (localStorage.getItem('pestis-theme') === 'light') document.documentElement.classList.remove('dark'); } catch (e) {}
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Html5Qrcode Scanner Library -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- jsPDF for Professional Client PDF Service Reports -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
@@ -106,8 +108,21 @@
         html.dark .icon-moon { display: none; }
 
         .chip { display: inline-flex; align-items: center; gap: .35rem; padding: .22rem .65rem; border-radius: .65rem; font-size: .7rem; font-weight: 700; border: 1px solid; white-space: nowrap; }
+        .chip-amber { color: #b45309; background: #fef3c7; border-color: #fcd34d; }
         .chip-green { color: #047857; background: #d1fae5; border-color: #6ee7b7; }
+        .chip-blue { color: #1d4ed8; background: #dbeafe; border-color: #93c5fd; }
+        .chip-red { color: #b91c1c; background: #fee2e2; border-color: #fca5a5; }
+        .chip-orange { color: #c2410c; background: #ffedd5; border-color: #fdba74; }
+        html.dark .chip-amber { color: #fbbf24; background: rgba(245, 158, 11, .12); border-color: rgba(245, 158, 11, .3); }
         html.dark .chip-green { color: #34d399; background: rgba(16, 185, 129, .12); border-color: rgba(16, 185, 129, .3); }
+        html.dark .chip-blue { color: #7db4ff; background: rgba(59, 130, 246, .14); border-color: rgba(59, 130, 246, .35); }
+        html.dark .chip-red { color: #f87171; background: rgba(239, 68, 68, .12); border-color: rgba(239, 68, 68, .3); }
+        html.dark .chip-orange { color: #fb923c; background: rgba(249, 115, 22, .14); border-color: rgba(249, 115, 22, .35); }
+
+        .row-item { background: var(--surface2); border: 1px solid var(--border); border-radius: .8rem; transition: border-color .15s, background .15s; }
+        .row-item.clickable { cursor: pointer; }
+        .row-item.clickable:hover { border-color: #f97316; background: var(--surface3); }
+        .link-btn { color: var(--accent-text); font-weight: 700; text-decoration: underline; cursor: pointer; font-size: .75rem; }
 
         .site-card { position: relative; display: block; width: 100%; aspect-ratio: 4 / 3; border-radius: 1rem; overflow: hidden; text-align: left; cursor: pointer; border: 1px solid rgba(255, 255, 255, .08); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; box-shadow: var(--shadow); }
         .site-card:hover, .site-card:focus-visible { transform: translateY(-4px) scale(1.03); box-shadow: 0 18px 40px -14px rgba(249, 115, 22, .6); border-color: #fb923c; outline: none; }
@@ -117,7 +132,8 @@
         .site-addr { color: rgba(255, 255, 255, .78); font-size: .72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .site-open { position: absolute; top: .7rem; left: .7rem; font-size: .65rem; font-weight: 800; color: #fff; background: #f97316; padding: .22rem .6rem; border-radius: .5rem; opacity: 0; transform: translateY(-4px); transition: all .2s ease; }
         .site-card:hover .site-open, .site-card:focus-visible .site-open { opacity: 1; transform: none; }
-        
+
+        .ph-hidden { display: none !important; }
         .scroll-thin { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
     </style>
 </head>
@@ -157,13 +173,19 @@
                     <svg class="icon-sun w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414m12.728 0l-1.414-1.414M7.05 7.05L5.636 5.636M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     <svg class="icon-moon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                 </button>
-                <button type="button" onclick="signOut()" class="btn btn-secondary !py-2 !px-3 text-xs">Sign Out</button>
+                <button type="button" onclick="openProfileModal()" class="flex items-center gap-2.5 rounded-xl pl-1.5 pr-3 py-1.5 cursor-pointer transition-all" style="background: var(--surface3); border: 1px solid var(--border);">
+                    <img id="headerAvatar" src="" alt="" class="w-8 h-8 rounded-lg object-cover hidden">
+                    <span id="headerAvatarFallback" class="w-8 h-8 rounded-lg bg-brand-500 text-white font-black text-xs flex items-center justify-center">?</span>
+                    <span id="headerName" class="text-xs font-bold t-strong hidden sm:block max-w-[9rem] truncate"></span>
+                </button>
             </div>
         </div>
     </header>
 
     <!-- ===================== MAIN ===================== -->
     <main id="appRoot" class="hidden flex-1 w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8 space-y-6">
+
+        <!-- 1. SITE CARDS -->
         <section id="siteSelectorSection" class="space-y-5">
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
@@ -178,10 +200,115 @@
                         </div>
                         <input type="text" id="siteSearchInput" oninput="renderSiteCards()" placeholder="Search sites..." class="field !pl-10">
                     </div>
+                    <button type="button" onclick="openAddClientModal()" class="btn btn-primary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                        Register New Site
+                    </button>
                 </div>
             </div>
+
             <div id="siteCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 lg:gap-5">
-                <span class="text-xs t-muted italic col-span-full">Loading sites from database...</span>
+                <span class="text-xs t-muted italic col-span-full">Loading sites...</span>
+            </div>
+        </section>
+
+        <!-- Loading Progress -->
+        <div id="syncProgressModal" class="hidden card p-8 space-y-4 w-full max-w-3xl mx-auto">
+            <div class="flex justify-between items-center">
+                <h3 class="text-sm font-bold t-accent uppercase tracking-widest">Synchronizing Site Assets & Data...</h3>
+                <span id="progressPercent" class="text-sm font-mono t-accent font-extrabold">0%</span>
+            </div>
+            <div class="w-full rounded-full h-3 overflow-hidden p-0.5" style="background: var(--surface2); border: 1px solid var(--border);">
+                <div id="progressBarFill" class="bg-gradient-to-r from-brand-600 to-brand-400 h-full rounded-full transition-all duration-200" style="width: 0%"></div>
+            </div>
+            <p id="progressStatusText" class="text-xs t-muted italic">Pre-caching offline device registers...</p>
+        </div>
+
+        <!-- 2. SITE LANDING DASHBOARD -->
+        <section id="siteLandingDashboard" class="space-y-6 hidden">
+            <div class="card p-5 sm:p-7">
+                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-5">
+                    <div class="min-w-0">
+                        <button type="button" onclick="backToSites()" class="link-btn !no-underline mb-2 inline-flex items-center gap-1">← All Sites</button>
+                        <div><span class="chip chip-orange">Active Site Dashboard</span></div>
+                        <h2 class="text-2xl sm:text-3xl font-black t-strong mt-2 break-words" id="siteLandingTitle">Customer Site Overview</h2>
+                        <p class="text-xs t-muted mt-1" id="siteLandingAddress">Address information</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <button type="button" onclick="proceedToWorkSpace()" class="btn btn-primary !px-6 !py-3">
+                            <span>Start Service</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                        <button type="button" onclick="openCompleteVisitModal()" class="btn btn-blue !px-6 !py-3">
+                            <span>Complete & Close Visit</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        </button>
+                        <button type="button" onclick="openCancelVisitModal()" class="btn btn-outline-danger !px-5 !py-3">Cancel Visit</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-12 gap-6">
+                <div class="lg:col-span-2 xl:col-span-3 grid gap-4 sm:grid-cols-3 xl:grid-cols-1 content-start">
+                    <div class="card p-5 sm:col-span-3 xl:col-span-1">
+                        <div class="grid grid-cols-3 gap-3 text-center">
+                            <div><div id="statStations" class="text-2xl font-black t-strong">0</div><div class="eyebrow t-faint mt-0.5">Stations</div></div>
+                            <div><div id="statServiced" class="text-2xl font-black" style="color:#10b981;">0</div><div class="eyebrow t-faint mt-0.5">Serviced</div></div>
+                            <div><div id="statIssues" class="text-2xl font-black t-accent">0</div><div class="eyebrow t-faint mt-0.5">Issues</div></div>
+                        </div>
+                    </div>
+                    <div class="card p-5 space-y-1.5 sm:col-span-1">
+                        <span class="eyebrow t-faint">Site Contact & Communication</span>
+                        <p class="text-sm font-bold t-strong break-words" id="siteLandingContact">Manager: Not Specified</p>
+                        <p class="text-xs t-accent font-mono break-all" id="siteLandingEmail">Email: Not Specified</p>
+                    </div>
+                    <div class="card p-5 space-y-1.5 sm:col-span-2 xl:col-span-1">
+                        <span class="eyebrow" style="color:#d97706;">Safety & Site Access Instructions</span>
+                        <p class="text-xs t-muted leading-relaxed" id="siteLandingNotes">No special access notes recorded.</p>
+                    </div>
+                </div>
+
+                <div class="card p-5 sm:p-6 space-y-4 xl:col-span-5">
+                    <div class="flex items-center justify-between border-b divider pb-3">
+                        <h3 class="eyebrow flex items-center gap-2" style="color:#d97706;">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            Active Open Recommendations
+                        </h3>
+                    </div>
+                    <div id="siteLandingRecsList" class="space-y-2.5 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1">
+                        <span class="t-faint italic">No active recommendations for this site.</span>
+                    </div>
+                </div>
+
+                <div class="card p-5 sm:p-6 space-y-4 xl:col-span-4">
+                    <div class="flex items-center justify-between border-b divider pb-3">
+                        <h3 class="eyebrow flex items-center gap-2" style="color:#2563eb;">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            Historical Visit Notes & PDF Reports
+                        </h3>
+                    </div>
+                    <div id="siteLandingVisitsList" class="space-y-2.5 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1">
+                        <span class="t-faint italic">No previous visit records found.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. ACTIVE SERVICE WORKSPACE -->
+        <section id="visitWorkspace" class="space-y-6 hidden">
+            <div class="card p-5 sm:p-7">
+                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-5">
+                    <div class="min-w-0">
+                        <span class="chip chip-orange">Service Mode</span>
+                        <h3 class="text-2xl font-black t-strong mt-2 break-words" id="activeWorkspaceTitle">Station Checklist</h3>
+                        <p class="text-xs t-muted mt-1">Scan device barcodes or select from the active inventory below.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="showSiteDashboard()" class="btn btn-secondary">← Back to Site Dashboard</button>
+                        <button type="button" onclick="openCompleteVisitModal()" class="btn btn-blue">Complete & Close Visit</button>
+                        <button type="button" onclick="openCancelVisitModal()" class="btn btn-outline-danger">Cancel Visit</button>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -200,6 +327,29 @@
         const db = window.supabaseClient;
 
         let sitesData = [];
+        let currentSite = null;
+
+        // Chunked signed URL map builder to fix 413 Payload Too Large errors
+        async function buildSignedUrlMap(paths) {
+            const chunkSize = 50;
+            const urlMap = {};
+            for (let i = 0; i < paths.length; i += chunkSize) {
+                const chunk = paths.slice(i, i + chunkSize);
+                try {
+                    const { data, error } = await db.storage.from('station-photos').createSignedUrls(chunk, 3600);
+                    if (!error && data) {
+                        data.forEach(item => {
+                            if (item.signedUrl) {
+                                urlMap[item.path] = item.signedUrl;
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error("Batch signed URL error chunk:", err);
+                }
+            }
+            return urlMap;
+        }
 
         async function initAuth() {
             const authLoading = document.getElementById('authLoading');
@@ -217,6 +367,26 @@
                     appHeader.classList.remove('hidden');
                     appRoot.classList.remove('hidden');
                     
+                    const user = session.user;
+                    const meta = user.user_metadata || {};
+                    const avatarUrl = meta.avatar_url || meta.picture;
+                    const fullName = meta.full_name || user.email;
+
+                    if (avatarUrl) {
+                        const img = document.getElementById('headerAvatar');
+                        if (img) {
+                            img.src = avatarUrl;
+                            img.classList.remove('hidden');
+                        }
+                        const fallback = document.getElementById('headerAvatarFallback');
+                        if (fallback) fallback.classList.add('hidden');
+                    } else {
+                        const fallback = document.getElementById('headerAvatarFallback');
+                        if (fallback) fallback.textContent = user.email ? user.email[0].toUpperCase() : '?';
+                    }
+                    const nameElem = document.getElementById('headerName');
+                    if (nameElem) nameElem.textContent = fullName;
+
                     await fetchSites();
                 } else {
                     authLoading.classList.add('hidden');
@@ -246,7 +416,8 @@
 
         function renderSiteCards() {
             const grid = document.getElementById('siteCardsGrid');
-            const query = (document.getElementById('siteSearchInput').value || '').toLowerCase();
+            const searchInput = document.getElementById('siteSearchInput');
+            const query = searchInput ? searchInput.value.toLowerCase() : '';
             
             const filtered = sitesData.filter(s => 
                 (s.name && s.name.toLowerCase().includes(query)) || 
@@ -269,7 +440,7 @@
                 const bg = gradients[idx % gradients.length];
                 const initials = (site.name || 'Site').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
                 return `
-                    <div class="site-card" style="background: ${bg};" onclick="alert('Opened site: ${site.name}')">
+                    <div class="site-card" style="background: ${bg};" onclick='selectSite(${JSON.stringify(site)})'>
                         <span class="site-initials">${initials}</span>
                         <div class="site-open">Open Site</div>
                         <div class="site-overlay">
@@ -281,6 +452,49 @@
             }).join('');
         }
 
+        function selectSite(site) {
+            currentSite = site;
+            document.getElementById('siteSelectorSection').classList.add('hidden');
+            document.getElementById('siteLandingDashboard').classList.remove('hidden');
+            
+            document.getElementById('siteLandingTitle').textContent = site.name || 'Customer Site Overview';
+            document.getElementById('siteLandingAddress').textContent = site.address || 'No address provided';
+            document.getElementById('siteLandingContact').textContent = 'Manager: ' + (site.contact_name || 'Not Specified');
+            document.getElementById('siteLandingEmail').textContent = 'Email: ' + (site.email || 'Not Specified');
+            document.getElementById('siteLandingNotes').textContent = site.access_notes || 'No special access notes recorded.';
+        }
+
+        function backToSites() {
+            currentSite = null;
+            document.getElementById('siteLandingDashboard').classList.add('hidden');
+            document.getElementById('visitWorkspace').classList.add('hidden');
+            document.getElementById('siteSelectorSection').classList.remove('hidden');
+        }
+
+        function proceedToWorkSpace() {
+            document.getElementById('siteLandingDashboard').classList.add('hidden');
+            document.getElementById('visitWorkspace').classList.remove('hidden');
+        }
+
+        function showSiteDashboard() {
+            document.getElementById('visitWorkspace').classList.add('hidden');
+            document.getElementById('siteLandingDashboard').classList.remove('hidden');
+        }
+
+        function openAddClientModal() {
+            alert('Register New Site dialog opened.');
+        }
+
+        function openCompleteVisitModal() {
+            alert('Complete & Close Visit dialog opened.');
+        }
+
+        function openCancelVisitModal() {
+            if (confirm('Are you sure you want to cancel this visit?')) {
+                backToSites();
+            }
+        }
+
         function escapeHtml(str) {
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
@@ -288,7 +502,9 @@
         async function signInWithGoogle() {
             const { error } = await db.auth.signInWithOAuth({
                 provider: 'google',
-                options: { redirectTo: window.location.origin + window.location.pathname }
+                options: { 
+                    redirectTo: 'https://impulsenz.github.io/Pesties/' 
+                }
             });
             if (error) {
                 const msg = document.getElementById('loginMessage');
