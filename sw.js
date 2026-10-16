@@ -1,11 +1,9 @@
 // Pestis offline app cache.
-// Keeps the app, its libraries and recently viewed photos available with no connection.
+// Keeps the app and its libraries available with no connection. Photos are NOT stored on the device.
 // Database calls are NOT cached here - the app's own upload queue handles data.
 
-const SHELL_CACHE = 'pestis-shell-v10';
-const RUNTIME_CACHE = 'pestis-runtime-v10';
-const PHOTO_CACHE = 'pestis-photos-v2';
-const MAX_PHOTOS = 600;
+const SHELL_CACHE = 'pestis-shell-v11';
+const RUNTIME_CACHE = 'pestis-runtime-v11';
 
 const SHELL = ['./', './index.html', './images/pesties-logo.png'];
 const CDN = [
@@ -29,7 +27,7 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
     event.waitUntil((async () => {
-        const keep = [SHELL_CACHE, RUNTIME_CACHE, PHOTO_CACHE];
+        const keep = [SHELL_CACHE, RUNTIME_CACHE]; // any photo cache from older versions is deleted
         for (const k of await caches.keys()) if (!keep.includes(k)) await caches.delete(k);
         await self.clients.claim();
     })());
@@ -68,21 +66,8 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Private photos (signed links): keep a copy so they can be viewed offline.
-    // Saved by file path (not the expiring link), so a photo seen once stays viewable offline
-    // even after its link has expired or been renewed.
-    if (url.hostname.endsWith('.supabase.co') && url.pathname.includes('/storage/v1/object/sign/')) {
-        const key = url.origin + url.pathname;
-        event.respondWith((async () => {
-            const cache = await caches.open(PHOTO_CACHE);
-            const hit = await cache.match(key);
-            if (hit) return hit;
-            const res = await fetch(new Request(req.url, { mode: 'cors', credentials: 'omit' }));
-            if (res.ok) { cache.put(key, res.clone()); trimCache(PHOTO_CACHE, MAX_PHOTOS); }
-            return res;
-        })());
-        return;
-    }
+    // Photos are never kept on the device: they load from the server only when opened
+    if (url.hostname.endsWith('.supabase.co') && url.pathname.includes('/storage/')) return;
 
     // Everything else from Supabase (database, auth) goes straight to the network
     if (url.hostname.endsWith('.supabase.co')) return;
