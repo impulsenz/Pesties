@@ -152,6 +152,17 @@
         .site-chips { position: absolute; right: .55rem; bottom: .6rem; z-index: 2; display: flex; flex-direction: column; align-items: flex-end; gap: .25rem; max-width: 55%; pointer-events: none; }
         .site-chips .site-due { margin-bottom: 0; align-self: auto; text-align: right; box-shadow: 0 4px 12px -4px rgba(0, 0, 0, .6); }
         .site-overlay.has-chips .site-name { padding-right: 45%; }
+        .site-progress { position: absolute; top: .55rem; left: .55rem; z-index: 2; font-size: .62rem; font-weight: 800; color: #fff; padding: .2rem .5rem; border-radius: .45rem; display: inline-flex; align-items: center; gap: .3rem; box-shadow: 0 4px 12px -4px rgba(0, 0, 0, .6); }
+        .site-progress .dot { width: .45rem; height: .45rem; border-radius: 999px; background: #fff; animation: pulse 1.6s ease-in-out infinite; }
+        @keyframes pulse { 50% { opacity: .35; } }
+        .tab-btn { font-size: .68rem; font-weight: 800; padding: .3rem .65rem; border-radius: .6rem; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); cursor: pointer; }
+        .tab-btn.active { background: #f97316; border-color: #f97316; color: #fff; }
+        #stationHistoryTabs .btn.active { border-color: #f97316; color: var(--accent-text); }
+        .viz-root { --viz-surface: #ffffff; --viz-grid: #e5e7eb; --viz-axis: #6b7280; --viz-text: #0b1530; --viz-muted: #52514e;
+                    --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-other: #eda100; }
+        html.dark .viz-root { --viz-surface: #0f1c3d; --viz-grid: #1d2d58; --viz-axis: #9db0d1; --viz-text: #f1f5f9; --viz-muted: #c3c2b7;
+                    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-other: #c98500; }
+        .viz-tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border); border-radius: .6rem; padding: .45rem .6rem; font-size: .68rem; color: var(--text); box-shadow: var(--shadow); white-space: nowrap; z-index: 5; }
         .site-grid.size-0 .site-due { font-size: .5rem; padding: .1rem .35rem; }
         .site-grid.size-0 .site-initials { font-size: 2.6rem; }
         .site-grid.size-0 .site-overlay { padding: 1.6rem .55rem .5rem; }
@@ -222,14 +233,14 @@
             <!-- Left: Logo -->
             <div class="flex items-center gap-2 sm:gap-3">
                 <button type="button" onclick="goHome()" class="logo-tile cursor-pointer" title="Back to all sites"><img src="images/pesties-logo.png" alt="Pesties - back to all sites" class="h-12 sm:h-14 w-auto rounded-lg"></button>
-                <button type="button" id="notifBtn" onclick="openNotifModal()" class="icon-btn relative" title="Notifications">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                    <span id="notifCount" class="hidden absolute -top-1.5 -right-1.5 min-w-[1.2rem] h-[1.2rem] px-1 rounded-full text-[10px] font-black text-white flex items-center justify-center" style="background:#dc2626;">0</span>
-                </button>
             </div>
 
             <!-- Right: sync status (opens upload queue), theme toggle, profile -->
             <div class="flex items-center gap-2 sm:gap-3">
+                <button type="button" id="notifBtn" onclick="openNotifModal()" class="icon-btn relative" title="Notifications">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    <span id="notifCount" class="hidden absolute -top-1.5 -right-1.5 min-w-[1.2rem] h-[1.2rem] px-1 rounded-full text-[10px] font-black text-white flex items-center justify-center" style="background:#dc2626;">0</span>
+                </button>
                 <button type="button" id="syncStatusBadge" onclick="openQueueModal()" class="chip chip-green sync-btn transition-all duration-300" title="View upload queue">
                     <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span id="syncText" class="hidden sm:inline">Online & Synced</span>
@@ -276,7 +287,8 @@
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3 md:items-center">
                     <select id="siteFilterSelect" onchange="setSiteFilter(this.value)" class="field sm:!w-56 cursor-pointer" title="Show sites"></select>
-                    <select id="dueRangeSelect" onchange="setDueRange(this.value)" class="field sm:!w-48 cursor-pointer hidden" title="Services due within">
+                    <select id="dueRangeSelect" onchange="setDueRange(this.value)" class="field sm:!w-52 cursor-pointer" title="Services due within">
+                        <option value="any">Any due date</option>
                         <option value="overdue">Overdue only</option>
                         <option value="7">Due in the next week</option>
                         <option value="14">Due in the next 2 weeks</option>
@@ -353,6 +365,7 @@
                             <div><span class="chip chip-orange">Active Site Dashboard</span></div>
                             <h2 class="text-2xl sm:text-3xl font-black t-strong mt-2 break-words" id="siteLandingTitle">Customer Site Overview</h2>
                             <p class="text-xs t-muted mt-1" id="siteLandingAddress">Address information</p>
+                            <div id="visitStatusLine" class="hidden mt-2"></div>
                             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] t-faint">
                                 <span class="site-sync-text"></span>
                                 <button type="button" onclick="backgroundSyncSite('manual')" class="site-sync-btn link-btn !text-[11px] disabled:opacity-50">Sync Site</button>
@@ -360,8 +373,8 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap gap-3">
-                        <button type="button" onclick="proceedToWorkSpace()" class="btn btn-primary !px-6 !py-3">
-                            <span>Start Service</span>
+                        <button type="button" id="startServiceBtn" onclick="proceedToWorkSpace()" class="btn btn-primary !px-6 !py-3">
+                            <span id="startServiceLabel">Start Service</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
                         </button>
                         <button type="button" onclick="openEditSiteModal()" class="btn btn-secondary !px-5 !py-3">Edit Site</button>
@@ -420,9 +433,9 @@
                     <div class="flex items-center justify-between border-b divider pb-3">
                         <h3 class="eyebrow flex items-center gap-2" style="color:#d97706;">
                             <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                            Active Open Recommendations
+                            Recommendations
                         </h3>
-                        <button type="button" id="toggleCompletedRecsBtn" onclick="toggleCompletedRecs()" class="link-btn !no-underline !text-[11px]"></button>
+                        <div id="recFilterTabs" class="flex flex-wrap gap-1.5"></div>
                     </div>
                     <div id="siteLandingRecsList" class="space-y-2.5 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1">
                         <span class="t-faint italic">No active recommendations for this site.</span>
@@ -616,6 +629,19 @@
                 </div>
 
                 <!-- Lazy-Loaded Historical Recommendations -->
+                <div id="stationHistorySection" class="hidden inset p-4 space-y-3">
+                    <div class="flex flex-wrap justify-between items-center gap-2">
+                        <h5 class="eyebrow" style="color:#7c3aed;">Station History</h5>
+                        <div class="flex gap-1.5" id="stationHistoryTabs">
+                            <button type="button" data-tab="chart" onclick="setStationHistoryTab('chart')" class="btn btn-secondary !px-3 !py-1.5">Activity chart</button>
+                            <button type="button" data-tab="log" onclick="setStationHistoryTab('log')" class="btn btn-secondary !px-3 !py-1.5">Service log</button>
+                        </div>
+                    </div>
+                    <div id="stationPrepSummary" class="flex flex-wrap gap-1.5 text-[11px]"></div>
+                    <div id="stationChart" class="viz-root"></div>
+                    <div id="stationLog" class="hidden max-h-72 overflow-y-auto scroll-thin"></div>
+                </div>
+
                 <div id="pastRecommendationsSection" class="hidden inset p-4 space-y-3">
                     <div class="flex justify-between items-center">
                         <h5 class="eyebrow" style="color:#2563eb;">Past Recommendations & Issue History</h5>
@@ -942,7 +968,8 @@
                     <div>
                         <label class="lbl">Status</label>
                         <select id="recModalStatus" class="field cursor-pointer">
-                            <option value="pending">Pending - still being worked on</option>
+                            <option value="open">Open - not started</option>
+                            <option value="pending">Pending - being worked on</option>
                             <option value="complete">Complete - issue resolved</option>
                         </select>
                     </div>
@@ -975,7 +1002,7 @@
             <div class="flex justify-between items-start gap-3">
                 <div>
                     <h3 class="font-black text-lg t-accent">Notifications</h3>
-                    <p class="text-xs t-muted mt-1">Missed and upcoming services, and contracts to renegotiate.</p>
+                    <p class="text-xs t-muted mt-1">These stay here until the job is done - they can't be dismissed.</p>
                 </div>
                 <button type="button" onclick="closeNotifModal()" class="t-faint hover:opacity-70 text-xs font-semibold cursor-pointer shrink-0">✕ Close</button>
             </div>
@@ -1058,11 +1085,11 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.17-r9';
+        const APP_VERSION = '2026.10.17-r10';
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "syncProgressModal", "progressTitle", "progressPercent", "progressBarFill", "progressStatusText", "progressStats", "progressStatData", "progressStatSpeed", "progressStatItems", "progressStatItemsLabel", "progressSteps", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "statStations", "statServiced", "statIssues", "siteServicesList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "toggleCompletedRecsBtn", "siteLandingRecsList", "siteLandingVisitsList", "visitWorkspace", "activeWorkspaceTitle", "stationSearchInput", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTitle", "scannedBarcodeBadge", "stationSheetBody", "newStationFields", "newLocName", "newDeviceType", "activityLevel", "prepUsed", "speciesCaught", "qtyCount", "serviceNotes", "recommendationNote", "visitEditNote", "issuePhotoCamera", "issuePhotoGallery", "photoPreviewGrid", "pastRecommendationsSection", "loadPastHistoryBtn", "pastRecommendationsList", "deleteStationBtn", "saveServiceBtn", "settingsModal", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "flashToggleBtn", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalStation", "recModalTitle", "recModalStatusChip", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoCamera", "recPhotoGallery", "recPhotoPreview", "recModalSaveBtn", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "syncToast", "syncToastIcon", "syncToastText", "syncToastBar", "syncToastPct", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "syncProgressModal", "progressTitle", "progressPercent", "progressBarFill", "progressStatusText", "progressStats", "progressStatData", "progressStatSpeed", "progressStatItems", "progressStatItemsLabel", "progressSteps", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "statStations", "statServiced", "statIssues", "siteServicesList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "siteLandingRecsList", "siteLandingVisitsList", "visitWorkspace", "activeWorkspaceTitle", "stationSearchInput", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTitle", "scannedBarcodeBadge", "stationSheetBody", "newStationFields", "newLocName", "newDeviceType", "activityLevel", "prepUsed", "speciesCaught", "qtyCount", "serviceNotes", "recommendationNote", "visitEditNote", "issuePhotoCamera", "issuePhotoGallery", "photoPreviewGrid", "stationHistorySection", "stationPrepSummary", "stationChart", "stationLog", "pastRecommendationsSection", "loadPastHistoryBtn", "pastRecommendationsList", "deleteStationBtn", "saveServiceBtn", "settingsModal", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "flashToggleBtn", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalStation", "recModalTitle", "recModalStatusChip", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoCamera", "recPhotoGallery", "recPhotoPreview", "recModalSaveBtn", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "syncToast", "syncToastIcon", "syncToastText", "syncToastBar", "syncToastPct", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -1198,7 +1225,8 @@
         const COLUMN_FIX_SCRIPT = {
             image_path: 'pestis_offline_sites_update.sql', services: 'pestis_offline_sites_update.sql',
             contract_start: 'pestis_contracts_team_update.sql', contract_end: 'pestis_contracts_team_update.sql',
-            contract_notes: 'pestis_contracts_team_update.sql', assigned_to: 'pestis_contracts_team_update.sql'
+            contract_notes: 'pestis_contracts_team_update.sql', assigned_to: 'pestis_contracts_team_update.sql',
+            visit_started_at: 'pestis_visit_status.sql', visit_started_by: 'pestis_visit_status.sql'
         };
         function friendlyError(err) {
             const msg = (err && err.message) || String(err);
@@ -1915,7 +1943,10 @@
 
         const PARK_AFTER_ATTEMPTS = 3;               // after 3 failed tries an item is set aside
         const PARKED_RETRY_MS = 5 * 60 * 1000;       // set-aside items are retried every 5 minutes
-        function laneOf(item) { return item.clientId != null ? 'site:' + item.clientId : 'settings'; }
+        function laneOf(item) {
+            if (item.lane) return item.lane + ':' + (item.clientId != null ? item.clientId : '');
+            return item.clientId != null ? 'site:' + item.clientId : 'settings';
+        }
 
         async function runFlush() {
             const pending = () => queueItems.filter(i => i.status !== 'sent').sort((a, b) => a.seq - b.seq);
@@ -2197,7 +2228,7 @@
             }, photos);
         }
 
-        async function queueClientUpdate(client, fields, label, removePaths) {
+        async function queueClientUpdate(client, fields, label, removePaths, lane) {
             Object.assign(client, fields);
             if ('image_path' in fields && !fields.image_path) localCovers.delete(String(client.id));
             await cacheSet('clients', clientsData);
@@ -2206,8 +2237,52 @@
                 clientId: client.id,
                 siteName: client.Name,
                 label: label,
+                lane: lane || null,
                 data: { fields: fields, removePaths: removePaths || null }
             });
+        }
+
+        // ---------- Visits in progress ----------
+        // Stored on the site record so the whole team sees it. Updates use their own upload lane,
+        // so they can never hold up service records if the database columns haven't been added yet.
+        const VISIT_STALE_HOURS = 24;
+        function visitInfo(c) {
+            if (!c || !c.visit_started_at) return null;
+            const t = Date.parse(c.visit_started_at);
+            if (isNaN(t)) return null;
+            const hours = (Date.now() - t) / 3600000;
+            return { at: c.visit_started_at, by: c.visit_started_by || null, hours: hours, stale: hours >= VISIT_STALE_HOURS };
+        }
+        async function markVisitStarted(c) {
+            if (!c || c.visit_started_at) return;
+            await queueClientUpdate(c, { visit_started_at: new Date().toISOString(), visit_started_by: currentUser ? currentUser.id : null }, 'Visit started', null, 'visit');
+            renderSiteCards();
+            renderNotifications();
+        }
+        async function markVisitClosed(c, label) {
+            if (!c || (!c.visit_started_at && !c.visit_started_by)) return;
+            await queueClientUpdate(c, { visit_started_at: null, visit_started_by: null }, label || 'Visit closed', null, 'visit');
+        }
+        function visitAgeText(v) {
+            const h = Math.floor(v.hours);
+            if (h < 1) return 'under an hour';
+            if (h < 48) return h + ' hour' + (h === 1 ? '' : 's');
+            return Math.floor(h / 24) + ' days';
+        }
+        function updateStartServiceButton() {
+            const c = selectedClient;
+            if (!c) return;
+            const v = visitInfo(c);
+            const inProgress = !!v || scannedBarcodesThisVisit.size > 0;
+            document.getElementById('startServiceLabel').textContent = inProgress ? 'Continue Service' : 'Start Service';
+            const line = document.getElementById('visitStatusLine');
+            if (!inProgress) { line.classList.add('hidden'); line.innerHTML = ''; return; }
+            const when = v ? fmtDateTimeLong(v.at) : null;
+            const who = v && v.by ? teamName(v.by) : '';
+            line.className = 'mt-2';
+            line.innerHTML = v && v.stale
+                ? `<span class="chip chip-red">⚠ Visit open for ${esc(visitAgeText(v))}</span> <span class="text-[11px] t-muted">Started ${esc(when.date)} ${esc(when.time)}${who ? ' by ' + esc(who) : ''} - complete or cancel it.</span>`
+                : `<span class="chip chip-blue">● Visit in progress</span> <span class="text-[11px] t-muted">${when ? `Started ${esc(when.date)} ${esc(when.time)}${who ? ' by ' + esc(who) : ''}` : 'Records already saved this visit'}</span>`;
         }
 
         async function queueClientImage(client, blob) {
@@ -2783,7 +2858,7 @@
                 ['mine', 'My sites'],
                 ['all', 'All sites'],
                 ['unassigned', 'Unassigned sites'],
-                ['due', 'Sites due soon'],
+                ['inprogress', 'Visits in progress'],
                 ['renewals', `Contracts ending soon${renewals ? ' (' + renewals + ')' : ''}`]
             ].concat(teamMembers.filter(t => !currentUser || t.id !== currentUser.id).map(t => ['tech:' + t.id, t.name + "'s sites"]));
             sel.innerHTML = opts.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('');
@@ -2791,19 +2866,19 @@
             sel.value = siteFilter;
             const range = document.getElementById('dueRangeSelect');
             range.value = dueRange;
-            range.classList.toggle('hidden', siteFilter !== 'due');
+
         }
 
         function setSiteFilter(v) {
             siteFilter = v;
             saveJSON(SITE_FILTER_KEY, v);
-            document.getElementById('dueRangeSelect').classList.toggle('hidden', v !== 'due');
+
             renderSiteCards();
         }
 
         // "Sites due soon": how far ahead to look
-        const DUE_RANGE_KEY = 'pestis-due-range';
-        let dueRange = loadJSON(DUE_RANGE_KEY, '7');
+        const DUE_RANGE_KEY = 'pestis-due-range-v2';
+        let dueRange = loadJSON(DUE_RANGE_KEY, 'any');
         function setDueRange(v) { dueRange = v; saveJSON(DUE_RANGE_KEY, v); renderSiteCards(); }
 
         // Soonest due (or most overdue) service at a site, in days from today
@@ -2817,6 +2892,7 @@
             return best;
         }
         function siteDueInRange(c) {
+            if (dueRange === 'any') return true;
             const b = soonestDue(c);
             if (!b) return false;
             if (dueRange === 'overdue') return b.days < 0;
@@ -2828,7 +2904,7 @@
                 case siteFilter === 'mine': return !!currentUser && c.assigned_to === currentUser.id;
                 case siteFilter === 'unassigned': return !c.assigned_to;
                 case siteFilter === 'renewals': return renewalDue(c);
-                case siteFilter === 'due': return siteDueInRange(c);
+                case siteFilter === 'inprogress': return !!visitInfo(c);
                 case String(siteFilter).startsWith('tech:'): return c.assigned_to === String(siteFilter).slice(5);
                 default: return true;
             }
@@ -2924,7 +3000,13 @@
             return clientsData.filter(c => !c.assigned_to || c.assigned_to === currentUser.id);
         }
         function buildNotifications() {
-            const missed = [], dueSoon = [], contracts = [];
+            const missed = [], dueSoon = [], contracts = [], longVisits = [];
+            const mine = c => !currentUser || !c.assigned_to || c.assigned_to === currentUser.id;
+            clientsData.forEach(c => {
+                const v = visitInfo(c);
+                // a visit left open: for whoever started it, and for the site's technician
+                if (v && v.stale && (notifScope === 'all' || mine(c) || (currentUser && v.by === currentUser.id))) longVisits.push({ c, v });
+            });
             notifSites().forEach(c => {
                 getServices(c).forEach(sv => {
                     const d = dueInfo(sv);
@@ -2938,14 +3020,15 @@
             missed.sort((a, b) => a.days - b.days);
             dueSoon.sort((a, b) => a.days - b.days);
             contracts.sort((a, b) => a.ci.days - b.ci.days);
-            return { missed, dueSoon, contracts, total: missed.length + dueSoon.length + contracts.length };
+            longVisits.sort((a, b) => b.v.hours - a.v.hours);
+            return { missed, dueSoon, contracts, longVisits, total: missed.length + dueSoon.length + contracts.length + longVisits.length };
         }
         function renderNotifications() {
             const n = buildNotifications();
             const badge = document.getElementById('notifCount');
             badge.textContent = n.total > 99 ? '99+' : n.total;
             badge.classList.toggle('hidden', n.total === 0);
-            badge.style.background = (n.missed.length || n.contracts.some(x => x.ci.days < 0)) ? '#dc2626' : '#ea580c';
+            badge.style.background = (n.missed.length || n.longVisits.length || n.contracts.some(x => x.ci.days < 0)) ? '#dc2626' : '#ea580c';
             document.getElementById('notifBtn').title = n.total ? `${n.total} notification${n.total === 1 ? '' : 's'}` : 'No notifications';
 
             const list = document.getElementById('notifList');
@@ -2959,6 +3042,7 @@
             const section = (title, color, items) => items.length ? `
                 <div class="space-y-2"><div class="eyebrow" style="color:${color};">${title} (${items.length})</div>${items.join('')}</div>` : '';
             const html = [
+                section('Visits open more than 24 hours', '#dc2626', n.longVisits.map(x => row(x.c, `Started ${fmtDateTimeLong(x.v.at).date} ${fmtDateTimeLong(x.v.at).time}${x.v.by ? ' by ' + teamName(x.v.by) : ''} - complete or cancel it`, 'chip-red', `Open ${visitAgeText(x.v)}`))),
                 section('Missed services', '#dc2626', n.missed.map(x => row(x.c, `${x.sv.type} · was due ${fmtDay(x.sv.nextDue)}`, 'chip-red', `${-x.days}d overdue`))),
                 section(`Due in the next ${NOTIF_DUE_DAYS} days`, '#ea580c', n.dueSoon.map(x => row(x.c, `${x.sv.type} · due ${fmtDay(x.sv.nextDue)}`, 'chip-amber', x.days === 0 ? 'Today' : `In ${x.days}d`))),
                 section('Contracts to renegotiate', '#7c3aed', n.contracts.map(x => row(x.c, x.ci.text, x.ci.days < 0 ? 'chip-red' : 'chip-purple', x.ci.days < 0 ? 'Expired' : `${x.ci.days}d left`)))
@@ -2977,7 +3061,7 @@
             renderNotifications();
             applyCardSize();
             const nameCls = (CARD_SIZES[cardSize] || CARD_SIZES[1]).name;
-            const list = sortSites(clientsData.filter(c => siteMatchesFilter(c) && (
+            const list = sortSites(clientsData.filter(c => siteMatchesFilter(c) && siteDueInRange(c) && (
                 !q || (c.Name || '').toLowerCase().includes(q) || (c.Address || '').toLowerCase().includes(q) || (c.Contact || '').toLowerCase().includes(q)
             )));
 
@@ -2988,7 +3072,7 @@
                 const cover = coverUrl(c);
                 const due = dueCountForClient(c);
                 let dueChip = '';
-                if (siteFilter === 'due') {
+                if (dueRange !== 'any') {
                     const b2 = soonestDue(c);
                     if (b2) dueChip = `<span class="site-due" style="background:${b2.days < 0 ? '#dc2626' : '#ea580c'};">${b2.days < 0 ? 'Overdue ' + (-b2.days) + 'd' : b2.days === 0 ? 'Due today' : 'Due in ' + b2.days + 'd'}</span>`;
                 } else if (due.overdue) dueChip = `<span class="site-due" style="background:#dc2626;">${due.overdue} overdue</span>`;
@@ -2997,11 +3081,16 @@
                 if (ci && ci.days <= RENEWAL_WARN_DAYS) dueChip += `<span class="site-due" style="background:${ci.days < 0 ? '#991b1b' : '#7c3aed'};">${esc(ci.short)}</span>`;
                 const tech = c.assigned_to ? teamName(c.assigned_to) : '';
                 const hover = [name, c.Address, tech ? 'Technician: ' + tech : ''].filter(Boolean).join(' - ');
+                const vi = visitInfo(c);
+                const progressBadge = vi
+                    ? `<span class="site-progress" style="background:${vi.stale ? '#dc2626' : '#2563eb'};">${vi.stale ? '⚠ Open ' + esc(visitAgeText(vi)) : '<span class="dot"></span>In progress'}</span>`
+                    : '';
                 return `
                     <button type="button" class="site-card" data-id="${esc(c.id)}" onclick="startSiteVisit(this.dataset.id)" title="${esc(hover)}" style="background:${grad}">
                         ${cover
                             ? `<img src="${esc(cover)}" alt="" loading="lazy" class="site-cover" onerror="this.remove()">`
                             : `<span class="site-initials">${esc(initials)}</span>`}
+                        ${progressBadge}
                         ${dueChip ? `<span class="site-chips">${dueChip}</span>` : ''}
                         <span class="site-overlay${dueChip ? ' has-chips' : ''}">
                             <span class="site-name ${nameCls}">${esc(name)}</span>
@@ -3017,8 +3106,8 @@
 
             if (list.length === 0 && q) {
                 html = '<span class="text-xs t-muted italic col-span-full">No sites match your search.</span>' + html;
-            } else if (list.length === 0 && siteFilter !== 'all' && clientsData.length) {
-                html = '<span class="text-xs t-muted italic col-span-full">No sites in this view. Choose "All sites" above to see every site.</span>' + html;
+            } else if (list.length === 0 && (siteFilter !== 'all' || dueRange !== 'any') && clientsData.length) {
+                html = '<span class="text-xs t-muted italic col-span-full">No sites in this view. Choose "All sites" and "Any due date" above to see every site.</span>' + html;
             }
             grid.innerHTML = html;
         }
@@ -3808,8 +3897,23 @@
                     lastPayload: payload,
                     visitPayload: null,
                     visitRef: null,
-                    visitRec: null
+                    visitRec: null,
+                    history: []
                 };
+
+                // Every service of this station, for the history log and activity chart
+                if (payload.activityLevel || payload.prepUsed || payload.speciesCaught) {
+                    existing.history.push({
+                        at: recTime(row),
+                        activity: payload.activityLevel || 'None',
+                        species: payload.speciesCaught || 'None',
+                        prep: payload.prepUsed || '',
+                        qty: payload.quantity,
+                        notes: payload.notes || '',
+                        technician: payload.technician || '',
+                        thisVisit: inThisVisit
+                    });
+                }
 
                 existing.locationName = payload.locationName || existing.locationName;
                 existing.deviceType = payload.deviceType || existing.deviceType;
@@ -3837,7 +3941,7 @@
                         missingPaths: missing,
                         date: payload.servicedAt || row.created_at,
                         technician: payload.technician || '',
-                        status: 'new',
+                        status: 'open',
                         updates: []
                     };
                     existing.recommendationsHistory.push(rec);
@@ -3856,12 +3960,22 @@
                 const ups = (recUpdates.get(rec.id) || []).slice().sort((x, y) => recTime(x) - recTime(y));
                 ups.forEach(u => {
                     const p = u.payload || {};
-                    rec.status = p.status === 'complete' ? 'complete' : 'pending'; // any change makes it pending unless closed off
+                    const before = rec.status;
+                    // The status chosen in the update wins (it can be re-opened); older updates without one count as pending
+                    const st = p.status === 'new' ? 'open' : p.status;
+                    rec.status = ['open', 'pending', 'complete'].includes(st) ? st : 'pending';
                     const ph = resolvePhotos(u._slots || []);
                     rec.photos = rec.photos.concat(ph.photos);
                     rec.missingPaths = rec.missingPaths.concat(ph.missing);
-                    rec.photoCount += (u._slots || []).length;
-                    rec.updates.push({ note: p.note || '', status: rec.status, by: p.technician || '', at: p.servicedAt || u.created_at, photoCount: (u._slots || []).length });
+                    const nPhotos = (u._slots || []).length;
+                    rec.photoCount += nPhotos;
+                    // What changed in this update, for the log
+                    const changes = [];
+                    if (before !== rec.status) changes.push(`Status changed from ${recStatusLabel(before)} to ${recStatusLabel(rec.status)}`);
+                    if (p.note) changes.push('Comment added');
+                    if (nPhotos) changes.push(`${nPhotos} photo${nPhotos === 1 ? '' : 's'} added`);
+                    if (!changes.length) changes.push('Updated');
+                    rec.updates.push({ note: p.note || '', status: rec.status, from: before, changes: changes, by: p.technician || '', at: p.servicedAt || u.created_at, photoCount: nPhotos });
                 });
                 const stillMissing = rec.missingPaths.filter(m => !awaiting.has(m));
                 if (stillMissing.length && !rec.photoError) rec.photoError = photoErrorText(stillMissing[0]);
@@ -4073,6 +4187,7 @@
             const cn = document.getElementById('siteContractNotes');
             cn.textContent = c.contract_notes || '';
             cn.classList.toggle('hidden', !c.contract_notes);
+            updateStartServiceButton();
             document.getElementById('siteAssignedTech').textContent = c.assigned_to ? teamName(c.assigned_to) + (currentUser && c.assigned_to === currentUser.id ? ' (me)' : '') : 'Unassigned';
 
             const cover = coverUrl(c);
@@ -4112,11 +4227,13 @@
 
         // ---------- Recommendation status helpers ----------
         const REC_STATUS = {
-            new: { label: 'New', cls: 'chip-blue' },
+            open: { label: 'Open', cls: 'chip-blue' },
             pending: { label: 'Pending', cls: 'chip-amber' },
             complete: { label: 'Complete', cls: 'chip-green' }
         };
-        function recStatusChip(st) { const s2 = REC_STATUS[st] || REC_STATUS.new; return `<span class="chip ${s2.cls} shrink-0">${s2.label}</span>`; }
+        REC_STATUS.new = REC_STATUS.open;
+        function recStatusLabel(st) { return (REC_STATUS[st] || REC_STATUS.open).label; }
+        function recStatusChip(st) { const s2 = REC_STATUS[st] || REC_STATUS.open; return `<span class="chip ${s2.cls} shrink-0">${s2.label}</span>`; }
         function allSiteRecs() {
             const out = [];
             siteDevices.forEach(d => d.recommendationsHistory.forEach(r => { r.station = d.locationName; out.push(r); }));
@@ -4135,8 +4252,8 @@
             document.getElementById('statIssues').textContent = issues;
         }
 
-        let showCompletedRecs = false;
-        function toggleCompletedRecs() { showCompletedRecs = !showCompletedRecs; renderLandingRecommendationsAndVisits(); }
+        let recFilter = 'open';
+        function setRecFilter(v) { recFilter = v; renderLandingRecommendationsAndVisits(); }
 
         function fmtDateTimeLong(iso) {
             const d = new Date(iso);
@@ -4177,14 +4294,16 @@
             const visitsContainer = document.getElementById('siteLandingVisitsList');
 
             const allRecs = allSiteRecs().sort((a, b) => new Date(b.lastChange || b.date) - new Date(a.lastChange || a.date));
-            const completed = allRecs.filter(r => r.status === 'complete');
-            const shown = showCompletedRecs ? allRecs : allRecs.filter(r => r.status !== 'complete');
-            const toggle = document.getElementById('toggleCompletedRecsBtn');
-            toggle.textContent = completed.length ? (showCompletedRecs ? 'Hide completed' : `Show completed (${completed.length})`) : '';
-
+            const counts = { open: 0, pending: 0, complete: 0 };
+            allRecs.forEach(r => { counts[r.status === 'new' ? 'open' : r.status] = (counts[r.status === 'new' ? 'open' : r.status] || 0) + 1; });
+            const tabs = [['open', 'Open'], ['pending', 'Pending'], ['complete', 'Complete'], ['all', 'All']];
+            document.getElementById('recFilterTabs').innerHTML = tabs.map(([k, l]) =>
+                `<button type="button" onclick="setRecFilter('${k}')" class="tab-btn ${recFilter === k ? 'active' : ''}">${l} ${k === 'all' ? allRecs.length : counts[k]}</button>`).join('');
+            const shown = recFilter === 'all' ? allRecs : allRecs.filter(r => (r.status === 'new' ? 'open' : r.status) === recFilter);
+            const emptyText = { open: 'No open recommendations.', pending: 'Nothing pending.', complete: 'No completed recommendations yet.', all: 'No recommendations on record for this site.' };
             recsContainer.innerHTML = shown.length
                 ? shown.map(r => recRowHtml(r)).join('')
-                : `<span class="t-faint italic">${completed.length ? 'All recommendations are complete.' : 'No active recommendations on record for this site.'}</span>`;
+                : `<span class="t-faint italic">${emptyText[recFilter]}</span>`;
 
             if (sitePastVisits.length === 0) {
                 visitsContainer.innerHTML = '<span class="t-faint italic">No past visit history recorded yet.</span>';
@@ -4207,6 +4326,7 @@
 
         // ---------- Recommendation detail: notes, extra photos, status ----------
         let openRecId = null;
+        let recModalStartStatus = null;
         let recPendingPhotos = [];
 
         ['recPhotoCamera', 'recPhotoGallery'].forEach(id => {
@@ -4235,7 +4355,7 @@
             renderRecPendingPhotos();
             document.getElementById('recModalStation').textContent = rec.station + ' · ' + rec.barcode;
             document.getElementById('recModalTitle').textContent = rec.recommendation;
-            document.getElementById('recModalStatusChip').outerHTML = `<span id="recModalStatusChip" class="chip ${(REC_STATUS[rec.status] || REC_STATUS.new).cls}">${(REC_STATUS[rec.status] || REC_STATUS.new).label}</span>`;
+            document.getElementById('recModalStatusChip').outerHTML = `<span id="recModalStatusChip" class="chip ${(REC_STATUS[rec.status] || REC_STATUS.open).cls}">${(REC_STATUS[rec.status] || REC_STATUS.open).label}</span>`;
             const dt = fmtDateTimeLong(rec.date);
             document.getElementById('recModalMeta').textContent = `Logged ${dt.date} ${dt.time}${rec.technician ? ' by ' + rec.technician : ''}`;
 
@@ -4251,12 +4371,14 @@
                 .concat(rec.updates.map(u => {
                     const d2 = fmtDateTimeLong(u.at);
                     return `<div class="row-item p-3"><div class="flex justify-between gap-2"><span class="t-faint">${esc(d2.date)} ${esc(d2.time)}${u.by ? ' · ' + esc(u.by) : ''}</span>${recStatusChip(u.status)}</div>
-                        ${u.note ? `<div class="t-strong mt-1 whitespace-pre-line break-words">${esc(u.note)}</div>` : ''}
-                        ${u.photoCount ? `<div class="t-faint mt-0.5">+${u.photoCount} photo${u.photoCount === 1 ? '' : 's'}</div>` : ''}</div>`;
+                        <div class="t-muted font-semibold mt-1">${(u.changes || []).map(esc).join(' · ')}</div>
+                        ${u.note ? `<div class="t-strong mt-1 whitespace-pre-line break-words">${esc(u.note)}</div>` : ''}</div>`;
                 }));
             document.getElementById('recModalHistory').innerHTML = hist.join('');
 
+            // Adding to an open recommendation moves it to pending by default; any status can be chosen, including re-opening
             document.getElementById('recModalStatus').value = rec.status === 'complete' ? 'complete' : 'pending';
+            recModalStartStatus = document.getElementById('recModalStatus').value;
             document.getElementById('recModalNote').value = '';
             document.getElementById('recModal').classList.remove('hidden');
         }
@@ -4278,8 +4400,7 @@
             const rec = findRec(openRecId);
             if (!rec) return;
             const note = document.getElementById('recModalNote').value.trim();
-            const chosen = document.getElementById('recModalStatus').value;
-            const status = chosen === 'complete' ? 'complete' : 'pending';
+            const status = document.getElementById('recModalStatus').value; // open | pending | complete
             const nothingNew = !note && recPendingPhotos.length === 0 && status === rec.status;
             if (nothingNew) { closeRecModal(); return; }
 
@@ -4295,7 +4416,7 @@
                     note: note,
                     technician: technicianLabel(),
                     servicedAt: new Date().toISOString()
-                }, blobs, `Recommendation ${status === 'complete' ? 'completed' : 'updated'} · ${rec.station}`);
+                }, blobs, `Recommendation ${status === 'complete' ? 'completed' : status === 'open' ? 're-opened' : 'updated'} · ${rec.station}`);
                 recPendingPhotos = [];
                 await refreshSiteStateFromCache();
                 document.getElementById('recModal').classList.add('hidden');
@@ -4503,7 +4624,7 @@
 
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(9);
-                    const stLabel = (REC_STATUS[item.status] || REC_STATUS.new).label;
+                    const stLabel = (REC_STATUS[item.status] || REC_STATUS.open).label;
                     doc.text(`Station: ${item.station} (${new Date(item.date).toLocaleDateString(LOCALE, NZ_DATE)})  -  Status: ${stLabel}`, 14, y);
                     y += 5;
 
@@ -4560,11 +4681,25 @@
             hideStationForm();
             renderDeviceLists();
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            markVisitStarted(selectedClient).catch(e => logAppError('Marking visit started', e));
             if (isOnline) backgroundSyncSite('start'); // pick up anything recorded elsewhere before servicing
         }
 
         function renderDeviceLists() {
             filterStationsList();
+        }
+
+        function lastServicedText(d, isScanned) {
+            const hist = d.history || [];
+            if (isScanned) {
+                const now = hist.filter(h => h.thisVisit).pop();
+                if (now) { const t = fmtDateTimeLong(now.at); return `Serviced this visit · ${t.date} ${t.time}`; }
+                return 'Opened this visit - not saved yet';
+            }
+            const prev = hist.filter(h => !h.thisVisit).pop();
+            if (!prev) return 'No previous service on record';
+            const t = fmtDateTimeLong(prev.at);
+            return `Last serviced ${t.date} ${t.time}${prev.technician ? ' · ' + prev.technician : ''}`;
         }
 
         function deviceRowHtml(d, isScanned) {
@@ -4578,6 +4713,7 @@
                     <div class="min-w-0">
                         <div class="font-bold t-strong text-sm break-words">${esc(d.locationName)} ${hasRecs}</div>
                         <div class="t-muted text-xs">${esc(d.deviceType)} • <span class="font-mono t-accent">${esc(d.barcode_id)}</span></div>
+                        <div class="t-faint text-[11px] mt-0.5">${esc(lastServicedText(d, isScanned))}</div>
                     </div>
                     ${badge}
                 </div>`;
@@ -4847,6 +4983,7 @@
 
             prefillFromThisVisit(existingDev);
             formSnapshot = JSON.stringify(readStationForm());
+            renderStationHistory(existingDev);
 
             if (markAsScanned) {
                 scannedBarcodesThisVisit.add(barcode);
@@ -4857,6 +4994,131 @@
             document.getElementById('stationSheetBody').scrollTop = 0;
             document.body.style.overflow = 'hidden';
             updateFab();
+        }
+
+        // ===================================================================
+        //  STATION HISTORY: preparations used over time + activity chart
+        // ===================================================================
+        const ACTIVITY_LEVELS = ['None', 'Low', 'Medium', 'High'];
+        const ACTIVITY_LABEL = { None: 'None', Low: 'Low', Medium: 'Medium', High: 'High' };
+        let stationHistoryTab = 'chart';
+        function activityValue(a) { const i = ACTIVITY_LEVELS.indexOf(a); return i < 0 ? 0 : i; }
+
+        function setStationHistoryTab(tab) {
+            stationHistoryTab = tab;
+            document.getElementById('stationChart').classList.toggle('hidden', tab !== 'chart');
+            document.getElementById('stationLog').classList.toggle('hidden', tab !== 'log');
+            document.querySelectorAll('#stationHistoryTabs [data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        }
+
+        function renderStationHistory(dev) {
+            const section = document.getElementById('stationHistorySection');
+            const hist = (dev && dev.history ? dev.history : []).slice().sort((a, b) => a.at - b.at);
+            section.classList.toggle('hidden', hist.length === 0);
+            if (!hist.length) return;
+
+            // Preparations used, with totals
+            const preps = new Map();
+            hist.forEach(h => {
+                if (!h.prep || h.prep === NONE_PREP) return;
+                const p = preps.get(h.prep) || { n: 0, qty: 0, last: 0 };
+                p.n++; p.last = Math.max(p.last, h.at);
+                if (!isNaN(parseFloat(h.qty))) p.qty += parseFloat(h.qty);
+                preps.set(h.prep, p);
+            });
+            document.getElementById('stationPrepSummary').innerHTML = preps.size
+                ? Array.from(preps.entries()).sort((a, b) => b[1].last - a[1].last).map(([name, p]) =>
+                    `<span class="chip chip-orange" title="Last used ${esc(fmtDateTimeLong(p.last).date)}">${esc(name)} · ${p.n} service${p.n === 1 ? '' : 's'}${p.qty ? ' · qty ' + (Math.round(p.qty * 10) / 10) : ''}</span>`).join('')
+                : '<span class="t-faint">No preparations used yet - monitoring only.</span>';
+
+            // Service log (also the table view of the chart)
+            document.getElementById('stationLog').innerHTML = `
+                <table class="w-full text-[11px]">
+                    <thead><tr class="t-faint text-left"><th class="py-1.5 pr-2 font-bold">Date</th><th class="py-1.5 pr-2 font-bold">Activity</th><th class="py-1.5 pr-2 font-bold">Species</th><th class="py-1.5 pr-2 font-bold">Preparation</th><th class="py-1.5 pr-2 font-bold">Qty</th><th class="py-1.5 font-bold">By</th></tr></thead>
+                    <tbody>${hist.slice().reverse().map(h => {
+                        const t = fmtDateTimeLong(h.at);
+                        return `<tr class="border-t divider align-top"><td class="py-1.5 pr-2 t-strong whitespace-nowrap">${esc(t.date)}<div class="t-faint">${esc(t.time)}</div></td><td class="py-1.5 pr-2 t-strong">${esc(h.activity)}</td><td class="py-1.5 pr-2 t-muted">${esc(h.species)}</td><td class="py-1.5 pr-2 t-muted">${esc(h.prep || '-')}</td><td class="py-1.5 pr-2 t-muted">${h.qty != null && !isNaN(h.qty) ? esc(h.qty) : '-'}</td><td class="py-1.5 t-muted">${esc(h.technician || '-')}</td></tr>${h.notes ? `<tr><td colspan="6" class="pb-1.5 t-faint">${esc(h.notes)}</td></tr>` : ''}`;
+                    }).join('')}</tbody>
+                </table>`;
+
+            renderActivityChart(document.getElementById('stationChart'), hist.slice(-30));
+            setStationHistoryTab(stationHistoryTab);
+        }
+
+        // Line chart of activity level per visit, one line per species (up to 3, the rest as "Other")
+        function renderActivityChart(el, hist) {
+            const isNone = sp => !sp || /^none$/i.test(String(sp).trim());
+            const freq = new Map();
+            hist.forEach(h => { if (!isNone(h.species)) freq.set(h.species, (freq.get(h.species) || 0) + 1); });
+            const top = Array.from(freq.entries()).sort((a, b) => b[1] - a[1]).map(x => x[0]);
+            const named = top.slice(0, 3);
+            const hasOther = top.length > 3;
+            const seriesDefs = named.map((sp, i) => ({ key: sp, label: sp, color: `var(--series-${i + 1})` }));
+            if (hasOther) seriesDefs.push({ key: '__other', label: 'Other species', color: 'var(--series-other)' });
+            if (!seriesDefs.length) seriesDefs.push({ key: '__all', label: 'Activity', color: 'var(--series-1)' });
+
+            const seriesOf = h => isNone(h.species) ? null : (named.includes(h.species) ? h.species : '__other');
+            const values = seriesDefs.map(sd => hist.map(h => {
+                if (sd.key === '__all') return activityValue(h.activity);
+                return seriesOf(h) === sd.key ? activityValue(h.activity) : 0;
+            }));
+
+            const W = 640, H = 230, L = 62, R = 16, T = 14, B = 34;
+            const n = hist.length;
+            const x = i => n === 1 ? L + (W - L - R) / 2 : L + i * (W - L - R) / (n - 1);
+            const y = v => T + (3 - v) * (H - T - B) / 3;
+            const grid = ACTIVITY_LEVELS.map((lv, i) => `
+                <line x1="${L}" x2="${W - R}" y1="${y(i)}" y2="${y(i)}" stroke="var(--viz-grid)" stroke-width="1"/>
+                <text x="${L - 8}" y="${y(i) + 4}" text-anchor="end" font-size="11" fill="var(--viz-muted)">${lv}</text>`).join('');
+            const step = Math.max(1, Math.ceil(n / 6));
+            const xLabels = hist.map((h, i) => (i % step === 0 || i === n - 1)
+                ? `<text x="${x(i)}" y="${H - 12}" text-anchor="middle" font-size="10" fill="var(--viz-muted)">${esc(new Date(h.at).toLocaleDateString(LOCALE, { day: '2-digit', month: '2-digit' }))}</text>` : '').join('');
+            const lines = seriesDefs.map((sd, si) => {
+                const pts = values[si].map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+                const dots = values[si].map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="4" fill="${sd.color}" stroke="var(--viz-surface)" stroke-width="2"/>`).join('');
+                return `<polyline points="${pts}" fill="none" stroke="${sd.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${dots}`;
+            }).join('');
+
+            const legend = seriesDefs.length > 1 || seriesDefs[0].key !== '__all'
+                ? `<div class="flex flex-wrap gap-3 mb-2 text-[11px] t-strong">${seriesDefs.map(sd => `<span class="inline-flex items-center gap-1.5"><span style="display:inline-block;width:14px;height:2px;background:${sd.color};border-radius:2px;"></span>${esc(sd.label)}</span>`).join('')}</div>`
+                : '<div class="text-[11px] t-muted mb-2">Activity level at each service</div>';
+
+            el.innerHTML = `${legend}
+                <div class="relative" style="background:var(--viz-surface);border:1px solid var(--border);border-radius:.75rem;">
+                    <svg viewBox="0 0 ${W} ${H}" class="w-full h-auto block" role="img" aria-label="Activity level over the last ${n} services">
+                        ${grid}${xLabels}
+                        <line class="viz-cross" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--viz-axis)" stroke-width="1" opacity="0"/>
+                        ${lines}
+                        <rect class="viz-hit" x="${L - 10}" y="0" width="${W - L - R + 20}" height="${H}" fill="transparent"/>
+                    </svg>
+                    <div class="viz-tip hidden"></div>
+                </div>
+                <div class="text-[10px] t-faint mt-1.5">Last ${n} service${n === 1 ? '' : 's'}. The Service log tab shows the same data as a table.</div>`;
+
+            // Hover / touch: crosshair + tooltip for the nearest service
+            const svg = el.querySelector('svg'), tip = el.querySelector('.viz-tip'), cross = el.querySelector('.viz-cross');
+            const show = evt => {
+                const r = svg.getBoundingClientRect();
+                const px = ((evt.touches ? evt.touches[0].clientX : evt.clientX) - r.left) * (W / r.width);
+                let i = n === 1 ? 0 : Math.round((px - L) / ((W - L - R) / (n - 1)));
+                i = Math.max(0, Math.min(n - 1, i));
+                const h = hist[i];
+                cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i)); cross.setAttribute('opacity', '1');
+                const t = fmtDateTimeLong(h.at);
+                tip.innerHTML = `<div class="font-bold">${esc(t.date)} ${esc(t.time)}</div>` +
+                    seriesDefs.map((sd, si) => `<div class="flex items-center gap-1.5"><span style="display:inline-block;width:8px;height:8px;border-radius:999px;background:${sd.color};"></span>${esc(sd.label)}: <b>${ACTIVITY_LEVELS[values[si][i]]}</b></div>`).join('') +
+                    `<div class="t-muted mt-0.5">${esc(h.species)}${h.prep ? ' · ' + esc(h.prep) : ''}${h.qty != null && !isNaN(h.qty) ? ' · qty ' + esc(h.qty) : ''}</div>`;
+                tip.classList.remove('hidden');
+                const left = x(i) / W * r.width;
+                tip.style.left = Math.min(Math.max(4, left + 10), r.width - tip.offsetWidth - 4) + 'px';
+                tip.style.top = '8px';
+            };
+            const hide = () => { tip.classList.add('hidden'); cross.setAttribute('opacity', '0'); };
+            const hit = el.querySelector('.viz-hit');
+            hit.addEventListener('mousemove', show);
+            hit.addEventListener('touchstart', show, { passive: true });
+            hit.addEventListener('touchmove', show, { passive: true });
+            hit.addEventListener('mouseleave', hide);
         }
 
         function lazyLoadStationHistory() {
@@ -5044,6 +5306,8 @@
                     data: { technicianId: currentUser.id, refs: Array.from(refs), cancelledAt: new Date().toISOString() }
                 });
 
+                await markVisitClosed(client, 'Visit cancelled - closed');
+
                 // 3. Take this visit's records out of the saved copy so they disappear straight away
                 if (cache) {
                     cache.rows = cache.rows.filter(r => !rowInThisVisit(r));
@@ -5107,6 +5371,7 @@
                     completedAt: new Date().toISOString()
                 }, null, 'Visit completed');
 
+                await markVisitClosed(selectedClient, 'Visit completed - closed');
                 if (doneIds.size > 0) {
                     const today = todayStr();
                     const updated = services.map(s => doneIds.has(s.id)
