@@ -1113,7 +1113,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.17-r11';
+        const APP_VERSION = '2026.10.17-r12';
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
@@ -2692,10 +2692,10 @@
         }
 
         function dueInfo(s) {
-            if (!s.nextDue) {
+            if (!s || !s.nextDue || !parseDay(String(s.nextDue).slice(0, 10))) {
                 return { cls: 'chip-blue', text: s.frequency === 'oneoff' ? 'On request' : 'No due date', days: null };
             }
-            const diff = Math.round((parseDay(s.nextDue) - parseDay(todayStr())) / 86400000);
+            const diff = Math.round((parseDay(String(s.nextDue).slice(0, 10)) - parseDay(todayStr())) / 86400000);
             if (diff < 0) return { cls: 'chip-red', text: `Overdue ${-diff} day${diff === -1 ? '' : 's'}`, days: diff };
             if (diff === 0) return { cls: 'chip-amber', text: 'Due today', days: 0 };
             if (diff <= 7) return { cls: 'chip-amber', text: `Due in ${diff} day${diff === 1 ? '' : 's'}`, days: diff };
@@ -2708,8 +2708,10 @@
                 try { c.services = JSON.parse(c.services); } catch (e) { c.services = []; }
             }
             if (!Array.isArray(c.services)) return [];
-            c.services.forEach(s => { if (!s.id) s.id = uid(); });
-            return c.services;
+            const clean = c.services.filter(sv => sv && typeof sv === 'object');
+            if (clean.length !== c.services.length) c.services = clean;
+            clean.forEach(sv => { if (!sv.id) sv.id = uid(); if (sv.type != null && typeof sv.type !== 'string') sv.type = String(sv.type); });
+            return clean;
         }
 
         function dueCountForClient(c) {
@@ -2867,7 +2869,7 @@
                         _supabase.from('profiles').select('id, full_name, email, approved').eq('approved', true), 10000, 'Loading team');
                     if (error) throw error;
                     if (data && data.length) {
-                        teamMembers = data.map(p => ({ id: p.id, name: p.full_name || p.email, email: p.email }))
+                        teamMembers = data.map(p => ({ id: p.id, name: txt(p.full_name || p.email || 'Team member'), email: p.email }))
                             .sort((a, b) => String(a.name).localeCompare(String(b.name)));
                         await cacheSet('team', teamMembers);
                     }
@@ -3014,13 +3016,13 @@
         let siteSort = loadJSON(SITE_SORT_KEY, 'due');
         function setSiteSort(v) { siteSort = v; saveJSON(SITE_SORT_KEY, v); renderSiteCards(); }
         function sortSites(list) {
-            const byName = (a, b) => String(a.Name || '').localeCompare(String(b.Name || ''), LOCALE, { sensitivity: 'base' });
+            const byName = (a, b) => txt(a.Name).localeCompare(txt(b.Name), LOCALE, { sensitivity: 'base' });
             const far = 1e9; // sites with nothing scheduled go last
             const keyed = list.map(c => {
                 let k = far;
                 if (siteSort === 'due') { const d = soonestDue(c); k = d ? d.days : far; }
                 else if (siteSort === 'contract') { const ci = contractInfo(c); k = ci ? ci.days : far; }
-                return { c, k, tech: c.assigned_to ? teamName(c.assigned_to) : '\uffff' };
+                return { c, k: isNaN(k) ? far : k, tech: c.assigned_to ? txt(teamName(c.assigned_to)) : '\uffff' };
             });
             keyed.sort((a, b) => {
                 if (siteSort === 'name') return byName(a.c, b.c);
@@ -3112,51 +3114,34 @@
         function openNotifModal() { document.getElementById('notifModal').classList.remove('hidden'); renderNotifications(); }
         function closeNotifModal() { document.getElementById('notifModal').classList.add('hidden'); }
 
+        // Runs a step and records (rather than throws) any error, so one bad site can't blank the page
+        function safely(where, fn, fallback) {
+            try { return fn(); } catch (e) { cardErrors.push(where + ': ' + (e.message || e)); logAppError(where, e); return fallback; }
+        }
+        let cardErrors = [];
+        const txt = v => (v == null ? '' : String(v)); // database values may not be text (e.g. a phone number column)
+
         function renderSiteCards() {
             const grid = document.getElementById('siteCardsGrid');
-            const q = (document.getElementById('siteSearchInput').value || '').trim().toLowerCase();
+            const q = txt(document.getElementById('siteSearchInput').value).trim().toLowerCase();
+            cardErrors = [];
 
-            if (siteFilter === null) populateSiteFilter();
-            renderRenewalNotice();
-            renderNotifications();
-            applyCardSize();
+            safely('Site filter', () => { if (siteFilter === null) populateSiteFilter(); });
+            safely('Renewals notice', () => renderRenewalNotice());
+            safely('Notifications', () => renderNotifications());
+            safely('Card size', () => applyCardSize());
             const nameCls = (CARD_SIZES[cardSize] || CARD_SIZES[1]).name;
-            const list = sortSites(clientsData.filter(c => siteMatchesFilter(c) && siteDueInRange(c) && (
-                !q || (c.Name || '').toLowerCase().includes(q) || (c.Address || '').toLowerCase().includes(q) || (c.Contact || '').toLowerCase().includes(q)
-            )));
 
-            let html = list.map(c => {
-                const name = c.Name || 'Unnamed site';
-                const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
-                const grad = CARD_GRADIENTS[hashString(name) % CARD_GRADIENTS.length];
-                const cover = coverUrl(c);
-                const due = dueCountForClient(c);
-                let dueChip = '';
-                if (dueRange !== 'any') {
-                    const b2 = soonestDue(c);
-                    if (b2) dueChip = `<span class="site-due" style="background:${b2.days < 0 ? '#dc2626' : '#ea580c'};">${b2.days < 0 ? 'Overdue ' + (-b2.days) + 'd' : b2.days === 0 ? 'Due today' : 'Due in ' + b2.days + 'd'}</span>`;
-                } else if (due.overdue) dueChip = `<span class="site-due" style="background:#dc2626;">${due.overdue} overdue</span>`;
-                else if (due.soon) dueChip = `<span class="site-due" style="background:#ea580c;">${due.soon} due this week</span>`;
-                const ci = contractInfo(c);
-                if (ci && ci.days <= RENEWAL_WARN_DAYS) dueChip += `<span class="site-due" style="background:${ci.days < 0 ? '#991b1b' : '#7c3aed'};">${esc(ci.short)}</span>`;
-                const tech = c.assigned_to ? teamName(c.assigned_to) : '';
-                const hover = [name, c.Address, tech ? 'Technician: ' + tech : ''].filter(Boolean).join(' - ');
-                const vi = visitInfo(c);
-                const progressBadge = vi
-                    ? `<span class="site-progress" style="background:${vi.stale ? '#dc2626' : '#2563eb'};">${vi.stale ? '⚠ Open ' + esc(visitAgeText(vi)) : '<span class="dot"></span>In progress'}</span>`
-                    : '';
-                return `
-                    <button type="button" class="site-card" data-id="${esc(c.id)}" onclick="startSiteVisit(this.dataset.id)" title="${esc(hover)}" style="background:${grad}">
-                        ${cover
-                            ? `<img src="${esc(cover)}" alt="" loading="lazy" class="site-cover" onerror="this.remove()">`
-                            : `<span class="site-initials">${esc(initials)}</span>`}
-                        ${progressBadge}
-                        ${dueChip ? `<span class="site-chips">${dueChip}</span>` : ''}
-                        <span class="site-overlay${dueChip ? ' has-chips' : ''}">
-                            <span class="site-name ${nameCls}">${esc(name)}</span>
-                        </span>
-                    </button>`;
-            }).join('');
+            const shown = clientsData.filter(c => c && safely(`Filtering "${txt(c.Name) || c.id}"`, () =>
+                siteMatchesFilter(c) && siteDueInRange(c) && (
+                    !q || txt(c.Name).toLowerCase().includes(q) || txt(c.Address).toLowerCase().includes(q) || txt(c.Contact).toLowerCase().includes(q)
+                ), true));
+            const list = safely('Sorting sites', () => sortSites(shown), shown);
+
+            let html = list.map(c => safely(`Site card "${txt(c.Name) || c.id}"`, () => siteCardHtml(c, nameCls), `
+                    <button type="button" class="site-card" data-id="${esc(c.id)}" onclick="startSiteVisit(this.dataset.id)" style="background:${CARD_GRADIENTS[0]}">
+                        <span class="site-overlay"><span class="site-name">${esc(txt(c.Name) || 'Unnamed site')}</span></span>
+                    </button>`)).join('');
 
             html += `
                 <button type="button" class="site-card-add" onclick="openAddClientModal()">
@@ -3169,7 +3154,43 @@
             } else if (list.length === 0 && (siteFilter !== 'all' || dueRange !== 'any') && clientsData.length) {
                 html = '<span class="text-xs t-muted italic col-span-full">No sites in this view. Choose "All sites" and "Any due date" above to see every site.</span>' + html;
             }
+            if (cardErrors.length) {
+                html = `<div class="col-span-full row-item p-3 text-xs" style="border-color:#d97706;color:#d97706;">Some site details couldn't be read fully (${cardErrors.length} problem${cardErrors.length === 1 ? '' : 's'}), so those cards are shown simply. Settings → Diagnostics → Copy details, and send it over to get it fixed.</div>` + html;
+            }
             grid.innerHTML = html;
+        }
+
+        function siteCardHtml(c, nameCls) {
+            const name = txt(c.Name) || 'Unnamed site';
+            const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+            const grad = CARD_GRADIENTS[hashString(name) % CARD_GRADIENTS.length];
+            const cover = coverUrl(c);
+            const due = dueCountForClient(c);
+            let dueChip = '';
+            if (dueRange !== 'any') {
+                const b2 = soonestDue(c);
+                if (b2) dueChip = `<span class="site-due" style="background:${b2.days < 0 ? '#dc2626' : '#ea580c'};">${b2.days < 0 ? 'Overdue ' + (-b2.days) + 'd' : b2.days === 0 ? 'Due today' : 'Due in ' + b2.days + 'd'}</span>`;
+            } else if (due.overdue) dueChip = `<span class="site-due" style="background:#dc2626;">${due.overdue} overdue</span>`;
+            else if (due.soon) dueChip = `<span class="site-due" style="background:#ea580c;">${due.soon} due this week</span>`;
+            const ci = contractInfo(c);
+            if (ci && ci.days <= RENEWAL_WARN_DAYS) dueChip += `<span class="site-due" style="background:${ci.days < 0 ? '#991b1b' : '#7c3aed'};">${esc(ci.short)}</span>`;
+            const tech = c.assigned_to ? txt(teamName(c.assigned_to)) : '';
+            const hover = [name, txt(c.Address), tech ? 'Technician: ' + tech : ''].filter(Boolean).join(' - ');
+            const vi = visitInfo(c);
+            const progressBadge = vi
+                ? `<span class="site-progress" style="background:${vi.stale ? '#dc2626' : '#2563eb'};">${vi.stale ? '⚠ Open ' + esc(visitAgeText(vi)) : '<span class="dot"></span>In progress'}</span>`
+                : '';
+            return `
+                    <button type="button" class="site-card" data-id="${esc(c.id)}" onclick="startSiteVisit(this.dataset.id)" title="${esc(hover)}" style="background:${grad}">
+                        ${cover
+                            ? `<img src="${esc(cover)}" alt="" loading="lazy" class="site-cover" onerror="this.remove()">`
+                            : `<span class="site-initials">${esc(initials)}</span>`}
+                        ${progressBadge}
+                        ${dueChip ? `<span class="site-chips">${dueChip}</span>` : ''}
+                        <span class="site-overlay${dueChip ? ' has-chips' : ''}">
+                            <span class="site-name ${nameCls}">${esc(name)}</span>
+                        </span>
+                    </button>`;
         }
 
         // ---------- Image picker previews ----------
