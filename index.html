@@ -168,7 +168,7 @@
                     <input type="file" id="stationPhotoInput" accept="image/*" capture="environment" class="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer">
                     <div id="photoPreviewContainer" class="hidden pt-2 flex items-center space-x-3">
                         <img id="photoPreview" class="h-16 rounded-lg border border-slate-700 object-cover cursor-pointer" onclick="viewFullImage(this.src)" alt="Preview">
-                        <span class="text-xs text-emerald-400">Photo compressed & ready ✓</span>
+                        <span class="text-xs text-emerald-400">Photo ready ✓ (Click to zoom)</span>
                     </div>
                 </div>
 
@@ -236,7 +236,6 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Compress to JPEG with 0.7 quality
                     compressedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
                     
                     const preview = document.getElementById('photoPreview');
@@ -323,20 +322,27 @@
                     .from('service_logs')
                     .select('barcode_id, payload, created_at')
                     .eq('client_id', clientId)
-                    .order('created_at', { ascending: false });
+                    .order('created_at', { ascending: true }); // Ascending so latest logs override older ones and find photos
 
                 if (error) throw error;
 
                 const map = new Map();
                 (data || []).forEach(row => {
-                    if (!map.has(row.barcode_id)) {
-                        map.set(row.barcode_id, {
-                            barcode_id: row.barcode_id,
-                            locationName: row.payload.locationName || 'Unnamed Device',
-                            deviceType: row.payload.deviceType || 'Rodent Bait Station',
-                            lastPayload: row.payload
-                        });
+                    const existing = map.get(row.barcode_id) || {
+                        barcode_id: row.barcode_id,
+                        locationName: row.payload.locationName || 'Unnamed Device',
+                        deviceType: row.payload.deviceType || 'Rodent Bait Station',
+                        lastPayload: row.payload
+                    };
+
+                    // Always prefer payload values that include a photo if available
+                    existing.locationName = row.payload.locationName || existing.locationName;
+                    existing.deviceType = row.payload.deviceType || existing.deviceType;
+                    if (row.payload.photo) {
+                        existing.lastPayload = row.payload;
                     }
+
+                    map.set(row.barcode_id, existing);
                 });
 
                 siteDevices = Array.from(map.values());
@@ -363,10 +369,11 @@
             } else {
                 unscannedList.innerHTML = '';
                 unscanned.forEach(d => {
+                    const photoThumb = d.lastPayload.photo ? `<img src="${d.lastPayload.photo}" class="w-8 h-8 rounded object-cover cursor-pointer inline-block ml-2 border border-slate-600" onclick="event.stopPropagation(); viewFullImage('${d.lastPayload.photo}')" title="View attached photo">` : '';
                     unscannedList.innerHTML += `
                         <div onclick="openDeviceForm('${d.barcode_id}', '${d.locationName}', '${d.deviceType}', false)" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-lg border border-slate-700 cursor-pointer transition flex justify-between items-center">
                             <div>
-                                <div class="font-bold text-white text-sm">${d.locationName}</div>
+                                <div class="font-bold text-white text-sm flex items-center">${d.locationName} ${photoThumb}</div>
                                 <div class="text-slate-400 text-xs">${d.deviceType} • <span class="font-mono text-sky-400">${d.barcode_id}</span></div>
                             </div>
                             <span class="text-amber-400 text-xs bg-amber-950 px-2 py-1 rounded">Unscanned</span>
@@ -380,11 +387,11 @@
             } else {
                 scannedList.innerHTML = '';
                 scanned.forEach(d => {
-                    const hasPhotoBadge = d.lastPayload.photo ? '<span class="text-sky-300 ml-1">📸</span>' : '';
+                    const photoThumb = d.lastPayload.photo ? `<img src="${d.lastPayload.photo}" class="w-8 h-8 rounded object-cover cursor-pointer inline-block ml-2 border border-slate-600" onclick="event.stopPropagation(); viewFullImage('${d.lastPayload.photo}')" title="View attached photo">` : '';
                     scannedList.innerHTML += `
                         <div onclick="openDeviceForm('${d.barcode_id}', '${d.locationName}', '${d.deviceType}', true)" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-lg border border-slate-700 cursor-pointer transition flex justify-between items-center">
                             <div>
-                                <div class="font-bold text-white text-sm">${d.locationName} ${hasPhotoBadge}</div>
+                                <div class="font-bold text-white text-sm flex items-center">${d.locationName} ${photoThumb}</div>
                                 <div class="text-slate-400 text-xs">${d.deviceType} • <span class="font-mono text-sky-400">${d.barcode_id}</span></div>
                             </div>
                             <span class="text-emerald-400 text-xs bg-emerald-950 px-2 py-1 rounded">Serviced ✓</span>
@@ -426,9 +433,21 @@
             currentBarcode = barcode;
             currentDeviceName = locName;
             currentDeviceType = devType;
+            compressedPhotoBase64 = null;
 
             document.getElementById('scannedBarcodeBadge').textContent = `Barcode: ${barcode}`;
             document.getElementById('stationFormContainer').classList.remove('hidden');
+
+            // Pre-populate existing photo if available in the device history
+            const existingDev = siteDevices.find(d => d.barcode_id === barcode);
+            if (existingDev && existingDev.lastPayload && existingDev.lastPayload.photo) {
+                compressedPhotoBase64 = existingDev.lastPayload.photo;
+                document.getElementById('photoPreview').src = compressedPhotoBase64;
+                document.getElementById('photoPreviewContainer').classList.remove('hidden');
+            } else {
+                document.getElementById('photoPreviewContainer').classList.add('hidden');
+                document.getElementById('stationPhotoInput').value = '';
+            }
 
             if (isNew || !locName) {
                 document.getElementById('formTitle').textContent = 'Register & Service New Device';
