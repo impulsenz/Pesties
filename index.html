@@ -696,12 +696,8 @@
             <div class="flex justify-between items-start gap-3 p-4 sm:p-5 border-b divider shrink-0" style="background: var(--surface);">
                 <div class="min-w-0">
                     <button type="button" onclick="requestCloseStation()" class="link-btn !no-underline inline-flex items-center gap-1 mb-1.5">← Back to stations</button>
-                    <h4 class="font-black text-lg t-strong break-words flex items-center gap-2"><span id="formTypeDot" class="type-dot"></span><span id="formTitle">Servicing Device</span></h4>
-                    <div class="flex flex-wrap items-center gap-2 mt-1.5">
-                        <span id="scannedBarcodeBadge" class="chip chip-orange font-mono"></span>
-                        <button type="button" id="stationMapBtn" onclick="showCurrentStationOnMap()" class="chip chip-blue cursor-pointer">📍 Show on map</button>
-                        <button type="button" id="changeBarcodeBtn" onclick="openBarcodeChange(currentBarcode)" class="chip chip-purple cursor-pointer">Change barcode</button>
-                    </div>
+                    <h4 class="font-black text-lg t-strong break-words flex items-center gap-2"><span id="formTypeDot" class="type-dot shrink-0"></span><span id="formTitle">Servicing Device</span>
+                        <button type="button" id="stationMapBtn" onclick="showCurrentStationOnMap()" class="chip chip-blue cursor-pointer shrink-0 !text-[11px]" title="Show this station on the floor plan" aria-label="Show on map">📍 Map</button></h4>
                     <div id="baitLastChanged" class="hidden text-[11px] font-semibold mt-1.5"></div>
                 </div>
                 <button type="button" onclick="requestCloseStation()" class="icon-btn shrink-0" title="Close">✕</button>
@@ -712,7 +708,8 @@
                 <p id="visitEditNote" class="hidden text-[11px] font-semibold -mb-2" style="color:#10b981;">Showing the service you saved for this station earlier in this visit. Saving again updates it.</p>
                 <div id="stationDetailsTop"></div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div id="newStationFields" class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 inset p-4" style="border-color:#f97316;">
+                    <div id="stationDetailsWrap" class="sm:col-span-2 space-y-2">
+                    <div id="newStationFields" class="grid grid-cols-1 sm:grid-cols-2 gap-4 inset p-4" style="border-color:#f97316;">
                         <div id="stationDetailsHeading" class="sm:col-span-2 eyebrow t-accent">New Barcode Detected - Register Device Details:</div>
                         <div>
                             <label class="lbl">Station / Location Name</label>
@@ -743,6 +740,11 @@
                             <input type="text" id="stationZone" list="zoneOptions" maxlength="60" placeholder="e.g. Dispatch" autocomplete="off" class="field">
                             <datalist id="zoneOptions"></datalist>
                         </div>
+                    </div>
+                    <div id="stationBarcodeRow" class="flex flex-wrap items-center gap-2 px-1">
+                        <span id="scannedBarcodeBadge" class="chip chip-orange font-mono"></span>
+                        <button type="button" id="changeBarcodeBtn" onclick="openBarcodeChange(currentBarcode)" class="chip chip-purple cursor-pointer">Change barcode</button>
+                    </div>
                     </div>
 
                     <div class="sm:col-span-2 inset p-4 space-y-3">
@@ -1693,7 +1695,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r27';
+        const APP_VERSION = '2026.10.18-r28';
         // after Check for updates, tidy the address bar
         try { if (/[?&]fresh=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
         // New Zealand date style everywhere: day/month/year
@@ -9394,7 +9396,7 @@
         // Shows what was saved for this station earlier in the same visit (a new visit starts clean)
         function prefillFromThisVisit(dev) {
             const p = dev && dev.visitPayload;
-            document.getElementById('visitEditNote').classList.toggle('hidden', !p);
+            document.getElementById('visitEditNote').classList.add('hidden');   // re-saving quietly updates it
             if (!p) return false;
             if (p.prepUsed) setSelectValue('prepUsed', p.prepUsed);
             if (p.speciesCaught) setSelectValue('speciesCaught', p.speciesCaught);
@@ -9573,7 +9575,7 @@
                 setSelectValue('newDeviceType', devType);
             }
             document.getElementById('newStationFields').classList.remove('hidden');
-            document.getElementById(isNew || !locName ? 'stationDetailsTop' : 'stationDetailsBottom').appendChild(document.getElementById('newStationFields'));
+            document.getElementById(isNew || !locName ? 'stationDetailsTop' : 'stationDetailsBottom').appendChild(document.getElementById('stationDetailsWrap'));
             populateStationMapSelect(barcode);
             const stRow = siteStations.get(barcode);
             document.getElementById('stationZone').value = (stRow && stRow.zone) || '';
