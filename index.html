@@ -762,6 +762,11 @@
                 </div>
             </div>
 
+            <div class="border-t divider pt-5 space-y-3">
+                <h4 class="eyebrow t-accent">Team settings</h4>
+                <div id="teamSettingsBox" class="space-y-2"></div>
+            </div>
+
             <div class="border-t divider pt-5 space-y-2">
                 <h4 class="eyebrow t-accent">Lists used in the station form</h4>
                 <p id="optionsAdminNote" class="text-xs t-muted">These lists are shared with your whole team. Removing an item doesn't change records that already use it.</p>
@@ -1337,11 +1342,11 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.17-r18';
+        const APP_VERSION = '2026.10.17-r19';
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "stationColorLegend", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "stationColorLegend", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -1546,7 +1551,8 @@
                 return `The "${table}" table in the database has no "${col}" column. Run ${script} in the Supabase SQL editor, then tap Retry.`;
             }
             if (/operator does not exist: json/i.test(msg)) return 'The database rejected this because of the earlier recommendation-number script. Run pestis_recommendations.sql in the Supabase SQL editor (it fixes this), then tap Sync Now.';
-            if (/recommendations/i.test(msg) && /does not exist|schema cache|could not find the table/i.test(msg)) return 'The database has no recommendations table yet. Run pestis_recommendations.sql in the Supabase SQL editor, then tap Retry.';
+            if (/recommendations'|recommendations"|relation "public\.recommendations"|table 'public\.recommendations'/i.test(msg) && /does not exist|schema cache|could not find the table/i.test(msg)) return 'The database has no recommendations table yet. Run pestis_recommendations.sql in the Supabase SQL editor, then tap Retry.';
+            if (/(stations|site_maps|visits|recommendation_updates|site_events|preparations|species|station_types|app_settings)/i.test(msg) && /does not exist|schema cache|could not find the table/i.test(msg)) return "The database doesn't have the new tables yet. Run pestis_split_tables.sql in the Supabase SQL editor, then tap Retry.";
             if (/column .* does not exist|schema cache/i.test(msg)) return msg + '.' + SQL_HINT;
             return msg;
         }
@@ -2438,6 +2444,41 @@
                 return;
             }
 
+            if (item.kind === 'table_upsert') {
+                await uploadAllPhotos(item);
+                const table = item.data.table;
+                const row = Object.assign({}, item.data.row);
+                const phs = itemPhotos(item);
+                if (item.data.photoField && phs.length) {
+                    const paths = phs.map(p => p.path);
+                    row[item.data.photoField] = item.data.photoField === 'photos' ? paths.concat(row.photos || []).filter((v, k, a) => a.indexOf(v) === k) : paths[0];
+                }
+                const { data, error } = await _supabase.from(table).upsert([row], { onConflict: 'id' }).select('*');
+                if (error) throw error;
+                const back = (data && data[0]) || row;
+                const cache = await getSiteCache(item.clientId);
+                if (cache) {
+                    cache.tables = cache.tables || {};
+                    const list = cache.tables[table] || [];
+                    const prev = list.find(r => r.id === back.id);
+                    cache.tables[table] = list.filter(r => r.id !== back.id).concat([Object.assign({}, prev || {}, back)]);
+                    await saveSiteCache(item.clientId, cache);
+                }
+                scheduleSiteRefresh(item.clientId);
+                return;
+            }
+
+            if (item.kind === 'table_delete') {
+                const { error } = await _supabase.from(item.data.table).delete().eq('id', item.data.id);
+                if (error) throw error;
+                const cache = await getSiteCache(item.clientId);
+                if (cache && cache.tables && cache.tables[item.data.table]) {
+                    cache.tables[item.data.table] = cache.tables[item.data.table].filter(r => r.id !== item.data.id);
+                    await saveSiteCache(item.clientId, cache);
+                }
+                return;
+            }
+
             if (item.kind === 'update_client') {
                 const { data, error } = await _supabase.from('clients').update(toDbClientFields(item.data.fields)).eq('id', item.clientId).select('id');
                 if (error) throw error;
@@ -2506,6 +2547,24 @@
                         await removePhotos((gone || []).flatMap(r => Array.isArray(r.photos) ? r.photos : []));
                     }
                 }
+                // recommendation updates and stations first registered during the visit
+                const delIn = async (table, ids) => {
+                    if (!ids || !ids.length) return [];
+                    const { data: gone, error: e1 } = await _supabase.from(table).select('*').in('id', ids);
+                    if (e1) { if (/does not exist|schema cache|could not find the table/i.test(e1.message || '')) return []; throw e1; }
+                    const { error: e2 } = await _supabase.from(table).delete().in('id', ids);
+                    if (e2) throw e2;
+                    return gone || [];
+                };
+                const goneUpdates = await delIn('recommendation_updates', item.data.recUpdateIds);
+                await removePhotos(goneUpdates.flatMap(r => Array.isArray(r.photos) ? r.photos : []));
+                // put each affected recommendation's status back to its latest remaining update
+                for (const recId of Array.from(new Set(goneUpdates.map(r => r.rec_id)))) {
+                    const { data: rest } = await _supabase.from('recommendation_updates').select('status, at').eq('rec_id', recId).order('at', { ascending: false }).limit(1);
+                    const st = rest && rest[0] ? (rest[0].status === 'new' ? 'open' : rest[0].status) : 'open';
+                    await _supabase.from('recommendations').update({ status: st, completed_at: st === 'complete' ? rest[0].at : null }).eq('id', recId);
+                }
+                await delIn('stations', item.data.stationIds);
                 await removePhotos(allPhotoPaths(removed));
                 if (await getSiteCache(cid)) syncSiteCache(cid, 'full').catch(() => {});
                 return;
@@ -2528,6 +2587,10 @@
                     await removePhotos(allPhotoPaths(rows));
                 }
                 {
+                    const { error: sErr } = await _supabase.from('stations').delete().eq('client_id', String(cid)).in('barcode', barcodes);
+                    if (sErr && !/does not exist|schema cache|could not find the table/i.test(sErr.message || '')) throw sErr;
+                }
+                {
                     const { data: gone, error: rErr } = await _supabase.from('recommendations').select('photos').eq('client_id', String(cid)).in('station_barcode', barcodes);
                     if (rErr && !/does not exist|schema cache/i.test(rErr.message || '')) throw rErr;
                     if (!rErr && (gone || []).length) {
@@ -2540,6 +2603,7 @@
                 if (cache) {
                     cache.rows = cache.rows.filter(r => !barcodes.includes(r.barcode_id));
                     cache.recs = (cache.recs || []).filter(r => !barcodes.includes(r.station_barcode));
+                    if (cache.tables && cache.tables.stations) cache.tables.stations = cache.tables.stations.filter(r => !barcodes.includes(r.barcode));
                     await saveSiteCache(cid, cache);
                 }
                 return;
@@ -2562,6 +2626,22 @@
                     if (count) throw new Error('The database refused to move the records (permission denied). Run pestis_r14_update.sql in the Supabase SQL editor, then tap Retry. The app already shows the new barcode.');
                 }
                 return;
+            }
+
+            if (item.kind === 'save_setting') {
+                const { error } = await _supabase.from('app_settings').upsert([{ key: item.data.key, value: item.data.value, updated_by: technicianLabel(), updated_at: new Date().toISOString() }], { onConflict: 'key' });
+                if (error) throw new Error(friendlyOptionsError(error));
+                return;
+            }
+
+            if ((item.kind === 'add_option' || item.kind === 'delete_option') && LIST_TABLES[item.data.kind]) {
+                // each list in its own table (falls back to app_options on databases without them)
+                const table = LIST_TABLES[item.data.kind];
+                const res = item.kind === 'add_option'
+                    ? await _supabase.from(table).upsert([Object.assign({ id: item.data.id, label: item.data.label, sort: item.data.sort || 0 }, item.data.kind === 'prep' ? { unit: item.data.unit || 'each' } : {})], { onConflict: 'id' })
+                    : await _supabase.from(table).delete().eq('id', item.data.id);
+                if (!res.error) return;
+                if (!/does not exist|schema cache|could not find the table/i.test(res.error.message || '')) throw new Error(friendlyOptionsError(res.error));
             }
 
             if (item.kind === 'add_option') {
@@ -2622,10 +2702,30 @@
             return enqueue({ kind: 'insert_rec', clientId: selectedClient.id, siteName: selectedClient.Name, label: label, data: { rec: rec } }, photos);
         }
 
+        // Saves (inserts or updates) a row in one of the site tables. Works offline; photos upload first.
+        async function queueTableRow(table, row, label, opts) {
+            opts = opts || {};
+            const stamp = Date.now();
+            const photos = (opts.blobs || []).map((blob, i) => ({ blob: blob, path: `${selectedClient.id}/${opts.prefix || table}_${stamp}_${i + 1}.${extFor(blob)}` }));
+            return enqueue({
+                kind: 'table_upsert', clientId: selectedClient.id, siteName: selectedClient.Name, label: label,
+                data: { table: table, row: Object.assign({ client_id: String(selectedClient.id) }, row), photoField: opts.photoField || null }
+            }, photos);
+        }
+        async function queueTableDelete(table, id, label) {
+            return enqueue({ kind: 'table_delete', clientId: selectedClient.id, siteName: selectedClient.Name, label: label, data: { table: table, id: id } });
+        }
+
         // A site-level event for the activity log (kept even if the visit is cancelled)
         async function queueSiteChange(payload, label) {
             if (!selectedClient) return null;
-            return queueLog('SITE_CHANGE', Object.assign({ technician: technicianLabel(), servicedAt: new Date().toISOString() }, payload), null, label || payload.title || 'Site change');
+            const title = payload.action === 'visit_started' ? `Visit started · ${payload.visitType || 'Routine Service'}`
+                : payload.action === 'visit_cancelled' ? 'Visit cancelled' : (payload.title || 'Site details changed');
+            return queueTableRow('site_events', {
+                id: uid(), action: payload.action || 'site_edit', title: title,
+                detail: payload.detail || payload.note || null, station: payload.station || null,
+                technician: technicianLabel(), at: new Date().toISOString()
+            }, label || title);
         }
 
         async function queueClientUpdate(client, fields, label, removePaths, lane) {
@@ -2677,7 +2777,7 @@
         // ---------- Visits in progress ----------
         // Stored on the site record so the whole team sees it. Updates use their own upload lane,
         // so they can never hold up service records if the database columns haven't been added yet.
-        const VISIT_STALE_HOURS = 24;
+        let VISIT_STALE_HOURS = 24;     // team setting
         function visitInfo(c) {
             if (!c || !c.visit_started_at) return null;
             const t = Date.parse(c.visit_started_at);
@@ -2852,7 +2952,10 @@
                 case 'delete_station': return { table: 'service_logs', action: 'delete', where: { client_id: item.clientId, barcode_id: d.barcodes || [d.barcode] } };
                 case 'change_barcode': return { table: 'service_logs', action: 'update', where: { client_id: item.clientId, barcode_id: d.from }, set: { barcode_id: d.to } };
                 case 'insert_rec': return { table: 'recommendations', action: 'insert', row: Object.assign({}, d.rec, { photos: itemPhotos(item).map(p => p.path).concat(d.rec.photos || []) }), note: 'rec_no is filled in by the database.' };
-                case 'add_option': return { table: 'app_options', action: 'upsert', row: d };
+                case 'table_upsert': return { table: d.table, action: 'upsert (insert, or update the columns given)', row: d.row, photoColumn: d.photoField || undefined };
+                case 'table_delete': return { table: d.table, action: 'delete', where: { id: d.id } };
+                case 'save_setting': return { table: 'app_settings', action: 'upsert', row: { key: d.key, value: d.value } };
+                case 'add_option': return { table: LIST_TABLES[d.kind] || 'app_options', action: 'upsert', row: d };
                 case 'delete_option': return { table: 'app_options', action: 'delete', where: { id: d.id } };
                 default: return { kind: item.kind, data: d };
             }
@@ -3314,7 +3417,7 @@
         //  TEAM, SITE ASSIGNMENT & CONTRACT RENEWALS
         // ===================================================================
         let teamMembers = [];          // [{ id, name, email }]
-        const RENEWAL_WARN_DAYS = 30;  // warn at least a month before a contract ends
+        let RENEWAL_WARN_DAYS = 30;    // warn at least a month before a contract ends (team setting)
         const SITE_FILTER_KEY = 'pestis-site-filter';
         let siteFilter = null;         // 'mine' | 'all' | 'unassigned' | 'renewals' | 'tech:<id>'
 
@@ -3579,7 +3682,7 @@
             const section = (title, color, items) => items.length ? `
                 <div class="space-y-2"><div class="eyebrow" style="color:${color};">${title} (${items.length})</div>${items.join('')}</div>` : '';
             const html = [
-                section('Visits open more than 24 hours', '#dc2626', n.longVisits.map(x => row(x.c, `Started ${fmtDateTimeLong(x.v.at).date} ${fmtDateTimeLong(x.v.at).time}${x.v.by ? ' by ' + teamName(x.v.by) : ''} - complete or cancel it`, 'chip-red', `Open ${visitAgeText(x.v)}`))),
+                section(`Visits open more than ${VISIT_STALE_HOURS} hours`, '#dc2626', n.longVisits.map(x => row(x.c, `Started ${fmtDateTimeLong(x.v.at).date} ${fmtDateTimeLong(x.v.at).time}${x.v.by ? ' by ' + teamName(x.v.by) : ''} - complete or cancel it`, 'chip-red', `Open ${visitAgeText(x.v)}`))),
                 section('Missed services', '#dc2626', n.missed.map(x => row(x.c, `${x.sv.type} · was due ${fmtDay(x.sv.nextDue)}`, 'chip-red', `${-x.days}d overdue`))),
                 section(notifDueMode === 'week' ? 'Due in the next 7 days' : 'Due today', '#ea580c', n.dueSoon.map(x => row(x.c, `${x.sv.type} · due ${fmtDay(x.sv.nextDue)}`, 'chip-amber', x.days === 0 ? 'Today' : `In ${x.days}d`))),
                 section('Contracts to renegotiate', '#7c3aed', n.contracts.map(x => row(x.c, x.ci.text, x.ci.days < 0 ? 'chip-red' : 'chip-purple', x.ci.days < 0 ? 'Expired' : `${x.ci.days}d left`)))
@@ -4301,7 +4404,7 @@
                 const rows = await fetchRowsPaged(clientId, null, prog);
                 changed = !cache || rows.length !== serverRows(cache.rows).length || latestCreatedAt(rows) !== latestCreatedAt(cache.rows);
                 added = Math.max(0, rows.length - before);
-                cache = { rows: rows, lastSyncAt: now, lastFullAt: now, recs: cache ? cache.recs : undefined, recsOk: cache ? cache.recsOk : undefined };
+                cache = { rows: rows, lastSyncAt: now, lastFullAt: now, recs: cache ? cache.recs : undefined, recsOk: cache ? cache.recsOk : undefined, tables: cache ? cache.tables : undefined };
             } else {
                 let rows = cache.rows;
                 let lastFullAt = cache.lastFullAt || now;
@@ -4325,25 +4428,33 @@
                     lastFullAt = now;
                     changed = true;
                 }
-                cache = { rows: rows, lastSyncAt: now, lastFullAt: lastFullAt, recs: cache.recs, recsOk: cache.recsOk };
+                cache = { rows: rows, lastSyncAt: now, lastFullAt: lastFullAt, recs: cache.recs, recsOk: cache.recsOk, tables: cache.tables };
             }
 
-            // Recommendations live in their own table: fetch the site's list (numbers, status, photos)
-            try {
-                const { data: recs, error: rErr } = await withTimeout(
-                    _supabase.from('recommendations').select('*').eq('client_id', String(clientId)), 15000, 'Downloading recommendations');
-                if (rErr) throw rErr;
-                const before = JSON.stringify(cache.recs || []);
-                cache.recs = recs || [];
-                cache.recsOk = true;
-                recTableMissing = false;
-                if (JSON.stringify(cache.recs) !== before) changed = true;
-            } catch (e) {
-                if (/does not exist|schema cache|could not find the table/i.test(e.message || '')) { recTableMissing = true; cache.recsOk = false; }
-                else if (!isNetworkError(e)) logAppError('Downloading recommendations', e);
-                const old = await getSiteCache(clientId);
-                if (old && old.recs && !cache.recs) cache.recs = old.recs;
+            // Site records in their own tables (small lists, fetched whole on every sync)
+            const fetchTable = name => withTimeout(_supabase.from(name).select('*').eq('client_id', String(clientId)), 15000, 'Downloading ' + name)
+                .then(r => { if (r.error) throw r.error; return r.data || []; });
+            const [recRes, ...tabRes] = await Promise.allSettled([fetchTable('recommendations')].concat(SITE_TABLES.map(fetchTable)));
+            const missing = e => /does not exist|schema cache|could not find the table/i.test((e && e.message) || '');
+            if (recRes.status === 'fulfilled') {
+                if (JSON.stringify(recRes.value) !== JSON.stringify(cache.recs || [])) changed = true;
+                cache.recs = recRes.value; cache.recsOk = true; recTableMissing = false;
+            } else {
+                if (missing(recRes.reason)) { recTableMissing = true; cache.recsOk = false; }
+                else if (!isNetworkError(recRes.reason)) logAppError('Downloading recommendations', recRes.reason);
+                if (!cache.recs) { const old = await getSiteCache(clientId); cache.recs = old && old.recs; }
             }
+            const prevTables = cache.tables || ((await getSiteCache(clientId)) || {}).tables || {};
+            cache.tables = Object.assign({}, prevTables);
+            splitTablesMissing = false;
+            tabRes.forEach((r, i) => {
+                const name = SITE_TABLES[i];
+                if (r.status === 'fulfilled') {
+                    if (JSON.stringify(r.value) !== JSON.stringify(prevTables[name] || [])) changed = true;
+                    cache.tables[name] = r.value;
+                } else if (missing(r.reason)) splitTablesMissing = true;
+                else if (!isNetworkError(r.reason)) logAppError('Downloading ' + name, r.reason);
+            });
             await saveSiteCache(clientId, cache);
             return { cache, changed, added };
         }
@@ -4422,6 +4533,56 @@
         let barcodeAliases = new Map(); // old barcode -> new barcode
         let lastVisitStats = null;      // { scanned, total, visit }
         let recTableMissing = false;    // the database has no recommendations table yet
+        let splitTablesMissing = false; // the database doesn't have the stations / plans / visits tables yet
+        let siteStations = new Map();   // barcode -> row in the stations table
+        const SITE_TABLES = ['stations', 'site_maps', 'visits', 'recommendation_updates', 'site_events'];
+
+        // A site table as this device sees it: the saved copy plus changes still waiting to upload
+        function effectiveTable(cache, name, clientId) {
+            const byId = new Map(((cache && cache.tables && cache.tables[name]) || []).map(r => [r.id, Object.assign({}, r)]));
+            const pending = new Map();
+            queueItems.filter(i => (i.kind === 'table_upsert' || i.kind === 'table_delete') && i.data.table === name && String(i.clientId) === String(clientId) && !i.cancelled)
+                .sort((a, b) => a.seq - b.seq).forEach(i => {
+                    if (i.kind === 'table_delete') { if (i.status !== 'sent') byId.delete(i.data.id); return; }
+                    if (i.status === 'sent' && byId.has(i.data.row.id)) return; // the saved copy already has it
+                    const row = Object.assign(byId.get(i.data.row.id) || {}, i.data.row);
+                    const phs = itemPhotos(i);
+                    if (phs.length && i.data.photoField) {
+                        const paths = phs.map(p => p.path);
+                        row[i.data.photoField] = i.data.photoField === 'photos' ? paths.concat(row.photos || []).filter((v, k, a) => a.indexOf(v) === k) : paths[0];
+                        if (i.status !== 'sent') pending.set(row.id, phs.map(p => p.blobKey));
+                    }
+                    row._pending = i.status !== 'sent';
+                    byId.set(row.id, row);
+                });
+            return Array.from(byId.values()).map(r => Object.assign(r, { _blobKeys: pending.get(r.id) || null }));
+        }
+
+        // Table rows shaped like the old service_logs records, so the rest of the app reads them the same way
+        function tableRowsAsLogs(cache, clientId) {
+            const out = [];
+            const t = name => effectiveTable(cache, name, clientId);
+            const base = (barcode, at, payload, r, extra) => Object.assign({ barcode_id: barcode, created_at: at, payload: payload, _fromTable: true, _pending: !!r._pending, _blobKeys: r._blobKeys || undefined }, extra || {});
+            t('site_maps').forEach(r => out.push(base('SITE_MAP', r.created_at || r.updated_at, {
+                clientRef: r.id, mapId: r.id, name: r.name, w: r.width, h: r.height, order: r.sort,
+                photos: r.image_path ? [r.image_path] : [], servicedAt: r.created_at || r.updated_at
+            }, r, { _noEvent: true })));
+            t('stations').forEach(r => { if (r.map_id) out.push(base('MAP_PIN', r.updated_at || r.created_at, {
+                clientRef: 'pin:' + r.id, barcode: r.barcode, mapId: r.map_id, x: r.pin_x, y: r.pin_y, servicedAt: r.updated_at || r.created_at
+            }, r, { _noEvent: true })); });
+            t('visits').forEach(r => out.push(base('SITE_VISIT_SUMMARY', r.created_at || r.completed_at, {
+                clientRef: r.id, siteNotes: r.notes, technician: r.technician, visitType: r.visit_type,
+                startedAt: r.started_at, completedAt: r.completed_at, signedInAt: r.signed_in_at, signedOutAt: r.signed_out_at,
+                servicesCompleted: r.services_completed || [], unscannedCount: r.unscanned_count, editedAt: r.edited_at, editedBy: r.edited_by
+            }, r)));
+            t('recommendation_updates').forEach(r => out.push(base(REC_UPDATE_ID, r.created_at || r.at, {
+                clientRef: r.id, recRef: r.rec_id, status: r.status, note: r.note || '', photos: r.photos || [], technician: r.technician, servicedAt: r.at
+            }, r)));
+            t('site_events').forEach(r => out.push(base('SITE_CHANGE', r.created_at || r.at, {
+                clientRef: r.id, action: r.action, title: r.title, detail: r.detail, station: r.station, technician: r.technician, servicedAt: r.at
+            }, r)));
+            return out;
+        }
 
         // A recommendation from the recommendations table, shaped like a service_logs record so the rest of the app reads it the same way
         function recToRow(r, opts) {
@@ -4469,6 +4630,16 @@
             });
             // the same recommendation recorded the old way (inside service_logs) is shown from the table instead
             const fromTable = id => recIds.has(id);
+
+            // Stations, plans, visits, recommendation updates and site events from their own tables
+            const tableLogs = tableRowsAsLogs(saved, clientId);
+            const tableRefs = new Set(tableLogs.map(r => r.payload.clientRef));
+            for (let k = rows.length - 1; k >= 0; k--) {
+                const r = rows[k];
+                if (!r._fromTable && META_IDS.has(r.barcode_id) && r.payload && tableRefs.has(r.payload.clientRef)) rows.splice(k, 1);
+            }
+            rows.push(...tableLogs);
+            const stationRows = effectiveTable(saved, 'stations', clientId);
 
             const refs = new Set(rows.map(r => r.payload && r.payload.clientRef).filter(Boolean));
             queueItems
@@ -4700,6 +4871,23 @@
                 rec.lastChange = ups.length ? (ups[ups.length - 1].payload.servicedAt || ups[ups.length - 1].created_at) : rec.date;
             }));
 
+            // The stations table names each station (and lists stations with no service yet)
+            siteStations = new Map();
+            stationRows.forEach(st => {
+                siteStations.set(st.barcode, st);
+                const dev = map.get(st.barcode) || {
+                    barcode_id: st.barcode, recommendationsHistory: [], lastPayload: {}, visitPayload: null, visitRef: null, visitRec: null,
+                    history: [], firstAt: Date.parse(st.created_at) || 0
+                };
+                if (st.name) dev.locationName = st.name;
+                if (st.type) dev.deviceType = st.type;
+                if (!dev.locationName) dev.locationName = 'Unnamed station';
+                if (!dev.deviceType) dev.deviceType = 'Rodent Bait Station';
+                dev.stationId = st.id;
+                dev.recommendationsHistory.forEach(r => { r.station = dev.locationName; r.stationType = dev.deviceType; });
+                map.set(st.barcode, dev);
+            });
+
             siteDevices = Array.from(map.values());
             sitePastVisits = visits.slice().sort((a, b) => b.to - a.to);
             scannedBarcodesThisVisit = activeScannedSet;
@@ -4728,6 +4916,7 @@
                 const at = recTime(r);
                 const by = p.technician || '';
                 const add = (kind, title, detail, extra) => ev.push(Object.assign({ at, kind, title, detail: detail || '', by, pending: !!r._pending }, extra || {}));
+                if (r._noEvent) return; // plan / pin state from the tables (their history is in site_events)
                 switch (r.barcode_id) {
                     case 'SITE_VISIT_SUMMARY': {
                         const v = visits.find(x => x.row === r);
@@ -4757,9 +4946,9 @@
                         if (p.action === 'visit_started') {
                             const v = visits.find(x => at > x.from && at <= x.to);
                             if (v) startsLogged.add(v.key);
-                            add('visit', `Visit started · ${p.visitType || 'Routine Service'}`);
-                        } else if (p.action === 'visit_cancelled') add('visit', 'Visit cancelled', p.note || '');
-                        else add('change', p.title || 'Site details changed', p.detail || '');
+                            add('visit', p.title && /^Visit started/.test(p.title) ? p.title : `Visit started · ${p.visitType || 'Routine Service'}`);
+                        } else if (p.action === 'visit_cancelled') add('visit', 'Visit cancelled', p.note || p.detail || '');
+                        else add('change', p.title || 'Site details changed', p.detail || '', p.station ? { station: p.station } : null);
                         return;
                 }
                 if (META_IDS.has(r.barcode_id)) return;
@@ -5182,6 +5371,7 @@
         let recNumbersMissing = false;
         function unnumberedUploadedRecs() { return allSiteRecs().filter(r => r.recNo == null && !r.pending); }
         function recNumbersNotice() {
+            if (splitTablesMissing) return `<div class="row-item p-2.5 text-[11px]" style="border-color:#d97706;color:#d97706;">The database doesn't have the new stations / floor plans / visits tables yet. Run <b>pestis_split_tables.sql</b> in the Supabase SQL editor, then tap Sync Site. Changes made meanwhile are kept on this device.</div>`;
             if (!recTableMissing) return '';
             return `<div class="row-item p-2.5 text-[11px]" style="border-color:#d97706;color:#d97706;">Recommendation numbers need the recommendations table in the database. Run <b>pestis_recommendations.sql</b> in the Supabase SQL editor, then tap Sync Site.</div>`;
         }
@@ -5494,15 +5684,14 @@
             btn.disabled = true;
             try {
                 const blobs = recPendingPhotos.map(p => p.blob);
-                await queueLog(REC_UPDATE_ID, {
-                    recRef: rec.id,
-                    stationBarcode: rec.barcode,
-                    locationName: rec.station,
+                await queueTableRow('recommendation_updates', {
+                    id: uid(),
+                    rec_id: rec.id,
                     status: status,
-                    note: note,
+                    note: note || null,
                     technician: technicianLabel(),
-                    servicedAt: new Date().toISOString()
-                }, blobs, `Recommendation ${fmtRecNo(rec.recNo) ? fmtRecNo(rec.recNo) + ' ' : ''}${status === 'complete' ? 'completed' : status === 'open' ? 're-opened' : 'updated'} · ${rec.station}`);
+                    at: new Date().toISOString()
+                }, `Recommendation ${fmtRecNo(rec.recNo) ? fmtRecNo(rec.recNo) + ' ' : ''}${status === 'complete' ? 'completed' : status === 'open' ? 're-opened' : 'updated'} · ${rec.station}`, { blobs: blobs, photoField: 'photos', prefix: 'REC_UPDATE' });
                 recPendingPhotos = [];
                 await refreshSiteStateFromCache();
                 document.getElementById('recModal').classList.add('hidden');
@@ -5932,13 +6121,15 @@
                 notes !== (v.summaryNote === 'No notes provided' ? '' : v.summaryNote);
             if (sumChanged) {
                 const p = v.payload;
-                const payload = Object.assign({}, p, {
-                    visitType: type, siteNotes: notes || 'No notes provided',
-                    signedInAt: signedIn, signedOutAt: signedOut,
-                    completedAt: p.completedAt || new Date(recTime(v.row)).toISOString(), // the visit keeps its place
-                    clientRef: uid(), supersedes: v.key, editedAt: now, editedBy: me
-                });
-                jobs.push(() => queueLog('SITE_VISIT_SUMMARY', payload, null, `Visit corrected · ${fmtDateTimeLong(v.date).date}`));
+                // the whole visit is sent, so a visit recorded the old way moves into the visits table too
+                jobs.push(() => queueTableRow('visits', {
+                    id: v.key, visit_type: type, notes: notes || 'No notes provided',
+                    signed_in_at: signedIn, signed_out_at: signedOut,
+                    completed_at: p.completedAt || new Date(recTime(v.row)).toISOString(), // the visit keeps its place
+                    started_at: p.startedAt || null, technician: p.technician || v.technician || null,
+                    services_completed: p.servicesCompleted || v.servicesCompleted || [],
+                    edited_at: now, edited_by: me
+                }, `Visit corrected · ${fmtDateTimeLong(v.date).date}`));
             }
 
             if (!jobs.length) { visitEditing = false; renderVisitModal(); return; }
@@ -6074,8 +6265,11 @@
             for (const i of queueItems.filter(i => i.kind === 'insert_rec' && String(i.clientId) === String(cid) && (i.status === 'pending' || i.status === 'failed') && i.data.rec.station_barcode === from)) {
                 i.data.rec.station_barcode = to; await persistItem(i);
             }
-            // 2. The change itself (every device applies it to the records it has)
-            await queueLog('BARCODE_CHANGE', { from, to, locationName: name, technician: technicianLabel(), servicedAt: new Date().toISOString() }, null, `Barcode changed ${from} → ${to} · ${name}`);
+            // 2. The station itself
+            const st = siteStations.get(from);
+            await queueTableRow('stations', st ? { id: st.id, barcode: to, updated_at: new Date().toISOString() }
+                : { id: uid(), barcode: to, name: name, type: d ? d.deviceType : null, created_by: technicianLabel() }, `Barcode changed ${from} → ${to} · ${name}`);
+            await queueSiteChange({ action: 'barcode_change', title: `Barcode changed ${from} → ${to}`, station: name }, 'Barcode changed · log');
             // 3. Move the records in the database (its own lane, so it never holds up service records)
             await enqueue({ kind: 'change_barcode', clientId: cid, siteName: c.Name, lane: 'barcode', label: `Move records to barcode ${to} · ${name}`, data: { from, to } });
             // 4. The saved copy and the screen
@@ -6086,6 +6280,7 @@
                     else if (r.barcode_id === 'MAP_PIN' && r.payload && r.payload.barcode === from) r.payload.barcode = to;
                 });
                 (cache.recs || []).forEach(r => { if (r.station_barcode === from) r.station_barcode = to; });
+                ((cache.tables && cache.tables.stations) || []).forEach(r => { if (r.barcode === from) r.barcode = to; });
                 await saveSiteCache(cid, cache);
             }
             if (scannedBarcodesThisVisit.has(from)) { scannedBarcodesThisVisit.delete(from); scannedBarcodesThisVisit.add(to); }
@@ -6136,7 +6331,12 @@
             const name = stationNameFor(barcode);
             const mapName = mapId ? ((siteMaps.find(m => m.id === mapId) || {}).name || 'floor plan') : '';
             const label = mapId == null ? `Removed from floor plan · ${name}` : x == null ? `Assigned to ${mapName} · ${name}` : `Pin ${extra && extra.moved ? 'moved' : 'placed'} on ${mapName} · ${name}`;
-            await queueLog('MAP_PIN', Object.assign({ barcode, mapId: mapId || null, x: round(x), y: round(y), locationName: name, technician: technicianLabel(), servicedAt: new Date().toISOString() }, extra || {}), null, label);
+            const st = siteStations.get(barcode);
+            const row = { id: st ? st.id : uid(), barcode: barcode, map_id: mapId || null, pin_x: round(x), pin_y: round(y), updated_at: new Date().toISOString() };
+            if (!st) { row.name = name; row.type = stationTypeFor(barcode) || null; row.created_by = technicianLabel(); }
+            await queueTableRow('stations', row, label);
+            siteStations.set(barcode, Object.assign({}, st || {}, row));
+            await queueSiteChange({ action: 'pin', title: mapId == null ? 'Removed from floor plan' : x == null ? `Assigned to ${mapName}` : `Pin ${extra && extra.moved ? 'moved' : 'placed'} on ${mapName}`, station: name }, label + ' · log');
             sitePins.set(barcode, { mapId: mapId || null, x: round(x), y: round(y), at: Date.now(), by: technicianLabel() });
             renderSiteMapsList();
             if (!document.getElementById('mapModal').classList.contains('hidden')) selectMapOptionsRefresh();
@@ -6560,14 +6760,17 @@
                 let id;
                 if (mode === 'new') {
                     id = uid();
-                    const order = siteMaps.length ? Math.max(...siteMaps.map(x => x.order || 0)) + 1 : Date.now();
-                    await queueLog('SITE_MAP', Object.assign({ mapId: id, name, w: mapEditDims.w, h: mapEditDims.h, order }, base), [mapEditBlob], `Floor plan added · ${name}`);
+                    const order = siteMaps.length ? Math.max(...siteMaps.map(x => x.order || 0)) + 1 : 1;
+                    await queueTableRow('site_maps', { id, name, width: mapEditDims.w, height: mapEditDims.h, sort: order, created_by: base.technician }, `Floor plan added · ${name}`, { blobs: [mapEditBlob], photoField: 'image_path', prefix: 'SITE_MAP' });
+                    await queueSiteChange({ action: 'floor_plan', title: `Floor plan "${name}" added` }, 'Floor plan added · log');
                 } else if (mode === 'rename') {
                     id = m.id;
-                    await queueLog('SITE_MAP', Object.assign({ mapId: id, name, w: m.w, h: m.h, order: m.order }, base), null, `Floor plan renamed · ${name}`);
+                    await queueTableRow('site_maps', { id, name, updated_at: base.servicedAt }, `Floor plan renamed · ${name}`);
+                    await queueSiteChange({ action: 'floor_plan', title: `Floor plan "${m.name}" renamed to "${name}"` }, 'Floor plan renamed · log');
                 } else {
                     id = m.id;
-                    await queueLog('SITE_MAP', Object.assign({ mapId: id, name: m.name, w: mapEditDims.w, h: mapEditDims.h, order: m.order }, base), [mapEditBlob], `Floor plan image replaced · ${m.name}`);
+                    await queueTableRow('site_maps', { id, width: mapEditDims.w, height: mapEditDims.h, updated_at: base.servicedAt }, `Floor plan image replaced · ${m.name}`, { blobs: [mapEditBlob], photoField: 'image_path', prefix: 'SITE_MAP' });
+                    await queueSiteChange({ action: 'floor_plan', title: `Floor plan "${m.name}" image replaced` }, 'Floor plan image replaced · log');
                 }
                 closeMapEdit();
                 await refreshSiteStateFromCache();
@@ -6594,7 +6797,8 @@
                 confirmLabel: 'Yes, delete plan',
                 cancelLabel: 'Keep it',
                 onConfirm: async () => {
-                    await queueLog('SITE_MAP', { mapId: m.id, name: m.name, deleted: true, technician: technicianLabel(), servicedAt: new Date().toISOString() }, null, `Floor plan removed · ${m.name}`);
+                    await queueTableDelete('site_maps', m.id, `Floor plan removed · ${m.name}`);
+                    await queueSiteChange({ action: 'floor_plan', title: `Floor plan "${m.name}" removed` }, 'Floor plan removed · log');
                     await refreshSiteStateFromCache();
                     selectMap(siteMaps[0] ? siteMaps[0].id : null);
                 }
@@ -7505,6 +7709,14 @@
                 const newRec = f.recommendation || newBlobs.length;
                 const photoBit = newBlobs.length ? ` + ${newBlobs.length} photo${newBlobs.length === 1 ? '' : 's'}` : '';
                 await queueLog(currentBarcode, payloadData, null, `Service record · ${locNameInput}`);
+                // The station's own row: created the first time, updated when its name or type changes
+                const st = siteStations.get(currentBarcode);
+                if (!st || st.name !== locNameInput || (st.type || '') !== (devType || '')) {
+                    const row = st ? { id: st.id, name: locNameInput, type: devType, updated_at: new Date().toISOString() }
+                        : { id: uid(), barcode: currentBarcode, name: locNameInput, type: devType, created_by: technicianLabel(), created_at: new Date().toISOString() };
+                    await queueTableRow('stations', row, st ? `Station details updated · ${locNameInput}` : `New station · ${locNameInput}`);
+                    siteStations.set(currentBarcode, Object.assign({}, st || {}, row));
+                }
                 // A new recommendation is its own record (the database gives it the next number)
                 if (newRec) {
                     await queueRecommendation(currentBarcode, {
@@ -7556,7 +7768,8 @@
             const isThisStation = i => i.kind === 'insert_log' && String(i.clientId) === String(cid) && i.data.barcode_id === barcode;
             try {
                 // 1. Records for this station still waiting on this device: just remove them
-                for (const i of queueItems.filter(i => (isThisStation(i) || (i.kind === 'insert_rec' && String(i.clientId) === String(cid) && i.data.rec.station_barcode === barcode)) && (i.status === 'pending' || i.status === 'failed'))) {
+                for (const i of queueItems.filter(i => (isThisStation(i) || (i.kind === 'insert_rec' && String(i.clientId) === String(cid) && i.data.rec.station_barcode === barcode)
+                        || (i.kind === 'table_upsert' && i.data.table === 'stations' && String(i.clientId) === String(cid) && i.data.row.barcode === barcode)) && (i.status === 'pending' || i.status === 'failed'))) {
                     await removeQueueItem(i);
                 }
                 await markSentCancelled(isThisStation);
@@ -7577,6 +7790,7 @@
                     const gone = new Set([barcode].concat(oldCodes));
                     cache.rows = cache.rows.filter(r => !gone.has(r.barcode_id));
                     cache.recs = (cache.recs || []).filter(r => !gone.has(r.station_barcode));
+                    if (cache.tables && cache.tables.stations) cache.tables.stations = cache.tables.stations.filter(r => !gone.has(r.barcode));
                     await saveSiteCache(cid, cache);
                 }
                 siteDevices = siteDevices.filter(d => d.barcode_id !== barcode);
@@ -7624,6 +7838,18 @@
                     await removeQueueItem(i);
                 }
                 const recIds = new Set(queueItems.filter(i => recInThisVisit(i) && (i.status === 'sent' || i.status === 'uploading')).map(i => i.data.rec.id));
+                // recommendation updates and stations first registered during this visit
+                const tablesCache = (await getSiteCache(cid)) || {};
+                const updatesHere = effectiveTable(tablesCache, 'recommendation_updates', cid).filter(r => Date.parse(r.at) > cutoffT && (r.technician || '') === me);
+                const stationsHere = effectiveTable(tablesCache, 'stations', cid).filter(r => Date.parse(r.created_at) > cutoffT && (r.created_by || '') === me && !r.map_id);  // a station placed on a floor plan stays, like other map edits
+                const dropIds = new Set(updatesHere.map(r => r.id).concat(stationsHere.map(r => r.id)));
+                for (const i of queueItems.filter(i => i.kind === 'table_upsert' && String(i.clientId) === String(cid) && dropIds.has(i.data.row.id) && (i.status === 'pending' || i.status === 'failed'))) {
+                    await removeQueueItem(i);
+                }
+                const uploaded = (table, list) => list.filter(r => ((tablesCache.tables || {})[table] || []).some(x => x.id === r.id) || queueItems.some(i => i.kind === 'table_upsert' && i.data.row.id === r.id && (i.status === 'sent' || i.status === 'uploading')));
+                const recUpdateIds = uploaded('recommendation_updates', updatesHere).map(r => r.id);
+                const stationIds = uploaded('stations', stationsHere).map(r => r.id);
+                queueItems.filter(i => i.kind === 'table_upsert' && dropIds.has(i.data.row.id)).forEach(i => { i.cancelled = true; persistItem(i); });
                 queueItems.filter(i => recInThisVisit(i)).forEach(i => { i.cancelled = true; persistItem(i); });
 
                 // 2. Note exactly which uploaded records belong to this visit, so only those are removed from the server
@@ -7639,7 +7865,7 @@
                     clientId: cid,
                     siteName: client.Name,
                     label: 'Visit cancelled',
-                    data: { technicianId: currentUser.id, refs: Array.from(refs), recIds: Array.from(new Set([...recIds, ...((cache && cache.recs) || []).filter(r => Date.parse(r.raised_at) > cutoffT && (r.raised_by || '') === me).map(r => r.id)])), cancelledAt: new Date().toISOString() }
+                    data: { technicianId: currentUser.id, refs: Array.from(refs), recIds: Array.from(new Set([...recIds, ...((cache && cache.recs) || []).filter(r => Date.parse(r.raised_at) > cutoffT && (r.raised_by || '') === me).map(r => r.id)])), recUpdateIds, stationIds, cancelledAt: new Date().toISOString() }
                 });
 
                 await queueSiteChange({ action: 'visit_cancelled', title: 'Visit cancelled', note: `${refs.size} uploaded record${refs.size === 1 ? '' : 's'} removed` }, 'Visit cancelled · log');
@@ -7649,6 +7875,7 @@
                 if (cache) {
                     cache.rows = cache.rows.filter(r => !rowInThisVisit(r));
                     cache.recs = (cache.recs || []).filter(r => !(Date.parse(r.raised_at) > cutoffT && (r.raised_by || '') === me));
+                    if (cache.tables) ['recommendation_updates', 'stations'].forEach(t => { if (cache.tables[t]) cache.tables[t] = cache.tables[t].filter(r => !dropIds.has(r.id)); });
                     await saveSiteCache(cid, cache);
                 }
 
@@ -7758,16 +7985,16 @@
 
             // 1. Save the visit (the part that matters). Only this step can "fail" the close.
             try {
-                await queueLog('SITE_VISIT_SUMMARY', {
-                    clientRef: summaryRef,
-                    siteNotes: f.siteNotes || 'Visit completed successfully.',
+                await queueTableRow('visits', {
+                    id: summaryRef,
+                    notes: f.siteNotes || 'Visit completed successfully.',
                     technician: technicianLabel(),
-                    visitType: f.visitType,
-                    startedAt: (selectedClient && selectedClient.visit_started_at) || null,
-                    servicesCompleted: f.doneTypes,
-                    unscannedCount: siteDevices.filter(d => !scannedBarcodesThisVisit.has(d.barcode_id)).length,
-                    completedAt: new Date().toISOString()
-                }, null, 'Visit completed');
+                    visit_type: f.visitType,
+                    started_at: (selectedClient && selectedClient.visit_started_at) || null,
+                    services_completed: f.doneTypes,
+                    unscanned_count: siteDevices.filter(d => !scannedBarcodesThisVisit.has(d.barcode_id)).length,
+                    completed_at: new Date().toISOString()
+                }, 'Visit completed');
 
                 await markVisitClosed(selectedClient, 'Visit completed - closed');
                 if (f.doneIds.size > 0) {
@@ -7868,6 +8095,18 @@
             if (!isOnline) return;
             beginSync('options', 'Syncing settings...');
             try {
+                // Each list has its own table now; older databases still use app_options
+                const lists = await loadListTables();
+                if (lists) {
+                    optionsLoadError = null; optionsUnitMissing = false; listTablesMissing = false;
+                    appOptions = lists;
+                    logDownload('Settings lists', { detail: `${appOptions.length} items`, collapse: true });
+                    await cacheSet('app_options', appOptions);
+                    applyPendingOptionEdits();
+                    await loadTeamSettings();
+                    return;
+                }
+                listTablesMissing = true;
                 const load = cols => withTimeout(
                     _supabase.from('app_options').select(cols).order('sort', { ascending: true }).order('label', { ascending: true }),
                     10000, 'Loading settings');
@@ -7892,9 +8131,75 @@
                 console.warn('Settings lists could not be loaded:', err.message || err);
             } finally {
                 endSync('options');
+                populateOptionSelects();
+                renderSettingsLists();
             }
-            populateOptionSelects();
-            renderSettingsLists();
+        }
+
+        // ---------- Lists in their own tables ----------
+        const LIST_TABLES = { prep: 'preparations', species: 'species', station_type: 'station_types' };
+        let listTablesMissing = false;
+        async function loadListTables() {
+            try {
+                const res = await Promise.all(Object.entries(LIST_TABLES).map(([kind, table]) =>
+                    withTimeout(_supabase.from(table).select('*').order('sort', { ascending: true }), 10000, 'Loading ' + table)
+                        .then(r => { if (r.error) throw r.error; return (r.data || []).map(o => ({ id: o.id, kind: kind, label: o.label, sort: o.sort || 0, unit: o.unit || undefined })); })));
+                return res.flat();
+            } catch (e) {
+                if (/does not exist|schema cache|could not find the table/i.test(e.message || '')) return null;
+                throw e;
+            }
+        }
+
+        // ---------- Team settings (app_settings table; admins change them) ----------
+        const TEAM_SETTINGS = {
+            renewal_warn_days: { label: 'Warn about contracts ending within (days)', def: 30, min: 1, max: 365 },
+            visit_stale_hours: { label: 'Warn when a visit has been open for (hours)', def: 24, min: 1, max: 720 }
+        };
+        let teamSettings = loadJSON('pestis-team-settings', {});
+        function teamSetting(key) {
+            const v = Number(teamSettings[key]);
+            return isFinite(v) && v > 0 ? v : TEAM_SETTINGS[key].def;
+        }
+        async function loadTeamSettings() {
+            try {
+                const { data, error } = await withTimeout(_supabase.from('app_settings').select('key, value'), 10000, 'Loading team settings');
+                if (error) throw error;
+                const next = {};
+                (data || []).forEach(r => { next[r.key] = r.value; });
+                queueItems.filter(i => i.kind === 'save_setting' && i.status !== 'sent').forEach(i => { next[i.data.key] = i.data.value; });
+                teamSettings = next;
+                saveJSON('pestis-team-settings', teamSettings);
+                applyTeamSettings();
+            } catch (e) { if (!isNetworkError(e)) console.warn('Team settings could not be loaded:', e.message || e); }
+        }
+        function applyTeamSettings() {
+            RENEWAL_WARN_DAYS = teamSetting('renewal_warn_days');
+            VISIT_STALE_HOURS = teamSetting('visit_stale_hours');
+            renderTeamSettings();
+            if (appStarted) { renderSiteCards(); renderNotifications(); }
+        }
+        function renderTeamSettings() {
+            const el = document.getElementById('teamSettingsBox');
+            if (!el) return;
+            const admin = isAdmin();
+            el.innerHTML = Object.entries(TEAM_SETTINGS).map(([key, d]) => `
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <label class="t-muted font-semibold flex-1 min-w-[12rem]" for="ts_${key}">${esc(d.label)}</label>
+                    ${admin
+                        ? `<input type="number" id="ts_${key}" min="${d.min}" max="${d.max}" value="${teamSetting(key)}" class="field !w-24 !py-2" onchange="saveTeamSetting('${key}', this.value)">`
+                        : `<span class="chip chip-blue">${teamSetting(key)}</span>`}
+                </div>`).join('') + (admin ? '' : '<div class="text-[11px] t-faint">Only admins can change these.</div>');
+        }
+        async function saveTeamSetting(key, raw) {
+            if (!isAdmin()) return;
+            const d = TEAM_SETTINGS[key];
+            const v = Math.round(Number(raw));
+            if (!isFinite(v) || v < d.min || v > d.max) { alert(`Enter a number from ${d.min} to ${d.max}.`); renderTeamSettings(); return; }
+            teamSettings[key] = v;
+            saveJSON('pestis-team-settings', teamSettings);
+            applyTeamSettings();
+            await enqueue({ kind: 'save_setting', siteName: 'Settings', label: `${d.label}: ${v}`, data: { key: key, value: v } });
         }
 
         function optionLabels(kind) {
@@ -7932,6 +8237,7 @@
 
         function openSettingsModal() {
             document.getElementById('notifDueSelect').value = notifDueMode;
+            renderTeamSettings();
             document.getElementById('newPrepUnit').innerHTML = PREP_UNITS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
             renderSettingsLists();
             renderDiagnostics();
@@ -8032,7 +8338,7 @@
             const unsentAdd = queueItems.find(i => i.status !== 'sent' && i.status !== 'uploading' && i.kind === 'add_option' && i.data.id === id);
             if (unsentAdd) await removeQueueItem(unsentAdd);
             else if (!String(id).startsWith('default-')) {
-                await enqueue({ kind: 'delete_option', siteName: 'Settings', label: `Removed ${OPTION_KIND_LABEL[o.kind] || o.kind} "${o.label}"`, data: { id: id } });
+                await enqueue({ kind: 'delete_option', siteName: 'Settings', label: `Removed ${OPTION_KIND_LABEL[o.kind] || o.kind} "${o.label}"`, data: { id: id, kind: o.kind } });
             }
             updateSyncBadge();
             populateOptionSelects();
@@ -8107,6 +8413,7 @@
 
         // ---------- START ----------
         checkPageIntegrity();
+        applyTeamSettings();
         document.querySelectorAll('.app-version').forEach(el => { el.textContent = APP_VERSION; });
         console.log('Pestis version', APP_VERSION);
 
