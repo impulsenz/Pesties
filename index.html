@@ -146,6 +146,11 @@
         .role-toggle.on { background: rgba(249,115,22,.14); border-color: #f97316; color: #ea580c; }
         html.dark .role-toggle.on { color: #fb923c; }
         .role-toggle:disabled { opacity: .55; cursor: not-allowed; }
+        .limit-alert { border: 2px solid #dc2626; background: rgba(220,38,38,.08); border-radius: .9rem; padding: .85rem; }
+        .limit-alert-head { font-weight: 900; color: #dc2626; text-transform: uppercase; letter-spacing: .04em; font-size: .8rem; }
+        .limit-alert-row { background: var(--surface); border-radius: .6rem; padding: .55rem .7rem; color: var(--text); }
+        .map-pop-photo { border-radius: .6rem; overflow: hidden; background: var(--surface3); min-height: 3rem; display: flex; align-items: center; justify-content: center; }
+        .map-pop-photo img { width: 100%; max-height: 9rem; object-fit: cover; cursor: zoom-in; display: block; }
         .ms-opt:hover, .ms-opt:focus-visible { background: var(--surface3); outline: none; }
         .ms-opt.ms-on { background: rgba(249,115,22,.12); }
         .ms-tick { width: 1.1rem; height: 1.1rem; flex-shrink: 0; border-radius: .3rem; border: 1.5px solid rgba(148,163,184,.6); display: inline-flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: 900; color: #fff; }
@@ -209,6 +214,11 @@
         .fab:hover { filter: brightness(1.08); transform: translateY(-2px); }
         .fab:active { transform: scale(.97); }
         .fab-primary { background: linear-gradient(90deg, #ea580c, #f97316); color: #fff; }
+        .scanner-fab { background: rgba(15, 23, 42, .78); color: #fff; border-color: rgba(255, 255, 255, .25); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+        .scanner-pill { background: rgba(15, 23, 42, .78); color: #fff; font-size: .75rem; font-weight: 700; padding: .45rem .9rem; border-radius: 999px; text-align: center; max-width: 92vw; }
+        #fullscreenReader video { width: 100% !important; height: 100% !important; object-fit: cover; }
+        #fullscreenReader > div { height: 100%; }
+        #fullscreenReader img[alt="Info icon"], #fullscreenReader #qr-shaded-region { display: none !important; }
 
         /* ================= STATION FOCUS VIEW ================= */
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -700,6 +710,7 @@
             <!-- Body -->
             <div id="stationSheetBody" class="flex-1 overflow-y-auto scroll-thin p-4 sm:p-6 space-y-5">
                 <p id="visitEditNote" class="hidden text-[11px] font-semibold -mb-2" style="color:#10b981;">Showing the service you saved for this station earlier in this visit. Saving again updates it.</p>
+                <div id="stationDetailsTop"></div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div id="newStationFields" class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 inset p-4" style="border-color:#f97316;">
                         <div id="stationDetailsHeading" class="sm:col-span-2 eyebrow t-accent">New Barcode Detected - Register Device Details:</div>
@@ -734,32 +745,31 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="lbl">Pest Activity Level</label>
-                        <select id="activityLevel" class="field cursor-pointer">
-                            <option value="None">None - 0% of bait taken</option>
-                            <option value="Low">Low - 25% or less of bait taken</option>
-                            <option value="Medium">Medium - 25% to 75% of bait taken</option>
-                            <option value="High">High - 75% to 100% of bait taken</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div class="col-span-2">
-                            <label class="lbl">Species Caught / Observed</label>
-                            <select id="speciesCaught" class="field cursor-pointer" onchange="updatePestCountField()"></select>
+                    <div class="sm:col-span-2 inset p-4 space-y-3">
+                        <span class="eyebrow t-accent">Pests</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                            <div class="sm:col-span-5">
+                                <label class="lbl" for="speciesCaught">Pest found</label>
+                                <select id="speciesCaught" class="field cursor-pointer" onchange="updatePestCountField(true)"></select>
+                            </div>
+                            <div id="activityRow" class="sm:col-span-4 hidden">
+                                <label class="lbl" for="activityLevel" id="activityLabel">Activity</label>
+                                <select id="activityLevel" class="field cursor-pointer" onchange="updatePestCountField()"></select>
+                            </div>
+                            <div id="pestCountRow" class="sm:col-span-3 hidden">
+                                <label class="lbl" for="pestCount" id="pestCountLabel">Number caught</label>
+                                <input type="number" id="pestCount" min="0" step="1" inputmode="numeric" placeholder="0" class="field">
+                            </div>
                         </div>
-                        <div>
-                            <label class="lbl">Number</label>
-                            <input type="number" id="pestCount" min="0" step="1" placeholder="0" class="field">
-                        </div>
+                        <p id="pestHint" class="text-[11px] t-faint">Choose the pest first. Rodents: record how much bait was eaten. Insects: Low, Medium, High - or Caught, with how many.</p>
                     </div>
 
                     <div class="sm:col-span-2 inset p-4 space-y-3">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <span class="eyebrow t-accent">Preparation</span>
-                            <div class="flex flex-wrap items-center gap-3">
-                                <button type="button" id="repeatPrepBtn" onclick="applyRepeatPrep()" class="chip chip-orange cursor-pointer hidden"></button>
-                                <label class="text-[11px] t-muted flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="autoRepeatPrep" onchange="setAutoRepeat(this.checked)" class="accent-orange-500"> Repeat on every station</label>
+                            <div class="hidden">
+                                <button type="button" id="repeatPrepBtn" class="hidden"></button>
+                                <input type="checkbox" id="autoRepeatPrep" class="hidden">
                             </div>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
@@ -772,7 +782,7 @@
                                 <input type="text" id="batchNumber" placeholder="e.g. 24-0815" class="field" autocomplete="off">
                             </div>
                             <div class="sm:col-span-3">
-                                <label class="lbl">Quantity</label>
+                                <label class="lbl" for="qtyCount">Quantity <span id="qtyRequired" style="color:#ef4444;">*</span></label>
                                 <div class="flex items-center gap-2">
                                     <input type="number" id="qtyCount" value="1" min="0" step="any" class="field">
                                     <span id="qtyUnit" class="chip chip-blue shrink-0">each</span>
@@ -811,13 +821,15 @@
                         <div id="photoPreviewGrid" class="flex flex-wrap gap-2"></div>
                     </div>
                     <button type="button" id="addRecBtn" onclick="openRecEditor()" class="btn btn-secondary w-full !py-2.5">+ Add a recommendation</button>
-                    <p id="recSaveHint" class="hidden text-[11px] t-faint">Saved with "Save Complete Service Record" below. It then appears in the list with its number.</p>
+                    <p id="recSaveHint" class="hidden text-[11px] t-faint">Saved when you save the station below. It then appears in the list with its number.</p>
 
                     <div id="pastRecommendationsList" class="space-y-2.5 max-h-96 overflow-y-auto scroll-thin text-xs"></div>
                 </div>
 
                 <!-- Station history: preparations, activity chart, log -->
                 <div id="stationHistorySection" class="hidden inset p-4 space-y-3"></div>
+
+                <div id="stationDetailsBottom"></div>
 
                 <button type="button" id="deleteStationBtn" onclick="deleteCurrentStation()" class="btn btn-outline-danger w-full hidden">
                     Delete This Station
@@ -826,9 +838,14 @@
 
             <!-- Footer -->
             <div class="p-4 sm:p-5 border-t divider shrink-0" style="background: var(--surface); padding-bottom: max(1rem, env(safe-area-inset-bottom));">
-                <button type="button" id="saveServiceBtn" onclick="saveStationServiceRecord()" class="btn btn-primary w-full !py-3.5 !text-sm">
-                    Save Complete Service Record
-                </button>
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" id="saveServiceBtn" onclick="saveStationServiceRecord()" class="btn btn-secondary w-full !py-3.5 !text-sm">
+                        Save
+                    </button>
+                    <button type="button" id="saveNextBtn" onclick="saveAndScanNext()" class="btn btn-primary w-full !py-3.5 !text-sm">
+                        Save & scan next
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1213,22 +1230,18 @@
     </div>
 
     <!-- ===================== FULLSCREEN CAMERA SCANNER ===================== -->
-    <div id="fullscreenScannerModal" class="hidden overlay fixed inset-0 z-[62] flex flex-col justify-between p-4 sm:p-6">
-        <div class="card flex flex-wrap justify-between items-center gap-2 p-4 max-w-xl w-full mx-auto">
-            <h3 id="scannerTitle" class="font-extrabold text-sm t-accent">Align Barcode in Camera Frame</h3>
-            <div class="flex flex-wrap gap-2">
-                <button type="button" id="flashToggleBtn" onclick="toggleFlashlight()" class="btn btn-secondary !py-2">Flash: OFF</button>
-                <button type="button" onclick="openManualFromScanner()" class="btn btn-secondary !py-2">⌨ Manual Entry</button>
-                <button type="button" onclick="closeScannerByUser()" class="btn btn-primary !py-2">Close Scanner</button>
+    <div id="fullscreenScannerModal" class="hidden fixed inset-0 z-[62] bg-black">
+        <div id="fullscreenReader" class="absolute inset-0"></div>
+        <div class="absolute top-0 inset-x-0 flex flex-col items-center gap-2 p-3 pointer-events-none" style="padding-top: max(.75rem, env(safe-area-inset-top));">
+            <h3 id="scannerTitle" class="hidden scanner-pill"></h3>
+            <div id="scannerHelp" class="hidden scanner-pill"></div>
+        </div>
+        <div class="absolute bottom-0 inset-x-0 z-10 pointer-events-none" style="padding-bottom: max(1.1rem, env(safe-area-inset-bottom));">
+            <div class="flex justify-center gap-2.5 px-3 flex-wrap">
+                <button type="button" id="flashToggleBtn" onclick="toggleFlashlight()" class="fab scanner-fab pointer-events-auto">Flash: OFF</button>
+                <button type="button" onclick="openManualFromScanner()" class="fab scanner-fab pointer-events-auto">⌨ Manual entry</button>
+                <button type="button" onclick="closeScannerByUser()" class="fab fab-primary pointer-events-auto">✕ Close</button>
             </div>
-        </div>
-
-        <div class="flex-1 flex items-center justify-center p-2">
-            <div id="fullscreenReader" class="w-full max-w-lg overflow-hidden rounded-3xl bg-black border-2 border-brand-500 shadow-2xl"></div>
-        </div>
-
-        <div id="scannerHelp" class="text-center text-xs text-slate-300 pb-2 font-medium">
-            Point camera directly at device barcode. Scanner auto-detects code.
         </div>
     </div>
 
@@ -1680,13 +1693,13 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r26';
+        const APP_VERSION = '2026.10.18-r27';
         // after Check for updates, tidy the address bar
         try { if (/[?&]fresh=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "adminPage", "adminTabs", "adminTiles", "adminAttention", "adminWorkload", "adminDocsList", "adminDocSite", "adminActivityList", "adminExports", "adminSitesNoClient", "adminBtn", "profileAdminLink", "settingsAdminNote", "siteDocsList", "siteDocForm", "sitePortalAccess", "infoModal", "infoTitle", "infoBody", "infoFoot", "siteServicesManageBtn", "stationPhotoPreview", "stationPhotoToggle", "recPhotoToggle", "signOffModal", "signOffReview", "signPad", "signName", "signReason", "signOffStatus", "signOffBtn", "staffProfileModal", "actionsModal", "actionsBtn", "actionsCount", "actionsList", "userFilterChips", "adminServicesList", "adminSvcSearch", "newClientServicesBtn", "siteDocsFolderBtn", "docFolder", "adminDocFolder", "siteLimitsBox", "siteLimitAddBtn", "stationZoneRow", "stationZone", "zoneOptions", "recModalSeen", "recModalNoteReq", "adminClientsList", "clientNewSites", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "adminPage", "adminTabs", "adminTiles", "adminAttention", "adminWorkload", "adminDocsList", "adminDocSite", "adminActivityList", "adminExports", "adminSitesNoClient", "adminBtn", "profileAdminLink", "settingsAdminNote", "siteDocsList", "siteDocForm", "sitePortalAccess", "activityRow", "pestCountRow", "saveNextBtn", "stationDetailsTop", "stationDetailsBottom", "qtyRequired", "infoModal", "infoTitle", "infoBody", "infoFoot", "siteServicesManageBtn", "stationPhotoPreview", "stationPhotoToggle", "recPhotoToggle", "signOffModal", "signOffReview", "signPad", "signName", "signReason", "signOffStatus", "signOffBtn", "staffProfileModal", "actionsModal", "actionsBtn", "actionsCount", "actionsList", "userFilterChips", "adminServicesList", "adminSvcSearch", "newClientServicesBtn", "siteDocsFolderBtn", "docFolder", "adminDocFolder", "siteLimitsBox", "siteLimitAddBtn", "stationZoneRow", "stationZone", "zoneOptions", "recModalSeen", "recModalNoteReq", "adminClientsList", "clientNewSites", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -3775,17 +3788,19 @@
                     const paths = phs.map(p => p.path);
                     row[item.data.photoField] = item.data.photoField === 'photos' ? paths.concat(row.photos || []).filter((v, k, a) => a.indexOf(v) === k) : paths[0];
                 }
-                const { data, error } = await _supabase.from(table).upsert([row], { onConflict: 'id' }).select('*');
+                // change the row if it's there, otherwise add it (an upsert would insist on every required column even for a change)
+                let { data, error } = await _supabase.from(table).update(row).eq('id', row.id).select('*');
+                if (!error && !(data && data.length)) ({ data, error } = await _supabase.from(table).insert([row]).select('*'));
                 if (error) throw error;
-                const back = (data && data[0]) || row;
-                const cache = await getSiteCache(item.clientId);
-                if (cache) {
+                const back = Object.assign({}, row, (data && data[0]) || {});
+                Object.keys(back).forEach(k => { if (back[k] === undefined) delete back[k]; });
+                await withSiteCache(item.clientId, async cache => {
+                    if (!cache) return false;
                     cache.tables = cache.tables || {};
                     const list = cache.tables[table] || [];
                     const prev = list.find(r => r.id === back.id);
                     cache.tables[table] = list.filter(r => r.id !== back.id).concat([Object.assign({}, prev || {}, back)]);
-                    await saveSiteCache(item.clientId, cache);
-                }
+                });
                 scheduleSiteRefresh(item.clientId);
                 return;
             }
@@ -4027,6 +4042,13 @@
         // Saves (inserts or updates) a row in one of the site tables. Works offline; photos upload first.
         async function queueTableRow(table, row, label, opts) {
             opts = opts || {};
+            if (table === 'stations') {
+                const known = Array.from(siteStations.values()).find(x => x.id === row.id);
+                row = Object.assign({}, row);
+                if (!row.barcode && known) row.barcode = known.barcode;
+                if (!row.barcode) throw new Error('This station has no barcode. Scan or enter its barcode first.');
+                if (row.name == null && !known) { const d = siteDevices.find(x => x.barcode_id === row.barcode); row.name = d ? d.locationName : row.barcode; }
+            }
             const stamp = Date.now();
             const photos = (opts.blobs || []).map((blob, i) => ({ blob: blob, path: `${selectedClient.id}/${opts.prefix || table}_${stamp}_${i + 1}.${extFor(blob)}` }));
             return enqueue({
@@ -6046,6 +6068,18 @@
         }
 
         // After a queued record uploads, add it to the saved copy so the site doesn't need re-downloading
+        // One change to a site's saved copy at a time (two at once would undo each other)
+        const siteCacheLocks = new Map();
+        function withSiteCache(cid, fn) {
+            const k = String(cid);
+            const run = (siteCacheLocks.get(k) || Promise.resolve()).then(async () => {
+                const cache = await getSiteCache(cid);
+                const keep = await fn(cache);
+                if (cache && keep !== false) await saveSiteCache(cid, cache);
+            });
+            siteCacheLocks.set(k, run.catch(() => {}));
+            return run;
+        }
         async function addSentRowToSiteCache(item) {
             try {
                 const cache = await getSiteCache(item.clientId);
@@ -6747,7 +6781,9 @@
         //  double-check, and the visit report, notifications and the Client Portal show an alert.
         // ===================================================================
         const ANY_PEST = '*';
-        const zoneKey = z => String(z || '').trim().toLowerCase();
+        const zoneKey = z => String(z || '').trim().toLowerCase().replace(/\s+/g, ' ');
+        const pestKey = p => String(p || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/ies$/, 'y').replace(/([^s])s$/, '$1');
+        const limitMatches = (l, species) => l.species === ANY_PEST || pestKey(l.species) === pestKey(species);
         const limitPest = l => !l.species || l.species === ANY_PEST ? 'Any pest' : l.species;
         let limitEditing = null;     // null | 'new' | limit id
         function monthBounds(t) { const d = new Date(t); return [new Date(d.getFullYear(), d.getMonth(), 1).getTime(), new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime()]; }
@@ -6764,7 +6800,7 @@
         function limitTotal(l, t, upTo, recs, zoneOf) {
             const [a, b] = monthBounds(t == null ? Date.now() : t);
             const zf = zoneOf || stationZoneOf;
-            const list = (recs || sitePestRecords()).filter(r => r.at >= a && r.at < b && (upTo == null || r.at <= upTo) && zoneKey(zf(r.barcode)) === zoneKey(l.zone) && (l.species === ANY_PEST || r.species === l.species));
+            const list = (recs || sitePestRecords()).filter(r => r.at >= a && r.at < b && (upTo == null || r.at <= upTo) && zoneKey(zf(r.barcode)) === zoneKey(l.zone) && limitMatches(l, r.species));
             return { limit: l, total: list.reduce((n, r) => n + r.n, 0), records: list, month: a };
         }
         // limits a station record would take over the limit (its earlier record on this visit is replaced)
@@ -6774,7 +6810,7 @@
             const now = Date.now();
             const recs = sitePestRecords().filter(r => !(r.barcode === barcode && r.thisVisit)).concat([{ barcode, at: now, species, n, thisVisit: true }]);
             const zoneOf = bc => bc === barcode ? zone : stationZoneOf(bc);
-            return siteLimits.filter(l => zoneKey(l.zone) === zoneKey(zone) && (l.species === ANY_PEST || l.species === species))
+            return siteLimits.filter(l => zoneKey(l.zone) === zoneKey(zone) && limitMatches(l, species))
                 .map(l => limitTotal(l, now, null, recs, zoneOf)).filter(x => x.total > Number(x.limit.max_per_month));
         }
         function limitBreachesNow() { const recs = sitePestRecords(); return siteLimits.map(l => limitTotal(l, null, null, recs)).filter(x => x.total > Number(x.limit.max_per_month)); }
@@ -6787,7 +6823,16 @@
             const recs = sitePestRecords();
             return siteLimits.map(l => limitTotal(l, end - 5 * 60000, end, recs)).filter(x => x.total > Number(x.limit.max_per_month) && x.records.some(r => mine.has(r.barcode + '@' + r.at)));
         }
-        const limitAlertHtml = (list, title) => list.length ? `<div class="inset p-3 space-y-1 limit-alert" style="border-color:#dc2626;background:rgba(220,38,38,.08);" role="alert"><div class="font-black" style="color:#dc2626;">⚠ ${esc(title)}</div>${list.map(x => `<div class="t-strong"><b>${esc(x.limit.zone)} · ${esc(limitPest(x.limit))}:</b> ${x.total} recorded, limit ${esc(x.limit.max_per_month)} a month</div>`).join('')}</div>` : '';
+        function breachStations(x) {
+            const by = new Map();
+            x.records.forEach(r => { const d = siteDevices.find(s => s.barcode_id === r.barcode); const k = r.barcode; const o = by.get(k) || { name: d ? d.locationName : r.barcode, barcode: r.barcode, n: 0, species: new Set() }; o.n += r.n; o.species.add(r.species); by.set(k, o); });
+            return Array.from(by.values()).sort((a, b) => b.n - a.n);
+        }
+        const limitAlertHtml = (list, title) => list.length ? `<div class="limit-alert space-y-2" role="alert"><div class="limit-alert-head">⚠ ${esc(title)}</div>${list.map(x => {
+            const max = Number(x.limit.max_per_month), over = x.total - max;
+            return `<div class="limit-alert-row"><div class="flex flex-wrap items-baseline justify-between gap-2"><b class="text-sm">${esc(x.limit.zone)} · ${esc(limitPest(x.limit))}</b><span class="chip chip-red">${x.total} of ${esc(max)} allowed${max ? ` · ${Math.round(x.total / max * 100)}%` : ''}</span></div>
+                <div class="text-[11px] mt-0.5">${over} over the monthly limit in ${esc(monthName(x.month))}. Caught at: ${breachStations(x).map(b => `${esc(b.name)} (${b.n})`).join(', ')}</div></div>`;
+        }).join('')}</div>` : '';
 
         function renderSiteLimits() {
             const box = document.getElementById('siteLimitsBox');
@@ -6830,8 +6875,7 @@
             if (!c) return;
             const { data, error } = await _supabase.from('critical_limits').select('*').eq('client_id', String(c.id));
             if (error) throw error;
-            const cache = await getSiteCache(c.id);
-            if (cache) { cache.tables = Object.assign({}, cache.tables, { critical_limits: data || [] }); await saveSiteCache(c.id, cache); }
+            await withSiteCache(c.id, cache => { if (!cache) return false; cache.tables = Object.assign({}, cache.tables, { critical_limits: data || [] }); });
             await refreshSiteStateFromCache();
         }
         async function saveSiteLimit() {
@@ -7300,7 +7344,7 @@
             if (!f || !bc) return;
             try {
                 const blob = await compressImage(f, 1600, 0.8);
-                const row = st ? { id: st.id, updated_at: new Date().toISOString() }
+                const row = st ? { id: st.id, barcode: bc, updated_at: new Date().toISOString() }
                     : { id: uid(), barcode: bc, name: d ? d.locationName : bc, type: d ? d.deviceType : null, created_by: technicianLabel(), created_at: new Date().toISOString() };
                 await queueTableRow('stations', row, `Station location photo · ${d ? d.locationName : bc}`, { blobs: [blob], photoField: 'photo_path', prefix: 'STATION_' + safeName(bc) });
                 await refreshSiteStateFromCache();
@@ -7350,7 +7394,7 @@
                         <div class="min-w-0 flex-1">
                             <div class="font-bold t-strong break-words">${esc(d.locationName)}${openN ? ` <span class="chip chip-orange !py-0 ml-1">${openN} open</span>` : ''}</div>
                             <div class="t-muted">${esc(d.deviceType)} · <span class="font-mono t-accent">${esc(d.barcode_id)}</span>${plan ? ` · 📍 ${esc(plan)}` : ''}</div>
-                            <div class="t-faint text-[11px] mt-0.5">${lt ? `Last serviced ${esc(lt.date)} · ${esc(last.activity)} activity` : 'Not serviced yet'}</div>
+                            <div class="t-faint text-[11px] mt-0.5">${lt ? `Last serviced ${esc(lt.date)} · ${esc(last.activity === "Caught" ? "insects caught" : last.activity + " activity")}` : 'Not serviced yet'}</div>
                         </div>
                         <span class="link-btn !no-underline shrink-0">View ▸</span>
                     </div>`;
@@ -7746,7 +7790,7 @@
             y = 42;
             const breaches = visitLimitBreaches(v);
             if (breaches.length) {
-                const bl = breaches.map(x => doc.splitTextToSize(`${x.limit.zone} - ${limitPest(x.limit)}: ${x.total} recorded in ${monthName(x.month)}, limit ${x.limit.max_per_month} a month`, 172));
+                const bl = breaches.map(x => doc.splitTextToSize(`${x.limit.zone} - ${limitPest(x.limit)}: ${x.total} recorded in ${monthName(x.month)}, limit ${x.limit.max_per_month} a month (${x.total - Number(x.limit.max_per_month)} over). Caught at: ${breachStations(x).map(b => `${b.name} (${b.n})`).join(', ')}`, 172));
                 const h = 10 + bl.reduce((n, l) => n + l.length * 5, 0);
                 doc.setFillColor(254, 226, 226);
                 doc.setDrawColor(220, 38, 38);
@@ -7754,7 +7798,7 @@
                 doc.setTextColor(185, 28, 28);
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(11);
-                doc.text('CRITICAL LIMITS EXCEEDED', 18, y);
+                doc.text('CRITICAL LIMIT BREACH', 18, y);
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(9.5);
                 let by = y + 6;
@@ -8027,7 +8071,7 @@
                     const lbl = esc(rec ? (fmtRecNo(rec.recNo) || rec.station) : 'Recommendation');
                     return `<div class="row-item p-2.5">${rec ? `<button type="button" onclick="openVisitRec(this.dataset.recLink)" data-rec-link="${esc(rec.id)}" class="visit-link font-bold t-accent">${lbl}</button>` : `<span class="font-bold t-strong">${lbl}</span>`} <span class="t-muted">${esc((u._changes || []).join(', '))}${u.payload.note ? ' · ' + esc(u.payload.note) : ''}</span> <span class="t-faint">${esc(fmtDateTimeLong(recTime(u)).time)}</span></div>`;
                 }).join('');
-                body.innerHTML = limitAlertHtml(visitLimitBreaches(v), 'Critical limits exceeded') + `
+                body.innerHTML = limitAlertHtml(visitLimitBreaches(v), 'Critical limit breach') + `
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         ${fact('Signed in', signedIn ? esc(fmtDateTimeLong(signedIn).time) + `<div class="t-faint font-normal text-[11px]">${esc(fmtDateTimeLong(signedIn).date)}</div>` : 'Not recorded')}
                         ${fact('Signed out', esc(fmtDateTimeLong(signedOut).time) + `<div class="t-faint font-normal text-[11px]">${esc(fmtDateTimeLong(signedOut).date)}</div>`)}
@@ -8387,7 +8431,7 @@
             const mapName = mapId ? ((siteMaps.find(m => m.id === mapId) || {}).name || 'floor plan') : '';
             const label = mapId == null ? `Removed from floor plan · ${name}` : x == null ? `Assigned to ${mapName} · ${name}` : `Pin ${extra && extra.moved ? 'moved' : 'placed'} on ${mapName} · ${name}`;
             const st = siteStations.get(barcode);
-            const row = { id: st ? st.id : uid(), barcode: barcode, map_id: mapId || null, pin_x: round(x), pin_y: round(y), updated_at: new Date().toISOString() };
+            const row = { id: st ? st.id : uid(), barcode: barcode, map_id: mapId || null, pin_x: round(x), pin_y: round(y), updated_at: new Date().toISOString() };   // barcode always sent
             if (!st) { row.name = name; row.type = stationTypeFor(barcode) || null; row.created_by = technicianLabel(); }
             await queueTableRow('stations', row, label);
             siteStations.set(barcode, Object.assign({}, st || {}, row));
@@ -8643,8 +8687,9 @@
                     <div class="min-w-0"><div class="font-black t-strong text-sm flex items-center gap-1.5">${typeDot(st.type, '.6rem')}<span class="truncate">${esc(st.name)}</span></div><div class="t-muted">${esc(st.type)} · <span class="font-mono">${esc(barcode)}</span></div></div>
                     <button type="button" onclick="hideMapPopover()" class="t-faint font-bold">✕</button>
                 </div>
-                <div class="t-muted mt-1.5">${last ? `Last serviced ${esc(fmtDateTimeLong(last.at).date)} · ${esc(last.activity)} activity` : 'Not serviced yet'}${d && openRecCount(d) ? ` · <span class="t-accent font-bold">${openRecCount(d)} open</span>` : ''}</div>
+                <div class="t-muted mt-1.5">${last ? `Last serviced ${esc(fmtDateTimeLong(last.at).date)} · ${esc(last.activity === "Caught" ? "insects caught" : last.activity + " activity")}` : 'Not serviced yet'}${d && openRecCount(d) ? ` · <span class="t-accent font-bold">${openRecCount(d)} open</span>` : ''}</div>
                 ${d && isToxicRodent(st.type) ? `<div class="t-muted mt-0.5">🧪 Bait: ${esc(baitLastChangedText(d))}</div>` : ''}
+                ${(siteStations.get(barcode) || {}).photo_path ? '<div id="mapPopPhoto" class="map-pop-photo mt-2"><span class="station-photo-empty">Loading photo...</span></div>' : ''}
                 <div class="grid grid-cols-2 gap-1.5 mt-2.5">
                     ${d ? `<button type="button" data-b="${esc(barcode)}" onclick="mapServiceStation(this.dataset.b)" class="btn btn-primary !py-1.5 !px-2 col-span-2">Scan / service station</button>` : ''}
                     ${d ? `<button type="button" data-b="${esc(barcode)}" onclick="openStationOverview(this.dataset.b)" class="btn btn-secondary !py-1.5 !px-2">Details</button>` : ''}
@@ -8653,6 +8698,14 @@
                 </div>`;
             pop.classList.remove('hidden');
             positionMapPopover();
+            if ((siteStations.get(barcode) || {}).photo_path) stationPhotoUrls([barcode]).then(urls => {
+                const box = document.getElementById('mapPopPhoto'), u = urls.get(barcode);
+                if (!box || mapPopoverBarcode !== barcode) return;
+                if (!u) { box.innerHTML = `<span class="station-photo-empty">${isOnline ? 'Photo unavailable' : 'Photo shows when online'}</span>`; return; }
+                const idx = regImg([u], 'Where to find this station', st.name, '', []);
+                box.innerHTML = `<img src="${u}" alt="Where to find ${esc(st.name)}" onclick="openImgAt(${idx}, 0)">`;
+                const img = box.querySelector('img'); img.onload = positionMapPopover;
+            });
         }
         function positionMapPopover() {
             const pop = document.getElementById('mapPopover');
@@ -9070,18 +9123,22 @@
         // Normal scans open the station; "capture" scans hand the code back (e.g. a new barcode for a station)
         let scannerCapture = null;
         function scannerMessage(text) {
-            document.getElementById('scannerHelp').textContent = text;
+            const el = document.getElementById('scannerHelp');
+            el.textContent = text || '';
+            el.classList.toggle('hidden', !text);
         }
         async function startFullscreenCameraScanner(capture) {
             scannerCapture = typeof capture === 'function' ? capture : null;
             primeAudio();
-            document.getElementById('scannerTitle').textContent = scannerCapture ? 'Scan the new barcode' : 'Align Barcode in Camera Frame';
-            scannerMessage('Point camera directly at device barcode. Scanner auto-detects code.');
+            const title = document.getElementById('scannerTitle');
+            title.textContent = scannerCapture ? 'Scan the new barcode' : '';
+            title.classList.toggle('hidden', !scannerCapture);
+            scannerMessage('');
             document.getElementById('fullscreenScannerModal').classList.remove('hidden');
             isFlashOn = false;
             document.getElementById('flashToggleBtn').textContent = "Flash: OFF";
             if (typeof Html5Qrcode === 'undefined') {
-                scannerMessage('The camera scanner could not load (no connection when the app was opened). Use Manual Entry above.');
+                scannerMessage('The camera scanner could not load (no connection when the app was opened). Use Manual entry below.');
                 return;
             }
 
@@ -9091,7 +9148,7 @@
             fullscreenHtml5QrCode = new Html5Qrcode("fullscreenReader");
             fullscreenHtml5QrCode.start(
                 { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 300, height: 200 } },
+                { fps: 10 },   // the whole picture is scanned: no frame to line up
                 async (decodedText) => {
                     scanBeep();
                     const capture = scannerCapture;
@@ -9100,7 +9157,7 @@
                 },
                 (err) => {}
             ).catch(err => {
-                scannerMessage('Camera access error: ' + err + ' - use Manual Entry above.');
+                scannerMessage('Camera access error: ' + err + ' - use Manual entry below.');
             });
         }
 
@@ -9184,7 +9241,7 @@
 
         function readStationForm() {
             return {
-                activityLevel: document.getElementById('activityLevel').value,
+                activityLevel: (document.getElementById('speciesCaught').value || NONE_SPECIES) === NONE_SPECIES ? 'None' : document.getElementById('activityLevel').value,
                 prepUsed: document.getElementById('prepUsed').value,
                 speciesCaught: (document.getElementById('speciesCaught').value || '').trim(),
                 pestCount: document.getElementById('pestCount').value,
@@ -9226,6 +9283,7 @@
             qty.disabled = none;
             batch.disabled = none;
             document.getElementById('batchRequired').classList.toggle('hidden', none);
+            document.getElementById('qtyRequired').classList.toggle('hidden', none);
             batch.placeholder = none ? 'Not needed' : 'Required, e.g. 24-0815';
             if (none) { if (userChanged) { qty.value = ''; batch.value = ''; } return; }
             if (userChanged) {
@@ -9234,12 +9292,29 @@
                 qty.placeholder = currentQtyUnit === 'each' ? '1' : 'Amount';
             }
         }
-        function updatePestCountField() {
+        // Pest first: a rodent asks how much bait was eaten; an insect is Low / Medium / High, or Caught with a number
+        const isRodentSpecies = sp => /\b(rat|rats|mouse|mice|rodent|rodents|possum|stoat|ferret|weasel)\b/i.test(String(sp || ''));
+        const RODENT_LEVELS = [['None', 'None - 0% of bait taken'], ['Low', 'Low - 25% or less of bait taken'], ['Medium', 'Medium - 25% to 75% of bait taken'], ['High', 'High - 75% to 100% of bait taken']];
+        const INSECT_LEVELS = [['Low', 'Low'], ['Medium', 'Medium'], ['High', 'High'], ['Caught', 'Caught']];
+        function updatePestCountField(speciesChanged) {
             const sp = document.getElementById('speciesCaught').value;
-            const el = document.getElementById('pestCount');
+            const act = document.getElementById('activityLevel');
+            const count = document.getElementById('pestCount');
             const none = !sp || sp === NONE_SPECIES;
-            el.disabled = none;
-            if (none) el.value = '';
+            const rodent = !none && isRodentSpecies(sp);
+            const levels = none ? [['None', 'None']] : rodent ? RODENT_LEVELS : INSECT_LEVELS;
+            const keep = act.value;
+            const kind = none ? 'none' : rodent ? 'rodent' : 'insect';
+            if (act.dataset.kind !== kind) { act.innerHTML = levels.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join(''); act.dataset.kind = kind; }
+            act.value = levels.some(x => x[0] === keep) ? keep : (rodent ? 'None' : levels[0][0]);
+            document.getElementById('activityRow').classList.toggle('hidden', none);
+            document.getElementById('activityLabel').textContent = rodent ? 'Bait eaten' : 'Activity';
+            // the number: insects only when Caught; rodents optional (e.g. a snap trap)
+            const showCount = rodent || act.value === 'Caught';
+            document.getElementById('pestCountRow').classList.toggle('hidden', !showCount);
+            document.getElementById('pestCountLabel').innerHTML = rodent ? 'Number caught <span class="t-faint normal-case tracking-normal font-normal">(if any)</span>' : 'Number caught <span style="color:#ef4444;">*</span>';
+            count.disabled = !showCount;
+            if (!showCount) count.value = '';
         }
 
         // ---------- Repeat the last preparation (same bait and batch across many stations) ----------
@@ -9253,6 +9328,7 @@
         }
         function repeatPrepAvailable() { return !!(lastPrep && lastPrep.prep && Date.now() - (lastPrep.at || 0) < 30 * 86400000); }
         function renderRepeatPrepBtn() {
+            return;   // repeat preparation is switched off for now
             const btn = document.getElementById('repeatPrepBtn');
             const ok = repeatPrepAvailable();
             btn.classList.toggle('hidden', !ok);
@@ -9292,9 +9368,9 @@
 
         function resetServiceFields() {
             populateOptionSelects();
-            document.getElementById('activityLevel').value = 'None';
             document.getElementById('prepUsed').value = NONE_PREP;
             document.getElementById('speciesCaught').value = NONE_SPECIES;
+            updatePestCountField();
             document.getElementById('pestCount').value = '';
             document.getElementById('qtyCount').value = '';
             document.getElementById('batchNumber').value = '';
@@ -9320,9 +9396,11 @@
             const p = dev && dev.visitPayload;
             document.getElementById('visitEditNote').classList.toggle('hidden', !p);
             if (!p) return false;
-            if (p.activityLevel) setSelectValue('activityLevel', p.activityLevel);
             if (p.prepUsed) setSelectValue('prepUsed', p.prepUsed);
             if (p.speciesCaught) setSelectValue('speciesCaught', p.speciesCaught);
+            updatePestCountField();
+            if (p.activityLevel) setSelectValue('activityLevel', p.activityLevel);
+            updatePestCountField();
             if (p.pestCount != null && !isNaN(p.pestCount)) document.getElementById('pestCount').value = p.pestCount;
             currentQtyUnit = p.quantityUnit || prepUnit(p.prepUsed);
             if (p.quantity != null && !isNaN(p.quantity)) document.getElementById('qtyCount').value = p.quantity;
@@ -9495,6 +9573,7 @@
                 setSelectValue('newDeviceType', devType);
             }
             document.getElementById('newStationFields').classList.remove('hidden');
+            document.getElementById(isNew || !locName ? 'stationDetailsTop' : 'stationDetailsBottom').appendChild(document.getElementById('newStationFields'));
             populateStationMapSelect(barcode);
             const stRow = siteStations.get(barcode);
             document.getElementById('stationZone').value = (stRow && stRow.zone) || '';
@@ -9505,7 +9584,6 @@
 
             const hadVisit = prefillFromThisVisit(existingDev);
             renderStationRecs(existingDev);
-            if (!hadVisit && loadJSON(AUTO_REPEAT_KEY, false)) applyRepeatPrep();
             if (!hadVisit && isFlyingType(document.getElementById('newDeviceType').value || devType)) applyGlueBoard();
             prepChanged(false);
             if (!hadVisit && document.getElementById('prepUsed').value === NONE_PREP) document.getElementById('qtyCount').value = '';
@@ -9606,7 +9684,7 @@
         const ACTIVITY_RANGE_KEY = 'pestis-activity-range';
         let activityRange = loadJSON(ACTIVITY_RANGE_KEY, '6month');
         let stationHistoryTab = 'chart';
-        function activityValue(a) { const i = ACTIVITY_LEVELS.indexOf(a); return i < 0 ? 0 : i; }
+        function activityValue(a) { if (a === 'Caught') return 2; const i = ACTIVITY_LEVELS.indexOf(a); return i < 0 ? 0 : i; }
 
         // Builds the whole history panel (tabs, range, preparations, chart, log) inside a container
         function renderStationHistoryInto(root, dev) {
@@ -9776,6 +9854,11 @@
                 document.getElementById('batchNumber').focus();
                 return false;
             }
+            if (f.speciesCaught && f.speciesCaught !== NONE_SPECIES && f.activityLevel === 'Caught' && !(parseFloat(f.pestCount) > 0)) {
+                alert(`Enter how many ${f.speciesCaught} were caught.`);
+                document.getElementById('pestCount').focus();
+                return false;
+            }
             if (usedPrep && !(parseFloat(f.qty) > 0)) {
                 alert(`Enter how much ${f.prepUsed} was used (in ${unitText(f.unit)}).`);
                 document.getElementById('qtyCount').focus();
@@ -9837,7 +9920,7 @@
                 // The station's own row: created the first time, updated when its name or type changes
                 const st = siteStations.get(currentBarcode);
                 if (!st || st.name !== locNameInput || (st.type || '') !== (devType || '') || (st.zone || '') !== f.zone || pendingStationPhoto) {
-                    const row = st ? { id: st.id, name: locNameInput, type: devType, zone: f.zone || null, updated_at: new Date().toISOString() }
+                    const row = st ? { id: st.id, barcode: currentBarcode, name: locNameInput, type: devType, zone: f.zone || null, updated_at: new Date().toISOString() }
                         : { id: uid(), barcode: currentBarcode, name: locNameInput, type: devType, zone: f.zone || null, created_by: technicianLabel(), created_at: new Date().toISOString() };
                     const sp = pendingStationPhoto;
                     await queueTableRow('stations', row, (st ? `Station details updated · ${locNameInput}` : `New station · ${locNameInput}`) + (sp ? ' + location photo' : ''),
@@ -9870,6 +9953,12 @@
                 savingStation = false;
                 btn.disabled = false;
             }
+        }
+
+        // Save this station, then straight back to the camera for the next one
+        async function saveAndScanNext() {
+            const ok = await saveStationServiceRecord();
+            if (ok) startFullscreenCameraScanner();
         }
 
         // ===================================================================
