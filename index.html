@@ -503,6 +503,25 @@
                         </div>
                         <p class="text-xs t-muted leading-relaxed whitespace-pre-line" id="siteLandingNotes">No special access notes recorded.</p>
                     </div>
+                    <!-- Documents (shared with the client in the Client Portal) -->
+                    <div class="card p-5 space-y-3 sm:col-span-3 xl:col-span-1">
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="eyebrow flex items-center gap-2" style="color:#0891b2;"><span class="w-2 h-2 rounded-full" style="background:#0891b2;"></span>Documents</span>
+                            <button type="button" id="siteDocsAddBtn" onclick="toggleDocForm(true)" class="link-btn !no-underline hidden">+ Add</button>
+                        </div>
+                        <form id="siteDocForm" class="hidden inset p-3 space-y-2" onsubmit="event.preventDefault(); uploadSiteDoc();">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="col-span-2"><label class="lbl" for="docFile">File</label><input id="docFile" type="file" required class="field !py-1.5 !text-xs" onchange="docFileChosen(this)"></div>
+                                <div class="col-span-2"><label class="lbl" for="docTitle">Title</label><input id="docTitle" type="text" required maxlength="120" placeholder="e.g. SDS - Brodifacoum blocks" class="field !py-2 !text-xs"></div>
+                                <div><label class="lbl" for="docCategory">Type</label><select id="docCategory" class="field !py-2 !text-xs"></select></div>
+                                <div><label class="lbl" for="docExpires">Expires (optional)</label><input id="docExpires" type="date" class="field !py-2 !text-xs"></div>
+                                <div class="col-span-2"><label class="lbl" for="docNotes">Note (optional)</label><input id="docNotes" type="text" maxlength="200" class="field !py-2 !text-xs"></div>
+                            </div>
+                            <div class="flex justify-end gap-2"><button type="button" onclick="toggleDocForm(false)" class="btn btn-secondary !py-2">Cancel</button><button type="submit" id="docUploadBtn" class="btn btn-primary !py-2">Upload</button></div>
+                        </form>
+                        <div id="siteDocsList" class="space-y-2 text-xs"></div>
+                        <div id="sitePortalAccess" class="text-[11px] t-faint border-t divider pt-2"></div>
+                    </div>
                 </div>
 
                 <div class="lg:col-span-2 xl:col-span-9 grid grid-cols-1 lg:grid-cols-2 gap-6 content-start">
@@ -1008,6 +1027,25 @@
                     <h5 class="eyebrow t-faint mb-2">Pre-approved emails</h5>
                     <div id="adminAllowedList" class="space-y-2 text-xs"></div>
                 </div>
+
+                <div class="border-t divider pt-5 space-y-3">
+                    <h4 class="eyebrow" style="color:#0891b2;">Client Portal Access (Admin)</h4>
+                    <p class="text-xs t-muted">Give customers access to their sites in the <a id="portalLink" href="client.html" target="_blank" rel="noopener" class="link-btn">Client Portal</a>. They sign in with Google or an emailed link, see their reports and documents, and can only update recommendations (status, notes and photos).
+                        <button type="button" onclick="copyPortalLink()" class="link-btn ml-1">Copy link</button></p>
+                    <form onsubmit="event.preventDefault(); addClientUser();" class="inset p-3 space-y-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <input type="email" id="clientNewEmail" required placeholder="client@company.co.nz" class="field !py-2 !text-xs">
+                            <input type="text" id="clientNewName" placeholder="Name" class="field !py-2 !text-xs">
+                            <input type="text" id="clientNewCompany" placeholder="Company" class="field !py-2 !text-xs">
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-1"><span class="lbl !mb-0">Sites they can see</span><input type="search" id="clientSiteSearch" placeholder="Find a site..." class="field !w-44 !py-1.5 !text-xs" oninput="renderClientSitePicker('new')"></div>
+                            <div id="clientNewSites" class="max-h-40 overflow-y-auto scroll-thin grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs"></div>
+                        </div>
+                        <div class="flex justify-end"><button type="submit" class="btn btn-primary !py-2">Give access</button></div>
+                    </form>
+                    <div id="adminClientsList" class="space-y-2 text-xs"></div>
+                </div>
             </div>
 
             <div class="flex justify-end pt-2">
@@ -1401,13 +1439,13 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.17-r21';
+        const APP_VERSION = '2026.10.17-r22';
         // after Check for updates, tidy the address bar
         try { if (/[?&]fresh=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "siteDocsList", "siteDocForm", "sitePortalAccess", "adminClientsList", "clientNewSites", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -1921,6 +1959,7 @@
             loadOptions();
             loadTeam();
             flushQueue();
+            setTimeout(loadClientUpdates, 1500);
         }
 
         async function recheckProfileInBackground() {
@@ -1976,6 +2015,14 @@
                         const email = currentUser.email;
                         clearIdentity();
                         showLoginPanel();
+                        let isClient = false;
+                        try { const w = await withTimeout(_supabase.rpc('portal_whoami'), 6000, 'Account check'); isClient = !!(w.data && w.data.client); } catch (e) {}
+                        if (isClient) {
+                            showLoginMessage('');
+                            document.getElementById('loginMessage').innerHTML = `${esc(email)} is a client account. <a href="${esc(portalUrl())}" class="link-btn">Open the Client Portal</a>`;
+                            _supabase.auth.signOut().catch(() => {});
+                            return;
+                        }
                         showLoginMessage('Signed in as ' + email + ', but this account has not been approved yet. Ask your administrator to approve your email, then sign in again.');
                         _supabase.auth.signOut().catch(() => {});
                         return;
@@ -2067,6 +2114,10 @@
                 if (a.error) throw a.error;
                 adminProfiles = p.data || [];
                 adminAllowed = a.data || [];
+                // client logins are managed under Client Portal Access, not here
+                const cu = await _supabase.from('client_users').select('email');
+                const clientEmails = new Set(((cu && cu.data) || []).map(x => x.email));
+                adminProfiles = adminProfiles.filter(u => !clientEmails.has(String(u.email || '').toLowerCase()));
             } catch (err) {
                 profList.innerHTML = '<span style="color:#ef4444;">Could not load: ' + esc(err.message) + '</span>';
                 return;
@@ -2092,6 +2143,7 @@
                     <div class="font-mono t-strong truncate">${esc(a2.email)} <span class="t-faint">(${esc(a2.role)})</span></div>
                     <button type="button" onclick="removeAllowedEmail(${i})" class="font-bold cursor-pointer" style="color:#ef4444;">Remove</button>
                 </div>`).join('') || '<span class="t-faint italic">No pre-approved emails.</span>';
+            loadClientAdmin();
         }
 
         async function toggleApproval(i) {
@@ -2106,6 +2158,7 @@
             const email = document.getElementById('adminNewEmail').value.trim().toLowerCase();
             const role = document.getElementById('adminNewRole').value;
             if (!email || !email.includes('@')) { alert('Enter a valid email address.'); return; }
+            if (adminClients.some(u => u.email === email)) { alert(email + ' is a client login (Client Portal). Staff need their own email.'); return; }
 
             const { error } = await _supabase.from('allowed_emails').upsert({ email: email, role: role });
             if (error) { alert('Could not add: ' + error.message); return; }
@@ -2124,6 +2177,273 @@
             if (error) { alert('Could not remove: ' + error.message); return; }
             loadAdminPanel();
         }
+
+
+        // ===================================================================
+        //  CLIENT PORTAL: client accounts (admins), site documents, client updates
+        //  The database decides what clients can see and do (pestis_client_portal.sql); this is the staff side.
+        // ===================================================================
+        const PORTAL_PAGE = 'client.html';
+        function portalUrl() { return window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + PORTAL_PAGE; }
+        const portalMissing = e => /client_users|client_access|site_documents|by_client|does not exist|schema cache|could not find/i.test((e && e.message) || '');
+        const PORTAL_SQL_NOTE = 'Run pestis_client_portal.sql in the Supabase SQL editor to switch on the Client Portal.';
+        async function copyPortalLink() {
+            try { await navigator.clipboard.writeText(portalUrl()); alert('Client Portal link copied:\n' + portalUrl()); }
+            catch (e) { prompt('Copy the Client Portal link:', portalUrl()); }
+        }
+
+        // ---------- client accounts (admin panel) ----------
+        let adminClients = [], adminClientAccess = [], clientAdminReady = false;
+        const clientPicks = { new: new Set() };
+        let clientEditing = null;
+        async function loadClientAdmin() {
+            const box = document.getElementById('adminClientsList');
+            if (!box) return;
+            document.getElementById('portalLink').href = portalUrl();
+            try {
+                const [u, a] = await Promise.all([
+                    _supabase.from('client_users').select('*').order('created_at', { ascending: true }),
+                    _supabase.from('client_access').select('*')
+                ]);
+                if (u.error) throw u.error;
+                if (a.error) throw a.error;
+                adminClients = u.data || []; adminClientAccess = a.data || []; clientAdminReady = true;
+            } catch (e) {
+                clientAdminReady = false;
+                box.innerHTML = `<span style="color:#ef4444;">${esc(portalMissing(e) ? PORTAL_SQL_NOTE : 'Could not load client accounts: ' + e.message)}</span>`;
+                return;
+            }
+            renderClientSitePicker('new');
+            renderClientAdmin();
+        }
+        function clientSitesOf(email) { return adminClientAccess.filter(a => a.email === email).map(a => String(a.client_id)); }
+        function siteLabel(id) { const c = clientsData.find(x => String(x.id) === String(id)); return c ? (c.Name || 'Unnamed site') : 'Site ' + id; }
+        function renderClientSitePicker(mode) {
+            const box = document.getElementById(mode === 'new' ? 'clientNewSites' : 'clientEditSites');
+            if (!box) return;
+            const sel = mode === 'new' ? clientPicks.new : clientPicks.edit;
+            const q = (mode === 'new' ? (document.getElementById('clientSiteSearch').value || '') : (document.getElementById('clientEditSearch') || {}).value || '').trim().toLowerCase();
+            const sites = clientsData.slice().sort((a, b) => String(a.Name || '').localeCompare(String(b.Name || ''), undefined, { sensitivity: 'base' }))
+                .filter(c => !q || sel.has(String(c.id)) || `${c.Name || ''} ${c.Address || ''}`.toLowerCase().includes(q));
+            box.innerHTML = sites.map(c => `<label class="flex items-center gap-2 p-1.5 rounded-lg cursor-pointer hover:opacity-80"><input type="checkbox" ${sel.has(String(c.id)) ? 'checked' : ''} onchange="toggleClientPick('${mode}', '${esc(String(c.id))}', this.checked)"><span class="t-strong truncate">${esc(c.Name || 'Unnamed site')}</span></label>`).join('')
+                || '<span class="t-faint italic">No sites match.</span>';
+        }
+        function toggleClientPick(mode, id, on) { const sel = clientPicks[mode]; if (on) sel.add(id); else sel.delete(id); }
+        function renderClientAdmin() {
+            const box = document.getElementById('adminClientsList');
+            if (!box || !clientAdminReady) return;
+            box.innerHTML = adminClients.map(u => {
+                const sites = clientSitesOf(u.email);
+                const editing = clientEditing === u.email;
+                return `<div class="row-item p-3 space-y-2">
+                    <div class="flex flex-wrap justify-between items-start gap-2">
+                        <div class="min-w-0">
+                            <div class="font-bold t-strong">${esc(u.full_name || u.email)}${u.company ? ` <span class="t-muted font-normal">· ${esc(u.company)}</span>` : ''}</div>
+                            <div class="t-muted font-mono truncate">${esc(u.email)}</div>
+                            <div class="t-faint text-[11px]">${u.last_seen_at ? 'Last signed in ' + esc(fmtDateTimeLong(u.last_seen_at).date) : 'Not signed in yet'}</div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="chip ${u.active ? 'chip-green' : 'chip-amber'}">${u.active ? 'Active' : 'Paused'}</span>
+                            <button type="button" data-email="${esc(u.email)}" onclick="editClientSites(this.dataset.email)" class="btn btn-secondary !px-3 !py-1.5">${editing ? 'Close' : 'Sites'}</button>
+                            <button type="button" data-email="${esc(u.email)}" onclick="toggleClientActive(this.dataset.email)" class="btn btn-secondary !px-3 !py-1.5">${u.active ? 'Pause' : 'Resume'}</button>
+                            <button type="button" data-email="${esc(u.email)}" onclick="removeClientUser(this.dataset.email)" class="font-bold cursor-pointer" style="color:#ef4444;">Remove</button>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">${sites.map(id => `<span class="chip chip-blue">${esc(siteLabel(id))}</span>`).join('') || '<span class="t-faint italic">No sites yet - they will see nothing.</span>'}</div>
+                    ${editing ? `<div class="inset p-2 space-y-2"><input type="search" id="clientEditSearch" placeholder="Find a site..." class="field !py-1.5 !text-xs" oninput="renderClientSitePicker('edit')">
+                        <div id="clientEditSites" class="max-h-40 overflow-y-auto scroll-thin grid grid-cols-1 sm:grid-cols-2 gap-1"></div>
+                        <div class="flex justify-end"><button type="button" data-email="${esc(u.email)}" onclick="saveClientSites(this.dataset.email)" class="btn btn-primary !py-1.5">Save sites</button></div></div>` : ''}
+                </div>`;
+            }).join('') || '<span class="t-faint italic">No client accounts yet.</span>';
+            if (clientEditing) renderClientSitePicker('edit');
+        }
+        async function addClientUser() {
+            const email = document.getElementById('clientNewEmail').value.trim().toLowerCase();
+            if (!email.includes('@')) { alert('Enter the client\'s email address.'); return; }
+            if (adminProfiles.some(p => (p.email || '').toLowerCase() === email && p.approved)) { alert(email + ' is a staff account. Use a different email for the client login.'); return; }
+            if (adminClients.some(u => u.email === email)) { alert(email + ' already has a client login. Use "Sites" on their row to change what they can see.'); return; }
+            if (!clientPicks.new.size && !confirm('No sites are ticked, so they won\'t see anything yet. Add them anyway?')) return;
+            const { error } = await _supabase.from('client_users').insert({
+                email, active: true, full_name: document.getElementById('clientNewName').value.trim() || null,
+                company: document.getElementById('clientNewCompany').value.trim() || null, added_by: technicianLabel()
+            });
+            if (error) { alert(portalMissing(error) ? PORTAL_SQL_NOTE : 'Could not add: ' + error.message); return; }
+            if (clientPicks.new.size) {
+                const { error: e2 } = await _supabase.from('client_access').insert(Array.from(clientPicks.new).map(id => ({ email, client_id: id, added_by: technicianLabel() })));
+                if (e2) alert('The login was added, but the sites could not be saved: ' + e2.message);
+            }
+            ['clientNewEmail', 'clientNewName', 'clientNewCompany', 'clientSiteSearch'].forEach(id => { document.getElementById(id).value = ''; });
+            clientPicks.new.clear();
+            await loadAdminPanel();
+            alert(`Done. Send ${email} the Client Portal link:\n${portalUrl()}\n\nThey sign in with that email (Google, or "Email me a sign-in link").`);
+        }
+        function editClientSites(email) {
+            clientEditing = clientEditing === email ? null : email;
+            clientPicks.edit = new Set(clientSitesOf(email));
+            renderClientAdmin();
+        }
+        async function saveClientSites(email) {
+            const before = new Set(clientSitesOf(email)), after = clientPicks.edit;
+            const add = Array.from(after).filter(id => !before.has(id)), drop = Array.from(before).filter(id => !after.has(id));
+            if (drop.length) { const { error } = await _supabase.from('client_access').delete().eq('email', email).in('client_id', drop); if (error) { alert('Could not save: ' + error.message); return; } }
+            if (add.length) { const { error } = await _supabase.from('client_access').insert(add.map(id => ({ email, client_id: id, added_by: technicianLabel() }))); if (error) { alert('Could not save: ' + error.message); return; } }
+            clientEditing = null;
+            await loadClientAdmin();
+            renderSitePortalAccess();
+        }
+        async function toggleClientActive(email) {
+            const u = adminClients.find(x => x.email === email);
+            if (!u) return;
+            const { error } = await _supabase.from('client_users').update({ active: !u.active }).eq('email', email);
+            if (error) { alert('Could not update: ' + error.message); return; }
+            loadClientAdmin();
+        }
+        async function removeClientUser(email) {
+            if (!confirm(`Remove the client login ${email}?\nThey will no longer be able to sign in to the Client Portal. Their recommendation updates stay on record.`)) return;
+            const { error } = await _supabase.from('client_users').delete().eq('email', email);
+            if (error) { alert('Could not remove: ' + error.message); return; }
+            loadClientAdmin();
+        }
+
+        // ---------- site documents ----------
+        const DOC_BUCKET = 'site-documents';
+        const DOC_CATEGORIES = ['Service agreement', 'SDS', 'Insurance', 'Site map', 'Certificates', 'Reports', 'Other'];
+        let siteDocs = [], siteDocsFor = null, siteDocsError = '', sitePortalUsers = [], docCategoriesFilled = false;
+        const isAdminUser = () => !!(currentProfile && currentProfile.role === 'admin');
+        async function loadSiteDocs(force) {
+            const c = selectedClient;
+            if (!c) return;
+            const id = String(c.id);
+            if (!force && siteDocsFor === id) { renderSiteDocs(); return; }
+            siteDocsFor = id; siteDocs = []; sitePortalUsers = []; siteDocsError = '';
+            renderSiteDocs();
+            if (!isOnline) { siteDocsError = 'offline'; renderSiteDocs(); return; }
+            try {
+                const [d, a] = await Promise.all([
+                    _supabase.from('site_documents').select('*').eq('client_id', id),
+                    _supabase.from('client_access').select('email').eq('client_id', id)
+                ]);
+                if (siteDocsFor !== id) return;            // another site was opened meanwhile
+                if (d.error) throw d.error;
+                siteDocs = (d.data || []).sort((x, y) => String(x.category).localeCompare(String(y.category)) || String(x.title).localeCompare(String(y.title), undefined, { sensitivity: 'base' }));
+                const emails = (a.data || []).map(x => x.email);
+                if (emails.length) {
+                    const { data: us } = await _supabase.from('client_users').select('email, full_name, company, active').in('email', emails);
+                    sitePortalUsers = us || [];
+                }
+            } catch (e) { siteDocsError = portalMissing(e) ? 'missing' : (e.message || String(e)); }
+            if (siteDocsFor === id) renderSiteDocs();
+        }
+        function docExpiryChip(d) {
+            if (!d.expires_on) return '';
+            const days = Math.round((Date.parse(d.expires_on + 'T00:00:00') - Date.parse(toDayStr(new Date()) + 'T00:00:00')) / 86400000);
+            return days < 0 ? `<span class="chip chip-red">Expired ${esc(fmtDay(d.expires_on))}</span>` : days <= 60 ? `<span class="chip chip-amber">Expires ${esc(fmtDay(d.expires_on))}</span>` : `<span class="chip chip-green">Valid to ${esc(fmtDay(d.expires_on))}</span>`;
+        }
+        function renderSiteDocs() {
+            const box = document.getElementById('siteDocsList');
+            if (!box) return;
+            document.getElementById('siteDocsAddBtn').classList.toggle('hidden', !isAdminUser() || siteDocsError === 'missing' || !isOnline);
+            const sel = document.getElementById('docCategory');
+            if (sel && !docCategoriesFilled) { sel.innerHTML = DOC_CATEGORIES.map(c => `<option>${esc(c)}</option>`).join(''); docCategoriesFilled = true; }
+            if (siteDocsError === 'offline') box.innerHTML = '<span class="t-faint italic">Documents show when you\'re online.</span>';
+            else if (siteDocsError === 'missing') box.innerHTML = `<span class="t-faint italic">${esc(PORTAL_SQL_NOTE)}</span>`;
+            else if (siteDocsError) box.innerHTML = `<span style="color:#ef4444;">Could not load documents: ${esc(siteDocsError)}</span>`;
+            else box.innerHTML = siteDocs.map(d => `
+                <div class="row-item p-2.5 flex items-start justify-between gap-2">
+                    <button type="button" data-id="${esc(d.id)}" onclick="openSiteDoc(this.dataset.id)" class="text-left min-w-0 flex-1">
+                        <div class="font-bold t-strong break-words">📄 ${esc(d.title)}</div>
+                        <div class="t-faint text-[11px]">${esc(d.category || 'Other')} · added ${esc(fmtDateTimeLong(d.created_at).date)}${d.notes ? ' · ' + esc(d.notes) : ''}</div>
+                        ${d.expires_on ? `<div class="mt-1">${docExpiryChip(d)}</div>` : ''}
+                    </button>
+                    ${isAdminUser() ? `<button type="button" data-id="${esc(d.id)}" onclick="deleteSiteDoc(this.dataset.id)" class="t-faint hover:opacity-70 shrink-0 font-bold" title="Remove document" aria-label="Remove document">✕</button>` : ''}
+                </div>`).join('') || `<span class="t-faint italic">No documents yet.${isAdminUser() ? ' Add SDSs, insurance, agreements or maps for the client to see.' : ''}</span>`;
+            renderSitePortalAccess();
+        }
+        function renderSitePortalAccess() {
+            const el = document.getElementById('sitePortalAccess');
+            if (!el) return;
+            if (siteDocsError) { el.textContent = ''; return; }
+            el.innerHTML = sitePortalUsers.length
+                ? 'Client Portal: ' + sitePortalUsers.map(u => `<span class="t-strong font-semibold">${esc(u.full_name || u.email)}</span>${u.active ? '' : ' (paused)'}`).join(', ')
+                : `No client logins for this site yet.${isAdminUser() ? ' <button type="button" class="link-btn !text-[11px]" onclick="openProfileModal()">Add one</button>' : ''}`;
+        }
+        function toggleDocForm(on) {
+            document.getElementById('siteDocForm').classList.toggle('hidden', !on);
+            if (on) { document.getElementById('siteDocForm').reset(); renderSiteDocs(); }
+        }
+        function docFileChosen(input) {
+            const f = input.files && input.files[0];
+            const t = document.getElementById('docTitle');
+            if (f && !t.value) t.value = f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+        }
+        async function uploadSiteDoc() {
+            const c = selectedClient, f = document.getElementById('docFile').files[0];
+            if (!c || !f) return;
+            if (f.size > 50 * 1024 * 1024) { alert('That file is over 50 MB. Please make it smaller first.'); return; }
+            const btn = document.getElementById('docUploadBtn');
+            btn.disabled = true; btn.textContent = 'Uploading...';
+            const clean = f.name.replace(/[^\w.\- ]+/g, '').replace(/\s+/g, '_').slice(-80) || 'document';
+            const path = `${c.id}/${Date.now()}_${clean}`;
+            try {
+                const up = await _supabase.storage.from(DOC_BUCKET).upload(path, f, { contentType: f.type || 'application/octet-stream', upsert: false });
+                if (up.error) throw up.error;
+                const row = {
+                    id: uid(), client_id: String(c.id), category: document.getElementById('docCategory').value, title: document.getElementById('docTitle').value.trim() || f.name,
+                    file_path: path, file_name: f.name, mime_type: f.type || null, size_bytes: f.size,
+                    expires_on: document.getElementById('docExpires').value || null, notes: document.getElementById('docNotes').value.trim() || null, uploaded_by: technicianLabel()
+                };
+                const { error } = await _supabase.from('site_documents').insert(row);
+                if (error) { await _supabase.storage.from(DOC_BUCKET).remove([path]).catch(() => {}); throw error; }
+                await queueSiteChange({ action: 'document', title: `Document "${row.title}" added`, detail: row.category });
+                toggleDocForm(false);
+                await loadSiteDocs(true);
+            } catch (e) {
+                alert('Could not upload: ' + (portalMissing(e) ? PORTAL_SQL_NOTE : (e.message || e)));
+            } finally { btn.disabled = false; btn.textContent = 'Upload'; }
+        }
+        async function openSiteDoc(id) {
+            const d = siteDocs.find(x => x.id === id);
+            if (!d) return;
+            const w = window.open('', '_blank');
+            const { data, error } = await _supabase.storage.from(DOC_BUCKET).createSignedUrl(d.file_path, 600);
+            if (error || !data) { if (w) w.close(); alert('Could not open the document: ' + ((error && error.message) || 'not found')); return; }
+            if (w) w.location.href = data.signedUrl; else location.href = data.signedUrl;
+        }
+        async function deleteSiteDoc(id) {
+            const d = siteDocs.find(x => x.id === id);
+            if (!d || !confirm(`Remove "${d.title}"? The client will no longer see it.`)) return;
+            const { error } = await _supabase.from('site_documents').delete().eq('id', id);
+            if (error) { alert('Could not remove: ' + error.message); return; }
+            await _supabase.storage.from(DOC_BUCKET).remove([d.file_path]).catch(() => {});
+            await queueSiteChange({ action: 'document', title: `Document "${d.title}" removed`, detail: d.category });
+            loadSiteDocs(true);
+        }
+
+        // ---------- client updates to recommendations (shown in the bell) ----------
+        const CLIENT_SEEN_KEY = 'pestis-client-updates-seen';
+        let clientUpdates = [];
+        let clientUpdatesSeen = loadJSON(CLIENT_SEEN_KEY, null) || new Date(Date.now() - 7 * 86400000).toISOString();
+        async function loadClientUpdates() {
+            if (!isOnline || !appStarted) return;
+            try {
+                const since = new Date(Date.now() - 30 * 86400000).toISOString();
+                const { data, error } = await _supabase.from('recommendation_updates').select('id, rec_id, client_id, status, note, photos, technician, at')
+                    .eq('by_client', true).gte('at', since).order('at', { ascending: false }).limit(60);
+                if (error) throw error;
+                const ids = Array.from(new Set((data || []).map(u => u.rec_id)));
+                let recs = [];
+                if (ids.length) { const r = await _supabase.from('recommendations').select('id, rec_no, text, station_name').in('id', ids); recs = r.data || []; }
+                clientUpdates = (data || []).map(u => Object.assign({}, u, { rec: recs.find(r => r.id === u.rec_id) || null }));
+            } catch (e) { clientUpdates = []; }
+            renderNotifications();
+        }
+        function newClientUpdates() { return clientUpdates.filter(u => u.at > clientUpdatesSeen && notifSites().some(c => String(c.id) === String(u.client_id))); }
+        async function openClientUpdate(cid, recId) {
+            closeNotifModal();
+            await startSiteVisit(cid);
+            if (findRec(recId)) openRecModal(recId);
+        }
+        setInterval(() => { if (appStarted) loadClientUpdates(); }, 5 * 60000);
 
         // ===================================================================
         //  CONNECTIVITY & SYNC STATUS BADGE
@@ -4015,7 +4335,8 @@
             dueSoon.sort((a, b) => a.days - b.days);
             contracts.sort((a, b) => a.ci.days - b.ci.days);
             longVisits.sort((a, b) => b.v.hours - a.v.hours);
-            return { missed, dueSoon, contracts, longVisits, total: missed.length + dueSoon.length + contracts.length + longVisits.length };
+            const fresh = newClientUpdates();
+            return { missed, dueSoon, contracts, longVisits, fresh, total: missed.length + dueSoon.length + contracts.length + longVisits.length + fresh.length };
         }
         function renderNotifications() {
             const n = buildNotifications();
@@ -4035,7 +4356,19 @@
                 </button>`;
             const section = (title, color, items) => items.length ? `
                 <div class="space-y-2"><div class="eyebrow" style="color:${color};">${title} (${items.length})</div>${items.join('')}</div>` : '';
+            const shownUpdates = clientUpdates.filter(u => notifSites().some(c => String(c.id) === String(u.client_id))).slice(0, 25);
+            const updRow = u => {
+                const c = clientsData.find(x => String(x.id) === String(u.client_id));
+                const isNew = u.at > notifOpenSeen;
+                const st = { open: ['chip-red', 'Open'], pending: ['chip-amber', 'Pending'], complete: ['chip-green', 'Complete'] }[u.status] || ['chip-blue', u.status || 'Updated'];
+                return `<button type="button" data-cid="${esc(u.client_id)}" data-rec="${esc(u.rec_id)}" onclick="openClientUpdate(this.dataset.cid, this.dataset.rec)" class="row-item clickable w-full text-left p-3 flex justify-between items-start gap-3" ${isNew ? 'style="border-color:#0891b2;"' : ''}>
+                    <div class="min-w-0"><div class="font-bold t-strong truncate">${isNew ? '<span class="chip chip-blue !py-0 mr-1">New</span>' : ''}${esc(c ? c.Name : 'Site')} · ${esc(u.rec && u.rec.rec_no != null ? fmtRecNo(u.rec.rec_no) : 'Recommendation')}</div>
+                    <div class="t-muted">${esc(u.technician || 'Client')} · ${esc(fmtDateTimeLong(u.at).date)} ${esc(fmtDateTimeLong(u.at).time)}${u.photos && u.photos.length ? ' · 📷 ' + u.photos.length : ''}</div>
+                    ${u.note ? `<div class="t-strong mt-0.5 break-words">"${esc(u.note)}"</div>` : ''}</div>
+                    <span class="chip ${st[0]} shrink-0">${esc(st[1])}</span></button>`;
+            };
             const html = [
+                shownUpdates.length ? `<div class="space-y-2"><div class="eyebrow" style="color:#0891b2;">Client updates, last 30 days${n.fresh.length ? ` (${n.fresh.length} new)` : ''}</div>${shownUpdates.map(updRow).join('')}</div>` : '',
                 section(`Visits open more than ${VISIT_STALE_HOURS} hours`, '#dc2626', n.longVisits.map(x => row(x.c, `Started ${fmtDateTimeLong(x.v.at).date} ${fmtDateTimeLong(x.v.at).time}${x.v.by ? ' by ' + teamName(x.v.by) : ''} - complete or cancel it`, 'chip-red', `Open ${visitAgeText(x.v)}`))),
                 section('Missed services', '#dc2626', n.missed.map(x => row(x.c, `${x.sv.type} · was due ${fmtDay(x.sv.nextDue)}`, 'chip-red', `${-x.days}d overdue`))),
                 section(notifDueMode === 'week' ? 'Due in the next 7 days' : 'Due today', '#ea580c', n.dueSoon.map(x => row(x.c, `${x.sv.type} · due ${fmtDay(x.sv.nextDue)}`, 'chip-amber', x.days === 0 ? 'Today' : `In ${x.days}d`))),
@@ -4043,8 +4376,20 @@
             ].join('');
             list.innerHTML = html || '<div class="row-item p-4 t-faint italic text-center">Nothing needs attention right now.</div>';
         }
-        function openNotifModal() { document.getElementById('notifModal').classList.remove('hidden'); renderNotifications(); }
-        function closeNotifModal() { document.getElementById('notifModal').classList.add('hidden'); }
+        var notifOpenSeen = '';   // (var: read before this line runs) while the list is open, "New" marks what was new when it was opened
+        function markClientUpdatesSeen() {
+            const newest = clientUpdates.reduce((a, u) => u.at > a ? u.at : a, clientUpdatesSeen);
+            if (newest !== clientUpdatesSeen) { clientUpdatesSeen = newest; saveJSON(CLIENT_SEEN_KEY, clientUpdatesSeen); }
+        }
+        async function openNotifModal() {
+            notifOpenSeen = clientUpdatesSeen;
+            document.getElementById('notifModal').classList.remove('hidden');
+            renderNotifications();
+            markClientUpdatesSeen();          // opening the list counts as seeing the client updates in it
+            await loadClientUpdates();
+            if (!document.getElementById('notifModal').classList.contains('hidden')) markClientUpdatesSeen();
+        }
+        function closeNotifModal() { document.getElementById('notifModal').classList.add('hidden'); renderNotifications(); }
 
         // Runs a step and records (rather than throws) any error, so one bad site can't blank the page
         function safely(where, fn, fallback) {
@@ -5559,6 +5904,7 @@
             document.getElementById('siteLandingTitle').textContent = c.Name;
             document.getElementById('siteLandingAddress').textContent = c.Address || 'No address specified';
             renderSiteLocation();
+            loadSiteDocs().catch(e => console.warn('Documents', e));   // never stops the site opening
             document.getElementById('siteLandingContact').textContent = `Site Contact: ${c.Contact || 'Not specified'}`;
             document.getElementById('siteLandingEmail').textContent = `Email: ${c.Email || 'Not specified'}`;
             document.getElementById('siteLandingNotes').textContent = c.Notes || 'No site-specific safety instructions on file.';
