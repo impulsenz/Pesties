@@ -688,15 +688,20 @@
                     <textarea id="serviceNotes" rows="2" placeholder="Station inspected, fresh bait applied..." class="field"></textarea>
                 </div>
 
-                <!-- Recommendation & photos -->
-                <div class="inset p-4 space-y-4" style="border-color: rgba(249,115,22,.45);">
-                    <div>
-                        <label class="lbl">Corrective Action / Recommendation</label>
-                        <textarea id="recommendationNote" rows="3" placeholder="e.g. Seal gap around pipes, repair damaged door seal..." class="field"></textarea>
+                <!-- Recommendations: the one for this visit (editable) + the station's others, in one list -->
+                <div id="pastRecommendationsSection" class="inset p-4 space-y-3" style="border-color: rgba(249,115,22,.45);">
+                    <div class="flex justify-between items-center gap-2">
+                        <h5 class="eyebrow t-accent">Corrective Actions / Recommendations</h5>
+                        <button type="button" id="loadPastHistoryBtn" onclick="lazyLoadStationHistory()" class="btn btn-secondary !px-3 !py-1.5 hidden">Show completed</button>
                     </div>
 
-                    <div class="space-y-2">
-                        <p id="visitEditNote" class="hidden text-[11px] font-semibold" style="color:#10b981;">Showing what you saved for this station earlier in this visit. Saving again updates it.</p>
+                    <div id="recEditor" class="hidden row-item p-3 space-y-3" style="border-color:#f97316;">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <div id="recEditorHead" class="flex flex-wrap items-center gap-1.5 flex-1"></div>
+                            <button type="button" id="recEditorCancel" onclick="closeRecEditor()" class="link-btn !no-underline !text-[11px]">Cancel</button>
+                        </div>
+                        <textarea id="recommendationNote" rows="3" placeholder="e.g. Seal gap around pipes, repair damaged door seal..." class="field"></textarea>
+                        <p id="visitEditNote" class="hidden text-[11px] font-semibold" style="color:#10b981;">Raised earlier in this visit. Saving the service record updates it.</p>
                         <div class="grid grid-cols-2 gap-2">
                             <button type="button" onclick="document.getElementById('issuePhotoCamera').click()" class="btn btn-secondary !py-3">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -709,17 +714,11 @@
                         </div>
                         <input type="file" id="issuePhotoCamera" accept="image/*" capture="environment" class="hidden">
                         <input type="file" id="issuePhotoGallery" accept="image/*" multiple class="hidden">
-                        <div id="photoPreviewGrid" class="flex flex-wrap gap-2 pt-1"></div>
+                        <div id="photoPreviewGrid" class="flex flex-wrap gap-2"></div>
                     </div>
-                </div>
+                    <button type="button" id="addRecBtn" onclick="openRecEditor()" class="btn btn-secondary w-full !py-2.5">+ Add a recommendation</button>
 
-                <!-- This station's recommendations (photos stream when shown) -->
-                <div id="pastRecommendationsSection" class="hidden inset p-4 space-y-3">
-                    <div class="flex justify-between items-center gap-2">
-                        <h5 class="eyebrow" style="color:#2563eb;">Recommendations at this station</h5>
-                        <button type="button" id="loadPastHistoryBtn" onclick="lazyLoadStationHistory()" class="btn btn-secondary !px-3 !py-1.5">Show completed</button>
-                    </div>
-                    <div id="pastRecommendationsList" class="space-y-2.5 max-h-96 overflow-y-auto scroll-thin text-xs pt-1"></div>
+                    <div id="pastRecommendationsList" class="space-y-2.5 max-h-96 overflow-y-auto scroll-thin text-xs"></div>
                 </div>
 
                 <!-- Station history: preparations, activity chart, log -->
@@ -1337,11 +1336,11 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.17-r15';
+        const APP_VERSION = '2026.10.17-r16';
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "stationColorLegend", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "recommendationNote", "visitEditNote", "photoPreviewGrid", "pastRecommendationsSection", "loadPastHistoryBtn", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "stationColorLegend", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "visitEditNote", "photoPreviewGrid", "addRecBtn", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -2128,6 +2127,7 @@
                 const blob = await compressImage(f);
                 pendingPhotos.push({ blob: blob, url: URL.createObjectURL(blob) });
             }
+            recEditorOpen = true;
             renderPhotoPreviews();
         }
         ['issuePhotoCamera', 'issuePhotoGallery'].forEach(id => {
@@ -7037,7 +7037,7 @@
 
             const existingDev = siteDevices.find(d => d.barcode_id === barcode);
             stationRecsShowAll = false;
-            renderStationRecs(existingDev);
+            recEditorOpen = false;
 
             // Delete / change barcode only for stations that already exist
             document.getElementById('deleteStationBtn').classList.toggle('hidden', !existingDev);
@@ -7060,6 +7060,8 @@
             updateFormTypeDot();
 
             const hadVisit = prefillFromThisVisit(existingDev);
+            renderStationRecs(existingDev);
+            loadKeptPhotoThumbs(existingDev);
             if (!hadVisit && loadJSON(AUTO_REPEAT_KEY, false)) applyRepeatPrep();
             prepChanged(false);
             if (!hadVisit && document.getElementById('prepUsed').value === NONE_PREP) document.getElementById('qtyCount').value = '';
@@ -7080,24 +7082,66 @@
             updateFab();
         }
 
-        // ---------- Recommendations at this station (photos stream in, nothing is saved) ----------
+        // ---------- Recommendations at this station: this visit's (editable) + the others (photos stream in) ----------
         let stationRecsShowAll = false;
+        let recEditorOpen = false;
+        function openRecEditor() {
+            recEditorOpen = true;
+            renderRecEditor();
+            setTimeout(() => document.getElementById('recommendationNote').focus(), 30);
+        }
+        function closeRecEditor() {
+            const dev = siteDevices.find(d => d.barcode_id === currentBarcode);
+            if (dev && dev.visitRec) return; // already saved this visit: it stays (clear the text and photos to remove it)
+            document.getElementById('recommendationNote').value = '';
+            clearPendingPhotos(true);
+            recEditorOpen = false;
+            renderRecEditor();
+        }
+        function renderRecEditor() {
+            const dev = siteDevices.find(d => d.barcode_id === currentBarcode);
+            const rec = dev && dev.visitRec;
+            const open = recEditorOpen || !!rec || !!document.getElementById('recommendationNote').value.trim() || pendingPhotos.length > 0;
+            document.getElementById('recEditor').classList.toggle('hidden', !open);
+            document.getElementById('addRecBtn').classList.toggle('hidden', open);
+            document.getElementById('recEditorCancel').classList.toggle('hidden', !!rec);
+            document.getElementById('recEditorHead').innerHTML = rec
+                ? `${recNumberHtml(rec)} ${recStatusChip(rec.status)} ${recAgeChip(rec)} <span class="text-[11px] t-faint">Raised this visit</span>`
+                : '<span class="font-bold t-strong text-sm">New recommendation</span>';
+        }
         function renderStationRecs(dev) {
-            const section = document.getElementById('pastRecommendationsSection');
             const list = document.getElementById('pastRecommendationsList');
             const btn = document.getElementById('loadPastHistoryBtn');
-            const recs = dev ? dev.recommendationsHistory.slice() : [];
-            if (!recs.length) { section.classList.add('hidden'); list.innerHTML = ''; return; }
+            const own = dev && dev.visitRec ? dev.visitRec.id : null;
+            const recs = dev ? dev.recommendationsHistory.filter(r => r.id !== own) : [];
             recs.forEach(r => { r.station = dev.locationName; r.stationType = dev.deviceType; });
-            section.classList.remove('hidden');
             const open = recs.filter(r => r.status !== 'complete');
             const done = recs.filter(r => r.status === 'complete');
             const shown = (stationRecsShowAll ? open.concat(done) : open).sort((a, b) => new Date(b.date) - new Date(a.date));
             btn.classList.toggle('hidden', !done.length);
             btn.textContent = stationRecsShowAll ? 'Hide completed' : `Show completed (${done.length})`;
-            list.innerHTML = shown.length ? shown.map(r => recRowHtml(r, { hideStation: true, photos: true })).join('')
-                : '<span class="t-faint italic">No open recommendations at this station.</span>';
+            list.innerHTML = shown.length
+                ? `<div class="eyebrow t-faint pt-1">Earlier at this station</div>` + shown.map(r => recRowHtml(r, { hideStation: true, photos: true })).join('')
+                : '';
             streamRecThumbs(list, shown);
+            renderRecEditor();
+        }
+        // This visit's saved photos: show the real pictures (on this device if not uploaded yet, otherwise streamed)
+        async function loadKeptPhotoThumbs(dev) {
+            const rec = dev && dev.visitRec;
+            if (!keptPhotos.length) return;
+            const barcode = currentBarcode;
+            const local = new Map(((rec && rec.allSlots) || []).filter(sl => sl.local).map(sl => [sl.path, sl.local]));
+            keptPhotos.forEach(k => { if (!k.url && local.has(k.path)) k.url = local.get(k.path); });
+            const remote = keptPhotos.filter(k => !k.url).map(k => k.path);
+            if (remote.length && isOnline) {
+                try {
+                    const links = await withSyncBadge('photos', 'Loading photos...', () => getSignedUrls(remote));
+                    if (currentBarcode !== barcode) return;
+                    keptPhotos.forEach(k => { if (!k.url && links.get(k.path)) k.url = links.get(k.path); });
+                } catch (e) {}
+            }
+            renderPhotoPreviews();
         }
         function lazyLoadStationHistory() {
             stationRecsShowAll = !stationRecsShowAll;
