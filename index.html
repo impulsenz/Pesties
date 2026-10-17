@@ -1337,7 +1337,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.17-r17';
+        const APP_VERSION = '2026.10.17-r18';
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
@@ -1545,6 +1545,8 @@
                 const script = COLUMN_FIX_SCRIPT[col] || 'pestis_fix_client_columns.sql';
                 return `The "${table}" table in the database has no "${col}" column. Run ${script} in the Supabase SQL editor, then tap Retry.`;
             }
+            if (/operator does not exist: json/i.test(msg)) return 'The database rejected this because of the earlier recommendation-number script. Run pestis_recommendations.sql in the Supabase SQL editor (it fixes this), then tap Sync Now.';
+            if (/recommendations/i.test(msg) && /does not exist|schema cache|could not find the table/i.test(msg)) return 'The database has no recommendations table yet. Run pestis_recommendations.sql in the Supabase SQL editor, then tap Retry.';
             if (/column .* does not exist|schema cache/i.test(msg)) return msg + '.' + SQL_HINT;
             return msg;
         }
@@ -2420,6 +2422,22 @@
                 return;
             }
 
+            if (item.kind === 'insert_rec') {
+                await uploadAllPhotos(item);
+                const row = Object.assign({}, item.data.rec, { photos: itemPhotos(item).map(p => p.path).concat(item.data.rec.photos || []).filter((v, i, a) => a.indexOf(v) === i) });
+                const { data, error } = await _supabase.from('recommendations').upsert([row], { onConflict: 'id' }).select('*');
+                if (error) throw error;
+                const back = (data && data[0]) || row;
+                if (back.rec_no != null) item.data.rec.rec_no = back.rec_no;
+                const cache = await getSiteCache(item.clientId);
+                if (cache) {
+                    cache.recs = (cache.recs || []).filter(r => r.id !== back.id).concat([back]);
+                    await saveSiteCache(item.clientId, cache);
+                }
+                scheduleSiteRefresh(item.clientId);
+                return;
+            }
+
             if (item.kind === 'update_client') {
                 const { data, error } = await _supabase.from('clients').update(toDbClientFields(item.data.fields)).eq('id', item.clientId).select('id');
                 if (error) throw error;
@@ -2478,6 +2496,16 @@
                     return q2;
                 });
 
+                // recommendations raised on this visit (their own table)
+                if ((item.data.recIds || []).length) {
+                    const { data: gone, error: rErr } = await _supabase.from('recommendations').select('photos').in('id', item.data.recIds);
+                    if (rErr && !/does not exist|schema cache/i.test(rErr.message || '')) throw rErr;
+                    if (!rErr) {
+                        const { error: dErr } = await _supabase.from('recommendations').delete().in('id', item.data.recIds);
+                        if (dErr) throw dErr;
+                        await removePhotos((gone || []).flatMap(r => Array.isArray(r.photos) ? r.photos : []));
+                    }
+                }
                 await removePhotos(allPhotoPaths(removed));
                 if (await getSiteCache(cid)) syncSiteCache(cid, 'full').catch(() => {});
                 return;
@@ -2499,9 +2527,19 @@
                     }
                     await removePhotos(allPhotoPaths(rows));
                 }
+                {
+                    const { data: gone, error: rErr } = await _supabase.from('recommendations').select('photos').eq('client_id', String(cid)).in('station_barcode', barcodes);
+                    if (rErr && !/does not exist|schema cache/i.test(rErr.message || '')) throw rErr;
+                    if (!rErr && (gone || []).length) {
+                        const { error: dErr } = await _supabase.from('recommendations').delete().eq('client_id', String(cid)).in('station_barcode', barcodes);
+                        if (dErr) throw dErr;
+                        await removePhotos(gone.flatMap(r => Array.isArray(r.photos) ? r.photos : []));
+                    }
+                }
                 const cache = await getSiteCache(cid);
                 if (cache) {
                     cache.rows = cache.rows.filter(r => !barcodes.includes(r.barcode_id));
+                    cache.recs = (cache.recs || []).filter(r => !barcodes.includes(r.station_barcode));
                     await saveSiteCache(cid, cache);
                 }
                 return;
@@ -2513,6 +2551,10 @@
                 const { data: moved, error } = await _supabase.from('service_logs').update({ barcode_id: item.data.to })
                     .eq('client_id', cid).eq('barcode_id', item.data.from).select('barcode_id');
                 if (error) throw error;
+                {
+                    const { error: rErr } = await _supabase.from('recommendations').update({ station_barcode: item.data.to }).eq('client_id', String(cid)).eq('station_barcode', item.data.from);
+                    if (rErr && !/does not exist|schema cache/i.test(rErr.message || '')) throw rErr;
+                }
                 if (!moved || moved.length === 0) {
                     const { count, error: cErr } = await _supabase.from('service_logs').select('barcode_id', { count: 'exact', head: true })
                         .eq('client_id', cid).eq('barcode_id', item.data.from);
@@ -2562,6 +2604,22 @@
                 label: label,
                 data: { client_id: selectedClient.id, barcode_id: barcode, payload: payload }
             }, photos);
+        }
+
+        // A new recommendation: one row in the recommendations table (the database numbers it). Works offline.
+        async function queueRecommendation(barcode, fields, blobs, label) {
+            const safeBarcode = String(barcode).replace(/[^a-zA-Z0-9_-]/g, '_');
+            const stamp = Date.now();
+            const photos = (blobs || []).map((blob, i) => ({ blob: blob, path: `${selectedClient.id}/${safeBarcode}_rec_${stamp}_${i + 1}.${extFor(blob)}` }));
+            const rec = Object.assign({
+                id: uid(),
+                client_id: String(selectedClient.id),
+                station_barcode: barcode,
+                raised_at: new Date().toISOString(),
+                raised_by: technicianLabel(),
+                photos: []
+            }, fields);
+            return enqueue({ kind: 'insert_rec', clientId: selectedClient.id, siteName: selectedClient.Name, label: label, data: { rec: rec } }, photos);
         }
 
         // A site-level event for the activity log (kept even if the visit is cancelled)
@@ -2793,6 +2851,7 @@
                 case 'cancel_visit': return { table: 'service_logs', action: 'delete', where: { client_id: item.clientId, 'payload->>clientRef': d.refs || [] } };
                 case 'delete_station': return { table: 'service_logs', action: 'delete', where: { client_id: item.clientId, barcode_id: d.barcodes || [d.barcode] } };
                 case 'change_barcode': return { table: 'service_logs', action: 'update', where: { client_id: item.clientId, barcode_id: d.from }, set: { barcode_id: d.to } };
+                case 'insert_rec': return { table: 'recommendations', action: 'insert', row: Object.assign({}, d.rec, { photos: itemPhotos(item).map(p => p.path).concat(d.rec.photos || []) }), note: 'rec_no is filled in by the database.' };
                 case 'add_option': return { table: 'app_options', action: 'upsert', row: d };
                 case 'delete_option': return { table: 'app_options', action: 'delete', where: { id: d.id } };
                 default: return { kind: item.kind, data: d };
@@ -4242,7 +4301,7 @@
                 const rows = await fetchRowsPaged(clientId, null, prog);
                 changed = !cache || rows.length !== serverRows(cache.rows).length || latestCreatedAt(rows) !== latestCreatedAt(cache.rows);
                 added = Math.max(0, rows.length - before);
-                cache = { rows: rows, lastSyncAt: now, lastFullAt: now };
+                cache = { rows: rows, lastSyncAt: now, lastFullAt: now, recs: cache ? cache.recs : undefined, recsOk: cache ? cache.recsOk : undefined };
             } else {
                 let rows = cache.rows;
                 let lastFullAt = cache.lastFullAt || now;
@@ -4266,9 +4325,25 @@
                     lastFullAt = now;
                     changed = true;
                 }
-                cache = { rows: rows, lastSyncAt: now, lastFullAt: lastFullAt };
+                cache = { rows: rows, lastSyncAt: now, lastFullAt: lastFullAt, recs: cache.recs, recsOk: cache.recsOk };
             }
 
+            // Recommendations live in their own table: fetch the site's list (numbers, status, photos)
+            try {
+                const { data: recs, error: rErr } = await withTimeout(
+                    _supabase.from('recommendations').select('*').eq('client_id', String(clientId)), 15000, 'Downloading recommendations');
+                if (rErr) throw rErr;
+                const before = JSON.stringify(cache.recs || []);
+                cache.recs = recs || [];
+                cache.recsOk = true;
+                recTableMissing = false;
+                if (JSON.stringify(cache.recs) !== before) changed = true;
+            } catch (e) {
+                if (/does not exist|schema cache|could not find the table/i.test(e.message || '')) { recTableMissing = true; cache.recsOk = false; }
+                else if (!isNetworkError(e)) logAppError('Downloading recommendations', e);
+                const old = await getSiteCache(clientId);
+                if (old && old.recs && !cache.recs) cache.recs = old.recs;
+            }
             await saveSiteCache(clientId, cache);
             return { cache, changed, added };
         }
@@ -4346,6 +4421,24 @@
         let currentVisitEntries = [];   // station records made since the last closed visit
         let barcodeAliases = new Map(); // old barcode -> new barcode
         let lastVisitStats = null;      // { scanned, total, visit }
+        let recTableMissing = false;    // the database has no recommendations table yet
+
+        // A recommendation from the recommendations table, shaped like a service_logs record so the rest of the app reads it the same way
+        function recToRow(r, opts) {
+            return {
+                barcode_id: r.station_barcode || 'UNKNOWN',
+                created_at: r.created_at || r.raised_at,
+                payload: {
+                    recOnly: true, recRef: r.id, clientRef: r.id, recNo: r.rec_no != null ? r.rec_no : undefined,
+                    recommendation: r.text || 'Issue photo attached', locationName: r.station_name || undefined, deviceType: r.station_type || undefined,
+                    photos: Array.isArray(r.photos) ? r.photos : [], photo: Array.isArray(r.photos) ? r.photos[0] : null,
+                    technician: r.raised_by || '', servicedAt: r.raised_at
+                },
+                _fromTable: true,
+                _pending: !!(opts && opts.pending),
+                _blobKeys: opts && opts.blobKeys
+            };
+        }
 
         function entryFromRow(r) {
             const p = r.payload || {};
@@ -4361,6 +4454,21 @@
 
         async function buildSiteState(clientId, cachedRows, keepScanned, prog, opts) {
             const rows = (cachedRows || []).map(r => Object.assign({}, r));
+
+            // Recommendations from their own table, plus new ones still waiting to upload
+            const saved = await getSiteCache(clientId);
+            const tableRecs = (saved && saved.recs) || [];
+            const recIds = new Set();
+            tableRecs.forEach(r => { recIds.add(r.id); rows.push(recToRow(r)); });
+            queueItems.filter(i => i.kind === 'insert_rec' && !i.cancelled && String(i.clientId) === String(clientId)).sort((a, b) => a.seq - b.seq).forEach(i => {
+                const r = i.data.rec;
+                if (recIds.has(r.id)) return;
+                recIds.add(r.id);
+                const blobKeys = i.status !== 'sent' ? itemPhotos(i).map(p => p.blobKey) : [];
+                rows.push(recToRow(Object.assign({}, r, { photos: itemPhotos(i).map(p => p.path).concat(r.photos || []) }), { pending: i.status !== 'sent', blobKeys }));
+            });
+            // the same recommendation recorded the old way (inside service_logs) is shown from the table instead
+            const fromTable = id => recIds.has(id);
 
             const refs = new Set(rows.map(r => r.payload && r.payload.clientRef).filter(Boolean));
             queueItems
@@ -4479,13 +4587,15 @@
                 }
                 if (META_IDS.has(row.barcode_id)) return;
 
+                const recOnly = !!payload.recOnly; // a recommendation raised on its own, not a service of the station
+                const legacyRecId = payload.recRef || payload.clientRef || (row.barcode_id + '@' + row.created_at);
+                if (recOnly && !row._fromTable && fromTable(legacyRecId)) return; // shown from the recommendations table
+
                 const inThisVisit = recTime(row) > latestVisitTimestamp;
                 if (inThisVisit) activeScannedSet.add(row.barcode_id);
                 const entry = entryFromRow(row);
                 if (v) { v.entries.push(entry); if (v.firstAt == null) v.firstAt = entry.at; }
                 else currentVisitEntries.push(entry);
-
-                const recOnly = !!payload.recOnly; // a recommendation raised on its own, not a service of the station
                 const existing = map.get(row.barcode_id) || {
                     barcode_id: row.barcode_id,
                     locationName: payload.locationName || 'Unnamed Device',
@@ -4526,7 +4636,7 @@
                 const { photos, missing, slotUrls } = resolvePhotos(slots);
 
                 let rec = null;
-                if (recText || slots.length) {
+                if ((recText || slots.length) && (row._fromTable || !fromTable(legacyRecId))) {
                     rec = {
                         id: payload.recRef || payload.clientRef || (row.barcode_id + '@' + row.created_at),
                         recNo: payload.recNo != null ? payload.recNo : null,
@@ -4546,6 +4656,7 @@
                         completedAt: null,
                         thisVisit: inThisVisit,
                         pending: !!row._pending,
+                        fromTable: !!row._fromTable,
                         updates: []
                     };
                     existing.recommendationsHistory.push(rec);
@@ -4654,6 +4765,7 @@
                 if (META_IDS.has(r.barcode_id)) return;
                 if (p.recOnly) {
                     const rec = recById.get(p.recRef);
+                    if (!r._fromTable && rec && rec.fromTable) return; // the table's copy is logged instead
                     const no = fmtRecNo(p.recNo != null ? p.recNo : rec && rec.recNo);
                     add('rec', `Recommendation ${no || '(number on upload)'} raised`, p.recommendation || '', { station: p.locationName || devName(r.barcode_id) });
                     return;
@@ -4669,7 +4781,8 @@
                 if (p.editedAt) add('change', 'Service record corrected', bits.join(' · '), { station });
                 else add('scan', isNew ? 'New station registered & serviced' : 'Station scanned & serviced', bits.join(' · '), { station });
                 const recText = p.recommendation || p.recommendationNote;
-                if (recText && !p.editedAt) {
+                const tableRec = recById.get(p.recRef || p.clientRef);
+                if (recText && !p.editedAt && !(tableRec && tableRec.fromTable)) {
                     const rec = recById.get(p.recRef || p.clientRef);
                     const no = fmtRecNo(p.recNo != null ? p.recNo : rec && rec.recNo);
                     add('rec', `Recommendation ${no || '(number on upload)'} raised`, recText, { station });
@@ -4803,20 +4916,13 @@
                 step(25, 'Checking site details...');
                 const detailsChanged = await refreshClientRecord(clientId).catch(() => false);
                 step(40, 'Checking for new records...');
-                // Numbers added by the database to records we already have only arrive with a full refresh
-                const checkKey = 'pestis-recno-check-' + clientId;
-                const needNumbers = unnumberedUploadedRecs().length > 0;
-                const lastCheck = loadJSON(checkKey, 0);
-                const fullForNumbers = needNumbers && (mode === 'manual' || mode === 'start' || Date.now() - lastCheck > 6 * 3600000);
-                if (fullForNumbers) saveJSON(checkKey, Date.now());
-                const { cache, changed, added } = await syncSiteCache(clientId, mode === 'full' || fullForNumbers ? 'full' : 'auto', null, step);
+                const { cache, changed, added } = await syncSiteCache(clientId, mode === 'full' ? 'full' : 'auto', null, step);
                 if (mySeq !== siteSyncSeq) return;
                 siteSyncInfo.lastSyncAt = cache.lastSyncAt;
-                if (changed || mode || fullForNumbers) {
+                if (changed || mode) {
                     step(93, 'Updating the screen...');
                     await buildSiteState(clientId, cache.rows, new Set(scannedBarcodesThisVisit), null, { quick: true });
                     if (mySeq !== siteSyncSeq) return;
-                    if (fullForNumbers) recNumbersMissing = unnumberedUploadedRecs().length > 0;
                     rerenderOpenSite();
                     prefetchPhotos(sitePhotoUrls());
                     fetchMissingPhotoLinks();
@@ -5076,8 +5182,8 @@
         let recNumbersMissing = false;
         function unnumberedUploadedRecs() { return allSiteRecs().filter(r => r.recNo == null && !r.pending); }
         function recNumbersNotice() {
-            if (!recNumbersMissing || !unnumberedUploadedRecs().length) return '';
-            return `<div class="row-item p-2.5 text-[11px]" style="border-color:#d97706;color:#d97706;">Recommendation numbers are given by the database, and it isn't numbering them yet. Run <b>pestis_r14_update.sql</b> in the Supabase SQL editor, then tap Sync Site.</div>`;
+            if (!recTableMissing) return '';
+            return `<div class="row-item p-2.5 text-[11px]" style="border-color:#d97706;color:#d97706;">Recommendation numbers need the recommendations table in the database. Run <b>pestis_recommendations.sql</b> in the Supabase SQL editor, then tap Sync Site.</div>`;
         }
 
         function recRowHtml(item, opts) {
@@ -5965,6 +6071,9 @@
                 if (i.data.barcode_id === from) { i.data.barcode_id = to; await persistItem(i); }
                 else if (i.data.barcode_id === 'MAP_PIN' && i.data.payload && i.data.payload.barcode === from) { i.data.payload.barcode = to; await persistItem(i); }
             }
+            for (const i of queueItems.filter(i => i.kind === 'insert_rec' && String(i.clientId) === String(cid) && (i.status === 'pending' || i.status === 'failed') && i.data.rec.station_barcode === from)) {
+                i.data.rec.station_barcode = to; await persistItem(i);
+            }
             // 2. The change itself (every device applies it to the records it has)
             await queueLog('BARCODE_CHANGE', { from, to, locationName: name, technician: technicianLabel(), servicedAt: new Date().toISOString() }, null, `Barcode changed ${from} → ${to} · ${name}`);
             // 3. Move the records in the database (its own lane, so it never holds up service records)
@@ -5976,6 +6085,7 @@
                     if (r.barcode_id === from) r.barcode_id = to;
                     else if (r.barcode_id === 'MAP_PIN' && r.payload && r.payload.barcode === from) r.payload.barcode = to;
                 });
+                (cache.recs || []).forEach(r => { if (r.station_barcode === from) r.station_barcode = to; });
                 await saveSiteCache(cid, cache);
             }
             if (scannedBarcodesThisVisit.has(from)) { scannedBarcodesThisVisit.delete(from); scannedBarcodesThisVisit.add(to); }
@@ -7397,14 +7507,11 @@
                 await queueLog(currentBarcode, payloadData, null, `Service record · ${locNameInput}`);
                 // A new recommendation is its own record (the database gives it the next number)
                 if (newRec) {
-                    await queueLog(currentBarcode, {
-                        recOnly: true,
-                        locationName: locNameInput,
-                        deviceType: devType,
-                        recommendation: f.recommendation || 'Issue photo attached',
-                        recRef: uid(),
-                        technician: technicianLabel(),
-                        servicedAt: new Date(Date.now() + 1).toISOString()
+                    await queueRecommendation(currentBarcode, {
+                        station_name: locNameInput,
+                        station_type: devType,
+                        text: f.recommendation || 'Issue photo attached',
+                        raised_at: new Date(Date.now() + 1).toISOString()
                     }, newBlobs, `New recommendation${photoBit} · ${locNameInput}`);
                 }
                 if (usedPrep) rememberPrep(f);
@@ -7449,7 +7556,7 @@
             const isThisStation = i => i.kind === 'insert_log' && String(i.clientId) === String(cid) && i.data.barcode_id === barcode;
             try {
                 // 1. Records for this station still waiting on this device: just remove them
-                for (const i of queueItems.filter(i => isThisStation(i) && (i.status === 'pending' || i.status === 'failed'))) {
+                for (const i of queueItems.filter(i => (isThisStation(i) || (i.kind === 'insert_rec' && String(i.clientId) === String(cid) && i.data.rec.station_barcode === barcode)) && (i.status === 'pending' || i.status === 'failed'))) {
                     await removeQueueItem(i);
                 }
                 await markSentCancelled(isThisStation);
@@ -7469,6 +7576,7 @@
                 if (cache) {
                     const gone = new Set([barcode].concat(oldCodes));
                     cache.rows = cache.rows.filter(r => !gone.has(r.barcode_id));
+                    cache.recs = (cache.recs || []).filter(r => !gone.has(r.station_barcode));
                     await saveSiteCache(cid, cache);
                 }
                 siteDevices = siteDevices.filter(d => d.barcode_id !== barcode);
@@ -7511,9 +7619,12 @@
 
             try {
                 // 1. Records from this visit that never left the device: just remove them
-                for (const i of queueItems.filter(i => inThisVisit(i) && (i.status === 'pending' || i.status === 'failed'))) {
+                const recInThisVisit = i => i.kind === 'insert_rec' && String(i.clientId) === String(cid) && Date.parse(i.data.rec.raised_at) > cutoffT;
+                for (const i of queueItems.filter(i => (inThisVisit(i) || recInThisVisit(i)) && (i.status === 'pending' || i.status === 'failed'))) {
                     await removeQueueItem(i);
                 }
+                const recIds = new Set(queueItems.filter(i => recInThisVisit(i) && (i.status === 'sent' || i.status === 'uploading')).map(i => i.data.rec.id));
+                queueItems.filter(i => recInThisVisit(i)).forEach(i => { i.cancelled = true; persistItem(i); });
 
                 // 2. Note exactly which uploaded records belong to this visit, so only those are removed from the server
                 const cache = await getSiteCache(cid);
@@ -7528,7 +7639,7 @@
                     clientId: cid,
                     siteName: client.Name,
                     label: 'Visit cancelled',
-                    data: { technicianId: currentUser.id, refs: Array.from(refs), cancelledAt: new Date().toISOString() }
+                    data: { technicianId: currentUser.id, refs: Array.from(refs), recIds: Array.from(new Set([...recIds, ...((cache && cache.recs) || []).filter(r => Date.parse(r.raised_at) > cutoffT && (r.raised_by || '') === me).map(r => r.id)])), cancelledAt: new Date().toISOString() }
                 });
 
                 await queueSiteChange({ action: 'visit_cancelled', title: 'Visit cancelled', note: `${refs.size} uploaded record${refs.size === 1 ? '' : 's'} removed` }, 'Visit cancelled · log');
@@ -7537,6 +7648,7 @@
                 // 3. Take this visit's records out of the saved copy so they disappear straight away
                 if (cache) {
                     cache.rows = cache.rows.filter(r => !rowInThisVisit(r));
+                    cache.recs = (cache.recs || []).filter(r => !(Date.parse(r.raised_at) > cutoffT && (r.raised_by || '') === me));
                     await saveSiteCache(cid, cache);
                 }
 
