@@ -135,6 +135,31 @@
         .plan-pin { position: absolute; transform: translate(-50%, -100%); cursor: pointer; background: none; border: 0; padding: 0; }
         .plan-pin span { display: block; width: 20px; height: 20px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid #fff; box-shadow: 0 3px 8px -2px rgba(0, 0, 0, .6); }
         .plan-pin.overdue span { outline: 3px solid #dc2626; outline-offset: 1px; }
+        /* clickable tiles */
+        button.stat { text-align: left; cursor: pointer; transition: border-color .15s, transform .15s; width: 100%; }
+        button.stat:hover, button.stat:focus-visible { border-color: #f97316; transform: translateY(-2px); outline: none; }
+        /* recommendations: the photo leads */
+        .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .9rem; }
+        .rec-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 1rem; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; text-align: left; transition: border-color .15s, transform .15s; color: inherit; font: inherit; padding: 0; }
+        .rec-card:hover, .rec-card:focus-visible { border-color: #f97316; transform: translateY(-2px); outline: none; }
+        .rec-media { position: relative; aspect-ratio: 4 / 3; background: var(--surface3); overflow: hidden; }
+        @media (max-width: 520px) { .rec-media { aspect-ratio: 16 / 9; } }
+        .rec-media img, .rec-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .rec-media-ph { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .25rem; color: var(--faint); font-size: .72rem; }
+        .rec-media-ph b { font-size: 1.6rem; }
+        .rec-badges { position: absolute; top: .5rem; left: .5rem; right: .5rem; display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; }
+        .rec-badges .chip { background-color: rgba(6, 13, 31, .88) !important; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+        html:not(.dark) .rec-badges .chip { background-color: rgba(255, 255, 255, .94) !important; }
+        .rec-no { background: rgba(2, 6, 23, .8); color: #fff; font-size: .68rem; font-weight: 900; padding: .2rem .45rem; border-radius: .45rem; }
+        .rec-count { position: absolute; bottom: .5rem; right: .5rem; background: rgba(2, 6, 23, .8); color: #fff; font-size: .66rem; font-weight: 800; padding: .18rem .45rem; border-radius: .45rem; }
+        .rec-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.8rem; text-shadow: 0 2px 10px #000; pointer-events: none; }
+        .clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .rec-hero { position: relative; border-radius: .9rem; overflow: hidden; background: #020617; cursor: zoom-in; }
+        .rec-hero img, .rec-hero video { width: 100%; max-height: 55vh; object-fit: contain; display: block; margin: 0 auto; }
+        .alert-box { border: 1px solid #fca5a5; background: #fee2e2; color: #991b1b; border-radius: .9rem; }
+        html.dark .alert-box { border-color: rgba(239, 68, 68, .45); background: rgba(239, 68, 68, .12); color: #fca5a5; }
+        .limit-bar { height: .45rem; border-radius: 999px; background: var(--surface3); overflow: hidden; }
+        .limit-bar span { display: block; height: 100%; border-radius: 999px; }
         .hidden { display: none; }
     </style>
 </head>
@@ -179,6 +204,13 @@
                 <div id="headerSite" class="text-sm font-black t-strong truncate"></div>
             </div>
             <button type="button" id="switchSiteBtn" onclick="goSites()" class="btn btn-secondary hidden !px-3">⇄ <span class="hidden sm:inline">Switch site</span></button>
+            <div class="relative">
+                <button type="button" id="bellBtn" onclick="toggleBell()" class="icon-btn relative" title="Notifications" aria-label="Notifications" aria-haspopup="true">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    <span id="bellCount" class="hidden absolute -top-1.5 -right-1.5 min-w-[1.2rem] h-[1.2rem] px-1 rounded-full text-[10px] font-black text-white flex items-center justify-center" style="background:#dc2626;">0</span>
+                </button>
+                <div id="bellPanel" class="hidden absolute right-0 mt-2 w-[min(22rem,calc(100vw-2rem))] card p-3 space-y-2 text-xs z-50 max-h-[70vh] overflow-y-auto scroll-thin" role="menu"></div>
+            </div>
             <button type="button" onclick="toggleTheme()" class="icon-btn" title="Toggle day / night mode" aria-label="Toggle day / night mode">
                 <svg class="icon-sun w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414m12.728 0l-1.414-1.414M7.05 7.05L5.636 5.636M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 <svg class="icon-moon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
@@ -249,10 +281,15 @@
                     </div>
                     <div><label class="lbl" for="fFrom">From</label><input id="fFrom" type="date" class="field !w-auto !py-2" onchange="setCustomDates()"></div>
                     <div><label class="lbl" for="fTo">To</label><input id="fTo" type="date" class="field !w-auto !py-2" onchange="setCustomDates()"></div>
-                    <div><label class="lbl" for="fType">Station type</label><select id="fType" class="field !w-auto !py-2 max-w-[15rem]" onchange="F.type = this.value; renderTab();"></select></div>
-                    <div id="fSpeciesWrap"><label class="lbl" for="fSpecies">Pest species</label><select id="fSpecies" class="field !w-auto !py-2 max-w-[13rem]" onchange="F.species = this.value; renderTab();"></select></div>
-                    <div id="fPrepWrap"><label class="lbl" for="fPrep">Preparation</label><select id="fPrep" class="field !w-auto !py-2 max-w-[15rem]" onchange="F.prep = this.value; renderTab();"></select></div>
-                    <div class="flex-1 min-w-[10rem]"><label class="lbl" for="fSearch">Search</label><input id="fSearch" type="search" placeholder="Station, barcode, batch..." class="field !py-2" oninput="F.q = this.value; renderTab();"></div>
+                    <div data-f="type"><label class="lbl" for="fType">Station type</label><select id="fType" class="field !w-auto !py-2 max-w-[15rem]" onchange="F.type = this.value; renderTab();"></select></div>
+                    <div data-f="map"><label class="lbl" for="fMap">Floor plan</label><select id="fMap" class="field !w-auto !py-2 max-w-[13rem]" onchange="F.map = this.value; renderTab();"></select></div>
+                    <div data-f="zone"><label class="lbl" for="fZone">Zone</label><select id="fZone" class="field !w-auto !py-2 max-w-[13rem]" onchange="F.zone = this.value; renderTab();"></select></div>
+                    <div data-f="station"><label class="lbl" for="fStation">Station</label><select id="fStation" class="field !w-auto !py-2 max-w-[15rem]" onchange="F.station = this.value; renderTab();"></select></div>
+                    <div data-f="species"><label class="lbl" for="fSpecies">Pest</label><select id="fSpecies" class="field !w-auto !py-2 max-w-[13rem]" onchange="F.species = this.value; renderTab();"></select></div>
+                    <div data-f="prep"><label class="lbl" for="fPrep">Preparation</label><select id="fPrep" class="field !w-auto !py-2 max-w-[15rem]" onchange="F.prep = this.value; renderTab();"></select></div>
+                    <div data-f="batch"><label class="lbl" for="fBatch">Batch number</label><select id="fBatch" class="field !w-auto !py-2 max-w-[12rem]" onchange="F.batch = this.value; renderTab();"></select></div>
+                    <div data-f="tech"><label class="lbl" for="fTech">Technician</label><select id="fTech" class="field !w-auto !py-2 max-w-[12rem]" onchange="F.tech = this.value; renderTab();"></select></div>
+                    <div data-f="q" class="flex-1 min-w-[10rem]"><label class="lbl" for="fSearch">Search</label><input id="fSearch" type="search" placeholder="Station, barcode, batch..." class="field !py-2" oninput="F.q = this.value; renderTab();"></div>
                     <div class="flex gap-2">
                         <button type="button" onclick="exportTab('csv')" class="btn btn-secondary" title="Spreadsheet (opens in Excel)">⬇ CSV</button>
                         <button type="button" onclick="exportTab('pdf')" class="btn btn-secondary">⬇ PDF</button>
@@ -311,7 +348,7 @@
         <div id="viewerCaption" class="text-xs text-white/80 text-center max-w-xl"></div>
     </div>
 
-    <input id="recPhotoInput" type="file" accept="image/*" multiple class="hidden">
+    <input id="recPhotoInput" type="file" accept="image/*,video/*" multiple class="hidden">
 
 <script>
 // =====================================================================
@@ -319,7 +356,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.17-p1';
+const PORTAL_VERSION = '2026.10.18-p3';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -456,7 +493,45 @@ async function signOut() {
     showLogin('You have signed out.');
 }
 function toggleAccountMenu() { $('accountMenu').classList.toggle('hidden'); }
-document.addEventListener('click', e => { if (!e.target.closest('#accountMenu') && !e.target.closest('#accountBtn')) $('accountMenu').classList.add('hidden'); });
+document.addEventListener('click', e => {
+    if (!e.target.closest('#accountMenu') && !e.target.closest('#accountBtn')) $('accountMenu').classList.add('hidden');
+    if (!e.target.closest('#bellPanel') && !e.target.closest('#bellBtn')) $('bellPanel').classList.add('hidden');
+});
+
+// ---------- Notifications (bell): documents expiring on any of your sites, and for the open site
+//            critical limits exceeded and new recommendations you haven't opened yet ----------
+let allSiteDocs = [];
+async function loadAllDocs() {
+    try { const { data } = await sb.from('site_documents').select('id, client_id, title, category, expires_on'); allSiteDocs = data || []; } catch (e) { allSiteDocs = []; }
+    renderBell();
+}
+function bellItems() {
+    const items = [];
+    const today = dayStart(toDayStr(new Date()));
+    allSiteDocs.filter(d => d.expires_on && dayStart(d.expires_on) - today <= DOC_WARN_DAYS * 86400000).sort((a, b) => String(a.expires_on).localeCompare(String(b.expires_on))).forEach(d => {
+        const site = state.sites.find(x => String(x.id) === String(d.client_id));
+        const days = Math.round((dayStart(d.expires_on) - today) / 86400000);
+        items.push({ icon: '📄', red: days < 0, title: `${d.title} ${days < 0 ? 'has expired' : days === 0 ? 'expires today' : `expires in ${plural(days, 'day')}`}`, sub: `${site ? siteName(site) + ' · ' : ''}${d.category || 'Document'} · ${fmtDay(d.expires_on)}`, go: `goToDocs('${esc(String(d.client_id))}')` });
+    });
+    if (state.model) {
+        breachesNow().forEach(x => items.push({ icon: '⚠', red: true, title: `${x.limit.zone} · ${limitPest(x.limit)} over its limit`, sub: `${x.total} recorded in ${monthLabel(Date.now())} (limit ${x.limit.max})`, go: "setTab('reports'); setTimeout(() => $('limitsCard') && $('limitsCard').scrollIntoView({ behavior: 'smooth' }), 300)" }));
+        const uid = state.me && state.me.uid;
+        state.model.recs.filter(r => r.status !== 'complete' && r.raisedAt > Date.now() - 30 * 86400000 && uid && !r.views.some(v => v.viewer_key === uid))
+            .forEach(r => items.push({ icon: '🆕', title: `New recommendation ${fmtRecNo(r.no)}`, sub: `${r.station} · ${r.text}`, go: `openRec('${esc(r.id)}', 'overview')` }));
+    }
+    return items;
+}
+function renderBell() {
+    const items = bellItems();
+    const c = $('bellCount');
+    c.textContent = items.length > 99 ? '99+' : items.length;
+    c.classList.toggle('hidden', !items.length);
+    $('bellPanel').innerHTML = `<div class="eyebrow t-accent px-1">Notifications</div>` + (items.map(it => `
+        <button type="button" class="row-item clickable w-full text-left p-2.5 flex gap-2 items-start" onclick="$('bellPanel').classList.add('hidden'); ${it.go}" ${it.red ? 'style="border-color:#ef4444;"' : ''}>
+            <span>${it.icon}</span><span class="min-w-0"><span class="block font-bold t-strong">${esc(it.title)}</span><span class="block t-muted break-words">${esc(it.sub)}</span></span></button>`).join('') || '<div class="row-item p-3 t-faint italic text-center">Nothing new.</div>');
+}
+function toggleBell() { renderBell(); $('bellPanel').classList.toggle('hidden'); }
+function goToDocs(cid) { location.hash = `#/site/${encodeURIComponent(cid)}/documents`; }
 
 async function init() {
     // a sign-in link that failed or expired comes back with an error in the address
@@ -491,7 +566,7 @@ async function afterSignIn(session) {
             : 'Could not check your access: ' + esc(m), 'error');
         return;
     }
-    state.me = Object.assign({ email: session.user.email }, me || {});
+    state.me = Object.assign({ email: session.user.email, uid: session.user.id }, me || {});
     if (!me || (!me.staff && !me.client)) {
         await sb.auth.signOut().catch(() => {});
         state.started = false;
@@ -532,6 +607,7 @@ async function loadSites() {
         return;
     }
     loadCovers();
+    loadAllDocs();
     if (!state.sites.length) {
         showMessage('🏢', 'No sites yet', "No sites have been shared with your account yet. Ask Pesties to add your site.", [['Sign out', 'signOut()']]);
         return;
@@ -608,11 +684,19 @@ function renderPicker() {
 //  ONE SITE: load everything once, then each tab is worked out on this device
 // ===================================================================
 const TABS = [
-    ['overview', 'Overview'], ['recs', 'Recommendations'], ['stations', 'Station register'], ['chemicals', 'Chemical use'],
+    ['overview', 'Overview'], ['recs', 'Recommendations'], ['reports', 'Reports'], ['stations', 'Station register'], ['chemicals', 'Preparations'],
     ['activity', 'Pest activity'], ['visits', 'Visits'], ['documents', 'Documents'], ['plans', 'Floor plans']
 ];
-const REPORT_TABS = new Set(['stations', 'chemicals', 'activity', 'visits']);
-const F = { preset: '12m', from: null, to: null, type: '', species: '', prep: '', q: '' };
+// which filters each report tab offers (hidden filters are not applied)
+const TAB_FILTERS = {
+    reports: ['type', 'map', 'zone', 'station', 'species', 'tech'],
+    stations: ['type', 'map', 'zone', 'q'],
+    chemicals: ['station', 'prep', 'batch', 'tech', 'map'],
+    activity: ['type', 'map', 'zone', 'station', 'species'],
+    visits: ['tech', 'q']
+};
+const FILTER_KEYS = ['type', 'map', 'zone', 'station', 'species', 'prep', 'batch', 'tech', 'q'];
+const F = { preset: '12m', from: null, to: null, type: '', map: '', zone: '', station: '', species: '', prep: '', batch: '', tech: '', q: '' };
 
 async function openSite(id, tab, fromRoute) {
     const site = state.sites.find(s => String(s.id) === String(id));
@@ -625,7 +709,7 @@ async function openSite(id, tab, fromRoute) {
     $('headerSite').textContent = siteName(site);
     document.title = `${siteName(site)} · Pesties Client Portal`;
     if (changed || !state.model) {
-        Object.assign(F, { type: '', species: '', prep: '', q: '' });
+        FILTER_KEYS.forEach(k => { F[k] = ''; });
         $('fSearch').value = '';
         setPreset(F.preset, true);
         showLoading(`Loading ${siteName(site)}...`);
@@ -635,6 +719,7 @@ async function openSite(id, tab, fromRoute) {
     showOnly('siteView');
     renderSiteHeader();
     renderTab();
+    renderBell();
 }
 function setTab(tab) { if (state.site) location.hash = `#/site/${encodeURIComponent(state.site.id)}/${tab}`; }
 async function refreshSite() {
@@ -659,16 +744,19 @@ async function fetchAll(table, cid, cols, orderCol) {
 }
 async function loadSiteData(site) {
     const cid = String(site.id);
-    const [logs, stations, maps, visits, recs, updates, docs] = await Promise.all([
+    const [logs, stations, maps, visits, recs, updates, docs, folders, limits, views] = await Promise.all([
         fetchAll('service_logs', cid, 'barcode_id, payload, created_at', 'created_at'),
         fetchAll('stations', cid).catch(() => []),
         fetchAll('site_maps', cid).catch(() => []),
         fetchAll('visits', cid).catch(() => []),
         fetchAll('recommendations', cid),
         fetchAll('recommendation_updates', cid),
-        fetchAll('site_documents', cid).catch(() => [])
+        fetchAll('site_documents', cid).catch(() => []),
+        fetchAll('site_document_folders', cid).catch(() => []),
+        fetchAll('critical_limits', cid).catch(() => []),
+        fetchAll('recommendation_views', cid).catch(() => [])
     ]);
-    state.data = { logs, stations, maps, visits, recs, updates, docs };
+    state.data = { logs, stations, maps, visits, recs, updates, docs, folders, limits, views };
     state.model = buildModel(site, state.data);
     state.links = new Map();
     fillFilterOptions();
@@ -698,10 +786,10 @@ function buildModel(site, d) {
 
     // stations: the stations table, plus anything only seen in service records
     const st = new Map();
-    d.stations.forEach(s => st.set(s.barcode, { barcode: s.barcode, name: s.name || s.barcode, type: s.type || '', mapId: s.map_id || null, x: s.pin_x, y: s.pin_y, entries: [], fromTable: true }));
+    d.stations.forEach(s => st.set(s.barcode, { barcode: s.barcode, name: s.name || s.barcode, type: s.type || '', zone: (s.zone || '').trim(), mapId: s.map_id || null, x: s.pin_x, y: s.pin_y, entries: [], fromTable: true }));
     entries.forEach(e => {
         let s = st.get(e.barcode);
-        if (!s) { s = { barcode: e.barcode, name: e.name, type: e.type, entries: [] }; st.set(e.barcode, s); }
+        if (!s) { s = { barcode: e.barcode, name: e.name, type: e.type, zone: '', mapId: null, entries: [] }; st.set(e.barcode, s); }
         if (!s.fromTable) { s.name = e.name || s.name; s.type = e.type || s.type; }
         s.entries.push(e);
         // a station's name and type as they were when serviced stay on the record; the register shows the current ones
@@ -711,7 +799,7 @@ function buildModel(site, d) {
         const last = s.entries[s.entries.length - 1] || null;
         return Object.assign(s, { last, lastAt: last ? last.at : null });
     }).sort((a, b) => String(a.name).localeCompare(String(b.name), undefined, { numeric: true, sensitivity: 'base' }));
-    entries.forEach(e => { if (e.station) { e.name = e.station.name; e.type = e.station.type || e.type; } });
+    entries.forEach(e => { if (e.station) { e.name = e.station.name; e.type = e.station.type || e.type; e.zone = e.station.zone || ''; e.mapId = e.station.mapId || null; } });
 
     // how often stations should be checked: the most frequent contracted service
     const intervals = (site.services || []).map(s => FREQUENCIES[s.frequency] && FREQUENCIES[s.frequency].days).filter(Boolean);
@@ -755,7 +843,14 @@ function buildModel(site, d) {
 
     const maps = d.maps.slice().sort((a, b) => (a.sort || 0) - (b.sort || 0));
     const docs = d.docs.slice().sort((a, b) => String(a.title).localeCompare(String(b.title), undefined, { sensitivity: 'base' }));
-    return { entries, stations, visits, recs, maps, docs, interval };
+    const limits = (d.limits || []).map(l => ({ id: l.id, zone: String(l.zone || '').trim(), species: l.species || '*', max: Number(l.max_per_month) || 0, notes: l.notes || '', by: l.updated_by || '', at: l.updated_at }))
+        .sort((a, b) => a.zone.localeCompare(b.zone, undefined, { sensitivity: 'base' }) || a.species.localeCompare(b.species));
+    const views = new Map();
+    (d.views || []).forEach(v => { const l = views.get(v.rec_id) || []; l.push(v); views.set(v.rec_id, l); });
+    recs.forEach(r => { r.views = (views.get(r.id) || []).sort((a, b) => String(b.last_seen_at).localeCompare(String(a.last_seen_at))); });
+    const zones = Array.from(new Set(stations.map(s => s.zone).concat(limits.map(l => l.zone)).filter(Boolean))).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    const folders = Array.from(new Set((d.folders || []).map(f => f.name).concat(docs.map(x => x.folder).filter(Boolean)))).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+    return { entries, stations, visits, recs, maps, docs, folders, interval, limits, zones };
 }
 
 // ---------- signed links for photos and documents ----------
@@ -792,11 +887,10 @@ function renderSiteHeader() {
 function renderTab() {
     if (!state.model) return;
     renderSiteHeader();
-    const report = REPORT_TABS.has(state.tab);
-    $('filterBar').classList.toggle('hidden', !report);
-    $('fSpeciesWrap').classList.toggle('hidden', state.tab !== 'activity');
-    $('fPrepWrap').classList.toggle('hidden', state.tab !== 'chemicals');
-    const fn = { overview: renderOverview, recs: renderRecs, stations: renderStations, chemicals: renderChemicals, activity: renderActivity, visits: renderVisits, documents: renderDocuments, plans: renderPlans }[state.tab];
+    const shown = TAB_FILTERS[state.tab];
+    $('filterBar').classList.toggle('hidden', !shown);
+    document.querySelectorAll('#filterBar [data-f]').forEach(el => el.classList.toggle('hidden', !shown || !shown.includes(el.dataset.f)));
+    const fn = { overview: renderOverview, recs: renderRecs, reports: renderReports, stations: renderStations, chemicals: renderChemicals, activity: renderActivity, visits: renderVisits, documents: renderDocuments, plans: renderPlans }[state.tab];
     fn();
 }
 
@@ -818,32 +912,49 @@ function setCustomDates() {
     if (F.from && F.to && F.from > F.to) { [F.from, F.to] = [F.to, F.from]; $('fFrom').value = F.from; $('fTo').value = F.to; }
     renderTab();
 }
-function inRange(t) {
+function inRange(t, o) {
+    o = o || F;
     if (t == null || isNaN(t)) return false;
-    if (F.from && t < dayStart(F.from)) return false;
-    if (F.to && t >= dayStart(F.to) + 86400000) return false;
+    if (o.from && t < dayStart(o.from)) return false;
+    if (o.to && t >= dayStart(o.to) + 86400000) return false;
     return true;
 }
 function rangeText() {
     if (!F.from && !F.to) return 'All records';
     return `${F.from ? fmtDay(F.from) : 'start'} to ${F.to ? fmtDay(F.to) : 'today'}`;
 }
+const sortText = a => Array.from(new Set(a.filter(Boolean))).sort((x, y) => String(x).localeCompare(String(y), undefined, { sensitivity: 'base', numeric: true }));
+const optionsHtml = (list, all) => `<option value="">${all}</option>` + list.map(v => Array.isArray(v) ? `<option value="${esc(v[0])}">${esc(v[1])}</option>` : `<option value="${esc(v)}">${esc(v)}</option>`).join('');
 function fillFilterOptions() {
     const m = state.model;
-    const opt = (list, all) => `<option value="">${all}</option>` + list.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
-    const sort = a => Array.from(new Set(a.filter(Boolean))).sort((x, y) => x.localeCompare(y, undefined, { sensitivity: 'base' }));
-    $('fType').innerHTML = opt(sort(m.stations.map(s => s.type)), 'All types');
-    $('fSpecies').innerHTML = opt(sort(m.entries.map(e => e.species)), 'All species');
-    $('fPrep').innerHTML = opt(sort(m.entries.map(e => e.prep)), 'All preparations');
-    $('fType').value = F.type; $('fSpecies').value = F.species; $('fPrep').value = F.prep;
+    $('fType').innerHTML = optionsHtml(sortText(m.stations.map(s => s.type)), 'All types');
+    $('fMap').innerHTML = optionsHtml(m.maps.map(p => [p.id, p.name]), 'All floor plans');
+    $('fZone').innerHTML = optionsHtml(m.zones, 'All zones');
+    $('fStation').innerHTML = optionsHtml(m.stations.map(s => [s.barcode, `${s.name} (${s.barcode})`]), 'All stations');
+    $('fSpecies').innerHTML = optionsHtml(sortText(m.entries.map(e => e.species)), 'All pests');
+    $('fPrep').innerHTML = optionsHtml(sortText(m.entries.map(e => e.prep)), 'All preparations');
+    $('fBatch').innerHTML = optionsHtml(sortText(m.entries.map(e => e.batch)), 'All batches');
+    $('fTech').innerHTML = optionsHtml(sortText(m.entries.map(e => e.tech).concat(m.visits.map(v => v.tech))), 'All technicians');
+    [['fType', 'type'], ['fMap', 'map'], ['fZone', 'zone'], ['fStation', 'station'], ['fSpecies', 'species'], ['fPrep', 'prep'], ['fBatch', 'batch'], ['fTech', 'tech']].forEach(([id, k]) => { $(id).value = F[k]; });
+}
+// the filters the current tab shows, as an options object
+function filterOpts() {
+    const o = { from: F.from, to: F.to };
+    (TAB_FILTERS[state.tab] || []).forEach(k => { o[k] = F[k]; });
+    return o;
 }
 function matchesSearch(...vals) {
-    const q = (F.q || '').trim().toLowerCase();
+    const q = ((filterOpts().q) || '').trim().toLowerCase();
     return !q || vals.some(v => String(v || '').toLowerCase().includes(q));
 }
-function filteredEntries() {
-    return state.model.entries.filter(e => inRange(e.at) && (!F.type || e.type === F.type) && matchesSearch(e.name, e.barcode, e.batch, e.prep, e.species, e.tech, e.notes));
+const zoneKey = z => String(z || '').trim().toLowerCase();
+function entriesFor(o) {
+    const q = (o.q || '').trim().toLowerCase();
+    return state.model.entries.filter(e => inRange(e.at, o) && (!o.type || e.type === o.type) && (!o.map || e.mapId === o.map) && (!o.zone || zoneKey(e.zone) === zoneKey(o.zone))
+        && (!o.station || e.barcode === o.station) && (!o.species || e.species === o.species) && (!o.prep || e.prep === o.prep) && (!o.batch || e.batch === o.batch) && (!o.tech || e.tech === o.tech)
+        && (!q || [e.name, e.barcode, e.batch, e.prep, e.species, e.tech, e.notes, e.zone].some(v => String(v || '').toLowerCase().includes(q))));
 }
+function filteredEntries() { return entriesFor(filterOpts()); }
 
 // ---------- shared bits ----------
 function typeDot(type) { return `<span class="type-dot" style="background:${stationColor(type)}" title="${esc(type)}"></span>`; }
@@ -859,44 +970,112 @@ function sectionCard(title, color, body, right) {
 function emptyNote(t) { return `<div class="row-item p-4 t-faint italic text-xs text-center">${t}</div>`; }
 
 // ---------- Overview ----------
+const OV = { months: 12, species: '', station: '', map: '' };       // the overview chart's own filters
 function renderOverview() {
     const s = state.site, m = state.model;
     const lastVisit = m.visits[m.visits.length - 1];
     const lastStations = lastVisit ? new Set(lastVisit.entries.map(e => e.barcode)).size : 0;
     const openRecs = m.recs.filter(r => r.status !== 'complete');
     const due = nextDue(s);
+    const dueNames = due ? (s.services || []).filter(x => x.nextDue === due).map(x => x.type) : [];
     const overdue = m.stations.filter(x => x.overdue).length;
-    const in12 = m.entries.filter(e => e.at > Date.now() - 365 * 86400000);
-    const tile = (v, k, sub, color) => `<div class="card stat"><div class="v" ${color ? `style="color:${color}"` : ''}>${v}</div><div class="k">${k}</div>${sub ? `<div class="s">${sub}</div>` : ''}</div>`;
-    const soonDocs = m.docs.filter(d => d.expires_on && dayStart(d.expires_on) < Date.now() + 60 * 86400000);
+    const tile = (v, k, sub, onclick, color) => `<button type="button" class="card stat" onclick="${onclick}"><div class="v" ${color ? `style="color:${color}"` : ''}>${v}</div><div class="k">${k}</div>${sub ? `<div class="s">${sub}</div>` : ''}</button>`;
+    const soonDocs = m.docs.filter(d => d.expires_on && dayStart(d.expires_on) < Date.now() + DOC_WARN_DAYS * 86400000);
+    const breaches = breachesNow();
     $('tabBody').innerHTML = `
+        ${breaches.length ? limitAlertHtml(breaches, `Critical limits exceeded in ${monthLabel(Date.now())}`) : ''}
         <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
-            ${tile(m.stations.length, 'Stations', overdue ? `<span style="color:#ef4444" class="font-bold">${overdue} not checked recently</span>` : 'All checked on schedule')}
-            ${tile(lastVisit ? fmtDate(lastVisit.completed) : '-', 'Last service', lastVisit ? `${esc(lastVisit.type)}${lastVisit.tech ? ' · ' + esc(lastVisit.tech) : ''}` : 'No visits yet')}
-            ${tile(due ? fmtDay(due) : '-', 'Next service due', due ? '' : 'Not scheduled')}
-            ${tile(m.stations.length && lastVisit ? Math.round(lastStations / m.stations.length * 100) + '%' : '-', 'Checked last visit', lastVisit ? `${lastStations} of ${m.stations.length} stations` : '', '#10b981')}
-            ${tile(openRecs.length, 'Outstanding recommendations', openRecs.length ? `<button type="button" class="link-btn" onclick="setTab('recs')">Review them</button>` : 'Nothing outstanding', openRecs.length ? 'var(--accent-text)' : '')}
+            ${tile(m.stations.length, 'Stations', overdue ? `<span style="color:#ef4444" class="font-bold">${overdue} not checked recently</span>` : 'All checked on schedule', 'showStationList()')}
+            ${tile(lastVisit ? fmtDate(lastVisit.completed) : '-', 'Last service', lastVisit ? `${esc(lastVisit.type)}${lastVisit.tech ? ' · ' + esc(lastVisit.tech) : ''}` : 'No visits yet', lastVisit ? `openVisit('${esc(lastVisit.id)}')` : '')}
+            ${tile(due ? fmtDay(due) : '-', 'Next service due', due ? `<span class="t-strong font-semibold">${esc(dueNames.join(', ') || 'Service')}</span>` : 'Not scheduled', "document.getElementById('servicesCard').scrollIntoView({ behavior: 'smooth', block: 'center' })")}
+            ${tile(m.stations.length && lastVisit ? Math.round(lastStations / m.stations.length * 100) + '%' : '-', 'Checked last visit', lastVisit ? `${lastStations} of ${m.stations.length} stations` : '', lastVisit ? 'showLastVisitCoverage()' : '', '#10b981')}
+            ${tile(openRecs.length, 'Outstanding recommendations', openRecs.length ? `${openRecs.filter(r => r.status === 'open').length} open · ${openRecs.filter(r => r.status === 'pending').length} pending` : 'Nothing outstanding', "setTab('recs')", openRecs.length ? 'var(--accent-text)' : '')}
         </div>
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
             <div class="xl:col-span-2 space-y-5">
-                ${sectionCard('Open recommendations', '#f97316', openRecs.length ? openRecs.slice(0, 6).map(r => recRowHtml(r, 'overview')).join('') + (openRecs.length > 6 ? `<button type="button" class="link-btn" onclick="setTab('recs')">See all ${openRecs.length}</button>` : '') : emptyNote('No open recommendations. 🎉'), `<button type="button" class="link-btn !no-underline" onclick="setTab('recs')">All recommendations</button>`)}
-                ${sectionCard('Pest activity, last 12 months', '#2a78d6', `<div id="overviewChart"></div>`, `<button type="button" class="link-btn !no-underline" onclick="setTab('activity')">Details</button>`)}
+                ${sectionCard('Outstanding recommendations', '#f97316', openRecs.length ? `<div id="ovRecs" class="rec-grid">${openRecs.slice(0, 6).map(r => recCardHtml(r, 'overview')).join('')}</div>` + (openRecs.length > 6 ? `<button type="button" class="link-btn" onclick="setTab('recs')">See all ${openRecs.length}</button>` : '') : emptyNote('No outstanding recommendations. 🎉'), `<button type="button" class="link-btn !no-underline" onclick="setTab('recs')">All recommendations</button>`)}
+                ${sectionCard('Pest activity', '#2a78d6', `
+                    <div class="flex flex-wrap gap-2">
+                        <select class="field !w-auto !py-1.5 !text-xs" aria-label="Period" onchange="OV.months = Number(this.value); renderOverviewChart();">${[[3, 'Last 3 months'], [6, 'Last 6 months'], [12, 'Last 12 months'], [24, 'Last 2 years'], [0, 'All records']].map(([v, l]) => `<option value="${v}" ${OV.months === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+                        <select class="field !w-auto !py-1.5 !text-xs max-w-[11rem]" aria-label="Pest" onchange="OV.species = this.value; renderOverviewChart();">${optionsHtml(sortText(m.entries.map(e => e.species)), 'All pests').replace(`value="${esc(OV.species)}"`, `value="${esc(OV.species)}" selected`)}</select>
+                        <select class="field !w-auto !py-1.5 !text-xs max-w-[12rem]" aria-label="Station" onchange="OV.station = this.value; renderOverviewChart();">${optionsHtml(m.stations.map(x => [x.barcode, x.name]), 'All stations').replace(`value="${esc(OV.station)}"`, `value="${esc(OV.station)}" selected`)}</select>
+                        ${m.maps.length ? `<select class="field !w-auto !py-1.5 !text-xs max-w-[11rem]" aria-label="Floor plan" onchange="OV.map = this.value; renderOverviewChart();">${optionsHtml(m.maps.map(p => [p.id, p.name]), 'All floor plans').replace(`value="${esc(OV.map)}"`, `value="${esc(OV.map)}" selected`)}</select>` : ''}
+                    </div>
+                    <div id="overviewChart"></div>`, `<button type="button" class="link-btn !no-underline" onclick="setTab('reports')">More reports</button>`)}
             </div>
             <div class="space-y-5">
-                ${sectionCard('Services & schedule', '#10b981', (s.services || []).length ? s.services.map(x => `
+                ${s.Address ? sectionCard('Location', '#16a34a', `<div class="rounded-xl overflow-hidden" style="border:1px solid var(--border);"><iframe title="Map of ${esc(s.Address)}" class="w-full h-56 block" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=${encodeURIComponent(s.Address)}&z=16&hl=en&output=embed"></iframe></div>`, `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.Address)}" target="_blank" rel="noopener" class="link-btn !no-underline">Open in Google Maps ↗</a>`) : ''}
+                <div id="servicesCard">${sectionCard('Services & schedule', '#10b981', (s.services || []).length ? s.services.map(x => `
                     <div class="row-item p-3 space-y-0.5 text-xs">
                         <div class="font-bold t-strong text-sm">${esc(x.type)}</div>
                         <div class="t-muted">${esc(freqLabel(x.frequency))}</div>
                         <div class="t-muted">Last done: <b class="t-strong">${fmtDay(x.lastDone)}</b> · Next due: <b class="t-strong">${x.nextDue ? fmtDay(x.nextDue) : '-'}</b></div>
-                    </div>`).join('') : emptyNote('No scheduled services listed.'))}
+                    </div>`).join('') : emptyNote('No scheduled services listed.'))}</div>
                 ${sectionCard('Recent visits', '#7c3aed', m.visits.length ? m.visits.slice(-4).reverse().map(v => visitRowHtml(v)).join('') : emptyNote('No visits recorded yet.'), `<button type="button" class="link-btn !no-underline" onclick="setTab('visits')">All visits</button>`)}
                 ${soonDocs.length ? sectionCard('Documents expiring soon', '#d97706', soonDocs.map(d => docRowHtml(d)).join('')) : ''}
             </div>
         </div>`;
-    const saved = { from: F.from, to: F.to, type: F.type, species: F.species, q: F.q };
-    Object.assign(F, { from: toDayStr(new Date(Date.now() - 365 * 86400000)), to: toDayStr(new Date()), type: '', species: '', q: '' });
-    drawActivityChart($('overviewChart'), activitySeries('count'), { metric: 'count', compact: true, total: in12.length });
-    Object.assign(F, saved);
+    if ($('ovRecs')) fillRecMedia($('ovRecs'));
+    renderOverviewChart();
+}
+function renderOverviewChart() {
+    const o = { from: OV.months ? toDayStr(new Date(Date.now() - OV.months * 30.44 * 86400000)) : null, to: toDayStr(new Date()), species: OV.species, station: OV.station, map: OV.map };
+    drawActivityChart($('overviewChart'), activitySeries('count', o), { metric: 'count', compact: true });
+}
+// tile: Stations
+function showStationList() {
+    const m = state.model;
+    modalNav = { list: ['stations'], kind: 'list' }; setModalNav('stations');
+    $('modalEyebrow').textContent = 'Stations';
+    $('modalTitle').textContent = `${plural(m.stations.length, 'station')} on site`;
+    $('modalSub').textContent = 'Tap a station for its history.';
+    $('modalBody').innerHTML = stationTableHtml(m.stations);
+    $('modalFoot').classList.add('hidden');
+    openModal();
+}
+function stationTableHtml(list) {
+    return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Station</th><th>Type</th><th>Zone</th><th>Floor plan</th><th>Last checked</th></tr></thead><tbody>${list.map(x => `
+        <tr class="clickable" onclick="showStation('${esc(x.barcode)}')"><td>${stationCell(x)}</td><td class="t-muted">${esc(x.type || '-')}</td><td class="t-muted">${esc(x.zone || '-')}</td><td class="t-muted">${esc(mapName(x.mapId) || '-')}</td>
+        <td>${x.lastAt ? fmtDate(x.lastAt) : '<span class="t-faint">Never</span>'}${x.overdue ? ' <span class="chip chip-red !py-0">Overdue</span>' : ''}</td></tr>`).join('') || '<tr><td colspan="5" class="t-faint italic text-center p-5">No stations.</td></tr>'}</tbody></table></div>`;
+}
+function mapName(id) { const p = id && state.model.maps.find(x => x.id === id); return p ? p.name : ''; }
+// tile: Checked last visit
+function showLastVisitCoverage() {
+    const m = state.model, v = m.visits[m.visits.length - 1];
+    if (!v) return;
+    const done = new Set(v.entries.map(e => e.barcode));
+    const checked = m.stations.filter(x => done.has(x.barcode)), missed = m.stations.filter(x => !done.has(x.barcode));
+    modalNav = { list: ['coverage'], kind: 'list' }; setModalNav('coverage');
+    $('modalEyebrow').textContent = 'Last visit';
+    $('modalTitle').textContent = `${checked.length} of ${m.stations.length} stations checked`;
+    $('modalSub').textContent = `${fmtDate(v.completed)} · ${v.type}${v.tech ? ' · ' + v.tech : ''}`;
+    $('modalBody').innerHTML = `
+        <div class="space-y-2"><div class="eyebrow" style="color:#dc2626;">Not checked (${missed.length})</div>${missed.length ? stationTableHtml(missed) : emptyNote('Every station was checked. 🎉')}</div>
+        <div class="space-y-2"><div class="eyebrow" style="color:#10b981;">Checked (${checked.length})</div>${stationTableHtml(checked)}</div>`;
+    $('modalFoot').classList.remove('hidden');
+    $('modalFoot').innerHTML = `<button type="button" class="btn btn-secondary" onclick="openVisit('${esc(v.id)}')">Open the visit report</button>`;
+    openModal();
+}
+
+// ---------- Critical limits: how many of a pest a zone may have each month ----------
+const ANY_PEST = '*';
+const DOC_WARN_DAYS = 60;
+function limitPest(l) { return l.species === ANY_PEST ? 'Any pest' : l.species; }
+function monthBounds(t) { const d = new Date(t); return [new Date(d.getFullYear(), d.getMonth(), 1).getTime(), new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime()]; }
+function monthLabel(t) { return new Date(t).toLocaleString('en-NZ', { month: 'long', year: 'numeric' }); }
+function limitStatus(l, t, upTo) {
+    const [a, b] = monthBounds(t == null ? Date.now() : t);
+    const es = state.model.entries.filter(e => e.at >= a && e.at < b && (upTo == null || e.at <= upTo) && e.species && zoneKey(e.zone) === zoneKey(l.zone) && (l.species === ANY_PEST || e.species === l.species));
+    const total = es.reduce((n, e) => n + e.count, 0);
+    return { limit: l, total, entries: es, over: total > l.max, near: total <= l.max && l.max > 0 && total >= l.max * 0.8, month: a };
+}
+function breachesNow() { return state.model.limits.map(l => limitStatus(l)).filter(x => x.over); }
+// limits a visit took over (counting that month's records up to the end of the visit)
+function visitBreaches(v) {
+    return state.model.limits.map(l => limitStatus(l, v.completed, v.completed + 5 * 60000)).filter(x => x.over && x.entries.some(e => v.entries.includes(e)));
+}
+function limitAlertHtml(list, title) {
+    return `<div class="alert-box p-4 space-y-1.5" role="alert"><div class="font-black">⚠ ${esc(title)}</div>${list.map(x => `<div class="text-sm"><b>${esc(x.limit.zone)} · ${esc(limitPest(x.limit))}:</b> ${x.total} recorded, limit ${x.limit.max} a month</div>`).join('')}</div>`;
 }
 
 // ---------- Recommendations ----------
@@ -916,6 +1095,35 @@ function recRowHtml(r, ctx) {
         </div>
         <span class="t-faint text-lg font-black self-center">›</span>
     </div>`;
+}
+function recMedia(r) { return r.photos.concat(...r.updates.map(u => u.photos)); }
+function recCardHtml(r, ctx) {
+    const media = recMedia(r);
+    const lead = r.photos[0] || media[media.length - 1] || '';
+    return `<button type="button" class="rec-card" onclick="openRec('${esc(r.id)}', '${ctx}')" aria-label="${esc(fmtRecNo(r.no) + ' ' + r.text)}">
+        <div class="rec-media" data-media="${esc(lead)}">
+            <div class="rec-media-ph">${lead ? 'Loading photo...' : '<b>📝</b>No photo'}</div>
+            <div class="rec-badges"><span class="rec-no mono">${fmtRecNo(r.no)}</span>${statusChip(r.status)}</div>
+            ${media.length > 1 ? `<span class="rec-count">📷 ${media.length}</span>` : ''}
+        </div>
+        <div class="p-3.5 space-y-1">
+            <div class="text-sm t-strong font-bold clamp2">${esc(r.text)}</div>
+            <div class="text-[11px] t-muted flex items-center gap-1.5">${typeDot(r.type)} <span class="truncate">${esc(r.station)}</span></div>
+            <div class="text-[11px] t-faint">${recAge(r)} · raised ${fmtDate(r.raisedAt)}${r.views.length ? ` · 👁 ${r.views.length}` : ''}</div>
+        </div>
+    </button>`;
+}
+// fill the photo on each card (links are made in one batch)
+async function fillRecMedia(box) {
+    const els = Array.from(box.querySelectorAll('[data-media]')).filter(el => el.dataset.media);
+    if (!els.length) return;
+    const links = await signPaths(els.map(el => el.dataset.media));
+    els.forEach((el, i) => {
+        const ph = el.querySelector('.rec-media-ph');
+        if (!ph) return;
+        if (!links[i]) { ph.textContent = 'Photo unavailable'; return; }
+        ph.outerHTML = isVideo(el.dataset.media) ? `<video src="${esc(links[i])}" muted playsinline preload="metadata"></video><span class="rec-play">▶</span>` : `<img src="${esc(links[i])}" alt="" loading="lazy">`;
+    });
 }
 function recList(ctx) {
     const m = state.model;
@@ -939,14 +1147,15 @@ function renderRecs() {
                     <button type="button" class="btn btn-secondary" onclick="exportRecs('pdf')">⬇ PDF</button>
                 </div>
             </div>
-            <p class="text-xs t-muted">Open a recommendation to mark it as pending or complete, and add photos and notes showing what was done. Pesties is notified of each change.</p>
+            <p class="text-xs t-muted">Open a recommendation to mark it as pending or complete, with a note and photos or videos showing what was done. Pesties is notified of each change.</p>
             <div id="recListBox" class="space-y-2.5"></div>
         </div>`;
     renderRecList();
 }
 function renderRecList() {
     const list = recList('recs');
-    $('recListBox').innerHTML = list.length ? list.map(r => recRowHtml(r, 'recs')).join('') : emptyNote(recFilter === 'open' ? 'No open recommendations.' : 'Nothing here.');
+    $('recListBox').innerHTML = list.length ? `<div class="rec-grid">${list.map(r => recCardHtml(r, 'recs')).join('')}</div>` : emptyNote(recFilter === 'open' ? 'No open recommendations.' : 'Nothing here.');
+    fillRecMedia($('recListBox'));
 }
 
 // ---------- the recommendation window ----------
@@ -996,6 +1205,32 @@ function mediaThumbs(paths, links, caption) {
         ? `<div class="thumb" role="button" tabindex="0" onclick="openViewer('${key}', ${i})" onkeydown="if (event.key === 'Enter') this.click()">${isVideo(p) ? `<video src="${esc(links[i])}" muted preload="metadata"></video><span class="play">▶</span>` : `<img src="${esc(links[i])}" alt="" loading="lazy">`}</div>`
         : `<div class="thumb flex items-center justify-center text-[10px] t-faint text-center p-1">Photo unavailable</div>`).join('');
 }
+// the technician's photos large, others as thumbnails
+function galleryHtml(paths, links, caption) {
+    const key = 'g' + Math.random().toString(36).slice(2, 8);
+    viewerGroups[key] = { items: paths.map((p, i) => ({ url: links[i], video: isVideo(p) })), caption };
+    const first = links[0] ? (isVideo(paths[0]) ? `<video src="${esc(links[0])}" controls playsinline preload="metadata"></video>` : `<img src="${esc(links[0])}" alt="" onclick="openViewer('${key}', 0)">`) : '<div class="p-10 text-center text-xs t-faint">Photo unavailable</div>';
+    return `<div class="rec-hero">${first}</div>${paths.length > 1 ? `<div class="flex flex-wrap gap-2 mt-2">${paths.slice(1).map((p, i) => links[i + 1]
+        ? `<div class="thumb" role="button" tabindex="0" onclick="openViewer('${key}', ${i + 1})">${isVideo(p) ? `<video src="${esc(links[i + 1])}" muted preload="metadata"></video><span class="play">▶</span>` : `<img src="${esc(links[i + 1])}" alt="" loading="lazy">`}</div>`
+        : '<div class="thumb flex items-center justify-center text-[10px] t-faint text-center p-1">Unavailable</div>').join('')}</div>` : ''}`;
+}
+function seenByHtml(r) {
+    if (!r.views.length) return '<div class="text-xs t-faint">Not opened by anyone yet.</div>';
+    return r.views.map(v => `<div class="flex flex-wrap justify-between gap-2 text-xs"><span class="t-strong font-semibold">👁 ${esc(v.viewer_name || 'Someone')}${v.is_client ? '' : ' <span class="chip chip-blue !py-0">Pesties</span>'}</span>
+        <span class="t-faint">first ${fmtDateTime(v.first_seen_at)}${v.view_count > 1 ? ` · last ${fmtDateTime(v.last_seen_at)} · ${v.view_count} times` : ''}</span></div>`).join('');
+}
+// opening a recommendation is recorded (who and when), then the "Seen by" list is refreshed
+async function markRecViewed(r) {
+    try {
+        await sb.rpc('pestis_mark_rec_viewed', { p_rec_id: r.id });
+        const { data } = await sb.from('recommendation_views').select('*').eq('rec_id', r.id);
+        if (!data) return;
+        state.data.views = (state.data.views || []).filter(v => v.rec_id !== r.id).concat(data);
+        r.views = data.slice().sort((a, b) => String(b.last_seen_at).localeCompare(String(a.last_seen_at)));
+        if (modalNav && modalNav.current === r.id && $('recSeenBy')) $('recSeenBy').innerHTML = seenByHtml(r);
+        renderBell();
+    } catch (e) {}
+}
 async function showRec(id) {
     const r = state.model.recs.find(x => x.id === id);
     if (!r) return;
@@ -1006,7 +1241,8 @@ async function showRec(id) {
     $('modalSub').innerHTML = `${typeDot(r.type)} ${esc(r.station)}${r.barcode ? ` · <span class="mono">${esc(r.barcode)}</span>` : ''} · raised ${fmtDateTime(r.raisedAt)}${r.raisedBy ? ' by ' + esc(r.raisedBy) : ''}`;
     $('modalFoot').classList.add('hidden');
     openModal();
-    const allPaths = r.photos.concat(...r.updates.map(u => u.photos));
+    markRecViewed(r);
+    const allPaths = recMedia(r);
     $('modalBody').innerHTML = `<div class="flex items-center gap-2">${statusChip(r.status)}<span class="text-xs t-faint">${recAge(r)}</span></div><div class="t-faint text-xs">${allPaths.length ? 'Loading photos...' : ''}</div>`;
     const links = await signPaths(allPaths);
     if (!modalNav || modalNav.current !== id || $('modal').classList.contains('hidden')) return;
@@ -1018,19 +1254,20 @@ async function showRec(id) {
             ${u.photos.length ? `<div class="flex flex-wrap gap-2">${mediaThumbs(u.photos, u.photos.map(p => linkOf.get(p)), fmtRecNo(r.no) + ' update')}</div>` : ''}
         </div>`).join('');
     $('modalBody').innerHTML = `
+        ${r.photos.length ? galleryHtml(r.photos, r.photos.map(p => linkOf.get(p)), fmtRecNo(r.no) + ' · ' + r.text) : ''}
         <div class="flex flex-wrap items-center gap-2">${statusChip(r.status)}<span class="text-xs t-faint">${recAge(r)}</span></div>
-        ${r.photos.length ? `<div><div class="eyebrow t-faint mb-2">Photos from the technician</div><div class="flex flex-wrap gap-2">${mediaThumbs(r.photos, r.photos.map(p => linkOf.get(p)), fmtRecNo(r.no) + ' · ' + r.text)}</div></div>` : ''}
         <div class="inset p-4 space-y-3">
             <div class="eyebrow t-accent">Update this recommendation</div>
-            <div class="seg" role="group" aria-label="Status">${['open', 'pending', 'complete'].map(s => `<button type="button" data-st="${s}" onclick="setDraftStatus('${s}')">${STATUS[s].label}</button>`).join('')}</div>
-            <div><label class="lbl" for="recNote">Note</label><textarea id="recNote" rows="3" class="field" placeholder="What was done, by whom, any follow-up needed..." oninput="recDraft.note = this.value"></textarea></div>
+            <div class="seg" role="group" aria-label="Status">${['open', 'pending', 'complete'].map(st => `<button type="button" data-st="${st}" onclick="setDraftStatus('${st}')">${STATUS[st].label}</button>`).join('')}</div>
+            <div><label class="lbl" for="recNote">Note <span id="recNoteReq" class="hidden" style="color:#ef4444;">(required to change the status)</span></label><textarea id="recNote" rows="3" class="field" placeholder="What was done, by whom, any follow-up needed..." oninput="recDraft.note = this.value"></textarea></div>
             <div class="flex flex-wrap items-center gap-2">
-                <button type="button" class="btn btn-secondary" onclick="pickRecPhotos()">📷 Add photos</button>
-                <span class="text-[11px] t-faint">Photos showing the work completed help with your audit trail.</span>
+                <button type="button" class="btn btn-secondary" onclick="pickRecPhotos()">📷 Add photos or videos</button>
+                <span class="text-[11px] t-faint">Photos or a short video of the finished work help your audit trail. Videos up to ${VIDEO_MAX_MB} MB.</span>
             </div>
             <div id="recDraftPhotos" class="flex flex-wrap gap-2"></div>
             <div class="flex justify-end"><button type="button" id="recSaveBtn" class="btn btn-primary" onclick="saveRec()">Save update</button></div>
         </div>
+        <div><div class="eyebrow t-faint mb-2">Seen by</div><div id="recSeenBy" class="inset p-3 space-y-1.5">${seenByHtml(r)}</div></div>
         <div><div class="eyebrow t-faint mb-2">History</div><div class="space-y-2">${hist || ''}
             <div class="row-item p-3 text-xs"><span class="t-faint">${fmtDateTime(r.raisedAt)}${r.raisedBy ? ' · ' + esc(r.raisedBy) : ''}</span><div class="t-strong mt-0.5">Raised: ${esc(r.text)}</div></div></div></div>`;
     renderDraft();
@@ -1038,12 +1275,21 @@ async function showRec(id) {
 function setDraftStatus(s) { recDraft.status = s; renderDraft(); }
 function renderDraft() {
     document.querySelectorAll('.seg button').forEach(b => { b.className = recDraft.status === b.dataset.st ? 'on-' + b.dataset.st : ''; b.setAttribute('aria-pressed', recDraft.status === b.dataset.st); });
+    const req = $('recNoteReq');
+    if (req) req.classList.toggle('hidden', recDraft.status === recDraft.startStatus);
     const box = $('recDraftPhotos');
-    if (box) box.innerHTML = recDraft.files.map((f, i) => `<div class="thumb"><img src="${esc(f.url)}" alt=""><button type="button" class="thumb-x" onclick="recDraft.files.splice(${i}, 1); renderDraft();" aria-label="Remove photo">✕</button></div>`).join('');
+    if (box) box.innerHTML = recDraft.files.map((f, i) => `<div class="thumb">${f.video ? `<video src="${esc(f.url)}" muted preload="metadata"></video><span class="play">▶</span>` : `<img src="${esc(f.url)}" alt="">`}<button type="button" class="thumb-x" onclick="recDraft.files.splice(${i}, 1); renderDraft();" aria-label="Remove">✕</button></div>`).join('');
 }
 function pickRecPhotos() { $('recPhotoInput').click(); }
+const VIDEO_MAX_MB = 50;
 $('recPhotoInput').addEventListener('change', e => {
-    Array.from(e.target.files || []).forEach(file => { if (/^image\//.test(file.type) && recDraft) recDraft.files.push({ file, url: URL.createObjectURL(file) }); });
+    Array.from(e.target.files || []).forEach(file => {
+        if (!recDraft) return;
+        const video = /^video\//.test(file.type) || isVideo(file.name);
+        if (!video && !/^image\//.test(file.type)) return;
+        if (video && file.size > VIDEO_MAX_MB * 1048576) { alert(`"${file.name}" is ${Math.round(file.size / 1048576)} MB. Videos can be up to ${VIDEO_MAX_MB} MB, so please trim it first.`); return; }
+        recDraft.files.push({ file, url: URL.createObjectURL(file), video });
+    });
     e.target.value = '';
     renderDraft();
 });
@@ -1067,16 +1313,20 @@ async function saveRec() {
     if (!r || !recDraft) return;
     const note = ($('recNote').value || '').trim();
     if (recDraft.status === r.status && !note && !recDraft.files.length) { alert('Change the status, or add a note or a photo, then save.'); return; }
+    if (recDraft.status !== r.status && !note) { alert('Add a note saying why the status is changing (for example what was done).'); $('recNote').focus(); return; }
     const btn = $('recSaveBtn');
-    btn.disabled = true; btn.textContent = recDraft.files.length ? 'Uploading photos...' : 'Saving...';
+    btn.disabled = true; btn.textContent = recDraft.files.length ? 'Uploading...' : 'Saving...';
     try {
         const paths = [];
         const stamp = Date.now();
         for (let i = 0; i < recDraft.files.length; i++) {
-            const blob = await shrinkImage(recDraft.files[i].file, 1800);
-            const path = `${state.site.id}/CLIENT_rec_${stamp}_${i + 1}.jpg`;
-            const { error } = await sb.storage.from(PHOTO_BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: false });
-            if (error) throw new Error('Photo upload failed: ' + error.message);
+            const f = recDraft.files[i];
+            // photos are made smaller; videos go up as they are
+            const ext = f.video ? ((f.file.name.match(/\.(mp4|webm|mov|m4v|3gp)$/i) || [, (f.file.type.split('/')[1] || 'mp4')])[1]).toLowerCase().replace('quicktime', 'mov') : 'jpg';
+            const blob = f.video ? f.file : await shrinkImage(f.file, 1800);
+            const path = `${state.site.id}/CLIENT_rec_${stamp}_${i + 1}.${ext}`;
+            const { error } = await sb.storage.from(PHOTO_BUCKET).upload(path, blob, { contentType: f.video ? (f.file.type || 'video/mp4') : 'image/jpeg', upsert: false });
+            if (error) throw new Error((f.video ? 'Video' : 'Photo') + ' upload failed: ' + error.message);
             paths.push(path);
         }
         btn.textContent = 'Saving...';
@@ -1084,8 +1334,8 @@ async function saveRec() {
         if (error) throw error;
         // reload this site's recommendations so the change shows straight away
         const cid = String(state.site.id);
-        const [recs, updates] = await Promise.all([fetchAll('recommendations', cid), fetchAll('recommendation_updates', cid)]);
-        state.data.recs = recs; state.data.updates = updates;
+        const [recs, updates, views] = await Promise.all([fetchAll('recommendations', cid), fetchAll('recommendation_updates', cid), fetchAll('recommendation_views', cid).catch(() => state.data.views || [])]);
+        state.data.recs = recs; state.data.updates = updates; state.data.views = views;
         state.model = buildModel(state.site, state.data);
         recDraft.files.forEach(f => URL.revokeObjectURL(f.url));
         recDraft = null;
@@ -1119,14 +1369,170 @@ function showViewerItem() {
     $('viewerCaption').textContent = `${g.caption || ''}${g.items.length > 1 ? ` · ${viewerState.i + 1} of ${g.items.length}` : ''}`;
 }
 
+// ---------- Reports: build a trend chart, a summary table or the raw records, for any part of the site ----------
+const REP = { style: 'trend', measure: 'count', group: 'species' };
+const MEASURES = { count: 'Pests caught / sighted', activity: 'Average activity level (0-3)', checks: 'Station checks', apps: 'Preparation applications' };
+const GROUPS = { species: 'Pest', station: 'Station', type: 'Station type', zone: 'Zone', map: 'Floor plan', tech: 'Technician', month: 'Month', none: 'Whole site' };
+const REPORT_PRESETS = [
+    ['📈 Pest trend by species', { style: 'trend', measure: 'count', group: 'species' }],
+    ['🏷 Pests by station', { style: 'summary', measure: 'count', group: 'station' }],
+    ['🗺 Activity by zone', { style: 'trend', measure: 'activity', group: 'zone' }],
+    ['🧭 Activity by station type', { style: 'summary', measure: 'activity', group: 'type' }],
+    ['🗓 Monthly summary', { style: 'summary', measure: 'count', group: 'month' }],
+    ['🧪 Preparations by station', { style: 'summary', measure: 'apps', group: 'station' }],
+    ['👷 Checks by technician', { style: 'summary', measure: 'checks', group: 'tech' }],
+    ['📄 Raw service records', { style: 'raw', measure: 'count', group: 'none' }]
+];
+const RGB = [[42, 120, 214], [235, 104, 52], [27, 175, 122], [237, 161, 0], [232, 123, 164], [0, 131, 0]];
+function groupOf(e, g) {
+    if (g === 'species') return e.species || '(no pest)';
+    if (g === 'station') return `${e.name} (${e.barcode})`;
+    if (g === 'type') return e.type || '(no type)';
+    if (g === 'zone') return e.zone || '(no zone)';
+    if (g === 'map') return mapName(e.mapId) || '(not on a plan)';
+    if (g === 'tech') return e.tech || '(not recorded)';
+    if (g === 'month') { const d = new Date(e.at); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`; }
+    return 'Whole site';
+}
+function measureOf(list, measure) {
+    if (measure === 'count') return list.reduce((n, e) => n + e.count, 0);
+    if (measure === 'checks') return list.length;
+    if (measure === 'apps') return list.filter(e => e.prep).length;
+    return list.length ? Math.round(list.reduce((n, e) => n + (ACTIVITY_SCORE[e.activity] || 0), 0) / list.length * 100) / 100 : null;
+}
+// pests grouped by pest only makes sense for records that have a pest
+function reportEntries() { const list = filteredEntries(); return REP.group === 'species' && (REP.measure === 'count') ? list.filter(e => e.species) : list; }
+function reportGroups(list) {
+    const g = new Map();
+    list.forEach(e => { const k = groupOf(e, REP.group); const a = g.get(k) || []; a.push(e); g.set(k, a); });
+    return Array.from(g.entries()).map(([k, es]) => ({ key: k, entries: es, value: measureOf(es, REP.measure) }))
+        .sort((a, b) => REP.group === 'month' ? a.key.localeCompare(b.key) : ((b.value || 0) - (a.value || 0)) || a.key.localeCompare(b.key, undefined, { numeric: true }));
+}
+function reportTrend(list) {
+    const o = filterOpts();
+    const fromT = o.from ? dayStart(o.from) : (list.length ? list[0].at : Date.now());
+    const toT = o.to ? dayStart(o.to) + 86399999 : Date.now();
+    const { periods, unit } = periodsFor(fromT, toT);
+    const idx = t => { for (let i = 0; i < periods.length; i++) if (t >= periods[i].s && t < periods[i].e) return i; return -1; };
+    const grp = REP.group === 'month' ? 'none' : REP.group;
+    const ranked = (() => { const save = REP.group; REP.group = grp; const r = reportGroups(list); REP.group = save; return r; })();
+    const shown = ranked.slice(0, MAX_SERIES), rest = ranked.slice(MAX_SERIES);
+    const mk = (name, es, i) => {
+        const buckets = periods.map(() => []);
+        es.forEach(e => { const k = idx(e.at); if (k >= 0) buckets[k].push(e); });
+        return { name, color: i < MAX_SERIES ? `var(--series-${i + 1})` : 'var(--series-other)', rgb: i < MAX_SERIES ? RGB[i] : [148, 163, 184], values: buckets.map(b => REP.measure === 'activity' ? measureOf(b, 'activity') : measureOf(b, REP.measure)) };
+    };
+    const series = shown.map((g, i) => mk(g.key, g.entries, i));
+    if (rest.length) series.push(mk('Other', rest.flatMap(g => g.entries), MAX_SERIES));
+    return { periods, unit, series };
+}
+function renderReports() {
+    const list = reportEntries();
+    const isPreset = ([, p]) => p.style === REP.style && p.measure === REP.measure && p.group === REP.group;
+    const sel = (id, obj, cur, label) => `<div><label class="lbl" for="${id}">${label}</label><select id="${id}" class="field !w-auto !py-2" onchange="REP.${id.replace('rep', '').toLowerCase()} = this.value; renderReports();">${Object.entries(obj).map(([k, l]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`;
+    let out = '';
+    if (REP.style === 'trend') out = `<div id="reportChart"></div>`;
+    else if (REP.style === 'summary') {
+        const rows = reportGroups(list), max = Math.max(1, ...rows.map(r => r.value || 0));
+        out = `<div class="tbl-wrap max-h-[70vh] overflow-y-auto scroll-thin"><table class="tbl"><thead><tr><th>${esc(GROUPS[REP.group])}</th><th class="num">${esc(MEASURES[REP.measure])}</th><th></th><th class="num">Checks</th><th class="num">Pests</th><th>First</th><th>Last</th></tr></thead><tbody>
+            ${rows.map(r => `<tr><td class="font-bold">${esc(r.key)}</td><td class="num">${r.value == null ? '-' : r.value}</td><td class="w-40"><div class="limit-bar"><span style="width:${Math.round((r.value || 0) / max * 100)}%;background:var(--accent);"></span></div></td>
+                <td class="num">${r.entries.length}</td><td class="num">${r.entries.reduce((n, e) => n + e.count, 0)}</td><td>${fmtDate(r.entries[0].at)}</td><td>${fmtDate(r.entries[r.entries.length - 1].at)}</td></tr>`).join('') || '<tr><td colspan="7" class="t-faint italic text-center p-6">No records match these filters.</td></tr>'}</tbody></table></div>`;
+    } else {
+        const rows = list.slice().reverse();
+        out = `<p class="text-[11px] t-faint">${rows.length > 500 ? `Showing the latest 500 of ${rows.length} records. Download the CSV for all of them.` : plural(rows.length, 'record')}</p>
+            <div class="tbl-wrap max-h-[70vh] overflow-y-auto scroll-thin"><table class="tbl"><thead><tr><th>Date</th><th>Station</th><th>Zone</th><th>Activity</th><th>Pest</th><th class="num">No.</th><th>Preparation</th><th>Batch</th><th>Technician</th><th>Notes</th></tr></thead><tbody>
+            ${rows.slice(0, 500).map(e => `<tr class="clickable" onclick="showStation('${esc(e.barcode)}')"><td>${fmtDateTime(e.at)}</td><td>${stationCell(e.station || e)}</td><td class="t-muted">${esc(e.zone || '-')}</td><td>${activityChip(e.activity)}</td><td>${esc(e.species || '-')}</td><td class="num">${e.count || ''}</td><td>${esc(e.prep || '-')}${e.prep && e.qty != null ? `<div class="t-faint text-[11px]">${fmtQty(e.qty, e.unit)}</div>` : ''}</td><td class="mono">${esc(e.batch || '')}</td><td class="t-muted">${esc(e.tech || '')}</td><td class="t-muted">${esc(e.notes || '')}</td></tr>`).join('') || '<tr><td colspan="10" class="t-faint italic text-center p-6">No records match these filters.</td></tr>'}</tbody></table></div>`;
+    }
+    $('tabBody').innerHTML = `
+        <div class="card p-5 space-y-4">
+            <div><h3 class="font-black t-strong">Reports</h3><p class="text-xs t-muted">Pick a ready-made report or build your own. Use the filters above for the period, a station type, one station, a zone, a floor plan or a pest. Download any report as CSV (Excel) or PDF.</p></div>
+            <div class="flex flex-wrap gap-1.5">${REPORT_PRESETS.map((pr, i) => `<button type="button" class="tab-btn ${isPreset(pr) ? 'active' : ''}" onclick="Object.assign(REP, REPORT_PRESETS[${i}][1]); renderReports();">${pr[0]}</button>`).join('')}</div>
+            <div class="flex flex-wrap items-end gap-3 inset p-3">
+                ${sel('repStyle', { trend: 'Trend chart', summary: 'Summary table', raw: 'Raw records' }, REP.style, 'Report style')}
+                ${REP.style !== 'raw' ? sel('repMeasure', MEASURES, REP.measure, 'Measure') : ''}
+                ${REP.style !== 'raw' ? sel('repGroup', REP.style === 'trend' ? Object.fromEntries(Object.entries(GROUPS).filter(([k]) => k !== 'month')) : GROUPS, REP.group, REP.style === 'trend' ? 'One line per' : 'Group by') : ''}
+                <span class="text-xs t-muted pb-2">${plural(list.length, 'record')} · ${esc(rangeText())}</span>
+            </div>
+            ${out}
+        </div>
+        ${limitsCardHtml()}`;
+    if (REP.style === 'trend') {
+        const d = reportTrend(list);
+        drawActivityChart($('reportChart'), d, { metric: REP.measure === 'activity' ? 'activity' : 'count' });
+    }
+}
+
+// ---------- Critical limits card (Reports tab) ----------
+let limitEditing = null;   // limit id being edited, 'new', or null
+function limitsCardHtml() {
+    const m = state.model;
+    const now = Date.now();
+    const months = []; { const d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0); for (let i = 11; i >= 0; i--) months.push(new Date(d.getFullYear(), d.getMonth() - i, 1).getTime()); }
+    const rows = m.limits.map(l => {
+        const st = limitStatus(l, now), pct = l.max > 0 ? Math.min(100, Math.round(st.total / l.max * 100)) : (st.total ? 100 : 0);
+        const chip = st.over ? '<span class="chip chip-red">Over limit</span>' : st.near ? '<span class="chip chip-amber">Close to limit</span>' : '<span class="chip chip-green">Within limit</span>';
+        return `<tr><td class="font-bold">${esc(l.zone)}</td><td>${esc(limitPest(l))}</td><td class="num">${l.max}</td><td class="num">${st.total}</td>
+            <td class="w-36"><div class="limit-bar"><span style="width:${pct}%;background:${st.over ? '#dc2626' : st.near ? '#d97706' : '#10b981'};"></span></div></td><td>${chip}</td>
+            <td class="whitespace-nowrap"><button type="button" class="link-btn" onclick="limitEditing = '${esc(l.id)}'; renderReports(); $('limZone').focus();">Edit</button> · <button type="button" class="link-btn" style="color:#ef4444;" onclick="deleteLimit('${esc(l.id)}')">Remove</button></td></tr>`;
+    }).join('');
+    const hist = m.limits.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Limit</th>${months.map(t => `<th class="num">${new Date(t).toLocaleString('en-NZ', { month: 'short' })} ${String(new Date(t).getFullYear()).slice(2)}</th>`).join('')}</tr></thead><tbody>
+        ${m.limits.map(l => `<tr><td class="whitespace-nowrap"><b>${esc(l.zone)}</b> · ${esc(limitPest(l))} <span class="t-faint">(${l.max})</span></td>${months.map(t => { const st = limitStatus(l, t); return `<td class="num" ${st.over ? 'style="background:rgba(239,68,68,.15);color:#dc2626;font-weight:800;"' : ''}>${st.total || ''}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>` : '';
+    const ed = limitEditing && limitEditing !== 'new' ? m.limits.find(l => l.id === limitEditing) : null;
+    const species = sortText(m.entries.map(e => e.species));
+    const form = limitEditing ? `<form class="inset p-3 grid grid-cols-1 sm:grid-cols-5 gap-2 items-end" onsubmit="event.preventDefault(); saveLimit();">
+            <div><label class="lbl" for="limZone">Zone</label><input id="limZone" list="limZones" required maxlength="60" class="field !py-2" value="${esc(ed ? ed.zone : '')}" placeholder="e.g. Dispatch"><datalist id="limZones">${m.zones.map(z => `<option value="${esc(z)}">`).join('')}</datalist></div>
+            <div><label class="lbl" for="limPest">Pest</label><input id="limPest" list="limPests" maxlength="80" class="field !py-2" value="${esc(ed ? (ed.species === ANY_PEST ? 'Any pest' : ed.species) : 'Any pest')}"><datalist id="limPests"><option value="Any pest">${species.map(x => `<option value="${esc(x)}">`).join('')}</datalist></div>
+            <div><label class="lbl" for="limMax">Most allowed per month</label><input id="limMax" type="number" min="0" step="1" required class="field !py-2" value="${ed ? ed.max : ''}"></div>
+            <div><label class="lbl" for="limNotes">Note (optional)</label><input id="limNotes" maxlength="200" class="field !py-2" value="${esc(ed ? ed.notes : '')}"></div>
+            <div class="flex gap-2"><button type="button" class="btn btn-secondary" onclick="limitEditing = null; renderReports();">Cancel</button><button type="submit" id="limSaveBtn" class="btn btn-primary">Save</button></div>
+        </form>` : '';
+    return `<div class="card p-5 space-y-4" id="limitsCard">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div><h3 class="font-black t-strong">Critical limits</h3>
+                <p class="text-xs t-muted max-w-3xl">Set how many of a pest (for example flies, midges or carpet beetles) a zone may have in a month. If a service records more, the technician is asked to double-check, and it's flagged on the visit report and here.${m.zones.length ? '' : ' Pesties sets which zone each station belongs to: ask your technician to set up zones if none are listed.'}</p></div>
+            ${limitEditing ? '' : '<button type="button" class="btn btn-primary" onclick="limitEditing = \'new\'; renderReports(); $(\'limZone\').focus();">+ Add a limit</button>'}
+        </div>
+        ${form}
+        ${m.limits.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Zone</th><th>Pest</th><th class="num">Limit / month</th><th class="num">${esc(new Date().toLocaleString('en-NZ', { month: 'long' }))} so far</th><th></th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+            <div class="eyebrow t-faint">Last 12 months</div>${hist}` : emptyNote('No critical limits set yet.')}
+    </div>`;
+}
+async function saveLimit() {
+    const zone = $('limZone').value.trim(), pestRaw = $('limPest').value.trim(), max = Number($('limMax').value);
+    if (!zone) { alert('Enter the zone.'); return; }
+    if (!(max >= 0)) { alert('Enter the most allowed per month.'); return; }
+    const species = !pestRaw || /^any( pest)?$/i.test(pestRaw) ? ANY_PEST : pestRaw;
+    const btn = $('limSaveBtn'); btn.disabled = true;
+    try {
+        const { error } = await sb.rpc('portal_save_limit', { p_client_id: String(state.site.id), p_id: limitEditing === 'new' ? null : limitEditing, p_zone: zone, p_species: species, p_max: max, p_notes: $('limNotes').value.trim() || null });
+        if (error) throw error;
+        await reloadLimits();
+        limitEditing = null;
+        renderTab();
+        toast('Critical limit saved.');
+    } catch (e) { alert('Could not save: ' + (e.message || e)); btn.disabled = false; }
+}
+async function deleteLimit(id) {
+    const l = state.model.limits.find(x => x.id === id);
+    if (!l || !confirm(`Remove the limit for ${l.zone} · ${limitPest(l)}?`)) return;
+    const { error } = await sb.rpc('portal_delete_limit', { p_id: id });
+    if (error) { alert('Could not remove: ' + error.message); return; }
+    await reloadLimits(); renderTab();
+}
+async function reloadLimits() {
+    state.data.limits = await fetchAll('critical_limits', String(state.site.id));
+    state.model = buildModel(state.site, state.data);
+    renderBell();
+}
+
 // ---------- Station register ----------
 let stationSort = { key: 'name', dir: 1 };
 function stationRows() {
-    const m = state.model;
-    return m.stations.filter(s => (!F.type || s.type === F.type) && matchesSearch(s.name, s.barcode, s.type)).map(s => {
-        const inPeriod = s.entries.filter(e => inRange(e.at));
-        const lastPrep = s.entries.slice().reverse().find(e => e.prep);
-        return { s, checks: inPeriod.length, highest: inPeriod.reduce((a, e) => Math.max(a, ACTIVITY_SCORE[e.activity] || 0), 0), caught: inPeriod.reduce((a, e) => a + e.count, 0), lastPrep };
+    const m = state.model, o = filterOpts();
+    return m.stations.filter(x => (!o.type || x.type === o.type) && (!o.map || x.mapId === o.map) && (!o.zone || zoneKey(x.zone) === zoneKey(o.zone)) && matchesSearch(x.name, x.barcode, x.type, x.zone)).map(x => {
+        const inPeriod = x.entries.filter(e => inRange(e.at));
+        const lastPrep = x.entries.slice().reverse().find(e => e.prep);
+        return { s: x, checks: inPeriod.length, highest: inPeriod.reduce((a, e) => Math.max(a, ACTIVITY_SCORE[e.activity] || 0), 0), caught: inPeriod.reduce((a, e) => a + e.count, 0), lastPrep };
     });
 }
 function sortStations(rows) {
@@ -1151,18 +1557,20 @@ function renderStations() {
             </div>
             <div class="tbl-wrap max-h-[70vh] overflow-y-auto scroll-thin">
                 <table class="tbl">
-                    <thead><tr>${th('name', 'Station')}${th('type', 'Type')}${th('last', 'Last checked')}${th('days', 'Days since', 'num')}<th>Last activity</th><th>Last preparation</th>${th('checks', 'Checks', 'num')}${th('caught', 'Pests caught', 'num')}</tr></thead>
+                    <thead><tr>${th('name', 'Station')}${th('type', 'Type')}<th>Zone</th><th>Floor plan</th>${th('last', 'Last checked')}${th('days', 'Days since', 'num')}<th>Last activity</th><th>Last preparation</th>${th('checks', 'Checks', 'num')}${th('caught', 'Pests caught', 'num')}</tr></thead>
                     <tbody>${rows.map(r => `
                         <tr class="clickable" onclick="showStation('${esc(r.s.barcode)}')">
                             <td>${stationCell(r.s)}</td>
                             <td class="t-muted">${esc(r.s.type || '-')}</td>
+                            <td class="t-muted">${esc(r.s.zone || '-')}</td>
+                            <td class="t-muted">${esc(mapName(r.s.mapId) || '-')}</td>
                             <td>${r.s.lastAt ? `${fmtDate(r.s.lastAt)}<div class="t-faint text-[11px]">${esc(r.s.last.tech || '')}</div>` : '<span class="t-faint">Never</span>'}</td>
                             <td class="num">${r.s.daysSince == null ? '-' : r.s.daysSince}${r.s.overdue ? ' <span class="chip chip-red !py-0 ml-1">Overdue</span>' : ''}</td>
                             <td>${r.s.last ? activityChip(r.s.last.activity) : '-'}${r.s.last && r.s.last.species ? `<div class="t-faint text-[11px] mt-0.5">${esc(r.s.last.species)}</div>` : ''}</td>
                             <td class="t-muted">${r.lastPrep ? `${esc(r.lastPrep.prep)}<div class="t-faint text-[11px]">${fmtQty(r.lastPrep.qty, r.lastPrep.unit)}${r.lastPrep.batch ? ' · batch ' + esc(r.lastPrep.batch) : ''} · ${fmtDate(r.lastPrep.at)}</div>` : '-'}</td>
                             <td class="num">${r.checks}</td>
                             <td class="num">${r.caught}</td>
-                        </tr>`).join('') || `<tr><td colspan="8" class="t-faint italic text-center p-6">No stations match these filters.</td></tr>`}</tbody>
+                        </tr>`).join('') || `<tr><td colspan="10" class="t-faint italic text-center p-6">No stations match these filters.</td></tr>`}</tbody>
                 </table>
             </div>
         </div>`;
@@ -1194,32 +1602,16 @@ function showStation(barcode) {
 }
 
 // ---------- Chemical use ----------
-function chemicalEntries() { return filteredEntries().filter(e => e.prep && (!F.prep || e.prep === F.prep)); }
+function chemicalEntries() { return filteredEntries().filter(e => e.prep); }
 function renderChemicals() {
     const list = chemicalEntries().slice().reverse();
-    const byPrep = new Map();
-    list.forEach(e => {
-        const g = byPrep.get(e.prep) || { prep: e.prep, n: 0, qty: new Map(), batches: new Set(), stations: new Set(), last: 0 };
-        g.n++; if (e.qty != null) g.qty.set(e.unit, (g.qty.get(e.unit) || 0) + e.qty);
-        if (e.batch) g.batches.add(e.batch); g.stations.add(e.barcode); g.last = Math.max(g.last, e.at);
-        byPrep.set(e.prep, g);
-    });
-    const groups = Array.from(byPrep.values()).sort((a, b) => b.n - a.n);
     $('tabBody').innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">${groups.map(g => `
-            <div class="card p-4 space-y-1.5">
-                <div class="font-black t-strong">${esc(g.prep)}</div>
-                <div class="text-2xl font-black t-accent">${Array.from(g.qty.entries()).map(([u, q]) => fmtQty(q, u)).join(' + ') || '-'}</div>
-                <div class="text-xs t-muted">${plural(g.n, 'application')} · ${plural(g.stations.size, 'station')} · last used ${fmtDate(g.last)}</div>
-                <div class="text-xs t-muted">Batch numbers: <span class="mono t-strong">${Array.from(g.batches).map(esc).join(', ') || 'none recorded'}</span></div>
-            </div>`).join('') || `<div class="card p-5 md:col-span-2 xl:col-span-3">${emptyNote('No preparations were used in this period.')}</div>`}
-        </div>
         <div class="card p-5 space-y-3">
-            <div><h3 class="font-black t-strong">Chemical use log</h3><p class="text-xs t-muted">${plural(list.length, 'application')} · ${esc(rangeText())}</p></div>
+            <div><h3 class="font-black t-strong">Preparations log</h3><p class="text-xs t-muted">${plural(list.length, 'application')} · ${esc(rangeText())} · filter by station, preparation, batch number, technician or floor plan above</p></div>
             <div class="tbl-wrap max-h-[70vh] overflow-y-auto scroll-thin"><table class="tbl">
                 <thead><tr><th>Date</th><th>Station</th><th>Preparation</th><th class="num">Quantity</th><th>Batch number</th><th>Technician</th></tr></thead>
-                <tbody>${list.map(e => `<tr><td>${fmtDateTime(e.at)}</td><td>${stationCell(e.station || e)}</td><td>${esc(e.prep)}</td><td class="num">${fmtQty(e.qty, e.unit) || '-'}</td><td class="mono">${esc(e.batch || '-')}</td><td class="t-muted">${esc(e.tech || '-')}</td></tr>`).join('')
-                    || '<tr><td colspan="6" class="t-faint italic text-center p-6">No preparations were used in this period.</td></tr>'}</tbody>
+                <tbody>${list.map(e => `<tr class="clickable" onclick="showStation('${esc(e.barcode)}')"><td>${fmtDateTime(e.at)}</td><td>${stationCell(e.station || e)}</td><td>${esc(e.prep)}</td><td class="num">${fmtQty(e.qty, e.unit) || '-'}</td><td class="mono">${esc(e.batch || '-')}</td><td class="t-muted">${esc(e.tech || '-')}</td></tr>`).join('')
+                    || '<tr><td colspan="6" class="t-faint italic text-center p-6">No preparations match these filters.</td></tr>'}</tbody>
             </table></div>
         </div>`;
 }
@@ -1241,20 +1633,19 @@ function periodsFor(fromT, toT) {
     return { periods: out, unit: weekly ? 'week' : 'month' };
 }
 const MAX_SERIES = 6;
-function activitySeries(metric) {
-    const list = filteredEntries();
-    const fromT = F.from ? dayStart(F.from) : (list.length ? list[0].at : Date.now());
-    const toT = F.to ? dayStart(F.to) + 86399999 : Date.now();
+function activitySeries(metric, o) {
+    o = o || filterOpts();
+    const list = entriesFor(o);
+    const fromT = o.from ? dayStart(o.from) : (list.length ? list[0].at : Date.now());
+    const toT = o.to ? dayStart(o.to) + 86399999 : Date.now();
     const { periods, unit } = periodsFor(fromT, toT);
     const idx = t => { for (let i = 0; i < periods.length; i++) if (t >= periods[i].s && t < periods[i].e) return i; return -1; };
     // species ranked by total caught; colours follow the species (fixed order by rank over the whole site, not the filter)
-    const siteTotals = new Map();
-    state.model.entries.forEach(e => { if (e.species) siteTotals.set(e.species, (siteTotals.get(e.species) || 0) + e.count); });
-    const colourOrder = Array.from(siteTotals.entries()).sort((a, b) => b[1] - a[1]).map(x => x[0]);
+    const colourOrder = speciesRank();
     const totals = new Map();
     list.forEach(e => { if (e.species) totals.set(e.species, (totals.get(e.species) || 0) + e.count); });
     let species = Array.from(totals.keys()).sort((a, b) => colourOrder.indexOf(a) - colourOrder.indexOf(b));
-    if (F.species) species = species.filter(s => s === F.species);
+    if (o.species) species = species.filter(x => x === o.species);
     const shown = species.slice(0, MAX_SERIES), rest = species.slice(MAX_SERIES);
     const colourOf = sp => { const i = colourOrder.indexOf(sp); return i >= 0 && i < MAX_SERIES ? `var(--series-${i + 1})` : 'var(--series-other)'; };
     const series = [];
@@ -1267,6 +1658,11 @@ function activitySeries(metric) {
     shown.forEach(sp => series.push(mk(sp, colourOf(sp), e => e.species === sp)));
     if (rest.length) series.push(mk('Other species', 'var(--series-other)', e => rest.includes(e.species)));
     return { periods, unit, series, list, species };
+}
+function speciesRank() {
+    const t = new Map();
+    state.model.entries.forEach(e => { if (e.species) t.set(e.species, (t.get(e.species) || 0) + e.count); });
+    return Array.from(t.entries()).sort((a, b) => b[1] - a[1]).map(x => x[0]);
 }
 function renderActivity() {
     const data = activitySeries(activityMetric);
@@ -1341,7 +1737,7 @@ function drawActivityChart(box, data, opts) {
     const labels = direct ? series.map(s => ({ s, i: lastPt(s) })).filter(o => o.i >= 0).map(o => ({ s: o.s, yy: y(o.s.values[o.i]) })).sort((a, b) => a.yy - b.yy) : [];
     for (let k = 1; k < labels.length; k++) if (labels[k].yy - labels[k - 1].yy < 13) labels[k].yy = labels[k - 1].yy + 13;
     box.innerHTML = `<div class="viz-root relative">
-        ${series.length > 1 ? `<div class="flex flex-wrap gap-x-4 gap-y-1 mb-2">${series.map(s => `<span class="legend-key"><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div>` : ''}
+        ${series.length > 1 || (series.length && !direct) ? `<div class="flex flex-wrap gap-x-4 gap-y-1 mb-2">${series.map(s => `<span class="legend-key"><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div>` : ''}
         <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${metric === 'count' ? 'Pests caught' : 'Activity level'} over time" style="display:block;max-width:100%;">
             ${ticks.map(v => `<line x1="${m.l}" x2="${m.l + pw}" y1="${y(v)}" y2="${y(v)}" stroke="var(--viz-grid)" stroke-width="1"/><text x="${m.l - 6}" y="${y(v) + 3.5}" text-anchor="end" font-size="10" fill="var(--viz-axis)">${metric === 'activity' ? ['None', 'Low', 'Med', 'High'][v] : v}</text>`).join('')}
             ${periods.map((p, i) => i % every === 0 ? `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" font-size="10" fill="var(--viz-axis)">${esc(p.label)}</text>` : '').join('')}
@@ -1381,7 +1777,8 @@ window.addEventListener('resize', () => { clearTimeout(window.__rz); window.__rz
 
 // ---------- Visits ----------
 function visitList() {
-    return state.model.visits.filter(v => inRange(v.completed) && (!F.type || v.entries.some(e => e.type === F.type)) && matchesSearch(v.type, v.tech, v.notes, ...v.entries.map(e => e.name))).slice().reverse();
+    const o = filterOpts();
+    return state.model.visits.filter(v => inRange(v.completed) && (!o.tech || v.tech === o.tech || v.entries.some(e => e.tech === o.tech)) && matchesSearch(v.type, v.tech, v.notes, ...v.entries.map(e => e.name))).slice().reverse();
 }
 function visitRowHtml(v) {
     const n = new Set(v.entries.map(e => e.barcode)).size;
@@ -1411,7 +1808,9 @@ function showVisit(id) {
     $('modalSub').textContent = v.tech || '';
     const n = new Set(v.entries.map(e => e.barcode)).size;
     const fact = (k, val) => `<div class="inset p-2.5"><div class="eyebrow t-faint">${k}</div><div class="font-bold t-strong mt-0.5">${val}</div></div>`;
+    const breaches = visitBreaches(v);
     $('modalBody').innerHTML = `
+        ${breaches.length ? limitAlertHtml(breaches, `Critical limits exceeded (${monthLabel(v.completed)})`) : ''}
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
             ${fact('Arrived', v.start ? fmtTime(v.start) : '-')}${fact('Left', fmtTime(v.end))}${fact('Time on site', durationText(v.start, v.end))}${fact('Stations checked', `${n}${state.model.stations.length ? ' of ' + state.model.stations.length : ''}`)}
         </div>
@@ -1454,11 +1853,28 @@ function docRowHtml(d) {
         <div class="text-[11px] t-muted">${esc(d.category || 'Other')}${size ? ' · ' + size : ''} · added ${fmtDate(d.created_at)}${d.notes ? ' · ' + esc(d.notes) : ''}</div></div>
         <div class="flex flex-wrap items-center gap-2 justify-end ml-auto">${expiryChip(d)}<span class="link-btn !no-underline">Open ↗</span></div></div>`;
 }
+let openFolder = null;
 function renderDocuments() {
-    const docs = state.model.docs;
-    const cats = DOC_CATEGORIES.filter(c => docs.some(d => (d.category || 'Other') === c)).concat(Array.from(new Set(docs.map(d => d.category || 'Other'))).filter(c => !DOC_CATEGORIES.includes(c)));
-    $('tabBody').innerHTML = docs.length ? cats.map(c => sectionCard(esc(c), '#0891b2', docs.filter(d => (d.category || 'Other') === c).map(docRowHtml).join(''))).join('')
-        : `<div class="card p-5">${emptyNote('No documents have been added for this site yet. Pesties adds service agreements, safety data sheets (SDS), insurance certificates and site maps here.')}</div>`;
+    const m = state.model, docs = m.docs;
+    if (!docs.length && !m.folders.length) {
+        $('tabBody').innerHTML = `<div class="card p-5">${emptyNote('No documents have been added for this site yet. Pesties adds service agreements, safety data sheets (SDS), insurance certificates and site maps here.')}</div>`;
+        return;
+    }
+    if (openFolder && !m.folders.includes(openFolder)) openFolder = null;
+    if (openFolder) {
+        const inside = docs.filter(d => d.folder === openFolder);
+        $('tabBody').innerHTML = `<div class="card p-5 space-y-3">
+            <div class="flex items-center gap-2"><button type="button" class="btn btn-secondary !px-3" onclick="openFolder = null; renderDocuments();">← All documents</button><h3 class="font-black t-strong">📁 ${esc(openFolder)}</h3></div>
+            ${inside.map(docRowHtml).join('') || emptyNote('This folder is empty.')}</div>`;
+        return;
+    }
+    const loose = docs.filter(d => !d.folder);
+    const cats = DOC_CATEGORIES.filter(c => loose.some(d => (d.category || 'Other') === c)).concat(Array.from(new Set(loose.map(d => d.category || 'Other'))).filter(c => !DOC_CATEGORIES.includes(c)));
+    $('tabBody').innerHTML = (m.folders.length ? sectionCard('Folders', '#0891b2', `<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">${m.folders.map(f => {
+            const n = docs.filter(d => d.folder === f).length;
+            return `<button type="button" class="row-item clickable p-3 text-left flex items-center gap-3" data-folder="${esc(f)}" onclick="openFolder = this.dataset.folder; renderDocuments();"><span class="text-2xl">📁</span><span class="min-w-0"><span class="block font-bold t-strong truncate">${esc(f)}</span><span class="block text-[11px] t-faint">${plural(n, 'file')}</span></span></button>`;
+        }).join('')}</div>`) : '')
+        + cats.map(c => sectionCard(esc(c), '#0891b2', loose.filter(d => (d.category || 'Other') === c).map(docRowHtml).join(''))).join('');
 }
 async function openDoc(id) {
     const d = state.model.docs.find(x => x.id === id);
@@ -1476,19 +1892,59 @@ async function renderPlans() {
     if (!m.maps.length) { $('tabBody').innerHTML = `<div class="card p-5">${emptyNote('No floor plans have been added for this site yet.')}</div>`; return; }
     if (!m.maps.some(p => p.id === planId)) planId = m.maps[0].id;
     const plan = m.maps.find(p => p.id === planId);
-    const pins = m.stations.filter(s => s.mapId === planId && s.x != null && s.y != null);
+    const pins = planPins(plan);
     $('tabBody').innerHTML = `<div class="card p-5 space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap gap-1.5">${m.maps.map(p => `<button type="button" class="tab-btn ${p.id === planId ? 'active' : ''}" onclick="planId = '${esc(p.id)}'; renderPlans();">${esc(p.name)}</button>`).join('')}</div>
-            <span class="text-xs t-muted">${plural(pins.length, 'station')} on this plan · tap a pin for its history</span>
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs t-muted">${plural(pins.length, 'station')} on this plan</span>
+                <button type="button" class="btn btn-secondary" onclick="downloadPlan('${esc(plan.id)}', true)">⬇ Plan with stations</button>
+                <button type="button" class="btn btn-secondary" onclick="downloadPlan('${esc(plan.id)}', false)">⬇ Original image</button>
+            </div>
         </div>
         <div class="text-center"><div class="plan-stage" id="planStage"><div class="t-faint text-xs p-10">Loading floor plan...</div></div></div>
-        <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] t-muted justify-center">${Array.from(new Set(pins.map(s => s.type))).map(t => `<span class="inline-flex items-center gap-1.5">${typeDot(t)}${esc(t)}</span>`).join('')}<span class="inline-flex items-center gap-1.5"><span class="type-dot" style="background:transparent;outline:3px solid #dc2626;"></span>Not checked recently</span></div>
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] t-muted justify-center">${Array.from(new Set(pins.map(x => x.type))).map(t => `<span class="inline-flex items-center gap-1.5">${typeDot(t)}${esc(t)}</span>`).join('')}<span class="inline-flex items-center gap-1.5"><span class="type-dot" style="background:transparent;outline:3px solid #dc2626;"></span>Not checked recently</span></div>
     </div>`;
     const [url] = await signPaths([plan.image_path]);
     const stage = $('planStage');
     if (!stage || planId !== plan.id) return;
-    stage.innerHTML = url ? `<img src="${esc(url)}" alt="${esc(plan.name)}">${pins.map(s => `<button type="button" class="plan-pin ${s.overdue ? 'overdue' : ''}" style="left:${s.x * 100}%;top:${s.y * 100}%;" title="${esc(s.name)}" onclick="showStation('${esc(s.barcode)}')"><span style="background:${stationColor(s.type)}"></span></button>`).join('')}` : '<div class="t-faint text-xs p-10">The floor plan image could not be loaded.</div>';
+    stage.innerHTML = url ? `<img src="${esc(url)}" alt="${esc(plan.name)}">${pins.map(x => `<button type="button" class="plan-pin ${x.overdue ? 'overdue' : ''}" style="left:${x.x * 100}%;top:${x.y * 100}%;" title="${esc(x.name)}" onclick="showStation('${esc(x.barcode)}')"><span style="background:${stationColor(x.type)}"></span></button>`).join('')}` : '<div class="t-faint text-xs p-10">The floor plan image could not be loaded.</div>';
+}
+function planPins(plan) { return state.model.stations.filter(x => x.mapId === plan.id && x.x != null && x.y != null); }
+// The plan image with the station pins drawn on, as a canvas (the image is fetched first, so the canvas can be saved)
+async function planCanvas(plan, withPins) {
+    const [url] = await signPaths([plan.image_path]);
+    if (!url) throw new Error('The floor plan image could not be loaded.');
+    const blob = await (await fetch(url)).blob();
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('The floor plan image could not be read.')); i.src = URL.createObjectURL(blob); });
+    const scale = Math.min(1, 2400 / Math.max(img.width, img.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+    const g = c.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(img, 0, 0, c.width, c.height);
+    if (withPins) {
+        const r = Math.max(7, Math.round(c.width / 140));
+        g.font = `bold ${Math.round(r * 1.5)}px sans-serif`; g.textBaseline = 'middle';
+        planPins(plan).forEach(x => {
+            const px = x.x * c.width, py = x.y * c.height;
+            g.beginPath(); g.arc(px, py, r, 0, Math.PI * 2); g.fillStyle = stationColor(x.type); g.fill(); g.lineWidth = Math.max(2, r / 3); g.strokeStyle = '#fff'; g.stroke();
+            if (x.overdue) { g.beginPath(); g.arc(px, py, r * 1.6, 0, Math.PI * 2); g.strokeStyle = '#dc2626'; g.stroke(); }
+            const label = x.name, w = g.measureText(label).width;
+            g.fillStyle = 'rgba(2,6,23,.82)'; g.fillRect(px + r + 4, py - r, w + 8, r * 2); g.fillStyle = '#fff'; g.fillText(label, px + r + 8, py);
+        });
+    }
+    return { canvas: c, blob };
+}
+async function downloadPlan(id, withPins) {
+    const plan = state.model.maps.find(p => p.id === id);
+    if (!plan) return;
+    try {
+        const { canvas, blob } = await planCanvas(plan, withPins);
+        const name = `${safeName(siteName(state.site))} - ${safeName(plan.name)}${withPins ? ' (stations)' : ''}`;
+        if (!withPins) { downloadBlob(blob, name + '.' + ((blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg'))); return; }
+        canvas.toBlob(b => downloadBlob(b, name + '.png'), 'image/png');
+    } catch (e) { alert('Could not download the floor plan: ' + (e.message || e)); }
 }
 
 // ===================================================================
@@ -1509,18 +1965,28 @@ function fileBase(what) { return `${safeName(siteName(state.site))} - ${what} - 
 
 const EXPORTS = {
     stations: () => ({
-        title: 'Station register', cols: [['Station', 30], ['Barcode', 18], ['Type', 30], ['Last checked', 18], ['Days', 10], ['Last activity', 16], ['Last preparation', 34], ['Checks', 11], ['Caught', 11]],
-        rows: sortStations(stationRows()).map(r => [r.s.name, r.s.barcode, r.s.type, r.s.lastAt ? fmtDate(r.s.lastAt) : 'Never', r.s.daysSince == null ? '' : r.s.daysSince + (r.s.overdue ? ' (overdue)' : ''),
+        title: 'Station register', cols: [['Station', 28], ['Barcode', 16], ['Type', 28], ['Zone', 16], ['Floor plan', 18], ['Last checked', 18], ['Days', 10], ['Last activity', 16], ['Last preparation', 34], ['Checks', 11], ['Caught', 11]],
+        rows: sortStations(stationRows()).map(r => [r.s.name, r.s.barcode, r.s.type, r.s.zone || '', mapName(r.s.mapId) || '', r.s.lastAt ? fmtDate(r.s.lastAt) : 'Never', r.s.daysSince == null ? '' : r.s.daysSince + (r.s.overdue ? ' (overdue)' : ''),
             r.s.last ? (r.s.last.activity === 'None' ? 'No activity' : r.s.last.activity) : '', r.lastPrep ? `${r.lastPrep.prep} ${fmtQty(r.lastPrep.qty, r.lastPrep.unit)}${r.lastPrep.batch ? ' batch ' + r.lastPrep.batch : ''} (${fmtDate(r.lastPrep.at)})` : '', r.checks, r.caught])
     }),
     chemicals: () => ({
-        title: 'Chemical use log', cols: [['Date', 26], ['Station', 34], ['Barcode', 18], ['Preparation', 40], ['Quantity', 18], ['Batch', 22], ['Technician', 26]],
+        title: 'Preparations log', cols: [['Date', 26], ['Station', 34], ['Barcode', 18], ['Preparation', 40], ['Quantity', 18], ['Batch', 22], ['Technician', 26]],
         rows: chemicalEntries().slice().reverse().map(e => [fmtDateTime(e.at), e.name, e.barcode, e.prep, fmtQty(e.qty, e.unit), e.batch, e.tech])
     }),
     activity: () => {
         const d = activitySeries(activityMetric);
         return { title: (activityMetric === 'count' ? 'Pests caught' : 'Average activity level (0-3)') + ' per ' + d.unit, cols: [[d.unit === 'week' ? 'Week of' : 'Month', 24]].concat(d.series.map(s => [s.name, 24])),
             rows: d.periods.map((p, i) => [p.label].concat(d.series.map(s => s.values[i] == null ? '' : s.values[i]))), chart: d };
+    },
+    reports: () => {
+        const list = reportEntries();
+        if (REP.style === 'raw') return { title: 'Service records', cols: [['Date', 24], ['Station', 28], ['Barcode', 16], ['Type', 24], ['Zone', 16], ['Activity', 14], ['Pest', 20], ['Number', 12], ['Preparation', 30], ['Quantity', 14], ['Batch', 16], ['Technician', 20], ['Notes', 40]],
+            rows: list.slice().reverse().map(e => [fmtDateTime(e.at), e.name, e.barcode, e.type, e.zone, e.activity === 'None' ? 'No activity' : e.activity, e.species, e.count || '', e.prep, e.prep ? fmtQty(e.qty, e.unit) : '', e.batch, e.tech, e.notes]) };
+        if (REP.style === 'summary') return { title: `${MEASURES[REP.measure]} by ${GROUPS[REP.group].toLowerCase()}`, cols: [[GROUPS[REP.group], 40], [MEASURES[REP.measure], 26], ['Checks', 14], ['Pests', 14], ['First', 20], ['Last', 20]],
+            rows: reportGroups(list).map(r => [r.key, r.value == null ? '' : r.value, r.entries.length, r.entries.reduce((n, e) => n + e.count, 0), fmtDate(r.entries[0].at), fmtDate(r.entries[r.entries.length - 1].at)]) };
+        const d = reportTrend(list);
+        return { title: `${MEASURES[REP.measure]} per ${d.unit}, by ${GROUPS[REP.group].toLowerCase()}`, cols: [[d.unit === 'week' ? 'Week of' : 'Month', 24]].concat(d.series.map(x => [x.name, 24])),
+            rows: d.periods.map((p, i) => [p.label].concat(d.series.map(x => x.values[i] == null ? '' : x.values[i]))), chart: d, metric: REP.measure === 'activity' ? 'activity' : 'count' };
     },
     visits: () => ({
         title: 'Visits', cols: [['Date', 22], ['Visit type', 28], ['Technician', 28], ['Arrived', 16], ['Left', 16], ['Stations', 14], ['Recs', 10], ['Notes', 60]],
@@ -1533,7 +1999,7 @@ function exportTab(kind) {
     const t = ex();
     if (kind === 'csv') { csvDownload(fileBase(t.title), t.cols.map(c => c[0]), t.rows); return; }
     const pdf = newPdf(t.title);
-    if (t.chart) pdf.chart(t.chart, activityMetric);
+    if (t.chart) pdf.chart(t.chart, t.metric || activityMetric);
     pdf.table(t.cols, t.rows);
     pdf.save(fileBase(t.title));
 }
@@ -1622,7 +2088,7 @@ function newPdf(title, subtitle) {
             const every = Math.max(1, Math.ceil(d.periods.length / 14));
             d.periods.forEach((p, i) => { if (i % every === 0) doc.text(p.label, X(i), y0 + ph + 5, { align: 'center' }); });
             d.series.forEach((s, si) => {
-                const c = s.name === 'All stations' ? [15, 23, 42] : s.name === 'Other species' ? [148, 163, 184] : COLORS[speciesColourIndex(s.name) % COLORS.length];
+                const c = s.rgb || (s.name === 'All stations' ? [15, 23, 42] : s.name === 'Other species' ? [148, 163, 184] : COLORS[speciesColourIndex(s.name) % COLORS.length]);
                 doc.setDrawColor(c[0], c[1], c[2]); doc.setFillColor(c[0], c[1], c[2]); doc.setLineWidth(.6);
                 let prev = null;
                 s.values.forEach((v, i) => { if (v == null) { prev = null; return; } if (prev) doc.line(X(prev[0]), Y(prev[1]), X(i), Y(v)); if (!(metric === 'count' && v === 0)) doc.circle(X(i), Y(v), .7, 'F'); prev = [i, v]; });
@@ -1631,6 +2097,20 @@ function newPdf(title, subtitle) {
                 doc.text(s.name.length > 22 ? s.name.slice(0, 21) + '…' : s.name, x0 + pw + 12, y0 + 4.5 + si * 5.5);
             });
             y = y0 + ph + 11;
+        },
+        // a picture fitted to the page width (and the space left), keeping its shape
+        image(dataUrl, w, h) {
+            const maxW = W - 2 * M, maxH = H - y - 14;
+            const k = Math.min(maxW / w, maxH / h);
+            doc.addImage(dataUrl, 'JPEG', M, y, w * k, h * k);
+            y += h * k + 5;
+        },
+        alert(lines) {
+            api.room(10 + lines.length * 5);
+            doc.setFillColor(254, 226, 226); doc.setDrawColor(239, 68, 68); doc.roundedRect(M, y, W - 2 * M, 8 + lines.length * 5, 2, 2, 'FD');
+            doc.setTextColor(153, 27, 27); doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+            lines.forEach((l, i) => doc.text(l, M + 4, y + 6 + i * 5));
+            y += 12 + lines.length * 5;
         },
         save(name) {
             const n = doc.getNumberOfPages();
@@ -1657,6 +2137,8 @@ function downloadVisitPdf(id) {
     const v = state.model.visits.find(x => x.id === id);
     if (!v) return;
     const pdf = newPdf('Visit report', `${fmtDate(v.completed)} · ${v.type}${v.tech ? ' · ' + v.tech : ''}`);
+    const breaches = visitBreaches(v);
+    if (breaches.length) pdf.alert([`CRITICAL LIMITS EXCEEDED (${monthLabel(v.completed)})`].concat(breaches.map(x => `${x.limit.zone} · ${limitPest(x.limit)}: ${x.total} recorded, limit ${x.limit.max} a month`)));
     pdf.facts([['Arrived', v.start ? fmtTime(v.start) : '-'], ['Left', fmtTime(v.end)], ['Time on site', durationText(v.start, v.end)], ['Stations checked', new Set(v.entries.map(e => e.barcode)).size]]);
     if (v.services.length) pdf.para('Services completed: ' + v.services.join(', '));
     pdf.heading("Technician's notes"); pdf.para(v.notes || 'No notes provided');
@@ -1682,12 +2164,12 @@ function openAuditPack() {
             <div><label class="lbl" for="apFrom">From</label><input id="apFrom" type="date" class="field" value="${F.from || ''}" onchange="$('apPreset').value = 'custom'"></div>
             <div><label class="lbl" for="apTo">To</label><input id="apTo" type="date" class="field" value="${F.to || ''}" onchange="$('apPreset').value = 'custom'"></div>
         </div>
-        <div class="space-y-2 text-sm">${[['summary', 'Summary'], ['visits', 'Visit list'], ['stations', 'Station register (last checked, days since, overdue)'], ['chemicals', 'Chemical use log (preparation, quantity, batch numbers)'],
-            ['activity', 'Pest activity trend by species'], ['recs', 'Recommendations register'], ['docs', 'Document register']].map(([k, l]) =>
+        <div class="space-y-2 text-sm">${[['summary', 'Summary'], ['visits', 'Visit list'], ['stations', 'Station register (last checked, days since, overdue)'], ['chemicals', 'Preparations log (preparation, quantity, batch numbers)'],
+            ['activity', 'Pest activity trend by species'], ['limits', 'Critical limits, month by month'], ['recs', 'Recommendations register'], ['docs', 'Document register'], ['plans', 'Floor plans with station positions']].map(([k, l]) =>
             `<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="ap-part" value="${k}" checked> <span class="t-strong">${l}</span></label>`).join('')}</div>
         <p class="text-xs t-muted">Station type and search filters are not applied to the audit pack: it covers the whole site.</p>`;
     $('modalFoot').classList.remove('hidden');
-    $('modalFoot').innerHTML = `<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button><button type="button" class="btn btn-primary" onclick="buildAuditPack()">⬇ Download PDF</button>`;
+    $('modalFoot').innerHTML = `<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button><button type="button" id="apBuildBtn" class="btn btn-primary" onclick="buildAuditPack()">⬇ Download PDF</button>`;
     openModal();
 }
 function apPresetChanged() {
@@ -1696,12 +2178,21 @@ function apPresetChanged() {
     $('apFrom').value = F.from || ''; $('apTo').value = F.to || '';
     Object.assign(F, keep); $('fPreset').value = F.preset; $('fFrom').value = F.from || ''; $('fTo').value = F.to || '';
 }
-function buildAuditPack() {
+async function buildAuditPack() {
     const parts = new Set(Array.from(document.querySelectorAll('.ap-part:checked')).map(c => c.value));
     if (!parts.size) { alert('Choose at least one section.'); return; }
     const saved = Object.assign({}, F);
-    Object.assign(F, { from: $('apFrom').value || null, to: $('apTo').value || null, type: '', species: '', prep: '', q: '' });
+    Object.assign(F, { from: $('apFrom').value || null, to: $('apTo').value || null });
+    FILTER_KEYS.forEach(k => { F[k] = ''; });
+    const btn = $('apBuildBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Building...'; }
     try {
+        // floor plans are drawn first (they need loading), then everything goes into one PDF
+        const plans = [];
+        if (parts.has('plans')) for (const plan of state.model.maps) {
+            try { const { canvas } = await planCanvas(plan, true); plans.push({ plan, url: canvas.toDataURL('image/jpeg', .85), w: canvas.width, h: canvas.height }); }
+            catch (e) { plans.push({ plan, error: e.message || String(e) }); }
+        }
         const m = state.model;
         const entries = filteredEntries();
         const visits = visitList();
@@ -1719,7 +2210,7 @@ function buildAuditPack() {
         const section = (key, title, fn) => { if (!parts.has(key)) return; pdf.newPage(title); fn(); };
         section('visits', 'Visits', () => { const t = EXPORTS.visits(); pdf.table(t.cols, t.rows); });
         section('stations', 'Station register', () => { const t = EXPORTS.stations(); if (m.interval) pdf.para(`Stations should be checked at least every ${m.interval} days. "Overdue" means not checked for more than ${m.interval + OVERDUE_GRACE_DAYS} days.`); pdf.table(t.cols, t.rows); });
-        section('chemicals', 'Chemical use log', () => {
+        section('chemicals', 'Preparations log', () => {
             const byPrep = new Map();
             entries.filter(e => e.prep).forEach(e => { const g = byPrep.get(e.prep) || { n: 0, q: new Map(), b: new Set() }; g.n++; if (e.qty != null) g.q.set(e.unit, (g.q.get(e.unit) || 0) + e.qty); if (e.batch) g.b.add(e.batch); byPrep.set(e.prep, g); });
             pdf.heading('Totals by preparation');
@@ -1735,14 +2226,37 @@ function buildAuditPack() {
             pdf.table([[caught.unit === 'week' ? 'Week of' : 'Month', 24]].concat(caught.series.map(s => [s.name + ' caught', 24])).concat([['Avg activity', 20]]),
                 caught.periods.map((p, i) => [p.label].concat(caught.series.map(s => s.values[i])).concat([act.series[0] && act.series[0].values[i] != null ? act.series[0].values[i] : '-'])));
         });
+        section('limits', 'Critical limits', () => {
+            if (!m.limits.length) { pdf.para('No critical limits are set for this site.'); return; }
+            const from = F.from ? dayStart(F.from) : (entries.length ? entries[0].at : Date.now()), to = F.to ? dayStart(F.to) : Date.now();
+            const months = []; for (let d = new Date(new Date(from).getFullYear(), new Date(from).getMonth(), 1); d.getTime() <= to; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) months.push(d.getTime());
+            const rows = [];
+            m.limits.forEach(l => months.forEach(t => { const st = limitStatus(l, t); rows.push([monthLabel(t), l.zone, limitPest(l), l.max, st.total, st.over ? 'OVER LIMIT' : 'Within limit']); }));
+            const over = rows.filter(r => r[5] === 'OVER LIMIT').length;
+            pdf.para(`${plural(m.limits.length, 'limit')} checked for each month in the period. ${over ? plural(over, 'month') + ' over a limit.' : 'No limits were exceeded.'}`);
+            pdf.table([['Month', 24], ['Zone', 24], ['Pest', 24], ['Limit / month', 16], ['Recorded', 14], ['Result', 18]], rows);
+        });
         section('recs', 'Recommendations register', () => { pdf.para('Recommendations raised or updated in the period, and all that are still open.'); pdf.table(REC_COLS, recExportRows(recsIn)); });
         section('docs', 'Document register', () => {
             pdf.table([['Document', 60], ['Category', 30], ['File', 50], ['Added', 20], ['Expires', 20]], m.docs.map(d => [d.title, d.category, d.file_name || '', fmtDate(d.created_at), d.expires_on ? fmtDay(d.expires_on) : '-']));
         });
+        plans.forEach(x => {
+            pdf.newPage('Floor plan: ' + x.plan.name);
+            if (x.error) { pdf.para('The floor plan image could not be included: ' + x.error); return; }
+            pdf.image(x.url, x.w, x.h);
+        });
+        if (plans.length) {
+            pdf.newPage('Floor plan stations');
+            pdf.table([['Floor plan', 30], ['Station', 34], ['Barcode', 18], ['Type', 30], ['Zone', 18], ['Last checked', 18]],
+                state.model.maps.flatMap(p => planPins(p).map(x => [p.name, x.name, x.barcode, x.type, x.zone || '', x.lastAt ? fmtDate(x.lastAt) : 'Never'])));
+        }
         pdf.save(`${safeName(siteName(state.site))} - Audit pack - ${F.from || 'start'} to ${F.to || toDayStr(new Date())}`);
         closeModal(true);
+    } catch (e) {
+        alert('Could not build the audit pack: ' + (e.message || e));
     } finally {
         Object.assign(F, saved);
+        if (btn) { btn.disabled = false; btn.textContent = '⬇ Download PDF'; }
     }
 }
 
