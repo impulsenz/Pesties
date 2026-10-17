@@ -196,7 +196,26 @@
         @keyframes sheetIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
         #stationFormContainer:not(.hidden) .station-sheet { animation: sheetIn .22s ease-out; }
         .thumb { position: relative; width: 5rem; height: 5rem; border-radius: .8rem; overflow: hidden; border: 1px solid var(--border); }
-        .thumb img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
+        .thumb img, .thumb video { width: 100%; height: 100%; object-fit: cover; cursor: pointer; display: block; }
+        .media-tile { position: relative; display: inline-block; overflow: hidden; }
+        .thumb .media-tile { display: block; width: 100%; height: 100%; }
+        .thumb .media-tile { display: block; width: 100%; height: 100%; }
+        .media-tile video { pointer-events: none; background: #0f172a; }
+        .play-badge { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+        .play-badge span { width: 1.7rem; height: 1.7rem; border-radius: 999px; background: rgba(2, 6, 23, .7); color: #fff; display: flex; align-items: center; justify-content: center; font-size: .7rem; padding-left: .12rem; }
+        .rec-media-btns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+        .rec-media-btns .btn { flex-direction: column; gap: .3rem; font-size: .72rem; padding-left: .4rem; padding-right: .4rem; white-space: normal; text-align: center; line-height: 1.15; min-width: 0; }
+        /* full screen viewer: pinch / double-tap zoom */
+        .zoom-stage { touch-action: none; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+        .zoom-stage.hidden, .media-tile.hidden, .rec-media-btns.hidden, .icon-btn.hidden, .rec-nav-btn.hidden { display: none; }
+        .zoom-stage img { transform-origin: 0 0; will-change: transform; user-select: none; -webkit-user-drag: none; }
+        .zoom-stage.zoomed img { cursor: grab; }
+        .scan-type-tabs .tab-btn { flex-shrink: 0; white-space: nowrap; }
+        .visit-link { cursor: pointer; text-decoration: underline; text-decoration-color: rgba(249,115,22,.45); text-underline-offset: 3px; background: none; border: 0; padding: 0; font: inherit; }
+        .visit-link:hover { text-decoration-color: #f97316; }
+        .rec-nav-btn { width: 2.4rem; height: 2.4rem; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 900; border: 1px solid var(--border); background: var(--surface); color: var(--text-strong, inherit); cursor: pointer; }
+        .rec-nav-btn:disabled { opacity: .35; cursor: default; }
+        .rec-rec-video-live { width: 100%; max-height: 55vh; border-radius: 1rem; background: #000; object-fit: contain; }
         .thumb-x { position: absolute; top: .25rem; right: .25rem; width: 1.4rem; height: 1.4rem; border-radius: 999px; background: rgba(2, 6, 23, .8); color: #fff; font-size: .7rem; font-weight: 900; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .viewer-thumb { width: 3.5rem; height: 3.5rem; border-radius: .6rem; object-fit: cover; cursor: pointer; border: 2px solid transparent; opacity: .7; }
         .viewer-thumb.active { border-color: #f97316; opacity: 1; }
@@ -539,7 +558,7 @@
                     </div>
                     <input type="text" id="stationSearchInput" oninput="filterStationsList()" placeholder="Search stations by name, barcode ID, or type..." class="field !pl-10 !text-xs">
                 </div>
-                <div id="stationColorLegend" class="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] t-muted"></div>
+                <div id="scanTypeTabs" class="scan-type-tabs flex gap-1.5 overflow-x-auto scroll-thin pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0" role="group" aria-label="Filter by station type"></div>
             </div>
 
             <!-- Station lists: pending first, serviced underneath -->
@@ -549,7 +568,7 @@
                     <div class="flex justify-between items-center border-b divider pb-3">
                         <h4 class="eyebrow flex items-center gap-2" style="color:#d97706;">
                             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                            Pending / Unscanned Devices
+                            Unscanned Devices
                         </h4>
                         <span id="unscannedCount" class="chip chip-amber font-mono">0</span>
                     </div>
@@ -563,7 +582,7 @@
                     <div class="flex justify-between items-center border-b divider pb-3">
                         <h4 class="eyebrow flex items-center gap-2" style="color:#059669;">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            Serviced / Scanned Today
+                            Scanned Devices
                         </h4>
                         <span id="scannedCount" class="chip chip-green font-mono">0</span>
                     </div>
@@ -702,18 +721,14 @@
                             <button type="button" id="recEditorCancel" onclick="closeRecEditor()" class="link-btn !no-underline !text-[11px]">Cancel</button>
                         </div>
                         <textarea id="recommendationNote" rows="3" placeholder="e.g. Seal gap around pipes, repair damaged door seal..." class="field"></textarea>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button type="button" onclick="document.getElementById('issuePhotoCamera').click()" class="btn btn-secondary !py-3">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                Take Photo
-                            </button>
-                            <button type="button" onclick="document.getElementById('issuePhotoGallery').click()" class="btn btn-secondary !py-3">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                Choose from Device
-                            </button>
+                        <div class="rec-media-btns">
+                            <button type="button" onclick="document.getElementById('issuePhotoCamera').click()" class="btn btn-secondary !py-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Take Photo</button>
+                            <button type="button" onclick="openVideoRecorder('issue')" class="btn btn-secondary !py-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 10l4.55-2.28A1 1 0 0121 8.62v6.76a1 1 0 01-1.45.9L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>Record Video</button>
+                            <button type="button" onclick="document.getElementById('issuePhotoGallery').click()" class="btn btn-secondary !py-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>Photo / Video Library</button>
                         </div>
                         <input type="file" id="issuePhotoCamera" accept="image/*" capture="environment" class="hidden">
-                        <input type="file" id="issuePhotoGallery" accept="image/*" multiple class="hidden">
+                        <input type="file" id="issueVideoCapture" accept="video/*" capture="environment" class="hidden">
+                        <input type="file" id="issuePhotoGallery" accept="image/*,video/*" multiple class="hidden">
                         <div id="photoPreviewGrid" class="flex flex-wrap gap-2"></div>
                     </div>
                     <button type="button" id="addRecBtn" onclick="openRecEditor()" class="btn btn-secondary w-full !py-2.5">+ Add a recommendation</button>
@@ -1057,7 +1072,7 @@
     <!-- ===================== RECOMMENDATION DETAIL ===================== -->
     <div id="recModal" class="hidden fixed inset-0 z-[61] overlay flex justify-center items-stretch sm:items-center sm:p-6">
         <div class="station-sheet w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[92vh] flex flex-col sm:rounded-[1.25rem] overflow-hidden" style="background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);">
-            <div class="flex justify-between items-start gap-3 p-4 sm:p-5 border-b divider shrink-0">
+            <div id="recModalHead" class="flex justify-between items-start gap-3 p-4 sm:p-5 border-b divider shrink-0">
                 <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
                         <span id="recModalNumber" class="font-black text-xl t-strong font-mono"></span>
@@ -1068,7 +1083,14 @@
                     <h4 id="recModalTitle" class="font-bold text-base t-strong break-words mt-1"></h4>
                     <span id="recModalMeta" class="text-[11px] t-faint"></span>
                 </div>
-                <button type="button" onclick="closeRecModal()" class="icon-btn shrink-0" title="Close">✕</button>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <div id="recNav" class="hidden flex items-center gap-1.5">
+                        <button type="button" id="recNavPrev" onclick="stepRecModal(-1)" class="rec-nav-btn" title="Previous recommendation" aria-label="Previous recommendation">‹</button>
+                        <span id="recNavPos" class="text-[11px] t-faint font-mono min-w-[3.2rem] text-center"></span>
+                        <button type="button" id="recNavNext" onclick="stepRecModal(1)" class="rec-nav-btn" title="Next recommendation" aria-label="Next recommendation">›</button>
+                    </div>
+                    <button type="button" onclick="closeRecModal()" class="icon-btn shrink-0" title="Close">✕</button>
+                </div>
             </div>
             <div class="flex-1 overflow-y-auto scroll-thin p-4 sm:p-6 space-y-5">
                 <div>
@@ -1095,13 +1117,15 @@
                         <textarea id="recModalNote" rows="3" placeholder="e.g. Client has booked a builder to seal the gap next week" class="field"></textarea>
                     </div>
                     <div class="space-y-2">
-                        <label class="lbl">Add photos</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button type="button" onclick="document.getElementById('recPhotoCamera').click()" class="btn btn-secondary !py-2.5">Take Photo</button>
-                            <button type="button" onclick="document.getElementById('recPhotoGallery').click()" class="btn btn-secondary !py-2.5">Choose from Device</button>
+                        <label class="lbl">Add photos or videos</label>
+                        <div class="rec-media-btns">
+                            <button type="button" onclick="document.getElementById('recPhotoCamera').click()" class="btn btn-secondary !py-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Take Photo</button>
+                            <button type="button" onclick="openVideoRecorder('rec')" class="btn btn-secondary !py-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 10l4.55-2.28A1 1 0 0121 8.62v6.76a1 1 0 01-1.45.9L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>Record Video</button>
+                            <button type="button" onclick="document.getElementById('recPhotoGallery').click()" class="btn btn-secondary !py-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>Photo / Video Library</button>
                         </div>
                         <input type="file" id="recPhotoCamera" accept="image/*" capture="environment" class="hidden">
-                        <input type="file" id="recPhotoGallery" accept="image/*" multiple class="hidden">
+                        <input type="file" id="recVideoCapture" accept="video/*" capture="environment" class="hidden">
+                        <input type="file" id="recPhotoGallery" accept="image/*,video/*" multiple class="hidden">
                         <div id="recPhotoPreview" class="flex flex-wrap gap-2"></div>
                     </div>
                 </div>
@@ -1318,13 +1342,37 @@
         </div>
     </div>
 
+    <!-- ===================== IN-APP VIDEO RECORDER ===================== -->
+    <div id="videoRecModal" class="hidden overlay fixed inset-0 z-[70] flex flex-col justify-center items-center p-4">
+        <div class="card p-4 sm:p-5 max-w-lg w-full space-y-3">
+            <div class="flex justify-between items-center gap-3">
+                <h3 class="font-black text-lg t-accent">Record video</h3>
+                <span id="videoRecTimer" class="chip font-mono">0:00 / 1:00</span>
+            </div>
+            <video id="videoRecLive" class="rec-rec-video-live" playsinline muted autoplay></video>
+            <video id="videoRecReview" class="rec-rec-video-live hidden" playsinline controls></video>
+            <p id="videoRecMsg" class="text-xs t-muted">Starting the camera...</p>
+            <div class="flex flex-wrap justify-end gap-2">
+                <button type="button" onclick="closeVideoRecorder()" class="btn btn-secondary">Cancel</button>
+                <button type="button" id="videoRecRetake" onclick="retakeVideo()" class="btn btn-secondary hidden">Retake</button>
+                <button type="button" id="videoRecStart" onclick="startVideoRecording()" class="btn btn-primary" disabled><span class="w-2.5 h-2.5 rounded-full bg-white inline-block"></span> Record</button>
+                <button type="button" id="videoRecStop" onclick="stopVideoRecording()" class="btn btn-danger hidden">■ Stop</button>
+                <button type="button" id="videoRecUse" onclick="useRecordedVideo()" class="btn btn-primary hidden">Use video</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===================== IMAGE / RECOMMENDATION VIEWER ===================== -->
     <div id="imageModal" class="hidden overlay fixed inset-0 z-[65] flex flex-col justify-center items-center p-6 space-y-4" onclick="if(event.target===this) closeImageModal()">
         <div class="relative flex items-center justify-center max-w-full">
             <button type="button" id="viewerPrev" onclick="stepViewer(-1)" class="icon-btn absolute left-2 z-10 hidden" title="Previous photo">‹</button>
-            <img id="fullImageDisplay" class="max-h-[60vh] max-w-full rounded-2xl object-contain shadow-2xl" style="border:1px solid var(--border);">
+            <div id="zoomStage" class="zoom-stage rounded-2xl">
+                <img id="fullImageDisplay" class="rounded-2xl object-contain shadow-2xl" style="max-height:60vh;max-width:calc(100vw - 3rem);border:1px solid var(--border);" draggable="false" alt="">
+            </div>
+            <video id="fullVideoDisplay" class="hidden rounded-2xl shadow-2xl bg-black" style="max-height:60vh;max-width:calc(100vw - 3rem);border:1px solid var(--border);" controls playsinline preload="metadata"></video>
             <button type="button" id="viewerNext" onclick="stepViewer(1)" class="icon-btn absolute right-2 z-10 hidden" title="Next photo">›</button>
         </div>
+        <div id="zoomHint" class="text-[11px] text-white/80 -mt-2 hidden">Pinch or double-tap to zoom</div>
         <div id="viewerThumbs" class="flex flex-wrap gap-2 justify-center max-w-xl"></div>
         <div class="card p-4 max-w-xl w-full text-center space-y-1">
             <div id="modalTitleDisplay" class="eyebrow t-accent hidden"></div>
@@ -1342,11 +1390,11 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.17-r19';
+        const APP_VERSION = '2026.10.17-r20';
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "stationColorLegend", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -1583,8 +1631,53 @@
             }
         }
 
-        function extFor(blob) {
+        // ---------- Videos: kept alongside photos (same bucket, same lists) ----------
+        const VIDEO_MAX_MB = 50;           // Supabase's standard upload limit per file
+        const VIDEO_MAX_SECONDS = 60;      // in-app recordings stop by themselves after this
+        const VIDEO_PATH_RE = /\.(mp4|webm|mov|m4v|3gp|ogv)$/i;
+        const videoUrls = new Set();       // device copies (blob: links) that are videos
+        function isVideoBlob(b) { return !!(b && /^video\//i.test(b.type || '')); }
+        function isVideoPath(p) { return VIDEO_PATH_RE.test(String(p || '').split('?')[0].split('#')[0]); }
+        function isVideoUrl(u) { return !!u && (videoUrls.has(u) || isVideoPath(u)); }
+        function mediaUrl(blob) { const u = URL.createObjectURL(blob); if (isVideoBlob(blob)) videoUrls.add(u); return u; }
+        // A thumbnail for a photo or a video (videos show their first frame with a play mark)
+        function mediaThumb(url, onclick, cls, style) {
+            const c = esc(cls || ''), st = style ? ` style="${esc(style)}"` : '';
+            if (!isVideoUrl(url)) return `<img src="${esc(url)}" alt="" class="${c}"${st} onclick="${onclick}">`;
+            return `<span class="media-tile ${c}"${st} onclick="${onclick}" role="button" aria-label="Play video"><video src="${esc(url)}#t=0.1" muted playsinline preload="metadata" class="w-full h-full object-cover"></video><span class="play-badge"><span>▶</span></span></span>`;
+        }
+        function mediaCountText(n, vids) {
+            const ph = n - vids;
+            return [ph ? `${ph} photo${ph === 1 ? '' : 's'}` : '', vids ? `${vids} video${vids === 1 ? '' : 's'}` : ''].filter(Boolean).join(' and ') || '0 photos';
+        }
+        // Files picked or captured -> [{ blob, url, video }]: photos are shrunk, videos are checked for size
+        async function mediaFromFiles(fileList) {
+            const out = [];
+            for (const f of Array.from(fileList || [])) {
+                if (isVideoBlob(f) || isVideoPath(f.name)) {
+                    if (f.size > VIDEO_MAX_MB * 1024 * 1024) {
+                        alert(`"${f.name || 'This video'}" is ${(f.size / 1048576).toFixed(0)} MB. Videos can be up to ${VIDEO_MAX_MB} MB - trim it on your phone first, or use Record Video in the app (it keeps videos small).`);
+                        continue;
+                    }
+                    const blob = f.type ? f : new Blob([f], { type: 'video/' + (extFor({ type: '' }, f.name) === 'mov' ? 'quicktime' : 'mp4') });
+                    out.push({ blob: blob, url: mediaUrl(blob), video: true });
+                } else {
+                    const blob = await compressImage(f);
+                    out.push({ blob: blob, url: mediaUrl(blob), video: false });
+                }
+            }
+            return out;
+        }
+
+        function extFor(blob, name) {
             const t = (blob && blob.type) || '';
+            const fromName = (String(name || '').match(/\.(\w+)$/) || [])[1];
+            if (t.includes('mp4')) return 'mp4';
+            if (t.includes('webm')) return 'webm';
+            if (t.includes('quicktime')) return 'mov';
+            if (t.includes('3gpp')) return '3gp';
+            if (/^video\//.test(t)) return 'mp4';
+            if (!t && fromName && VIDEO_PATH_RE.test('.' + fromName)) return fromName.toLowerCase();
             if (t.includes('png')) return 'png';
             if (t.includes('webp')) return 'webp';
             if (t.includes('gif')) return 'gif';
@@ -1674,7 +1767,7 @@
             try {
                 const b = await loadBlob(key);
                 if (!b) return null;
-                const u = URL.createObjectURL(b);
+                const u = mediaUrl(b);
                 blobUrlMemo.set(key, u);
                 return u;
             } catch (e) { return null; }
@@ -2132,14 +2225,11 @@
         let pendingPhotos = []; // [{ blob, url }]
 
         async function addPickedPhotos(fileList) {
-            for (const f of Array.from(fileList || [])) {
-                const blob = await compressImage(f);
-                pendingPhotos.push({ blob: blob, url: URL.createObjectURL(blob) });
-            }
+            (await mediaFromFiles(fileList)).forEach(m => pendingPhotos.push(m));
             recEditorOpen = true;
             renderPhotoPreviews();
         }
-        ['issuePhotoCamera', 'issuePhotoGallery'].forEach(id => {
+        ['issuePhotoCamera', 'issuePhotoGallery', 'issueVideoCapture'].forEach(id => {
             document.getElementById(id).addEventListener('change', async e => {
                 await addPickedPhotos(e.target.files);
                 e.target.value = '';
@@ -2150,19 +2240,19 @@
             const grid = document.getElementById('photoPreviewGrid');
             const kept = (typeof keptPhotos !== 'undefined' ? keptPhotos : []).map((k, i) => `
                 <div class="thumb" title="Already saved">
-                    ${k.url ? `<img src="${esc(k.url)}" alt="" onclick="viewFullImage(keptPhotos.map(x => x.url).filter(Boolean), 'Saved photo', 'Saved earlier this visit', '', ${i})">` : '<div class="w-full h-full flex items-center justify-center text-[10px] t-faint text-center p-1">📷 Saved photo</div>'}
+                    ${k.url ? mediaThumb(k.url, `viewFullImage(keptPhotos.map(x => x.url).filter(Boolean), 'Saved photo', 'Saved earlier this visit', '', ${i})`) : '<div class="w-full h-full flex items-center justify-center text-[10px] t-faint text-center p-1">📷 Saved photo</div>'}
                     <span class="absolute bottom-1 left-1 text-[9px] font-black text-white bg-emerald-600 rounded px-1">SAVED</span>
                     <button type="button" class="thumb-x" onclick="keptPhotos.splice(${i}, 1); renderPhotoPreviews();" title="Remove photo">✕</button>
                 </div>`).join('');
             grid.innerHTML = kept + pendingPhotos.map((p, i) => `
                 <div class="thumb">
-                    <img src="${esc(p.url)}" alt="" onclick="previewPendingPhoto(${i})">
+                    ${mediaThumb(p.url, `previewPendingPhoto(${i})`)}
                     <button type="button" class="thumb-x" onclick="removePendingPhoto(${i})" title="Remove photo">✕</button>
                 </div>`).join('');
         }
         function removePendingPhoto(i) {
             const p = pendingPhotos.splice(i, 1)[0];
-            if (p) URL.revokeObjectURL(p.url);
+            if (p) { URL.revokeObjectURL(p.url); videoUrls.delete(p.url); }
             renderPhotoPreviews();
         }
         function previewPendingPhoto(i) {
@@ -2357,7 +2447,9 @@
                 const alreadyThere = /already exists|duplicate/i.test(msg) || String(error.statusCode) === '409';
                 if (!alreadyThere) {
                     if (isNetworkError(error)) throw error;
-                    throw new Error(`Photo upload${which} was refused by storage: ` + msg + (/row-level security|policy|unauthori/i.test(msg) ? ' (check the storage policies on the station-photos bucket).' : ''));
+                    const mimeHint = /mime|content.?type|not supported|invalid.*type/i.test(msg) ? ' (the station-photos bucket only accepts some file types: in Supabase go to Storage > station-photos > Edit bucket and clear "Allowed MIME types", or add video/*).' : '';
+                    const sizeHint = /too large|exceeded|maximum.*size|payload/i.test(msg) ? ` (the file is bigger than the bucket allows; videos must be under ${VIDEO_MAX_MB} MB).` : '';
+                    throw new Error(`Upload${which} was refused by storage: ` + msg + (/row-level security|policy|unauthori/i.test(msg) ? ' (check the storage policies on the station-photos bucket).' : '') + mimeHint + sizeHint);
                 }
             }
 
@@ -3160,32 +3252,40 @@
 
         function showViewerPhoto() {
             const img = document.getElementById('fullImageDisplay');
+            const vid = document.getElementById('fullVideoDisplay');
+            const stage = document.getElementById('zoomStage');
             const note = document.getElementById('modalPhotoNote');
             note.textContent = viewerNote;
             note.classList.toggle('hidden', !viewerNote);
+            resetZoom();
+            try { vid.pause(); } catch (e) {}
 
             const src = viewerSrcs[viewerIndex];
-            if (src) {
-                img.onerror = () => {
-                    img.classList.add('hidden');
-                    note.textContent = isOnline
-                        ? "This photo couldn't be loaded from storage. Tap Sync Site and try again."
-                        : "This photo hasn't been saved on this device yet, so it can't be shown offline.";
-                    note.classList.remove('hidden');
-                };
+            const failText = isOnline
+                ? "This file couldn't be loaded from storage. Tap Sync Site and try again."
+                : "This file hasn't been saved on this device yet, so it can't be shown offline.";
+            const isVid = isVideoUrl(src);
+            stage.classList.toggle('hidden', !src || isVid);
+            vid.classList.toggle('hidden', !src || !isVid);
+            document.getElementById('zoomHint').classList.toggle('hidden', !src || isVid);
+            if (src && isVid) {
+                img.onerror = null; img.removeAttribute('src');
+                vid.onerror = () => { vid.classList.add('hidden'); note.textContent = failText; note.classList.remove('hidden'); };
+                if (vid.getAttribute('src') !== src) vid.src = src;
+            } else if (src) {
+                vid.onerror = null; vid.removeAttribute('src'); try { vid.load(); } catch (e) {}
+                img.onerror = () => { stage.classList.add('hidden'); note.textContent = failText; note.classList.remove('hidden'); };
                 img.src = src;
-                img.classList.remove('hidden');
             } else {
-                img.onerror = null;
-                img.removeAttribute('src');
-                img.classList.add('hidden');
+                img.onerror = null; img.removeAttribute('src');
+                vid.onerror = null; vid.removeAttribute('src');
             }
 
             const many = viewerSrcs.length > 1;
             document.getElementById('viewerPrev').classList.toggle('hidden', !many);
             document.getElementById('viewerNext').classList.toggle('hidden', !many);
             document.getElementById('viewerThumbs').innerHTML = many ? viewerSrcs.map((u, i) =>
-                `<img src="${esc(u)}" alt="" class="viewer-thumb ${i === viewerIndex ? 'active' : ''}" onclick="viewerIndex=${i}; showViewerPhoto()">`).join('') : '';
+                mediaThumb(u, `viewerIndex=${i}; showViewerPhoto()`, `viewer-thumb ${i === viewerIndex ? 'active' : ''}`)).join('') : '';
         }
 
         function stepViewer(d) {
@@ -3195,7 +3295,211 @@
         }
 
         function closeImageModal() {
+            const vid = document.getElementById('fullVideoDisplay');
+            try { vid.pause(); } catch (e) {}
+            resetZoom();
             document.getElementById('imageModal').classList.add('hidden');
+        }
+
+        // ---------- Pinch, double-tap and wheel zoom for the full screen photo ----------
+        const zoom = { s: 1, x: 0, y: 0, pts: new Map(), start: null, lastTap: 0, lastTapX: 0, lastTapY: 0, moved: false };
+        const ZOOM_MAX = 5;
+        function applyZoom() {
+            const img = document.getElementById('fullImageDisplay');
+            const w = img.offsetWidth, h = img.offsetHeight;
+            // keep the photo covering its frame (no empty gaps while zoomed)
+            zoom.s = Math.min(ZOOM_MAX, Math.max(1, zoom.s));
+            zoom.x = Math.min(0, Math.max(w - w * zoom.s, zoom.x));
+            zoom.y = Math.min(0, Math.max(h - h * zoom.s, zoom.y));
+            img.style.transform = zoom.s === 1 ? '' : `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.s})`;
+            document.getElementById('zoomStage').classList.toggle('zoomed', zoom.s > 1);
+        }
+        function resetZoom() { zoom.s = 1; zoom.x = 0; zoom.y = 0; zoom.pts.clear(); zoom.start = null; applyZoom(); }
+        function zoomAt(px, py, newScale) {
+            const cx = (px - zoom.x) / zoom.s, cy = (py - zoom.y) / zoom.s;   // the photo point under the finger stays put
+            zoom.s = Math.min(ZOOM_MAX, Math.max(1, newScale));
+            zoom.x = px - cx * zoom.s; zoom.y = py - cy * zoom.s;
+            applyZoom();
+        }
+        (function initZoom() {
+            const stage = document.getElementById('zoomStage');
+            if (!stage || !stage.addEventListener) return;
+            const local = e => { const r = stage.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+            const twoFinger = () => {
+                const [a, b] = Array.from(zoom.pts.values());
+                return { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+            };
+            const begin = () => {
+                const t = zoom.pts.size === 2 ? twoFinger() : null;
+                const one = Array.from(zoom.pts.values())[0];
+                zoom.start = { s: zoom.s, x: zoom.x, y: zoom.y, t: t, px: one ? one.x : 0, py: one ? one.y : 0 };
+                if (t) { zoom.start.cx = (t.mx - zoom.x) / zoom.s; zoom.start.cy = (t.my - zoom.y) / zoom.s; }
+            };
+            stage.addEventListener('pointerdown', e => {
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+                zoom.pts.set(e.pointerId, local(e));
+                zoom.moved = false;
+                begin();
+                e.preventDefault();
+            });
+            stage.addEventListener('pointermove', e => {
+                if (!zoom.pts.has(e.pointerId) || !zoom.start) return;
+                zoom.pts.set(e.pointerId, local(e));
+                if (zoom.pts.size === 2 && zoom.start.t) {
+                    const t = twoFinger();
+                    zoom.s = Math.min(ZOOM_MAX, Math.max(1, zoom.start.s * t.d / zoom.start.t.d));
+                    zoom.x = t.mx - zoom.start.cx * zoom.s; zoom.y = t.my - zoom.start.cy * zoom.s;
+                    zoom.moved = true;
+                    applyZoom();
+                } else if (zoom.pts.size === 1 && zoom.s > 1) {
+                    const p = Array.from(zoom.pts.values())[0];
+                    if (Math.abs(p.x - zoom.start.px) + Math.abs(p.y - zoom.start.py) > 4) zoom.moved = true;
+                    zoom.x = zoom.start.x + (p.x - zoom.start.px); zoom.y = zoom.start.y + (p.y - zoom.start.py);
+                    applyZoom();
+                } else if (zoom.pts.size === 1) {
+                    const p = Array.from(zoom.pts.values())[0];
+                    if (Math.abs(p.x - zoom.start.px) + Math.abs(p.y - zoom.start.py) > 8) zoom.moved = true;
+                }
+            });
+            const end = e => {
+                if (!zoom.pts.has(e.pointerId)) return;
+                const p = zoom.pts.get(e.pointerId);
+                const wasSingle = zoom.pts.size === 1;
+                zoom.pts.delete(e.pointerId);
+                if (zoom.pts.size) { begin(); return; }
+                // swipe left/right (not zoomed) moves between photos
+                if (wasSingle && zoom.s === 1 && zoom.start && Math.abs(p.x - zoom.start.px) > 60 && Math.abs(p.y - zoom.start.py) < 60 && viewerSrcs.length > 1) {
+                    stepViewer(p.x < zoom.start.px ? 1 : -1);
+                    return;
+                }
+                if (wasSingle && !zoom.moved && e.type === 'pointerup') {
+                    const now = Date.now();
+                    if (now - zoom.lastTap < 320 && Math.hypot(p.x - zoom.lastTapX, p.y - zoom.lastTapY) < 30) {
+                        if (zoom.s > 1) resetZoom(); else zoomAt(p.x, p.y, 2.5);
+                        zoom.lastTap = 0;
+                    } else { zoom.lastTap = now; zoom.lastTapX = p.x; zoom.lastTapY = p.y; }
+                }
+                zoom.start = null;
+            };
+            stage.addEventListener('pointerup', end);
+            stage.addEventListener('pointercancel', end);
+            stage.addEventListener('wheel', e => {
+                e.preventDefault();
+                const p = local(e);
+                zoomAt(p.x, p.y, zoom.s * (e.deltaY < 0 ? 1.2 : 1 / 1.2));
+            }, { passive: false });
+            stage.addEventListener('dblclick', e => e.preventDefault());
+        })();
+
+        // ---------- In-app video recorder (keeps files small enough to upload from site) ----------
+        let vr = { target: null, stream: null, rec: null, chunks: [], blob: null, timer: null, started: 0, mime: '' };
+        function pickRecorderMime() {
+            if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
+            return ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => { try { return MediaRecorder.isTypeSupported(t); } catch (e) { return false; } }) || '';
+        }
+        function fmtClock(sec) { sec = Math.max(0, Math.floor(sec)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); }
+        async function openVideoRecorder(target) {
+            const canRecord = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+            if (!canRecord) {
+                // this browser can't record in the page: use the phone's own camera for video instead
+                document.getElementById(target === 'rec' ? 'recVideoCapture' : 'issueVideoCapture').click();
+                return;
+            }
+            vr = { target: target, stream: null, rec: null, chunks: [], blob: null, timer: null, started: 0, mime: pickRecorderMime() };
+            const msg = document.getElementById('videoRecMsg');
+            const live = document.getElementById('videoRecLive');
+            showVideoRecState('starting');
+            document.getElementById('videoRecModal').classList.remove('hidden');
+            msg.textContent = 'Starting the camera...';
+            const video = { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30, max: 30 } };
+            try {
+                try { vr.stream = await navigator.mediaDevices.getUserMedia({ video: video, audio: true }); }
+                catch (e) { vr.stream = await navigator.mediaDevices.getUserMedia({ video: video, audio: false }); } // no microphone: record without sound
+                if (document.getElementById('videoRecModal').classList.contains('hidden')) { stopVideoStream(); return; }
+                live.srcObject = vr.stream;
+                try { await live.play(); } catch (e) {}
+                msg.textContent = `Tap Record. Recording stops by itself after ${fmtClock(VIDEO_MAX_SECONDS)}.`;
+                showVideoRecState('ready');
+            } catch (err) {
+                msg.textContent = /denied|notallowed|permission/i.test(String(err && (err.name + err.message)))
+                    ? 'Camera access was blocked. Allow the camera for this site in your browser settings, or use Photo / Video Library.'
+                    : "The camera couldn't be started here. Use Photo / Video Library instead.";
+                showVideoRecState('error');
+            }
+        }
+        function showVideoRecState(st) {
+            const show = (id, on) => document.getElementById(id).classList.toggle('hidden', !on);
+            document.getElementById('videoRecStart').disabled = st !== 'ready';
+            show('videoRecStart', st === 'ready' || st === 'starting' || st === 'error');
+            show('videoRecStop', st === 'recording');
+            show('videoRecUse', st === 'review');
+            show('videoRecRetake', st === 'review');
+            show('videoRecLive', st !== 'review');
+            show('videoRecReview', st === 'review');
+            if (st !== 'recording') document.getElementById('videoRecTimer').textContent = `0:00 / ${fmtClock(VIDEO_MAX_SECONDS)}`;
+            document.getElementById('videoRecTimer').classList.toggle('chip-red', st === 'recording');
+        }
+        function startVideoRecording() {
+            if (!vr.stream) return;
+            vr.chunks = [];
+            try {
+                vr.rec = new MediaRecorder(vr.stream, Object.assign({ videoBitsPerSecond: 1500000, audioBitsPerSecond: 64000 }, vr.mime ? { mimeType: vr.mime } : {}));
+            } catch (e) {
+                vr.rec = new MediaRecorder(vr.stream);
+            }
+            vr.rec.ondataavailable = e => { if (e.data && e.data.size) vr.chunks.push(e.data); };
+            vr.rec.onstop = () => {
+                clearInterval(vr.timer);
+                const type = ((vr.rec && vr.rec.mimeType) || vr.mime || 'video/webm').split(';')[0];
+                vr.blob = new Blob(vr.chunks, { type: type });
+                const review = document.getElementById('videoRecReview');
+                review.src = URL.createObjectURL(vr.blob);
+                document.getElementById('videoRecMsg').textContent = `${(vr.blob.size / 1048576).toFixed(1)} MB · check it, then tap Use video.`;
+                showVideoRecState('review');
+            };
+            vr.rec.start(1000);
+            vr.started = Date.now();
+            showVideoRecState('recording');
+            document.getElementById('videoRecMsg').textContent = 'Recording...';
+            vr.timer = setInterval(() => {
+                const sec = (Date.now() - vr.started) / 1000;
+                document.getElementById('videoRecTimer').textContent = `${fmtClock(sec)} / ${fmtClock(VIDEO_MAX_SECONDS)}`;
+                if (sec >= VIDEO_MAX_SECONDS) stopVideoRecording();
+            }, 250);
+        }
+        function stopVideoRecording() {
+            clearInterval(vr.timer);
+            if (vr.rec && vr.rec.state !== 'inactive') vr.rec.stop();
+        }
+        function retakeVideo() {
+            const review = document.getElementById('videoRecReview');
+            if (review.src) { URL.revokeObjectURL(review.src); review.removeAttribute('src'); }
+            vr.blob = null;
+            document.getElementById('videoRecMsg').textContent = 'Tap Record when ready.';
+            showVideoRecState('ready');
+        }
+        function stopVideoStream() {
+            if (vr.stream) vr.stream.getTracks().forEach(t => t.stop());
+            vr.stream = null;
+            document.getElementById('videoRecLive').srcObject = null;
+        }
+        function closeVideoRecorder() {
+            if (vr.rec && vr.rec.state === 'recording') { vr.rec.onstop = null; try { vr.rec.stop(); } catch (e) {} }
+            clearInterval(vr.timer);
+            stopVideoStream();
+            const review = document.getElementById('videoRecReview');
+            try { review.pause(); } catch (e) {}
+            if (review.src) { URL.revokeObjectURL(review.src); review.removeAttribute('src'); }
+            document.getElementById('videoRecModal').classList.add('hidden');
+        }
+        function useRecordedVideo() {
+            const blob = vr.blob, target = vr.target;
+            if (!blob) return;
+            closeVideoRecorder();
+            const m = { blob: blob, url: mediaUrl(blob), video: true };
+            if (target === 'rec') { recPendingPhotos.push(m); renderRecPendingPhotos(); }
+            else { pendingPhotos.push(m); recEditorOpen = true; renderPhotoPreviews(); }
         }
 
         // ===================================================================
@@ -4636,7 +4940,8 @@
             const tableRefs = new Set(tableLogs.map(r => r.payload.clientRef));
             for (let k = rows.length - 1; k >= 0; k--) {
                 const r = rows[k];
-                if (!r._fromTable && META_IDS.has(r.barcode_id) && r.payload && tableRefs.has(r.payload.clientRef)) rows.splice(k, 1);
+                // matched by the same id the app gives it (records from very old versions have no clientRef)
+                if (!r._fromTable && META_IDS.has(r.barcode_id) && tableRefs.has((r.payload && r.payload.clientRef) || (r.barcode_id + '@' + r.created_at))) rows.splice(k, 1);
             }
             rows.push(...tableLogs);
             const stationRows = effectiveTable(saved, 'stations', clientId);
@@ -5211,7 +5516,7 @@
         function resetSiteState() {
             hideStationForm();
             ['mapModal', 'mapEditDialog', 'stationOverviewModal', 'visitModal', 'barcodeModal'].forEach(id => document.getElementById(id).classList.add('hidden'));
-            mapPlacing = null; mapFocus = null; currentMapId = null; ovBarcode = null; openVisitIndex = null; visitEditing = false;
+            mapPlacing = null; mapFocus = null; currentMapId = null; ovBarcode = null; openVisitIndex = null; visitEditing = false; scanTypeFilter = 'all';
             siteMaps = []; sitePins = new Map(); siteEvents = []; currentVisitEntries = []; lastVisitStats = null; barcodeAliases = new Map();
             stationTypeFilter = 'all'; activityFilter = 'all';
             const ss = document.getElementById('siteStationSearch');
@@ -5383,7 +5688,7 @@
             if (item.updates && item.updates.length) bits.push(`${item.updates.length} update${item.updates.length === 1 ? '' : 's'}`);
             const station = opts && opts.hideStation ? '' : `<div class="t-accent font-semibold text-[11px] mt-0.5 flex items-center gap-1.5">${typeDot(item.stationType, '.55rem')}${esc(item.station)}</div>`;
             return `
-                <button type="button" data-rec="${esc(item.id)}" onclick="openRecModal(this.dataset.rec)" class="row-item clickable w-full text-left p-3 block" style="border-color: ${item.status === 'complete' ? 'var(--border)' : 'rgba(249,115,22,.35)'};${item.status === 'complete' ? 'opacity:.8;' : ''}">
+                <button type="button" data-rec="${esc(item.id)}" onclick="openRecModal(this.dataset.rec, this)" class="row-item clickable w-full text-left p-3 block" style="border-color: ${item.status === 'complete' ? 'var(--border)' : 'rgba(249,115,22,.35)'};${item.status === 'complete' ? 'opacity:.8;' : ''}">
                     <div class="flex flex-wrap items-center gap-1.5">
                         ${recNumberHtml(item)}
                         ${recStatusChip(item.status)}
@@ -5574,12 +5879,9 @@
         let recModalStartStatus = null;
         let recPendingPhotos = [];
 
-        ['recPhotoCamera', 'recPhotoGallery'].forEach(id => {
+        ['recPhotoCamera', 'recPhotoGallery', 'recVideoCapture'].forEach(id => {
             document.getElementById(id).addEventListener('change', async e => {
-                for (const f of Array.from(e.target.files || [])) {
-                    const blob = await compressImage(f);
-                    recPendingPhotos.push({ blob: blob, url: URL.createObjectURL(blob) });
-                }
+                (await mediaFromFiles(e.target.files)).forEach(m => recPendingPhotos.push(m));
                 e.target.value = '';
                 renderRecPendingPhotos();
             });
@@ -5587,14 +5889,66 @@
         function renderRecPendingPhotos() {
             document.getElementById('recPhotoPreview').innerHTML = recPendingPhotos.map((p, i) => `
                 <div class="thumb">
-                    <img src="${esc(p.url)}" alt="" onclick="viewFullImage(recPendingPhotos.map(x => x.url), 'New photo', 'Not saved yet', '', ${i})">
+                    ${mediaThumb(p.url, `viewFullImage(recPendingPhotos.map(x => x.url), 'New photo', 'Not saved yet', '', ${i})`)}
                     <button type="button" class="thumb-x" onclick="recPendingPhotos.splice(${i}, 1); renderRecPendingPhotos();" title="Remove photo">✕</button>
                 </div>`).join('');
         }
 
-        function openRecModal(id) {
+        // The recommendations the window can step through: the list it was opened from
+        let recNavList = [];
+        function recListFrom(el) {
+            const box = el && el.closest ? el.closest('[id]') : null;
+            if (!box) return [];
+            return Array.from(new Set(Array.from(box.querySelectorAll('[data-rec]')).map(b => b.dataset.rec))).filter(x => findRec(x));
+        }
+        function recModalHasUnsaved() {
+            return recPendingPhotos.length > 0 || document.getElementById('recModalNote').value.trim() !== '';
+        }
+        function stepRecModal(d) {
+            const i = recNavList.indexOf(openRecId);
+            const next = recNavList[i + d];
+            if (i < 0 || !next) return;
+            if (recModalHasUnsaved() && !confirm("Discard the note, photos and videos you haven't saved?")) return;
+            recPendingPhotos.forEach(p => URL.revokeObjectURL(p.url));
+            recPendingPhotos = [];
+            openRecModal(next, null, { keepList: true });
+        }
+        function renderRecNav() {
+            const i = recNavList.indexOf(openRecId);
+            const many = recNavList.length > 1 && i >= 0;
+            document.getElementById('recNav').classList.toggle('hidden', !many);
+            if (!many) return;
+            document.getElementById('recNavPos').textContent = `${i + 1} of ${recNavList.length}`;
+            document.getElementById('recNavPrev').disabled = i === 0;
+            document.getElementById('recNavNext').disabled = i === recNavList.length - 1;
+        }
+        document.addEventListener('keydown', e => {
+            if (document.getElementById('recModal').classList.contains('hidden') || !document.getElementById('imageModal').classList.contains('hidden')) return;
+            if (/input|textarea|select/i.test((e.target && e.target.tagName) || '')) return;
+            if (e.key === 'ArrowLeft') stepRecModal(-1);
+            if (e.key === 'ArrowRight') stepRecModal(1);
+        });
+        // swipe across the recommendation window's header to move between recommendations
+        (function () {
+            let sx = null, sy = 0;
+            const head = document.getElementById('recModalHead');
+            if (!head || !head.addEventListener) return;
+            head.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+            head.addEventListener('touchend', e => {
+                if (sx == null) return;
+                const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+                sx = null;
+                if (Math.abs(dx) > 70 && Math.abs(dy) < 50) stepRecModal(dx < 0 ? 1 : -1);
+            }, { passive: true });
+        })();
+
+        function openRecModal(id, srcEl, opts) {
             const rec = findRec(id);
             if (!rec) return;
+            if (!(opts && opts.keepList)) {
+                const fromList = opts && opts.list ? opts.list.filter(x => findRec(x)) : recListFrom(srcEl);
+                recNavList = fromList.includes(id) ? fromList : [id];
+            }
             openRecId = id;
             recPendingPhotos = [];
             renderRecPendingPhotos();
@@ -5627,6 +5981,7 @@
             document.getElementById('recModalStatus').value = rec.status === 'complete' ? 'complete' : 'pending';
             recModalStartStatus = document.getElementById('recModalStatus').value;
             document.getElementById('recModalNote').value = '';
+            renderRecNav();
             document.getElementById('recModal').classList.remove('hidden');
         }
 
@@ -5636,7 +5991,7 @@
             const pn = document.getElementById('recModalPhotoNote');
             pn.classList.add('hidden');
             const slots = rec.allSlots || [];
-            if (!slots.length) { box.innerHTML = '<span class="text-xs t-faint italic">No photos yet.</span>'; return; }
+            if (!slots.length) { box.innerHTML = '<span class="text-xs t-faint italic">No photos or videos yet.</span>'; return; }
             const remote = slots.filter(sl => !sl.local).map(sl => sl.path);
             if (remote.length && !isOnline) {
                 const local = slots.filter(sl => sl.local);
@@ -5652,7 +6007,7 @@
             const urls = [], missing = [];
             slots.forEach(sl => { const u = sl.local || links.get(sl.path); if (u) urls.push(u); else if (isOnline) missing.push(sl.path); });
             const idx = regImg(urls, rec.recommendation, (fmtRecNo(rec.recNo) ? fmtRecNo(rec.recNo) + ' · ' : '') + rec.station, missing.length ? photoErrorText(missing[0]) : '', []);
-            box.innerHTML = urls.map((u, i) => `<div class="thumb"><img src="${esc(u)}" alt="" onclick="openImgAt(${idx}, ${i})"></div>`).join('') || '';
+            box.innerHTML = urls.map((u, i) => `<div class="thumb">${mediaThumb(u, `openImgAt(${idx}, ${i})`)}</div>`).join('') || '';
             if (missing.length) {
                 pn.textContent = (slots.length > 1 ? `${missing.length} of ${slots.length} photos unavailable. ` : '') + photoErrorText(missing[0]);
                 pn.classList.remove('hidden');
@@ -5665,7 +6020,7 @@
         }
 
         function closeRecModal() {
-            if (recPendingPhotos.length && !confirm("Discard the photos you haven't saved?")) return;
+            if (recPendingPhotos.length && !confirm("Discard the photos and videos you haven't saved?")) return;
             recPendingPhotos.forEach(p => URL.revokeObjectURL(p.url));
             recPendingPhotos = [];
             document.getElementById('recModal').classList.add('hidden');
@@ -5865,7 +6220,7 @@
                 y += 6;
                 const sp = e.species && e.species !== NONE_SPECIES ? `${e.species}${e.count ? ' x' + e.count : ''}` : 'None';
                 const pr = e.prep && e.prep !== NONE_PREP ? `${e.prep} ${fmtQty(e.qty, e.unit)}${e.batch ? ' (batch ' + e.batch + ')' : ''}` : 'None';
-                doc.text(doc.splitTextToSize(`Activity: ${e.activity}  |  Species: ${sp}  |  Prep: ${pr}`, 174), 18, y + 1);
+                doc.text(doc.splitTextToSize(`Activity: ${activityLabel(e.activity)}  |  Species: ${sp}  |  Prep: ${pr}`, 174), 18, y + 1);
                 y += 6;
                 doc.text(notes, 18, y + 1);
                 y += notes.length * 5 + 8;
@@ -5902,9 +6257,17 @@
                     y += 1;
                     // Photos in rows of four (streamed from storage for the report only)
                     const imgs = [];
-                    const remote = (item.allSlots || []).filter(sl => !sl.local).map(sl => sl.path);
+                    const remote = (item.allSlots || []).filter(sl => !sl.local && !isVideoPath(sl.path)).map(sl => sl.path);
                     const links = remote.length && isOnline ? await getSignedUrls(remote) : new Map();
-                    const reportUrls = (item.allSlots || []).map(sl => sl.local || links.get(sl.path)).filter(Boolean).slice(0, 8);
+                    const vidCount = (item.allSlots || []).filter(sl => isVideoPath(sl.path)).length;
+                    const reportUrls = (item.allSlots || []).filter(sl => !isVideoPath(sl.path)).map(sl => sl.local || links.get(sl.path)).filter(Boolean).slice(0, 8);
+                    if (vidCount) {
+                        pageBreak(6);
+                        doc.setFont('helvetica', 'italic');
+                        doc.text(`${vidCount} video${vidCount === 1 ? '' : 's'} recorded - view in the Pestis app.`, 14, y);
+                        doc.setFont('helvetica', 'normal');
+                        y += 5;
+                    }
                     for (const url of reportUrls) {
                         try { const b64 = await getBase64ImageFromUrl(url); if (b64) imgs.push(b64); } catch (err) { console.warn('Could not embed image in PDF:', err); }
                     }
@@ -5991,20 +6354,29 @@
             const body = document.getElementById('visitModalBody');
 
             if (!visitEditing) {
+                // tap a station or a recommendation number to go straight to it
+                const stationLink = e => siteDevices.some(d => d.barcode_id === e.barcode)
+                    ? `<button type="button" onclick="openVisitStation(this.dataset.bc)" data-bc="${esc(e.barcode)}" class="visit-link text-left font-bold t-strong" title="Open this station">${esc(e.name)} <span class="t-faint font-normal">${esc(e.type)} · <span class="font-mono">${esc(e.barcode)}</span></span> <span class="t-accent">›</span></button>`
+                    : `<span class="font-bold t-strong">${esc(e.name)} <span class="t-faint font-normal">${esc(e.type)} · <span class="font-mono">${esc(e.barcode)}</span></span></span>`;
+                const recLink = e => {
+                    const id = entryRecId(e), label = esc(fmtRecNo(e.recNo) || 'Recommendation');
+                    return id ? `<button type="button" onclick="openVisitRec(this.dataset.recLink)" data-rec-link="${esc(id)}" class="visit-link font-bold t-accent" title="Open this recommendation">${label}:</button>` : `<b class="t-accent">${label}:</b>`;
+                };
                 const entryRows = v.entries.filter(e => !e.recOnly).sort((a, b) => a.at - b.at).map(e => {
                     const sp = e.species && e.species !== NONE_SPECIES ? `${e.species}${e.count ? ' ×' + e.count : ''}` : 'None';
                     const pr = e.prep && e.prep !== NONE_PREP ? `${e.prep} · ${fmtQty(e.qty, e.unit) || '-'}${e.batch ? ' · batch ' + e.batch : ''}` : 'None';
                     return `
                         <div class="row-item typed p-3 space-y-1" style="border-left-color:${stationColor(e.type).color};">
-                            <div class="flex flex-wrap justify-between gap-2"><span class="font-bold t-strong">${esc(e.name)} <span class="t-faint font-normal">${esc(e.type)} · <span class="font-mono">${esc(e.barcode)}</span></span></span><span class="t-faint">${esc(fmtDateTimeLong(e.at).time)}${e.edited ? ' · corrected' : ''}</span></div>
-                            <div class="t-muted"><b class="t-strong">Activity:</b> ${esc(e.activity)} · <b class="t-strong">Species:</b> ${esc(sp)} · <b class="t-strong">Preparation:</b> ${esc(pr)}</div>
+                            <div class="flex flex-wrap justify-between gap-2">${stationLink(e)}<span class="t-faint">${esc(fmtDateTimeLong(e.at).time)}${e.edited ? ' · corrected' : ''}</span></div>
+                            <div class="t-muted"><b class="t-strong">Activity:</b> ${esc(activityLabel(e.activity))} · <b class="t-strong">Species:</b> ${esc(sp)} · <b class="t-strong">Preparation:</b> ${esc(pr)}</div>
                             ${e.notes ? `<div class="t-muted"><b class="t-strong">Notes:</b> ${esc(e.notes)}</div>` : ''}
-                            ${e.recommendation ? `<div class="t-muted"><b class="t-accent">${esc(fmtRecNo(e.recNo) || 'Recommendation')}:</b> ${esc(e.recommendation)}${e.photoCount ? ` · 📷 ${e.photoCount}` : ''}</div>` : ''}
+                            ${e.recommendation ? `<div class="t-muted">${recLink(e)} ${esc(e.recommendation)}${e.photoCount ? ` · 📷 ${e.photoCount}` : ''}</div>` : ''}
                         </div>`;
                 }).join('') || '<span class="t-faint italic">No station records on this visit.</span>';
                 const recUps = v.recUpdates.map(u => {
                     const rec = findRec(u.payload.recRef);
-                    return `<div class="row-item p-2.5"><span class="font-bold t-strong">${esc(rec ? (fmtRecNo(rec.recNo) || rec.station) : 'Recommendation')}</span> <span class="t-muted">${esc((u._changes || []).join(', '))}${u.payload.note ? ' · ' + esc(u.payload.note) : ''}</span> <span class="t-faint">${esc(fmtDateTimeLong(recTime(u)).time)}</span></div>`;
+                    const lbl = esc(rec ? (fmtRecNo(rec.recNo) || rec.station) : 'Recommendation');
+                    return `<div class="row-item p-2.5">${rec ? `<button type="button" onclick="openVisitRec(this.dataset.recLink)" data-rec-link="${esc(rec.id)}" class="visit-link font-bold t-accent">${lbl}</button>` : `<span class="font-bold t-strong">${lbl}</span>`} <span class="t-muted">${esc((u._changes || []).join(', '))}${u.payload.note ? ' · ' + esc(u.payload.note) : ''}</span> <span class="t-faint">${esc(fmtDateTimeLong(recTime(u)).time)}</span></div>`;
                 }).join('');
                 body.innerHTML = `
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -6016,7 +6388,7 @@
                     ${v.servicesCompleted.length ? `<div><span class="eyebrow t-faint">Services completed</span><div class="flex flex-wrap gap-1.5 mt-1.5">${v.servicesCompleted.map(x => `<span class="chip chip-green">${esc(x)}</span>`).join('')}</div></div>` : ''}
                     <div><span class="eyebrow t-faint">Service notes</span><div class="t-strong mt-1 whitespace-pre-line inset p-3">${esc(v.summaryNote)}</div></div>
                     <div class="space-y-2"><span class="eyebrow t-faint">Station records (${v.entries.filter(e => !e.recOnly).length})</span>${entryRows}</div>
-                    ${v.entries.some(e => e.recOnly) ? `<div class="space-y-2"><span class="eyebrow t-faint">Recommendations raised</span>${v.entries.filter(e => e.recOnly).map(e => `<div class="row-item p-2.5"><b class="t-accent">${esc(fmtRecNo(e.recNo) || 'Recommendation')}</b> <span class="t-strong">${esc(e.name)}:</span> <span class="t-muted">${esc(e.recommendation)}${e.photoCount ? ' · 📷 ' + e.photoCount : ''}</span></div>`).join('')}</div>` : ''}
+                    ${v.entries.some(e => e.recOnly) ? `<div class="space-y-2"><span class="eyebrow t-faint">Recommendations raised</span>${v.entries.filter(e => e.recOnly).map(e => `<div class="row-item p-2.5">${recLink(e)} <span class="t-strong">${siteDevices.some(d => d.barcode_id === e.barcode) ? `<button type="button" onclick="openVisitStation(this.dataset.bc)" data-bc="${esc(e.barcode)}" class="visit-link font-semibold t-strong">${esc(e.name)}</button>` : esc(e.name)}:</span> <span class="t-muted">${esc(e.recommendation)}${e.photoCount ? ' · 📷 ' + e.photoCount : ''}</span></div>`).join('')}</div>` : ''}
                     ${recUps ? `<div class="space-y-2"><span class="eyebrow t-faint">Recommendation updates</span>${recUps}</div>` : ''}`;
                 return;
             }
@@ -6041,7 +6413,7 @@
                         <div class="row-item typed p-3 space-y-2 entry-grid" data-entry="${esc(e.key)}" style="border-left-color:${stationColor(e.type).color};">
                             <div class="font-bold t-strong">${esc(e.name)} <span class="t-faint font-normal">${esc(e.type)} · <span class="font-mono">${esc(e.barcode)}</span> · ${esc(fmtDateTimeLong(e.at).time)}</span></div>
                             <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
-                                <div class="sm:col-span-2"><label class="lbl">Activity</label><select data-f="activity" class="field">${acts.map(a => `<option value="${a}" ${a === e.activity ? 'selected' : ''}>${a}</option>`).join('')}</select></div>
+                                <div class="sm:col-span-2"><label class="lbl">Activity</label><select data-f="activity" class="field">${acts.map(a => `<option value="${a}" ${a === e.activity ? 'selected' : ''}>${activityLabel(a)}</option>`).join('')}</select></div>
                                 <div class="sm:col-span-3"><label class="lbl">Species</label><select data-f="species" class="field">${optionsHtml(species, e.species)}</select></div>
                                 <div><label class="lbl">Number</label><input type="number" data-f="count" min="0" step="1" class="field" value="${e.count != null ? esc(e.count) : ''}"></div>
                                 <div class="sm:col-span-3"><label class="lbl">Preparation</label><select data-f="prep" class="field" onchange="visitPrepChanged(this)">${optionsHtml(preps, e.prep || NONE_PREP)}</select></div>
@@ -6052,6 +6424,28 @@
                             </div>
                         </div>`).join('') || '<span class="t-faint italic">No station records on this visit.</span>'}
                 </div>`;
+        }
+
+        // "None" reads as "No Activity" on visit reports
+        function activityLabel(a) { return !a || a === 'None' ? 'No Activity' : a; }
+        // The recommendation a visit record refers to (same id the dashboard uses)
+        function entryRecId(e) {
+            const p = e.payload || {};
+            const id = p.recRef || p.clientRef || (e.barcode + '@' + e.created_at);
+            return findRec(id) ? id : null;
+        }
+        function visitRecIds(v) {
+            const ids = [];
+            v.entries.filter(e => e.recommendation).forEach(e => { const id = entryRecId(e); if (id && !ids.includes(id)) ids.push(id); });
+            v.recUpdates.forEach(u => { const id = u.payload.recRef; if (id && findRec(id) && !ids.includes(id)) ids.push(id); });
+            return ids;
+        }
+        function openVisitRec(id) {
+            const v = sitePastVisits[openVisitIndex];
+            openRecModal(id, null, { list: v ? visitRecIds(v) : [id] });
+        }
+        function openVisitStation(barcode) {
+            if (siteDevices.some(d => d.barcode_id === barcode)) openStationOverview(barcode);
         }
 
         function visitPrepChanged(sel) {
@@ -6138,7 +6532,11 @@
             try {
                 for (const j of jobs) await j();
                 visitEditing = false;
+                const key = v.key;
                 await refreshSiteStateFromCache();
+                // the list can re-order after a correction, so find the same visit again
+                const again = sitePastVisits.findIndex(x => x.key === key);
+                if (again >= 0) openVisitIndex = again;
                 renderVisitModal();
             } catch (err) {
                 alert('Could not save the corrections on this device: ' + (err.message || err));
@@ -6892,18 +7290,29 @@
         function inWorkspace() { return !document.getElementById('visitWorkspace').classList.contains('hidden'); }
 
         function renderDeviceLists() {
-            renderColorLegend();
             filterStationsList();
         }
 
-        function renderColorLegend() {
-            const el = document.getElementById('stationColorLegend');
+        // Station type filter on the scan page (applies to both lists, together with the search)
+        let scanTypeFilter = 'all';
+        function setScanTypeFilter(t) { scanTypeFilter = t; filterStationsList(); }
+        function renderScanTypeTabs(matchesText) {
+            const el = document.getElementById('scanTypeTabs');
             if (!el) return;
-            const used = new Set(siteDevices.map(d => stationColor(d.deviceType).key));
-            const all = STATION_COLORS.concat([OTHER_STATION_COLOR]).filter(c => used.has(c.key));
-            el.innerHTML = all.length > 1 || (all.length === 1 && all[0].key !== 'other')
-                ? all.map(c => `<span class="inline-flex items-center gap-1.5"><span class="type-dot" style="background:${c.color};width:.6rem;height:.6rem;"></span>${esc(c.label)}</span>`).join('')
-                : '';
+            const counts = new Map();
+            siteDevices.filter(matchesText).forEach(d => counts.set(d.deviceType, (counts.get(d.deviceType) || 0) + 1));
+            // every type in the system, plus any older type still used on this site
+            const types = optionLabels('station_type').slice();
+            siteDevices.forEach(d => { if (!types.includes(d.deviceType)) types.push(d.deviceType); });
+            if (scanTypeFilter !== 'all' && !types.includes(scanTypeFilter)) scanTypeFilter = 'all';
+            const total = Array.from(counts.values()).reduce((a, b) => a + b, 0);
+            const onSite = new Set(siteDevices.map(d => d.deviceType));
+            types.sort((a, b) => (onSite.has(b) ? 1 : 0) - (onSite.has(a) ? 1 : 0)); // this site's types first, then the rest in list order
+            el.innerHTML = [`<button type="button" data-t="all" onclick="setScanTypeFilter(this.dataset.t)" class="tab-btn ${scanTypeFilter === 'all' ? 'active' : ''}" aria-pressed="${scanTypeFilter === 'all'}">All ${total}</button>`]
+                .concat(types.map(t => {
+                    const n = counts.get(t) || 0;
+                    return `<button type="button" data-t="${esc(t)}" onclick="setScanTypeFilter(this.dataset.t)" class="tab-btn ${scanTypeFilter === t ? 'active' : ''} ${n || scanTypeFilter === t ? '' : 'opacity-50'} inline-flex items-center gap-1.5" aria-pressed="${scanTypeFilter === t}">${typeDot(t, '.55rem')}${esc(t)} ${n}</button>`;
+                })).join('');
         }
 
         function lastServicedText(d, isScanned) {
@@ -6949,7 +7358,9 @@
             const unscannedList = document.getElementById('unscannedList');
             const scannedList = document.getElementById('scannedList');
 
-            const matches = d => d.locationName.toLowerCase().includes(query) || d.barcode_id.toLowerCase().includes(query) || d.deviceType.toLowerCase().includes(query);
+            const matchesText = d => d.locationName.toLowerCase().includes(query) || d.barcode_id.toLowerCase().includes(query) || d.deviceType.toLowerCase().includes(query);
+            renderScanTypeTabs(matchesText);
+            const matches = d => matchesText(d) && (scanTypeFilter === 'all' || d.deviceType === scanTypeFilter);
             const byName = (a, b) => a.locationName.localeCompare(b.locationName, LOCALE, { numeric: true });
 
             const unscanned = siteDevices.filter(d => !scannedBarcodesThisVisit.has(d.barcode_id) && matches(d)).sort(byName);
@@ -7472,7 +7883,7 @@
                 if (!box) return;
                 const urls = (r.allSlots || []).slice(0, 8).map(sl => sl.local || (links && links.get(sl.path))).filter(Boolean);
                 const idx = regImg(urls, r.recommendation, (fmtRecNo(r.recNo) ? fmtRecNo(r.recNo) + ' · ' : '') + r.station, '', []);
-                box.innerHTML = urls.map((u, i) => `<img src="${esc(u)}" alt="" class="w-14 h-14 rounded-lg object-cover" style="border:1px solid var(--border);" onclick="event.stopPropagation(); openImgAt(${idx}, ${i})">`).join('')
+                box.innerHTML = urls.map((u, i) => mediaThumb(u, `event.stopPropagation(); openImgAt(${idx}, ${i})`, 'w-14 h-14 rounded-lg object-cover cursor-pointer', 'border:1px solid var(--border);')).join('')
                     + (!links && remote.length && !isOnline ? '<span class="t-faint text-[11px]">Photos show when online</span>' : '');
             });
             if (!remote.length || !isOnline) { fill(null); return; }
