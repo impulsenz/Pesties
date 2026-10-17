@@ -2,8 +2,8 @@
 // Keeps the app and its libraries available with no connection. Photos are NOT stored on the device.
 // Database calls are NOT cached here - the app's own upload queue handles data.
 
-const SHELL_CACHE = 'pestis-shell-v27';
-const RUNTIME_CACHE = 'pestis-runtime-v27';
+const SHELL_CACHE = 'pestis-shell-v28';
+const RUNTIME_CACHE = 'pestis-runtime-v28';
 
 const SHELL = ['./', './index.html', './images/pesties-logo.png'];
 const CDN = [
