@@ -133,6 +133,12 @@
         .visit-act { width: 100%; justify-content: center; text-align: center; line-height: 1.2; padding-left: .5rem; padding-right: .5rem; white-space: normal; }
         .header-h { height: 2.5rem; border-radius: .8rem; box-sizing: border-box; }
         .sync-btn:hover { filter: brightness(1.05); }
+        .ms-opt:hover, .ms-opt:focus-visible { background: var(--surface3); outline: none; }
+        .ms-opt.ms-on { background: rgba(249,115,22,.12); }
+        .ms-tick { width: 1.1rem; height: 1.1rem; flex-shrink: 0; border-radius: .3rem; border: 1.5px solid rgba(148,163,184,.6); display: inline-flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: 900; color: #fff; }
+        .ms-on .ms-tick { background: #f97316; border-color: #f97316; }
+        .ms-x { font-weight: 900; padding: 0 .3rem; border-radius: 999px; line-height: 1.2; }
+        .ms-x:hover { background: rgba(0,0,0,.15); }
         .queue-count { min-width: 1.15rem; height: 1.15rem; padding: 0 .3rem; border-radius: 999px; background: #f97316; color: #fff; font-size: .62rem; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; }
 
         .offline-banner { background: #b91c1c; color: #fff; }
@@ -151,7 +157,6 @@
         .site-initials { position: absolute; right: .8rem; top: .2rem; font-size: 4.5rem; font-weight: 900; color: rgba(255, 255, 255, .15); line-height: 1; pointer-events: none; }
         .site-overlay { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.6rem .95rem .85rem; background: linear-gradient(to top, rgba(2, 6, 23, .94), rgba(2, 6, 23, 0)); display: flex; flex-direction: column; gap: .12rem; }
         .site-name { color: #fff; font-weight: 800; font-size: .95rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .site-addr { color: rgba(255, 255, 255, .78); font-size: .72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .site-chips { position: absolute; right: .55rem; bottom: .6rem; z-index: 2; display: flex; flex-direction: column; align-items: flex-end; gap: .25rem; max-width: 55%; pointer-events: none; }
         .site-chips .site-due { margin-bottom: 0; align-self: auto; text-align: right; box-shadow: 0 4px 12px -4px rgba(0, 0, 0, .6); }
         .site-overlay.has-chips .site-name { padding-right: 45%; }
@@ -160,7 +165,6 @@
         @keyframes pulse { 50% { opacity: .35; } }
         .tab-btn { font-size: .68rem; font-weight: 800; padding: .3rem .65rem; border-radius: .6rem; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); cursor: pointer; }
         .tab-btn.active { background: #f97316; border-color: #f97316; color: #fff; }
-        #stationHistoryTabs .btn.active { border-color: #f97316; color: var(--accent-text); }
         .viz-root { --viz-surface: #ffffff; --viz-grid: #e5e7eb; --viz-axis: #6b7280; --viz-text: #0b1530; --viz-muted: #52514e;
                     --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-other: #eda100;
                     --series-4: #eda100; --series-5: #e87ba4; --series-6: #008300; --series-7: #6250d6; }
@@ -175,6 +179,8 @@
         .site-grid.card-size-0 .site-overlay { padding: 1.6rem .55rem .5rem; }
         .site-grid.card-size-0 .site-overlay.has-chips .site-name { padding-right: 0; margin-bottom: 1.1rem; }
         .site-grid.card-size-2 .site-initials { font-size: 6rem; }
+        .chip-grey { color: #475569; background: #f1f5f9; border-color: #cbd5e1; }
+        html.dark .chip-grey { color: #cbd5e1; background: rgba(148, 163, 184, .1); border-color: rgba(148, 163, 184, .3); }
         .chip-purple { color: #6d28d9; background: #ede9fe; border-color: #c4b5fd; }
         html.dark .chip-purple { color: #c4b5fd; background: rgba(124, 58, 237, .15); border-color: rgba(124, 58, 237, .4); }
         .site-due { align-self: flex-start; font-size: .6rem; font-weight: 800; padding: .15rem .5rem; border-radius: .4rem; color: #fff; margin-bottom: .3rem; }
@@ -184,14 +190,12 @@
         .img-drop { aspect-ratio: 4 / 3; border-radius: .9rem; border: 2px dashed var(--border); overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--surface2); }
         .img-drop img { width: 100%; height: 100%; object-fit: cover; }
 
-        .ph-hidden { display: none !important; }
 
         /* ================= FLOATING SCAN BUTTONS ================= */
         .fab { display: inline-flex; align-items: center; gap: .5rem; font-weight: 800; font-size: .8rem; padding: .95rem 1.4rem; border-radius: 999px; cursor: pointer; transition: transform .15s ease, filter .15s ease; border: 1px solid transparent; box-shadow: 0 14px 30px -10px rgba(0, 0, 0, .55); }
         .fab:hover { filter: brightness(1.08); transform: translateY(-2px); }
         .fab:active { transform: scale(.97); }
         .fab-primary { background: linear-gradient(90deg, #ea580c, #f97316); color: #fff; }
-        .fab-secondary { background: var(--surface3); color: var(--text); border-color: var(--border); }
 
         /* ================= STATION FOCUS VIEW ================= */
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -201,7 +205,6 @@
         .thumb { position: relative; width: 5rem; height: 5rem; border-radius: .8rem; overflow: hidden; border: 1px solid var(--border); }
         .thumb img, .thumb video { width: 100%; height: 100%; object-fit: cover; cursor: pointer; display: block; }
         .media-tile { position: relative; display: inline-block; overflow: hidden; }
-        .thumb .media-tile { display: block; width: 100%; height: 100%; }
         .thumb .media-tile { display: block; width: 100%; height: 100%; }
         .media-tile video { pointer-events: none; background: #0f172a; }
         .play-badge { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
@@ -216,9 +219,9 @@
         .scan-type-tabs .tab-btn { flex-shrink: 0; white-space: nowrap; }
         .visit-link { cursor: pointer; text-decoration: underline; text-decoration-color: rgba(249,115,22,.45); text-underline-offset: 3px; background: none; border: 0; padding: 0; font: inherit; }
         .visit-link:hover { text-decoration-color: #f97316; }
-        .rec-nav-btn { width: 2.4rem; height: 2.4rem; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 900; border: 1px solid var(--border); background: var(--surface); color: var(--text-strong, inherit); cursor: pointer; }
+        .rec-nav-btn { width: 2.4rem; height: 2.4rem; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 900; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
         .rec-nav-btn:disabled { opacity: .35; cursor: default; }
-        .rec-rec-video-live { width: 100%; max-height: 55vh; border-radius: 1rem; background: #000; object-fit: contain; }
+        .rec-video-live { width: 100%; max-height: 55vh; border-radius: 1rem; background: #000; object-fit: contain; }
         .thumb-x { position: absolute; top: .25rem; right: .25rem; width: 1.4rem; height: 1.4rem; border-radius: 999px; background: rgba(2, 6, 23, .8); color: #fff; font-size: .7rem; font-weight: 900; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .viewer-thumb { width: 3.5rem; height: 3.5rem; border-radius: .6rem; object-fit: cover; cursor: pointer; border: 2px solid transparent; opacity: .7; }
         .viewer-thumb.active { border-color: #f97316; opacity: 1; }
@@ -307,6 +310,9 @@
                     <span id="notifCount" class="hidden absolute -top-1.5 -right-1.5 min-w-[1.2rem] h-[1.2rem] px-1 rounded-full text-[10px] font-black text-white flex items-center justify-center" style="background:#dc2626;">0</span>
                 </button>
 
+                <button type="button" id="adminBtn" onclick="openAdmin('overview')" class="icon-btn hidden" title="Admin" aria-label="Admin">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                </button>
                 <button type="button" onclick="openSettingsModal()" class="icon-btn" title="Settings">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 </button>
@@ -507,7 +513,7 @@
                     <div class="card p-5 space-y-3 sm:col-span-3 xl:col-span-1">
                         <div class="flex justify-between items-center gap-2">
                             <span class="eyebrow flex items-center gap-2" style="color:#0891b2;"><span class="w-2 h-2 rounded-full" style="background:#0891b2;"></span>Documents</span>
-                            <button type="button" id="siteDocsAddBtn" onclick="toggleDocForm(true)" class="link-btn !no-underline hidden">+ Add</button>
+                            <span class="flex items-center gap-3"><button type="button" id="siteDocsFolderBtn" onclick="newDocFolder(selectedClient && selectedClient.id)" class="link-btn !no-underline hidden">+ Folder</button><button type="button" id="siteDocsAddBtn" onclick="toggleDocForm(true)" class="link-btn !no-underline hidden">+ Add</button></span>
                         </div>
                         <form id="siteDocForm" class="hidden inset p-3 space-y-2" onsubmit="event.preventDefault(); uploadSiteDoc();">
                             <div class="grid grid-cols-2 gap-2">
@@ -515,12 +521,21 @@
                                 <div class="col-span-2"><label class="lbl" for="docTitle">Title</label><input id="docTitle" type="text" required maxlength="120" placeholder="e.g. SDS - Brodifacoum blocks" class="field !py-2 !text-xs"></div>
                                 <div><label class="lbl" for="docCategory">Type</label><select id="docCategory" class="field !py-2 !text-xs"></select></div>
                                 <div><label class="lbl" for="docExpires">Expires (optional)</label><input id="docExpires" type="date" class="field !py-2 !text-xs"></div>
+                                <div class="col-span-2"><label class="lbl" for="docFolder">Folder</label><select id="docFolder" class="field !py-2 !text-xs" onchange="if (this.value === '__new') newDocFolder(selectedClient && selectedClient.id, 'docFolder')"></select></div>
                                 <div class="col-span-2"><label class="lbl" for="docNotes">Note (optional)</label><input id="docNotes" type="text" maxlength="200" class="field !py-2 !text-xs"></div>
                             </div>
                             <div class="flex justify-end gap-2"><button type="button" onclick="toggleDocForm(false)" class="btn btn-secondary !py-2">Cancel</button><button type="submit" id="docUploadBtn" class="btn btn-primary !py-2">Upload</button></div>
                         </form>
                         <div id="siteDocsList" class="space-y-2 text-xs"></div>
                         <div id="sitePortalAccess" class="text-[11px] t-faint border-t divider pt-2"></div>
+                    </div>
+                    <!-- Critical limits (also set by the client in the Client Portal) -->
+                    <div class="card p-5 space-y-3 sm:col-span-3 xl:col-span-1">
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="eyebrow flex items-center gap-2" style="color:#dc2626;"><span class="w-2 h-2 rounded-full" style="background:#dc2626;"></span>Critical limits</span>
+                            <button type="button" id="siteLimitAddBtn" onclick="editSiteLimit('new')" class="link-btn !no-underline">+ Add</button>
+                        </div>
+                        <div id="siteLimitsBox" class="space-y-2 text-xs"></div>
                     </div>
                 </div>
 
@@ -682,6 +697,11 @@
                             <label class="lbl">Floor plan location</label>
                             <select id="stationMapSelect" class="field cursor-pointer" onchange="stationMapChosen(this.value)"></select>
                         </div>
+                        <div id="stationZoneRow" class="sm:col-span-2 hidden">
+                            <label class="lbl" for="stationZone">Zone <span class="t-faint font-normal normal-case tracking-normal">- for critical limits, e.g. Dispatch or Kitchen</span></label>
+                            <input type="text" id="stationZone" list="zoneOptions" maxlength="60" placeholder="e.g. Dispatch" autocomplete="off" class="field">
+                            <datalist id="zoneOptions"></datalist>
+                        </div>
                     </div>
 
                     <div>
@@ -807,42 +827,9 @@
                 </div>
             </div>
 
-            <div class="border-t divider pt-5 space-y-3">
-                <h4 class="eyebrow t-accent">Team settings</h4>
-                <div id="teamSettingsBox" class="space-y-2"></div>
-            </div>
-
-            <div class="border-t divider pt-5 space-y-2">
-                <h4 class="eyebrow t-accent">Lists used in the station form</h4>
-                <p id="optionsAdminNote" class="text-xs t-muted">These lists are shared with your whole team. Removing an item doesn't change records that already use it.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 -mt-2">
-                <div class="space-y-3">
-                    <h4 class="eyebrow t-accent">Preparations & Chemicals</h4>
-                    <div class="admin-only flex flex-wrap gap-2">
-                        <input type="text" id="newPrepInput" placeholder="e.g. Zetag-Pi" class="field !w-full" onkeydown="if(event.key==='Enter') addOption('prep')">
-                        <select id="newPrepUnit" class="field !w-auto flex-1 cursor-pointer" title="Quantity unit"></select>
-                        <button type="button" onclick="addOption('prep')" class="btn btn-primary">Add</button>
-                    </div>
-                    <div id="prepOptionsList" class="space-y-2 text-xs"></div>
-                </div>
-                <div class="space-y-3">
-                    <h4 class="eyebrow t-accent">Species Caught / Observed</h4>
-                    <div class="admin-only flex gap-2">
-                        <input type="text" id="newSpeciesInput" placeholder="e.g. Ship Rat" class="field" onkeydown="if(event.key==='Enter') addOption('species')">
-                        <button type="button" onclick="addOption('species')" class="btn btn-primary">Add</button>
-                    </div>
-                    <div id="speciesOptionsList" class="space-y-2 text-xs"></div>
-                </div>
-                <div class="space-y-3">
-                    <h4 class="eyebrow t-accent">Station Types</h4>
-                    <div class="admin-only flex gap-2">
-                        <input type="text" id="newStationTypeInput" placeholder="e.g. External Toxic Rodent Station" class="field" onkeydown="if(event.key==='Enter') addOption('station_type')">
-                        <button type="button" onclick="addOption('station_type')" class="btn btn-primary">Add</button>
-                    </div>
-                    <div id="stationTypeOptionsList" class="space-y-2 text-xs"></div>
-                </div>
+            <div id="settingsAdminNote" class="hidden border-t divider pt-5 flex flex-wrap items-center justify-between gap-3">
+                <p class="text-xs t-muted">Team settings, the station form lists, staff and client access are on the Admin page.</p>
+                <button type="button" onclick="closeSettingsModal(); openAdmin('overview')" class="btn btn-secondary">🛡 Open Admin</button>
             </div>
 
             <div class="border-t divider pt-5 space-y-3">
@@ -1002,33 +989,80 @@
                 </div>
             </div>
 
-            <!-- Admin-only: team access -->
-            <div id="adminPanel" class="hidden space-y-5">
-                <div class="border-t divider pt-5">
-                    <h4 class="eyebrow" style="color:#d97706;">Team Access (Admin)</h4>
-                    <p class="text-xs t-muted mt-1">Pre-approve a staff Google email, or approve / revoke people who have already signed in.</p>
-                </div>
+            <!-- Admins: everything team-wide lives on the Admin page -->
+            <div id="profileAdminLink" class="hidden border-t divider pt-5 flex flex-wrap items-center justify-between gap-3">
+                <p class="text-xs t-muted">Staff, client logins, lists, team settings and documents are managed on the Admin page.</p>
+                <button type="button" onclick="closeProfileModal(); openAdmin('overview')" class="btn btn-secondary">🛡 Open Admin</button>
+            </div>
 
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <input type="email" id="adminNewEmail" placeholder="staff@gmail.com" class="field flex-1">
-                    <select id="adminNewRole" class="field !w-auto cursor-pointer">
-                        <option value="technician">Technician</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                    <button type="button" onclick="addAllowedEmail()" class="btn btn-primary">Approve Email</button>
-                </div>
+            <div class="flex justify-end pt-2">
+                <button type="button" onclick="signOut()" class="btn btn-danger !px-6 !py-3">Sign Out</button>
+            </div>
+        </div>
+    </div>
 
-                <div>
-                    <h5 class="eyebrow t-faint mb-2">Users who have signed in</h5>
-                    <div id="adminProfilesList" class="space-y-2 text-xs"></div>
+    <!-- ===================== ADMIN PAGE (admins only) ===================== -->
+    <div id="adminPage" class="hidden fixed inset-0 z-[55] overflow-y-auto scroll-thin" style="background: var(--bg);">
+        <div class="app-header sticky top-0 z-10">
+            <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-10 py-3 flex items-center gap-3">
+                <button type="button" onclick="closeAdmin()" class="btn btn-secondary !px-3">← Back</button>
+                <div class="min-w-0 flex-1">
+                    <div class="eyebrow t-accent">Pestis</div>
+                    <h2 class="text-lg font-black t-strong leading-tight">🛡 Admin</h2>
                 </div>
+                <button type="button" onclick="refreshAdmin()" class="btn btn-secondary !px-3" title="Load the latest">⟳ <span class="hidden sm:inline">Refresh</span></button>
+            </div>
+            <nav id="adminTabs" class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-10 pb-2 flex gap-1.5 overflow-x-auto scroll-thin" aria-label="Admin sections"></nav>
+        </div>
+        <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-10 py-6 space-y-5">
+            <div id="adminOffline" class="hidden card p-4 text-xs" style="color:#d97706;">You're offline. The Admin page needs a connection to load and save.</div>
 
-                <div>
-                    <h5 class="eyebrow t-faint mb-2">Pre-approved emails</h5>
-                    <div id="adminAllowedList" class="space-y-2 text-xs"></div>
+            <section data-admin-tab="overview" class="space-y-5">
+                <div id="adminTiles" class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3"></div>
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+                    <div class="card p-5 space-y-3 xl:col-span-2">
+                        <span class="eyebrow" style="color:#dc2626;">Needs attention</span>
+                        <div id="adminAttention" class="space-y-2 text-xs"></div>
+                    </div>
+                    <div class="card p-5 space-y-3">
+                        <span class="eyebrow" style="color:#7c3aed;">Technician workload</span>
+                        <div id="adminWorkload" class="space-y-2 text-xs"></div>
+                    </div>
                 </div>
+            </section>
 
-                <div class="border-t divider pt-5 space-y-3">
+            <section data-admin-tab="team" class="hidden card p-5 sm:p-6 space-y-5">
+                <div id="adminPanel" class="space-y-5">
+                        <div>
+                            <h4 class="eyebrow" style="color:#d97706;">Team Access (Admin)</h4>
+                            <p class="text-xs t-muted mt-1">Pre-approve a staff Google email, or approve / revoke people who have already signed in.</p>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="email" id="adminNewEmail" placeholder="staff@gmail.com" class="field flex-1">
+                            <select id="adminNewRole" class="field !w-auto cursor-pointer">
+                                <option value="technician">Technician</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            <button type="button" onclick="addAllowedEmail()" class="btn btn-primary">Approve Email</button>
+                        </div>
+
+                        <div>
+                            <h5 class="eyebrow t-faint mb-2">Users who have signed in</h5>
+                            <div id="adminProfilesList" class="space-y-2 text-xs"></div>
+                        </div>
+
+                        <div>
+                            <h5 class="eyebrow t-faint mb-2">Pre-approved emails</h5>
+                            <div id="adminAllowedList" class="space-y-2 text-xs"></div>
+                        </div>
+
+
+                </div>
+            </section>
+
+            <section data-admin-tab="clients" class="hidden card p-5 sm:p-6 space-y-4">
+                <div class="space-y-3">
                     <h4 class="eyebrow" style="color:#0891b2;">Client Portal Access (Admin)</h4>
                     <p class="text-xs t-muted">Give customers access to their sites in the <a id="portalLink" href="client.html" target="_blank" rel="noopener" class="link-btn">Client Portal</a>. They sign in with Google or an emailed link, see their reports and documents, and can only update recommendations (status, notes and photos).
                         <button type="button" onclick="copyPortalLink()" class="link-btn ml-1">Copy link</button></p>
@@ -1039,18 +1073,106 @@
                             <input type="text" id="clientNewCompany" placeholder="Company" class="field !py-2 !text-xs">
                         </div>
                         <div>
-                            <div class="flex items-center justify-between gap-2 mb-1"><span class="lbl !mb-0">Sites they can see</span><input type="search" id="clientSiteSearch" placeholder="Find a site..." class="field !w-44 !py-1.5 !text-xs" oninput="renderClientSitePicker('new')"></div>
-                            <div id="clientNewSites" class="max-h-40 overflow-y-auto scroll-thin grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs"></div>
+                            <span class="lbl">Sites they can see</span>
+                            <div id="clientNewSites" class="text-xs"></div>
                         </div>
                         <div class="flex justify-end"><button type="submit" class="btn btn-primary !py-2">Give access</button></div>
                     </form>
                     <div id="adminClientsList" class="space-y-2 text-xs"></div>
                 </div>
-            </div>
 
-            <div class="flex justify-end pt-2">
-                <button type="button" onclick="signOut()" class="btn btn-danger !px-6 !py-3">Sign Out</button>
-            </div>
+                <div id="adminSitesNoClient" class="text-xs t-muted border-t divider pt-3"></div>
+            </section>
+
+            <section data-admin-tab="documents" class="hidden space-y-5">
+                <div class="card p-5 space-y-3">
+                    <span class="eyebrow" style="color:#0891b2;">Add a document to a site</span>
+                    <form id="adminDocForm" class="grid grid-cols-1 md:grid-cols-6 gap-2 items-end" onsubmit="event.preventDefault(); adminUploadDoc();">
+                        <div class="md:col-span-2"><label class="lbl" for="adminDocSite">Site</label><select id="adminDocSite" required class="field !py-2 !text-xs" onchange="fillAdminDocFolders()"></select></div>
+                        <div class="md:col-span-2"><label class="lbl" for="adminDocFile">File</label><input id="adminDocFile" type="file" required class="field !py-1.5 !text-xs" onchange="if (this.files[0] && !document.getElementById('adminDocTitle').value) document.getElementById('adminDocTitle').value = this.files[0].name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim()"></div>
+                        <div class="md:col-span-2"><label class="lbl" for="adminDocTitle">Title</label><input id="adminDocTitle" type="text" required maxlength="120" class="field !py-2 !text-xs"></div>
+                        <div class="md:col-span-2"><label class="lbl" for="adminDocCategory">Type</label><select id="adminDocCategory" class="field !py-2 !text-xs"></select></div>
+                        <div class="md:col-span-2"><label class="lbl" for="adminDocExpires">Expires (optional)</label><input id="adminDocExpires" type="date" class="field !py-2 !text-xs"></div>
+                        <div class="md:col-span-2"><label class="lbl" for="adminDocFolder">Folder</label><select id="adminDocFolder" class="field !py-2 !text-xs" onchange="if (this.value === '__new') newDocFolder(document.getElementById('adminDocSite').value, 'adminDocFolder')"><option value="">No folder</option></select></div>
+                        <div class="md:col-span-4 flex justify-end"><button type="submit" id="adminDocUploadBtn" class="btn btn-primary !py-2.5 w-full md:w-auto">Upload</button></div>
+                    </form>
+                </div>
+                <div class="card p-5 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="eyebrow" style="color:#0891b2;">All site documents</span>
+                        <div class="flex flex-wrap gap-2">
+                            <select id="adminDocFilter" class="field !w-auto !py-1.5 !text-xs" onchange="renderAdminDocs()">
+                                <option value="all">All documents</option><option value="attention">Expired or expiring</option><option value="expired">Expired</option>
+                            </select>
+                            <input id="adminDocSearch" type="search" placeholder="Search..." class="field !w-48 !py-1.5 !text-xs" oninput="renderAdminDocs()">
+                        </div>
+                    </div>
+                    <div id="adminDocsList" class="space-y-2 text-xs"></div>
+                </div>
+            </section>
+
+            <section data-admin-tab="lists" class="hidden card p-5 sm:p-6 space-y-4">
+                <div class="space-y-2">
+                    <h4 class="eyebrow t-accent">Lists used in the station form</h4>
+                    <p id="optionsAdminNote" class="text-xs t-muted">These lists are shared with your whole team. Removing an item doesn't change records that already use it.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="space-y-3">
+                        <h4 class="eyebrow t-accent">Preparations & Chemicals</h4>
+                        <div class="admin-only flex flex-wrap gap-2">
+                            <input type="text" id="newPrepInput" placeholder="e.g. Zetag-Pi" class="field !w-full" onkeydown="if(event.key==='Enter') addOption('prep')">
+                            <select id="newPrepUnit" class="field !w-auto flex-1 cursor-pointer" title="Quantity unit"></select>
+                            <button type="button" onclick="addOption('prep')" class="btn btn-primary">Add</button>
+                        </div>
+                        <div id="prepOptionsList" class="space-y-2 text-xs"></div>
+                    </div>
+                    <div class="space-y-3">
+                        <h4 class="eyebrow t-accent">Species Caught / Observed</h4>
+                        <div class="admin-only flex gap-2">
+                            <input type="text" id="newSpeciesInput" placeholder="e.g. Ship Rat" class="field" onkeydown="if(event.key==='Enter') addOption('species')">
+                            <button type="button" onclick="addOption('species')" class="btn btn-primary">Add</button>
+                        </div>
+                        <div id="speciesOptionsList" class="space-y-2 text-xs"></div>
+                    </div>
+                    <div class="space-y-3">
+                        <h4 class="eyebrow t-accent">Station Types</h4>
+                        <div class="admin-only flex gap-2">
+                            <input type="text" id="newStationTypeInput" placeholder="e.g. External Toxic Rodent Station" class="field" onkeydown="if(event.key==='Enter') addOption('station_type')">
+                            <button type="button" onclick="addOption('station_type')" class="btn btn-primary">Add</button>
+                        </div>
+                        <div id="stationTypeOptionsList" class="space-y-2 text-xs"></div>
+                    </div>
+                </div>
+
+
+            </section>
+
+            <section data-admin-tab="settings" class="hidden card p-5 sm:p-6 space-y-4">
+                <div class="space-y-3">
+                    <h4 class="eyebrow t-accent">Team settings</h4>
+                    <div id="teamSettingsBox" class="space-y-2"></div>
+                </div>
+
+
+                <p class="text-[11px] t-faint">These apply to everyone on the team. Each person's own preferences (notification range, light or dark mode) are under Settings.</p>
+            </section>
+
+            <section data-admin-tab="activity" class="hidden card p-5 space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div><span class="eyebrow" style="color:#7c3aed;">Activity across all sites</span><p class="text-[11px] t-faint mt-0.5">Site changes and client updates from the last 30 days. Tap one to open the site.</p></div>
+                    <div class="flex flex-wrap gap-2">
+                        <select id="adminActSite" class="field !w-auto !py-1.5 !text-xs max-w-[14rem]" onchange="renderAdminActivity()"></select>
+                        <select id="adminActKind" class="field !w-auto !py-1.5 !text-xs" onchange="renderAdminActivity()"><option value="all">Everything</option><option value="client">Client updates</option><option value="staff">Staff changes</option></select>
+                    </div>
+                </div>
+                <div id="adminActivityList" class="space-y-1.5 text-xs"></div>
+            </section>
+
+            <section data-admin-tab="exports" class="hidden card p-5 sm:p-6 space-y-4">
+                <div><span class="eyebrow" style="color:#16a34a;">Exports</span><p class="text-xs t-muted mt-1">Spreadsheets (CSV, opens in Excel) of team-wide information.</p></div>
+                <div id="adminExports" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            </section>
         </div>
     </div>
 
@@ -1151,18 +1273,22 @@
                     <span class="eyebrow t-faint">Notes & history</span>
                     <div id="recModalHistory" class="space-y-2 mt-2 text-xs"></div>
                 </div>
+                <div>
+                    <span class="eyebrow t-faint">Opened by</span>
+                    <div id="recModalSeen" class="mt-2 text-xs"></div>
+                </div>
                 <div class="inset p-4 space-y-3">
                     <span class="eyebrow t-accent">Add an update</span>
                     <div>
                         <label class="lbl">Status</label>
-                        <select id="recModalStatus" class="field cursor-pointer">
+                        <select id="recModalStatus" class="field cursor-pointer" onchange="updateRecNoteReq()">
                             <option value="open">Open - not started</option>
                             <option value="pending">Pending - being worked on</option>
                             <option value="complete">Complete - issue resolved</option>
                         </select>
                     </div>
                     <div>
-                        <label class="lbl">Note</label>
+                        <label class="lbl" for="recModalNote">Note <span id="recModalNoteReq" class="hidden normal-case tracking-normal" style="color:#dc2626;">- required to change the status</span></label>
                         <textarea id="recModalNote" rows="3" placeholder="e.g. Client has booked a builder to seal the gap next week" class="field"></textarea>
                     </div>
                     <div class="space-y-2">
@@ -1398,8 +1524,8 @@
                 <h3 class="font-black text-lg t-accent">Record video</h3>
                 <span id="videoRecTimer" class="chip font-mono">0:00 / 1:00</span>
             </div>
-            <video id="videoRecLive" class="rec-rec-video-live" playsinline muted autoplay></video>
-            <video id="videoRecReview" class="rec-rec-video-live hidden" playsinline controls></video>
+            <video id="videoRecLive" class="rec-video-live" playsinline muted autoplay></video>
+            <video id="videoRecReview" class="rec-video-live hidden" playsinline controls></video>
             <p id="videoRecMsg" class="text-xs t-muted">Starting the camera...</p>
             <div class="flex flex-wrap justify-end gap-2">
                 <button type="button" onclick="closeVideoRecorder()" class="btn btn-secondary">Cancel</button>
@@ -1439,13 +1565,13 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.17-r22';
+        const APP_VERSION = '2026.10.18-r25';
         // after Check for updates, tidy the address bar
         try { if (/[?&]fresh=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "siteDocsList", "siteDocForm", "sitePortalAccess", "adminClientsList", "clientNewSites", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "adminPage", "adminTabs", "adminTiles", "adminAttention", "adminWorkload", "adminDocsList", "adminDocSite", "adminActivityList", "adminExports", "adminSitesNoClient", "adminBtn", "profileAdminLink", "settingsAdminNote", "siteDocsList", "siteDocForm", "sitePortalAccess", "siteDocsFolderBtn", "docFolder", "adminDocFolder", "siteLimitsBox", "siteLimitAddBtn", "stationZoneRow", "stationZone", "zoneOptions", "recModalSeen", "recModalNoteReq", "adminClientsList", "clientNewSites", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -1586,29 +1712,13 @@
             renderQueueModal();
         }
 
-        const imageRegistry = [];
+        // Photos shown on screen, by number, for the full screen viewer. Only the most recent are kept (older screens are gone).
+        const imageRegistry = new Map();
+        let imageSeq = 0;
         function regImg(src, text, title, note, missingPaths) {
-            imageRegistry.push({ src: src, text: text, title: title || '', note: note || '', missing: missingPaths || [] });
-            return imageRegistry.length - 1;
-        }
-        async function openImg(i) {
-            const r = imageRegistry[i];
-            if (!r) return;
-            viewFullImage(r.src, r.text, r.title, r.note);
-            // A photo that couldn't be linked earlier: ask storage again now
-            if (r.missing.length && isOnline) {
-                r.missing.forEach(p => { delete signedCache[p]; });
-                const found = await getSignedUrls(r.missing);
-                const srcs = (Array.isArray(r.src) ? r.src : [r.src]).filter(Boolean);
-                const still = r.missing.filter(p => !found.has(p));
-                r.missing.forEach(p => { if (found.has(p)) srcs.push(found.get(p)); });
-                r.src = srcs;
-                r.missing = still;
-                r.note = still.length ? photoErrorText(still[0]) : '';
-                if (!document.getElementById('imageModal').classList.contains('hidden')) {
-                    viewFullImage(r.src, r.text, r.title, r.note, viewerIndex);
-                }
-            }
+            imageRegistry.set(++imageSeq, { src: src, text: text, title: title || '', note: note || '', missing: missingPaths || [] });
+            if (imageRegistry.size > 400) imageRegistry.delete(imageRegistry.keys().next().value);
+            return imageSeq;
         }
 
         function hashString(str) {
@@ -1698,10 +1808,6 @@
             const c = esc(cls || ''), st = style ? ` style="${esc(style)}"` : '';
             if (!isVideoUrl(url)) return `<img src="${esc(url)}" alt="" class="${c}"${st} onclick="${onclick}">`;
             return `<span class="media-tile ${c}"${st} onclick="${onclick}" role="button" aria-label="Play video"><video src="${esc(url)}#t=0.1" muted playsinline preload="metadata" class="w-full h-full object-cover"></video><span class="play-badge"><span>▶</span></span></span>`;
-        }
-        function mediaCountText(n, vids) {
-            const ph = n - vids;
-            return [ph ? `${ph} photo${ph === 1 ? '' : 's'}` : '', vids ? `${vids} video${vids === 1 ? '' : 's'}` : ''].filter(Boolean).join(' and ') || '0 photos';
         }
         // Files picked or captured -> [{ blob, url, video }]: photos are shrunk, videos are checked for size
         async function mediaFromFiles(fileList) {
@@ -1801,9 +1907,6 @@
         }
         async function cacheGetEntry(key) {
             try { return (await IDB.get('cache', key)) || null; } catch (e) { return null; }
-        }
-        async function cacheDel(key) {
-            try { await IDB.del('cache', key); } catch (e) {}
         }
 
         async function saveBlob(key, blob) {
@@ -1917,6 +2020,8 @@
         }
 
         function applyProfileToUI() {
+            const ab = document.getElementById('adminBtn');
+            if (ab) ab.classList.toggle('hidden', !isAdmin());
             const name = (currentProfile && currentProfile.full_name) || currentUser.email;
             const initial = (name || '?').trim().charAt(0).toUpperCase();
             const avatar = currentProfile && currentProfile.avatar_url;
@@ -2085,9 +2190,7 @@
         // ---------- Profile modal & admin panel ----------
         function openProfileModal() {
             document.getElementById('profileModal').classList.remove('hidden');
-            const isAdmin = currentProfile && currentProfile.role === 'admin';
-            document.getElementById('adminPanel').classList.toggle('hidden', !isAdmin);
-            if (isAdmin) loadAdminPanel();
+            document.getElementById('profileAdminLink').classList.toggle('hidden', !isAdmin());
         }
 
         function closeProfileModal() {
@@ -2127,12 +2230,15 @@
                 const isMe = u.id === currentUser.id;
                 const badge = u.approved ? '<span class="chip chip-green">Approved</span>' : '<span class="chip chip-amber">Pending</span>';
                 const btn = isMe ? '<span class="t-faint italic">You</span>' :
-                    `<button type="button" onclick="toggleApproval(${i})" class="btn ${u.approved ? 'btn-danger' : 'btn-primary'} !px-3 !py-1.5">${u.approved ? 'Revoke' : 'Approve'}</button>`;
+                    `${u.approved ? `<select onchange="setUserRole(${i}, this.value)" class="field !w-auto !py-1 !px-2 !text-xs cursor-pointer" aria-label="Role"><option value="technician" ${u.role !== 'admin' ? 'selected' : ''}>Technician</option><option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option></select>` : ''}
+                     <button type="button" onclick="toggleApproval(${i})" class="btn ${u.approved ? 'btn-danger' : 'btn-primary'} !px-3 !py-1.5">${u.approved ? 'Revoke' : 'Approve'}</button>`;
+                const assigned = clientsData.filter(c => c.assigned_to === u.id).length;
                 return `
                     <div class="row-item p-3 flex flex-wrap justify-between items-center gap-2">
                         <div class="min-w-0">
                             <div class="font-bold t-strong truncate">${esc(u.full_name || u.email)}</div>
                             <div class="t-muted font-mono truncate">${esc(u.email)} • ${esc(u.role)}</div>
+                            ${u.approved ? `<div class="t-faint text-[11px]">${assigned} site${assigned === 1 ? '' : 's'} assigned</div>` : ''}
                         </div>
                         <div class="flex items-center gap-2">${badge}${btn}</div>
                     </div>`;
@@ -2144,8 +2250,17 @@
                     <button type="button" onclick="removeAllowedEmail(${i})" class="font-bold cursor-pointer" style="color:#ef4444;">Remove</button>
                 </div>`).join('') || '<span class="t-faint italic">No pre-approved emails.</span>';
             loadClientAdmin();
+            if (!document.getElementById('adminPage').classList.contains('hidden')) document.getElementById('adminTabs').innerHTML = ADMIN_TABS.map(([k, l]) => `<button type="button" class="tab-btn shrink-0 ${adminTab === k ? 'active' : ''}" onclick="setAdminTab('${k}')">${l}${adminTabBadge(k)}</button>`).join('');
         }
 
+        async function setUserRole(i, role) {
+            const u = adminProfiles[i];
+            if (!u || u.id === currentUser.id) return;
+            if (!confirm(`Make ${u.full_name || u.email} ${role === 'admin' ? 'an admin? Admins can manage staff, client logins, lists, settings and documents.' : 'a technician? They will lose admin access.'}`)) { loadAdminPanel(); return; }
+            const { error } = await _supabase.from('profiles').update({ role }).eq('id', u.id);
+            if (error) alert('Could not change the role: ' + error.message);
+            loadAdminPanel();
+        }
         async function toggleApproval(i) {
             const u = adminProfiles[i];
             if (!u || u.id === currentUser.id) return;
@@ -2194,7 +2309,7 @@
 
         // ---------- client accounts (admin panel) ----------
         let adminClients = [], adminClientAccess = [], clientAdminReady = false;
-        const clientPicks = { new: new Set() };
+        const clientPicks = { new: new Set(), edit: new Set(), site: new Set() };
         let clientEditing = null;
         async function loadClientAdmin() {
             const box = document.getElementById('adminClientsList');
@@ -2218,16 +2333,57 @@
         }
         function clientSitesOf(email) { return adminClientAccess.filter(a => a.email === email).map(a => String(a.client_id)); }
         function siteLabel(id) { const c = clientsData.find(x => String(x.id) === String(id)); return c ? (c.Name || 'Unnamed site') : 'Site ' + id; }
-        function renderClientSitePicker(mode) {
-            const box = document.getElementById(mode === 'new' ? 'clientNewSites' : 'clientEditSites');
+        // ---------- filterable multi-select drop-down (sites for a client login; client logins for a site) ----------
+        const siteItems = () => clientsData.slice().sort((a, b) => String(a.Name || '').localeCompare(String(b.Name || ''), undefined, { sensitivity: 'base' }))
+            .map(c => ({ id: String(c.id), label: c.Name || 'Unnamed site', sub: c.Address || '' }));
+        const MS = {
+            new: { box: 'clientNewSites', items: siteItems, sel: () => clientPicks.new, add: 'Choose sites', noun: 'site', filter: 'Filter sites by name or address...' },
+            edit: { box: 'clientEditSites', items: siteItems, sel: () => clientPicks.edit, add: 'Choose sites', noun: 'site', filter: 'Filter sites by name or address...' },
+            site: { box: 'sitePortalPicker', items: () => sitePickUsers.map(u => ({ id: u.email, label: u.full_name || u.email, sub: [u.company, u.email].filter(Boolean).join(' · ') + (u.active ? '' : ' · paused') })), sel: () => clientPicks.site, add: 'Choose client logins', noun: 'client login', filter: 'Filter by name, company or email...' }
+        };
+        const msUi = {};   // key -> { open, q }
+        function renderClientSitePicker(key) { msRender(key); }
+        function msRender(key) {
+            const cfg = MS[key], box = cfg && document.getElementById(cfg.box);
             if (!box) return;
-            const sel = mode === 'new' ? clientPicks.new : clientPicks.edit;
-            const q = (mode === 'new' ? (document.getElementById('clientSiteSearch').value || '') : (document.getElementById('clientEditSearch') || {}).value || '').trim().toLowerCase();
-            const sites = clientsData.slice().sort((a, b) => String(a.Name || '').localeCompare(String(b.Name || ''), undefined, { sensitivity: 'base' }))
-                .filter(c => !q || sel.has(String(c.id)) || `${c.Name || ''} ${c.Address || ''}`.toLowerCase().includes(q));
-            box.innerHTML = sites.map(c => `<label class="flex items-center gap-2 p-1.5 rounded-lg cursor-pointer hover:opacity-80"><input type="checkbox" ${sel.has(String(c.id)) ? 'checked' : ''} onchange="toggleClientPick('${mode}', '${esc(String(c.id))}', this.checked)"><span class="t-strong truncate">${esc(c.Name || 'Unnamed site')}</span></label>`).join('')
-                || '<span class="t-faint italic">No sites match.</span>';
+            const ui = msUi[key] || (msUi[key] = { open: false, q: '' });
+            const sel = cfg.sel(), all = cfg.items(), byId = new Map(all.map(i => [i.id, i]));
+            const chips = Array.from(sel).map(id => byId.get(id) || { id, label: key === 'site' ? id : siteLabel(id) }).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+            box.innerHTML = `<div class="ms-picker space-y-2" data-ms="${key}">
+                <div class="flex flex-wrap gap-1.5 items-center">${chips.map(i => `<span class="chip chip-blue !pr-1 gap-1">${esc(i.label)}<button type="button" class="ms-x" data-id="${esc(i.id)}" onclick="msToggle('${key}', this.dataset.id)" title="Remove" aria-label="Remove ${esc(i.label)}">×</button></span>`).join('')}
+                    <button type="button" class="btn btn-secondary !py-1 !px-2.5 !text-xs ms-open" aria-expanded="${ui.open}" onclick="msOpen('${key}', ${!ui.open})">${ui.open ? 'Close list ▴' : (sel.size ? '+ More' : cfg.add) + ' ▾'}</button>
+                    ${sel.size ? `<span class="t-faint text-[11px]">${sel.size} ${cfg.noun}${sel.size === 1 ? '' : 's'}</span>` : ''}</div>
+                ${ui.open ? `<div class="inset p-2 space-y-2">
+                    <input type="search" class="field !py-1.5 !text-xs ms-q" placeholder="${esc(cfg.filter)}" value="${esc(ui.q)}" oninput="msSearch('${key}', this.value)" aria-label="${esc(cfg.filter)}">
+                    <div class="ms-list max-h-56 overflow-y-auto scroll-thin space-y-0.5" role="listbox" aria-multiselectable="true"></div>
+                    <div class="flex justify-between items-center gap-2"><span class="flex gap-3"><button type="button" class="link-btn !text-[11px]" onclick="msAllShown('${key}', true)">Select all shown</button><button type="button" class="link-btn !text-[11px]" onclick="msAllShown('${key}', false)">Clear shown</button></span>
+                        <button type="button" class="btn btn-primary !py-1 !px-3 !text-xs" onclick="msOpen('${key}', false)">Done</button></div></div>` : ''}
+            </div>`;
+            if (ui.open) msList(key);
         }
+        function msShown(key) {
+            const q = (msUi[key].q || '').trim().toLowerCase();
+            return MS[key].items().filter(i => !q || `${i.label} ${i.sub || ''}`.toLowerCase().includes(q));
+        }
+        function msList(key) {
+            const box = document.getElementById(MS[key].box), list = box && box.querySelector('.ms-list');
+            if (!list) return;
+            const sel = MS[key].sel(), shown = msShown(key);
+            list.innerHTML = shown.map(i => `<button type="button" role="option" aria-selected="${sel.has(i.id)}" data-id="${esc(i.id)}" onclick="msToggle('${key}', this.dataset.id)" class="ms-opt w-full text-left px-2 py-1.5 rounded-lg flex items-center gap-2 ${sel.has(i.id) ? 'ms-on' : ''}">
+                <span class="ms-tick">${sel.has(i.id) ? '✓' : ''}</span><span class="min-w-0"><span class="block t-strong font-semibold truncate">${esc(i.label)}</span>${i.sub ? `<span class="block t-faint text-[11px] truncate">${esc(i.sub)}</span>` : ''}</span></button>`).join('')
+                || '<div class="t-faint italic p-2">Nothing matches.</div>';
+        }
+        function msOpen(key, on) { (msUi[key] || (msUi[key] = { q: '' })).open = on; if (!on) msUi[key].q = ''; msRender(key); if (on) { const q = document.querySelector(`#${MS[key].box} .ms-q`); if (q) q.focus(); } }
+        function msSearch(key, q) { msUi[key].q = q; msList(key); }
+        function msToggle(key, id) {
+            const sel = MS[key].sel();
+            if (sel.has(id)) sel.delete(id); else sel.add(id);
+            const ui = msUi[key] || {}, q = document.querySelector(`#${MS[key].box} .ms-q`), list = document.querySelector(`#${MS[key].box} .ms-list`);
+            const keep = list ? list.scrollTop : 0;
+            msRender(key);
+            if (ui.open) { const q2 = document.querySelector(`#${MS[key].box} .ms-q`), l2 = document.querySelector(`#${MS[key].box} .ms-list`); if (l2) l2.scrollTop = keep; if (q && q2 && document.activeElement !== q2 && q === document.activeElement) q2.focus(); }
+        }
+        function msAllShown(key, on) { const sel = MS[key].sel(); msShown(key).forEach(i => on ? sel.add(i.id) : sel.delete(i.id)); msRender(key); }
         function toggleClientPick(mode, id, on) { const sel = clientPicks[mode]; if (on) sel.add(id); else sel.delete(id); }
         function renderClientAdmin() {
             const box = document.getElementById('adminClientsList');
@@ -2249,10 +2405,9 @@
                             <button type="button" data-email="${esc(u.email)}" onclick="removeClientUser(this.dataset.email)" class="font-bold cursor-pointer" style="color:#ef4444;">Remove</button>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-1.5">${sites.map(id => `<span class="chip chip-blue">${esc(siteLabel(id))}</span>`).join('') || '<span class="t-faint italic">No sites yet - they will see nothing.</span>'}</div>
-                    ${editing ? `<div class="inset p-2 space-y-2"><input type="search" id="clientEditSearch" placeholder="Find a site..." class="field !py-1.5 !text-xs" oninput="renderClientSitePicker('edit')">
-                        <div id="clientEditSites" class="max-h-40 overflow-y-auto scroll-thin grid grid-cols-1 sm:grid-cols-2 gap-1"></div>
-                        <div class="flex justify-end"><button type="button" data-email="${esc(u.email)}" onclick="saveClientSites(this.dataset.email)" class="btn btn-primary !py-1.5">Save sites</button></div></div>` : ''}
+                    ${editing ? '' : `<div class="flex flex-wrap gap-1.5">${sites.map(id => `<span class="chip chip-blue">${esc(siteLabel(id))}</span>`).join('') || '<span class="t-faint italic">No sites yet - they will see nothing.</span>'}</div>`}
+                    ${editing ? `<div class="inset p-2 space-y-2"><div id="clientEditSites"></div>
+                        <div class="flex justify-end gap-2"><button type="button" data-email="${esc(u.email)}" onclick="editClientSites(this.dataset.email)" class="btn btn-secondary !py-1.5">Cancel</button><button type="button" data-email="${esc(u.email)}" onclick="saveClientSites(this.dataset.email)" class="btn btn-primary !py-1.5">Save sites</button></div></div>` : ''}
                 </div>`;
             }).join('') || '<span class="t-faint italic">No client accounts yet.</span>';
             if (clientEditing) renderClientSitePicker('edit');
@@ -2262,7 +2417,7 @@
             if (!email.includes('@')) { alert('Enter the client\'s email address.'); return; }
             if (adminProfiles.some(p => (p.email || '').toLowerCase() === email && p.approved)) { alert(email + ' is a staff account. Use a different email for the client login.'); return; }
             if (adminClients.some(u => u.email === email)) { alert(email + ' already has a client login. Use "Sites" on their row to change what they can see.'); return; }
-            if (!clientPicks.new.size && !confirm('No sites are ticked, so they won\'t see anything yet. Add them anyway?')) return;
+            if (!clientPicks.new.size && !confirm('No sites are chosen, so they won\'t see anything yet. Add them anyway?')) return;
             const { error } = await _supabase.from('client_users').insert({
                 email, active: true, full_name: document.getElementById('clientNewName').value.trim() || null,
                 company: document.getElementById('clientNewCompany').value.trim() || null, added_by: technicianLabel()
@@ -2272,14 +2427,15 @@
                 const { error: e2 } = await _supabase.from('client_access').insert(Array.from(clientPicks.new).map(id => ({ email, client_id: id, added_by: technicianLabel() })));
                 if (e2) alert('The login was added, but the sites could not be saved: ' + e2.message);
             }
-            ['clientNewEmail', 'clientNewName', 'clientNewCompany', 'clientSiteSearch'].forEach(id => { document.getElementById(id).value = ''; });
-            clientPicks.new.clear();
+            ['clientNewEmail', 'clientNewName', 'clientNewCompany'].forEach(id => { document.getElementById(id).value = ''; });
+            clientPicks.new.clear(); msUi.new = { open: false, q: '' };
             await loadAdminPanel();
             alert(`Done. Send ${email} the Client Portal link:\n${portalUrl()}\n\nThey sign in with that email (Google, or "Email me a sign-in link").`);
         }
         function editClientSites(email) {
             clientEditing = clientEditing === email ? null : email;
             clientPicks.edit = new Set(clientSitesOf(email));
+            msUi.edit = { open: !!clientEditing, q: '' };
             renderClientAdmin();
         }
         async function saveClientSites(email) {
@@ -2308,23 +2464,26 @@
         // ---------- site documents ----------
         const DOC_BUCKET = 'site-documents';
         const DOC_CATEGORIES = ['Service agreement', 'SDS', 'Insurance', 'Site map', 'Certificates', 'Reports', 'Other'];
-        let siteDocs = [], siteDocsFor = null, siteDocsError = '', sitePortalUsers = [], docCategoriesFilled = false;
+        let siteDocs = [], siteDocsFor = null, siteDocsError = '', sitePortalUsers = [], docCategoriesFilled = false, siteDocFolders = [];
+        const openDocFolders = new Set();
         const isAdminUser = () => !!(currentProfile && currentProfile.role === 'admin');
         async function loadSiteDocs(force) {
             const c = selectedClient;
             if (!c) return;
             const id = String(c.id);
             if (!force && siteDocsFor === id) { renderSiteDocs(); return; }
-            siteDocsFor = id; siteDocs = []; sitePortalUsers = []; siteDocsError = '';
+            siteDocsFor = id; siteDocs = []; sitePortalUsers = []; siteDocsError = ''; siteDocFolders = [];
             renderSiteDocs();
             if (!isOnline) { siteDocsError = 'offline'; renderSiteDocs(); return; }
             try {
-                const [d, a] = await Promise.all([
+                const [d, a, fo] = await Promise.all([
                     _supabase.from('site_documents').select('*').eq('client_id', id),
-                    _supabase.from('client_access').select('email').eq('client_id', id)
+                    _supabase.from('client_access').select('email').eq('client_id', id),
+                    _supabase.from('site_document_folders').select('*').eq('client_id', id)
                 ]);
                 if (siteDocsFor !== id) return;            // another site was opened meanwhile
                 if (d.error) throw d.error;
+                siteDocFolders = folderNames((fo && !fo.error && fo.data) || [], d.data || []);
                 siteDocs = (d.data || []).sort((x, y) => String(x.category).localeCompare(String(y.category)) || String(x.title).localeCompare(String(y.title), undefined, { sensitivity: 'base' }));
                 const emails = (a.data || []).map(x => x.email);
                 if (emails.length) {
@@ -2337,35 +2496,77 @@
         function docExpiryChip(d) {
             if (!d.expires_on) return '';
             const days = Math.round((Date.parse(d.expires_on + 'T00:00:00') - Date.parse(toDayStr(new Date()) + 'T00:00:00')) / 86400000);
-            return days < 0 ? `<span class="chip chip-red">Expired ${esc(fmtDay(d.expires_on))}</span>` : days <= 60 ? `<span class="chip chip-amber">Expires ${esc(fmtDay(d.expires_on))}</span>` : `<span class="chip chip-green">Valid to ${esc(fmtDay(d.expires_on))}</span>`;
+            return days < 0 ? `<span class="chip chip-red">Expired ${esc(fmtDay(d.expires_on))}</span>` : days <= teamSetting('doc_expiry_warn_days') ? `<span class="chip chip-amber">Expires ${esc(fmtDay(d.expires_on))}</span>` : `<span class="chip chip-green">Valid to ${esc(fmtDay(d.expires_on))}</span>`;
         }
         function renderSiteDocs() {
             const box = document.getElementById('siteDocsList');
             if (!box) return;
             document.getElementById('siteDocsAddBtn').classList.toggle('hidden', !isAdminUser() || siteDocsError === 'missing' || !isOnline);
+            document.getElementById('siteDocsFolderBtn').classList.toggle('hidden', !isAdminUser() || siteDocsError === 'missing' || !isOnline);
             const sel = document.getElementById('docCategory');
             if (sel && !docCategoriesFilled) { sel.innerHTML = DOC_CATEGORIES.map(c => `<option>${esc(c)}</option>`).join(''); docCategoriesFilled = true; }
             if (siteDocsError === 'offline') box.innerHTML = '<span class="t-faint italic">Documents show when you\'re online.</span>';
             else if (siteDocsError === 'missing') box.innerHTML = `<span class="t-faint italic">${esc(PORTAL_SQL_NOTE)}</span>`;
             else if (siteDocsError) box.innerHTML = `<span style="color:#ef4444;">Could not load documents: ${esc(siteDocsError)}</span>`;
-            else box.innerHTML = siteDocs.map(d => `
+            else {
+                const admin = isAdminUser();
+                const docRow = d => `
                 <div class="row-item p-2.5 flex items-start justify-between gap-2">
                     <button type="button" data-id="${esc(d.id)}" onclick="openSiteDoc(this.dataset.id)" class="text-left min-w-0 flex-1">
                         <div class="font-bold t-strong break-words">📄 ${esc(d.title)}</div>
                         <div class="t-faint text-[11px]">${esc(d.category || 'Other')} · added ${esc(fmtDateTimeLong(d.created_at).date)}${d.notes ? ' · ' + esc(d.notes) : ''}</div>
                         ${d.expires_on ? `<div class="mt-1">${docExpiryChip(d)}</div>` : ''}
                     </button>
-                    ${isAdminUser() ? `<button type="button" data-id="${esc(d.id)}" onclick="deleteSiteDoc(this.dataset.id)" class="t-faint hover:opacity-70 shrink-0 font-bold" title="Remove document" aria-label="Remove document">✕</button>` : ''}
-                </div>`).join('') || `<span class="t-faint italic">No documents yet.${isAdminUser() ? ' Add SDSs, insurance, agreements or maps for the client to see.' : ''}</span>`;
+                    ${admin ? `<div class="flex items-center gap-2 shrink-0">${siteDocFolders.length ? `<select data-id="${esc(d.id)}" onchange="moveSiteDoc(this.dataset.id, this.value)" class="field !w-auto !py-0.5 !px-1 !text-[10px]" title="Move to a folder" aria-label="Folder"><option value="">No folder</option>${siteDocFolders.map(f => `<option value="${esc(f)}" ${d.folder === f ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select>` : ''}
+                        <button type="button" data-id="${esc(d.id)}" onclick="deleteSiteDoc(this.dataset.id)" class="t-faint hover:opacity-70 font-bold" title="Remove document" aria-label="Remove document">✕</button></div>` : ''}
+                </div>`;
+                const folders = siteDocFolders.map(f => {
+                    const inside = siteDocs.filter(d => d.folder === f), open = openDocFolders.has(f);
+                    return `<div class="space-y-1.5"><div class="row-item p-2 flex items-center justify-between gap-2">
+                        <button type="button" data-folder="${esc(f)}" onclick="toggleDocFolder(this.dataset.folder)" class="text-left flex-1 min-w-0 font-bold t-strong flex items-center gap-2"><span>${open ? '📂' : '📁'}</span><span class="truncate">${esc(f)}</span><span class="t-faint font-normal text-[11px] shrink-0">${inside.length} file${inside.length === 1 ? '' : 's'}</span></button>
+                        ${admin ? `<button type="button" data-folder="${esc(f)}" onclick="deleteDocFolder(this.dataset.folder)" class="t-faint hover:opacity-70 font-bold" title="Remove folder" aria-label="Remove folder">✕</button>` : ''}</div>
+                        ${open ? `<div class="pl-4 space-y-1.5 border-l-2 divider ml-2">${inside.map(docRow).join('') || '<span class="t-faint italic">Empty folder.</span>'}</div>` : ''}</div>`;
+                }).join('');
+                const loose = siteDocs.filter(d => !d.folder || !siteDocFolders.includes(d.folder)).map(docRow).join('');
+                box.innerHTML = (folders + loose) || `<span class="t-faint italic">No documents yet.${admin ? ' Add SDSs, insurance, agreements or maps for the client to see.' : ''}</span>`;
+            }
+            fillFolderSelect('docFolder', siteDocFolders);
             renderSitePortalAccess();
         }
+        let sitePickUsers = [], sitePickOpen = false;
         function renderSitePortalAccess() {
             const el = document.getElementById('sitePortalAccess');
             if (!el) return;
             if (siteDocsError) { el.textContent = ''; return; }
-            el.innerHTML = sitePortalUsers.length
-                ? 'Client Portal: ' + sitePortalUsers.map(u => `<span class="t-strong font-semibold">${esc(u.full_name || u.email)}</span>${u.active ? '' : ' (paused)'}`).join(', ')
-                : `No client logins for this site yet.${isAdminUser() ? ' <button type="button" class="link-btn !text-[11px]" onclick="openProfileModal()">Add one</button>' : ''}`;
+            const manage = isAdminUser() && isOnline ? ` <button type="button" class="link-btn !text-[11px]" onclick="openSitePortalPicker()">${sitePortalUsers.length ? 'Change' : 'Choose'}</button>` : '';
+            el.innerHTML = (sitePortalUsers.length
+                ? 'Client Portal: ' + sitePortalUsers.map(u => `<span class="t-strong font-semibold">${esc(u.full_name || u.email)}</span>${u.active ? '' : ' (paused)'}`).join(', ') + manage
+                : `No client logins for this site yet.${manage}${isAdminUser() ? ' <button type="button" class="link-btn !text-[11px]" onclick="openAdmin(\'clients\')">New login</button>' : ''}`)
+                + (sitePickOpen ? `<div class="inset p-2 mt-2 space-y-2"><div id="sitePortalPicker"></div><div class="flex justify-end gap-2"><button type="button" class="btn btn-secondary !py-1.5" onclick="sitePickOpen = false; renderSitePortalAccess()">Cancel</button><button type="button" id="sitePortalSaveBtn" class="btn btn-primary !py-1.5" onclick="saveSitePortalAccess()">Save</button></div></div>` : '');
+            if (sitePickOpen) msRender('site');
+        }
+        async function openSitePortalPicker() {
+            const { data, error } = await _supabase.from('client_users').select('email, full_name, company, active');
+            if (error) { alert(portalMissing(error) ? PORTAL_SQL_NOTE : 'Could not load client logins: ' + error.message); return; }
+            sitePickUsers = (data || []).sort((a, b) => String(a.full_name || a.email).localeCompare(String(b.full_name || b.email), undefined, { sensitivity: 'base' }));
+            clientPicks.site = new Set(sitePortalUsers.map(u => u.email));
+            msUi.site = { open: true, q: '' };
+            sitePickOpen = true;
+            renderSitePortalAccess();
+        }
+        async function saveSitePortalAccess() {
+            const c = selectedClient;
+            if (!c) return;
+            const cid = String(c.id), before = new Set(sitePortalUsers.map(u => u.email)), after = clientPicks.site;
+            const add = Array.from(after).filter(e => !before.has(e)), drop = Array.from(before).filter(e => !after.has(e));
+            const btn = document.getElementById('sitePortalSaveBtn');
+            if (btn) btn.disabled = true;
+            if (drop.length) { const { error } = await _supabase.from('client_access').delete().eq('client_id', cid).in('email', drop); if (error) { alert('Could not save: ' + error.message); if (btn) btn.disabled = false; return; } }
+            if (add.length) { const { error } = await _supabase.from('client_access').insert(add.map(email => ({ email, client_id: cid, added_by: technicianLabel() }))); if (error) { alert('Could not save: ' + error.message); if (btn) btn.disabled = false; return; } }
+            if (add.length || drop.length) await queueSiteChange({ action: 'portal_access', title: 'Client Portal access changed', detail: [add.length ? 'added ' + add.join(', ') : '', drop.length ? 'removed ' + drop.join(', ') : ''].filter(Boolean).join('; ') });
+            sitePickOpen = false;
+            adminClientAccess = adminClientAccess.filter(a => String(a.client_id) !== cid).concat(Array.from(after).map(email => ({ email, client_id: cid })));
+            await loadSiteDocs(true);
         }
         function toggleDocForm(on) {
             document.getElementById('siteDocForm').classList.toggle('hidden', !on);
@@ -2379,27 +2580,67 @@
         async function uploadSiteDoc() {
             const c = selectedClient, f = document.getElementById('docFile').files[0];
             if (!c || !f) return;
-            if (f.size > 50 * 1024 * 1024) { alert('That file is over 50 MB. Please make it smaller first.'); return; }
             const btn = document.getElementById('docUploadBtn');
             btn.disabled = true; btn.textContent = 'Uploading...';
-            const clean = f.name.replace(/[^\w.\- ]+/g, '').replace(/\s+/g, '_').slice(-80) || 'document';
-            const path = `${c.id}/${Date.now()}_${clean}`;
             try {
-                const up = await _supabase.storage.from(DOC_BUCKET).upload(path, f, { contentType: f.type || 'application/octet-stream', upsert: false });
-                if (up.error) throw up.error;
-                const row = {
-                    id: uid(), client_id: String(c.id), category: document.getElementById('docCategory').value, title: document.getElementById('docTitle').value.trim() || f.name,
-                    file_path: path, file_name: f.name, mime_type: f.type || null, size_bytes: f.size,
-                    expires_on: document.getElementById('docExpires').value || null, notes: document.getElementById('docNotes').value.trim() || null, uploaded_by: technicianLabel()
-                };
-                const { error } = await _supabase.from('site_documents').insert(row);
-                if (error) { await _supabase.storage.from(DOC_BUCKET).remove([path]).catch(() => {}); throw error; }
-                await queueSiteChange({ action: 'document', title: `Document "${row.title}" added`, detail: row.category });
+                const row = await saveSiteDocument(c.id, f, { category: document.getElementById('docCategory').value, title: document.getElementById('docTitle').value.trim(), folder: document.getElementById('docFolder').value,
+                    expires_on: document.getElementById('docExpires').value, notes: document.getElementById('docNotes').value.trim() });
+                adminData.docs.push(row);
                 toggleDocForm(false);
                 await loadSiteDocs(true);
             } catch (e) {
                 alert('Could not upload: ' + (portalMissing(e) ? PORTAL_SQL_NOTE : (e.message || e)));
             } finally { btn.disabled = false; btn.textContent = 'Upload'; }
+        }
+        // ---------- document folders (admins make them; clients see them in the portal) ----------
+        function folderNames(rows, docs) {
+            return Array.from(new Set(rows.map(f => f.name).concat(docs.map(d => d.folder).filter(Boolean)))).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+        }
+        function fillFolderSelect(id, names, pick) {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            const keep = pick != null ? pick : sel.value;
+            sel.innerHTML = '<option value="">No folder</option>' + names.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('') + (isAdminUser() ? '<option value="__new">+ New folder...</option>' : '');
+            sel.value = names.includes(keep) ? keep : '';
+        }
+        function toggleDocFolder(f) { if (openDocFolders.has(f)) openDocFolders.delete(f); else openDocFolders.add(f); renderSiteDocs(); }
+        async function newDocFolder(cid, selectId) {
+            if (!cid) { alert('Choose a site first.'); if (selectId) document.getElementById(selectId).value = ''; return; }
+            const name = (prompt('Name the new folder (e.g. Safety data sheets, Audit 2026):') || '').trim().slice(0, 80);
+            if (!name) { if (selectId) document.getElementById(selectId).value = ''; return; }
+            const { error } = await _supabase.from('site_document_folders').insert({ id: uid(), client_id: String(cid), name, created_by: technicianLabel() });
+            if (error && !/duplicate|unique/i.test(error.message || '')) { alert('Could not add the folder: ' + (portalMissing(error) ? PORTAL_SQL_NOTE : error.message)); if (selectId) document.getElementById(selectId).value = ''; return; }
+            if (selectedClient && String(selectedClient.id) === String(cid)) { openDocFolders.add(name); await loadSiteDocs(true); }
+            if (selectId === 'adminDocFolder') await fillAdminDocFolders(name);
+            else if (selectId) fillFolderSelect(selectId, siteDocFolders, name);
+        }
+        async function deleteDocFolder(name) {
+            const c = selectedClient;
+            if (!c) return;
+            const n = siteDocs.filter(d => d.folder === name).length;
+            if (!confirm(`Remove the folder "${name}"?${n ? `\nIts ${n} document${n === 1 ? '' : 's'} stay, outside any folder.` : ''}`)) return;
+            if (n) { const { error } = await _supabase.from('site_documents').update({ folder: null }).eq('client_id', String(c.id)).eq('folder', name); if (error) { alert('Could not move the documents: ' + error.message); return; } }
+            const { error } = await _supabase.from('site_document_folders').delete().eq('client_id', String(c.id)).eq('name', name);
+            if (error) { alert('Could not remove the folder: ' + error.message); return; }
+            openDocFolders.delete(name);
+            loadSiteDocs(true);
+        }
+        async function moveSiteDoc(id, folder) {
+            const { error } = await _supabase.from('site_documents').update({ folder: folder || null }).eq('id', id);
+            if (error) { alert('Could not move the document: ' + error.message); return; }
+            const d = adminData.docs.find(x => x.id === id);
+            if (d) d.folder = folder || null;
+            if (folder) openDocFolders.add(folder);
+            loadSiteDocs(true);
+        }
+        async function fillAdminDocFolders(pick) {
+            const cid = document.getElementById('adminDocSite').value;
+            let names = [];
+            if (cid) {
+                const { data } = await _supabase.from('site_document_folders').select('name').eq('client_id', String(cid));
+                names = folderNames(data || [], adminData.docs.filter(d => String(d.client_id) === String(cid)));
+            }
+            if (document.getElementById('adminDocSite').value === cid) fillFolderSelect('adminDocFolder', names, pick);
         }
         async function openSiteDoc(id) {
             const d = siteDocs.find(x => x.id === id);
@@ -2415,6 +2656,7 @@
             const { error } = await _supabase.from('site_documents').delete().eq('id', id);
             if (error) { alert('Could not remove: ' + error.message); return; }
             await _supabase.storage.from(DOC_BUCKET).remove([d.file_path]).catch(() => {});
+            adminData.docs = adminData.docs.filter(x => x.id !== id);
             await queueSiteChange({ action: 'document', title: `Document "${d.title}" removed`, detail: d.category });
             loadSiteDocs(true);
         }
@@ -2423,8 +2665,40 @@
         const CLIENT_SEEN_KEY = 'pestis-client-updates-seen';
         let clientUpdates = [];
         let clientUpdatesSeen = loadJSON(CLIENT_SEEN_KEY, null) || new Date(Date.now() - 7 * 86400000).toISOString();
+        let notifDocs = null;          // every site's documents with an expiry date (null until loaded)
+        let notifBreaches = [];        // critical limits exceeded this month (logged when the technician saved the count)
+        let notifUnplaced = [];        // [{ cid, n, total }] sites with floor plans but stations not placed on one
+        async function loadBellExtras() {
+            const grab = async q => { try { const r = await q; if (r.error) throw r.error; return r.data || []; } catch (e) { return null; } };
+            const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+            const [docs, breaches, maps] = await Promise.all([
+                grab(_supabase.from('site_documents').select('id, client_id, title, category, expires_on')),
+                grab(_supabase.from('site_events').select('id, client_id, title, detail, technician, at').eq('action', 'limit_breach').gte('at', monthStart).order('at', { ascending: false }).limit(100)),
+                grab(_supabase.from('site_maps').select('client_id'))
+            ]);
+            if (docs) notifDocs = docs.filter(d => d.expires_on);
+            if (breaches) notifBreaches = breaches;
+            if (maps) {
+                const withPlans = new Set(maps.map(m => String(m.client_id)));
+                const stations = [];
+                for (let page = 0; page < 20 && withPlans.size; page++) {
+                    const rows = await grab(_supabase.from('stations').select('client_id, map_id, pin_x').range(page * 1000, page * 1000 + 999));
+                    if (!rows) break;
+                    stations.push(...rows);
+                    if (rows.length < 1000) break;
+                }
+                const by = new Map();
+                stations.filter(st => withPlans.has(String(st.client_id))).forEach(st => {
+                    const k = String(st.client_id), o = by.get(k) || { cid: k, n: 0, total: 0 };
+                    o.total++; if (!st.map_id || st.pin_x == null) o.n++;
+                    by.set(k, o);
+                });
+                notifUnplaced = Array.from(by.values()).filter(o => o.n > 0);
+            }
+        }
         async function loadClientUpdates() {
             if (!isOnline || !appStarted) return;
+            loadBellExtras().then(renderNotifications).catch(e => console.warn('Notifications', e));
             try {
                 const since = new Date(Date.now() - 30 * 86400000).toISOString();
                 const { data, error } = await _supabase.from('recommendation_updates').select('id, rec_id, client_id, status, note, photos, technician, at')
@@ -2444,6 +2718,263 @@
             if (findRec(recId)) openRecModal(recId);
         }
         setInterval(() => { if (appStarted) loadClientUpdates(); }, 5 * 60000);
+
+
+        // ===================================================================
+        //  ADMIN PAGE: team-wide information and settings in one place (admins only)
+        // ===================================================================
+        const ADMIN_TABS = [['overview', 'Overview'], ['team', 'Staff'], ['clients', 'Client portal'], ['documents', 'Documents'], ['lists', 'Lists'], ['settings', 'Team settings'], ['activity', 'Activity'], ['exports', 'Exports']];
+        let adminTab = 'overview';
+        const adminData = { loadedAt: 0, recs: [], docs: [], events: [], errors: {} };
+        function openAdmin(tab) {
+            if (!isAdmin()) { alert('Only admins can open the Admin page.'); return; }
+            ['settingsModal', 'profileModal', 'notifModal'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById('adminPage').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            setAdminTab(tab || adminTab);
+            if (Date.now() - adminData.loadedAt > 60000) refreshAdmin();
+        }
+        function closeAdmin() {
+            document.getElementById('adminPage').classList.add('hidden');
+            const formOpen = !document.getElementById('stationFormContainer').classList.contains('hidden');
+            if (!formOpen) document.body.style.overflow = '';
+        }
+        function setAdminTab(tab) {
+            adminTab = ADMIN_TABS.some(t => t[0] === tab) ? tab : 'overview';
+            document.getElementById('adminTabs').innerHTML = ADMIN_TABS.map(([k, l]) => `<button type="button" class="tab-btn shrink-0 ${adminTab === k ? 'active' : ''}" onclick="setAdminTab('${k}')">${l}${adminTabBadge(k)}</button>`).join('');
+            document.querySelectorAll('#adminPage [data-admin-tab]').forEach(sec => sec.classList.toggle('hidden', sec.dataset.adminTab !== adminTab));
+            document.getElementById('adminOffline').classList.toggle('hidden', isOnline);
+            renderAdminTab();
+            document.getElementById('adminPage').scrollTop = 0;
+        }
+        function adminTabBadge(k) {
+            const n = k === 'team' ? adminProfiles.filter(u => !u.approved).length : k === 'documents' ? adminDocsNeedingAttention().length : 0;
+            return n ? ` <span class="queue-count ml-0.5" style="background:#dc2626;">${n}</span>` : '';
+        }
+        function renderAdminTab() {
+            if (adminTab === 'overview') renderAdminOverview();
+            else if (adminTab === 'team') loadAdminPanel();
+            else if (adminTab === 'clients') { loadClientAdmin(); renderSitesWithoutClients(); }
+            else if (adminTab === 'documents') renderAdminDocs();
+            else if (adminTab === 'lists') { document.getElementById('newPrepUnit').innerHTML = PREP_UNITS.map(([v, l]) => `<option value="${v}">${l}</option>`).join(''); renderSettingsLists(); if (isOnline) loadOptions(); }
+            else if (adminTab === 'settings') renderTeamSettings();
+            else if (adminTab === 'activity') renderAdminActivity();
+            else if (adminTab === 'exports') renderAdminExports();
+        }
+        async function refreshAdmin() {
+            if (!isOnline) { setAdminTab(adminTab); return; }
+            const since = new Date(Date.now() - 30 * 86400000).toISOString();
+            const grab = async (key, q) => { try { const r = await q; if (r.error) throw r.error; adminData.errors[key] = ''; return r.data || []; } catch (e) { adminData.errors[key] = portalMissing(e) && key === 'docs' ? PORTAL_SQL_NOTE : (e.message || String(e)); return []; } };
+            const [recs, docs, events, profs, allowed, cus, cas] = await Promise.all([
+                grab('recs', _supabase.from('recommendations').select('id, rec_no, client_id, station_name, station_barcode, text, status, raised_at, raised_by').neq('status', 'complete')),
+                grab('docs', _supabase.from('site_documents').select('*')),
+                grab('events', _supabase.from('site_events').select('*').gte('at', since).order('at', { ascending: false }).limit(500)),
+                grab('profiles', _supabase.from('profiles').select('*')),
+                grab('allowed', _supabase.from('allowed_emails').select('*')),
+                grab('clientUsers', _supabase.from('client_users').select('*')),
+                grab('clientAccess', _supabase.from('client_access').select('*'))
+            ]);
+            const clientEmails = new Set(cus.map(x => x.email));
+            Object.assign(adminData, { recs, docs, events, loadedAt: Date.now() });
+            adminProfiles = profs.filter(u => !clientEmails.has(String(u.email || '').toLowerCase()));
+            adminAllowed = allowed; adminClients = cus; adminClientAccess = cas; clientAdminReady = !adminData.errors.clientUsers;
+            await loadClientUpdates();
+            setAdminTab(adminTab);
+        }
+        const siteById = id => clientsData.find(c => String(c.id) === String(id));
+        function adminDocsNeedingAttention() { return docsNeedingAttention(adminData.docs); }
+        function docsNeedingAttention(list) {
+            const warn = teamSetting('doc_expiry_warn_days'), today = Date.parse(toDayStr(new Date()) + 'T00:00:00');
+            return list.filter(d => d.expires_on && (Date.parse(d.expires_on + 'T00:00:00') - today) / 86400000 <= warn);
+        }
+        function goToSite(cid, then) {
+            closeAdmin();
+            startSiteVisit(cid).then(() => { if (then) then(); });
+        }
+
+        // ---------- Overview ----------
+        function renderAdminOverview() {
+            const n = buildNotifications();
+            const pending = adminProfiles.filter(u => !u.approved);
+            const docs = adminDocsNeedingAttention();
+            const expired = docs.filter(d => d.expires_on < toDayStr(new Date()));
+            const recent = clientUpdates.filter(u => Date.parse(u.at) > Date.now() - 7 * 86400000);
+            const noTech = clientsData.filter(c => !c.assigned_to);
+            const portalSites = new Set(adminClientAccess.map(a => String(a.client_id)));
+            const tile = (v, k, color, tab, sub) => `<button type="button" onclick="setAdminTab('${tab}')" class="card p-4 text-left hover:opacity-90"><div class="text-2xl font-black" style="color:${color || 'var(--text)'}">${v}</div><div class="eyebrow t-faint mt-1">${k}</div>${sub ? `<div class="text-[11px] t-muted mt-0.5">${sub}</div>` : ''}</button>`;
+            document.getElementById('adminTiles').innerHTML = [
+                tile(clientsData.length, 'Sites', '', 'exports', `${portalSites.size} with a client login`),
+                tile(clientsData.filter(c => visitInfo(c)).length, 'Visits in progress', n.longVisits.length ? '#dc2626' : '', 'activity', n.longVisits.length ? `${n.longVisits.length} open too long` : ''),
+                tile(n.missed.length, 'Missed services', n.missed.length ? '#dc2626' : '#10b981', 'overview'),
+                tile(adminData.recs.length, 'Outstanding recs', adminData.recs.length ? '#ea580c' : '#10b981', 'exports', 'open or pending'),
+                tile(recent.length, 'Client updates (7 days)', '#0891b2', 'activity'),
+                tile(docs.length, 'Documents to renew', expired.length ? '#dc2626' : docs.length ? '#d97706' : '#10b981', 'documents', expired.length ? `${expired.length} expired` : ''),
+                tile(n.contracts.length, 'Contracts to renew', n.contracts.length ? '#7c3aed' : '#10b981', 'exports'),
+                tile(pending.length, 'Staff awaiting approval', pending.length ? '#dc2626' : '#10b981', 'team')
+            ].join('');
+            const item = (icon, title, sub, onclick, chip) => `<button type="button" onclick="${onclick}" class="row-item clickable w-full text-left p-3 flex items-center justify-between gap-3"><div class="min-w-0 flex items-start gap-2"><span>${icon}</span><div class="min-w-0"><div class="font-bold t-strong">${title}</div><div class="t-muted">${sub}</div></div></div>${chip || ''}</button>`;
+            const rows = [];
+            pending.forEach(u => rows.push(item('👤', `${esc(u.full_name || u.email)} is waiting for approval`, esc(u.email), "setAdminTab('team')", '<span class="chip chip-amber">Staff</span>')));
+            n.longVisits.forEach(x => rows.push(item('⏱', `${esc(x.c.Name)}: visit open ${esc(visitAgeText(x.v))}`, `Started by ${esc(teamName(x.v.by) || 'unknown')}`, `goToSite('${esc(String(x.c.id))}')`, '<span class="chip chip-red">Visit</span>')));
+            n.missed.slice(0, 15).forEach(x => rows.push(item('📅', `${esc(x.c.Name)}: ${esc(x.sv.type)} missed`, `Was due ${esc(fmtDay(x.sv.nextDue))}${x.c.assigned_to ? ' · ' + esc(teamName(x.c.assigned_to)) : ' · no technician assigned'}`, `goToSite('${esc(String(x.c.id))}')`, `<span class="chip chip-red">${-x.days}d overdue</span>`)));
+            expired.forEach(d => rows.push(item('📄', `${esc(siteById(d.client_id) ? siteById(d.client_id).Name : 'Site')}: "${esc(d.title)}" has expired`, `${esc(d.category || 'Document')} · expired ${esc(fmtDay(d.expires_on))}`, "setAdminTab('documents')", '<span class="chip chip-red">Document</span>')));
+            n.contracts.filter(x => x.ci.days < 0).forEach(x => rows.push(item('📝', `${esc(x.c.Name)}: contract ended`, esc(x.ci.text), `goToSite('${esc(String(x.c.id))}')`, '<span class="chip chip-purple">Contract</span>')));
+            if (noTech.length) rows.push(item('🧭', `${noTech.length} site${noTech.length === 1 ? ' has' : 's have'} no technician assigned`, esc(noTech.slice(0, 4).map(c => c.Name).join(', ') + (noTech.length > 4 ? '...' : '')), "setAdminTab('exports')", '<span class="chip chip-blue">Sites</span>'));
+            const errs = Object.entries(adminData.errors).filter(([, e]) => e).map(([k, e]) => `<div class="row-item p-3" style="color:#ef4444;">${esc(k)}: ${esc(e)}</div>`);
+            document.getElementById('adminAttention').innerHTML = errs.join('') + (rows.join('') || '<div class="row-item p-4 t-faint italic text-center">Nothing needs attention. 🎉</div>');
+            // technician workload
+            const staff = adminProfiles.filter(u => u.approved);
+            const missedBy = id => n.missed.filter(x => x.c.assigned_to === id).length;
+            const recsBy = id => adminData.recs.filter(r => { const c = siteById(r.client_id); return c && c.assigned_to === id; }).length;
+            document.getElementById('adminWorkload').innerHTML = staff.map(u => {
+                const sites = clientsData.filter(c => c.assigned_to === u.id).length;
+                return `<div class="row-item p-3 flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-bold t-strong truncate">${esc(u.full_name || u.email)}</div><div class="t-faint text-[11px]">${esc(u.role === 'admin' ? 'Admin' : 'Technician')}</div></div>
+                    <div class="flex flex-wrap gap-1.5 justify-end"><span class="chip chip-blue">${sites} site${sites === 1 ? '' : 's'}</span>${missedBy(u.id) ? `<span class="chip chip-red">${missedBy(u.id)} missed</span>` : ''}${recsBy(u.id) ? `<span class="chip chip-amber">${recsBy(u.id)} recs</span>` : ''}</div></div>`;
+            }).join('') + (noTech.length ? `<div class="row-item p-3 flex justify-between"><span class="t-muted">Unassigned</span><span class="chip chip-grey">${noTech.length} site${noTech.length === 1 ? '' : 's'}</span></div>` : '') || '<span class="t-faint italic">No staff loaded yet.</span>';
+        }
+
+        // ---------- Client portal: sites nobody can see yet ----------
+        function renderSitesWithoutClients() {
+            const el = document.getElementById('adminSitesNoClient');
+            if (!el || !clientAdminReady) return;
+            const covered = new Set(adminClientAccess.map(a => String(a.client_id)));
+            const without = clientsData.filter(c => !covered.has(String(c.id)));
+            el.innerHTML = without.length ? `<b class="t-strong">${without.length} site${without.length === 1 ? '' : 's'} without a client login:</b> ${without.slice(0, 30).map(c => esc(c.Name)).join(', ')}${without.length > 30 ? '...' : ''}` : 'Every site has at least one client login.';
+        }
+
+        // ---------- Documents across all sites ----------
+        async function saveSiteDocument(cid, file, meta) {
+            if (file.size > 50 * 1024 * 1024) throw new Error('That file is over 50 MB. Please make it smaller first.');
+            const clean = file.name.replace(/[^\w.\- ]+/g, '').replace(/\s+/g, '_').slice(-80) || 'document';
+            const path = `${cid}/${Date.now()}_${clean}`;
+            const up = await _supabase.storage.from(DOC_BUCKET).upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
+            if (up.error) throw up.error;
+            const row = { id: uid(), client_id: String(cid), category: meta.category || 'Other', title: meta.title || file.name, file_path: path, file_name: file.name, folder: meta.folder && meta.folder !== '__new' ? meta.folder : null,
+                mime_type: file.type || null, size_bytes: file.size, expires_on: meta.expires_on || null, notes: meta.notes || null, uploaded_by: technicianLabel() };
+            const { error } = await _supabase.from('site_documents').insert(row);
+            if (error) { await _supabase.storage.from(DOC_BUCKET).remove([path]).catch(() => {}); throw error; }
+            // logged against the document's own site (which may not be the one open on screen)
+            const site = siteById(cid);
+            await enqueue({ kind: 'table_upsert', clientId: cid, siteName: site ? site.Name : '', label: 'Document added · log',
+                data: { table: 'site_events', row: { id: uid(), client_id: String(cid), action: 'document', title: `Document "${row.title}" added`, detail: row.category, technician: technicianLabel(), at: new Date().toISOString() }, photoField: null } });
+            return row;
+        }
+        async function adminUploadDoc() {
+            const cid = document.getElementById('adminDocSite').value, f = document.getElementById('adminDocFile').files[0];
+            if (!cid || !f) return;
+            const btn = document.getElementById('adminDocUploadBtn');
+            btn.disabled = true; btn.textContent = 'Uploading...';
+            try {
+                const row = await saveSiteDocument(cid, f, { title: document.getElementById('adminDocTitle').value.trim(), category: document.getElementById('adminDocCategory').value, expires_on: document.getElementById('adminDocExpires').value, folder: document.getElementById('adminDocFolder').value });
+                adminData.docs.push(row);
+                document.getElementById('adminDocForm').reset();
+                fillAdminDocFolders();
+                if (selectedClient && String(selectedClient.id) === String(cid)) loadSiteDocs(true);
+                renderAdminDocs();
+            } catch (e) { alert('Could not upload: ' + (portalMissing(e) ? PORTAL_SQL_NOTE : (e.message || e))); }
+            finally { btn.disabled = false; btn.textContent = 'Upload'; }
+        }
+        function renderAdminDocs() {
+            const siteSel = document.getElementById('adminDocSite');
+            const keep = siteSel.value;
+            siteSel.innerHTML = '<option value="">Choose a site...</option>' + clientsData.slice().sort((a, b) => String(a.Name || '').localeCompare(String(b.Name || ''), undefined, { sensitivity: 'base' })).map(c => `<option value="${esc(String(c.id))}">${esc(c.Name || 'Unnamed site')}</option>`).join('');
+            siteSel.value = keep;
+            const cat = document.getElementById('adminDocCategory');
+            if (!cat.options || !cat.options.length) cat.innerHTML = DOC_CATEGORIES.map(c => `<option>${esc(c)}</option>`).join('');
+            const box = document.getElementById('adminDocsList');
+            if (adminData.errors.docs) { box.innerHTML = `<span style="color:#ef4444;">${esc(adminData.errors.docs)}</span>`; return; }
+            const f = document.getElementById('adminDocFilter').value, q = document.getElementById('adminDocSearch').value.trim().toLowerCase();
+            const attention = new Set(adminDocsNeedingAttention().map(d => d.id)), today = toDayStr(new Date());
+            const list = adminData.docs.filter(d => (f === 'all' || (f === 'attention' && attention.has(d.id)) || (f === 'expired' && d.expires_on && d.expires_on < today)))
+                .map(d => Object.assign({ site: siteById(d.client_id) }, d))
+                .filter(d => !q || `${d.title} ${d.category} ${d.file_name} ${d.folder || ''} ${d.site ? d.site.Name : ''}`.toLowerCase().includes(q))
+                .sort((a, b) => (a.expires_on || '9999') < (b.expires_on || '9999') ? -1 : (a.expires_on || '9999') > (b.expires_on || '9999') ? 1 : String(a.title).localeCompare(String(b.title)));
+            box.innerHTML = list.map(d => `
+                <div class="row-item p-3 flex flex-wrap items-center justify-between gap-2">
+                    <button type="button" data-id="${esc(d.id)}" onclick="adminOpenDoc(this.dataset.id)" class="text-left min-w-0 flex-1">
+                        <div class="font-bold t-strong">📄 ${esc(d.title)}</div>
+                        <div class="t-faint text-[11px]">${esc(d.site ? d.site.Name : 'Site ' + d.client_id)}${d.folder ? ' · 📁 ' + esc(d.folder) : ''} · ${esc(d.category || 'Other')} · added ${esc(fmtDateTimeLong(d.created_at).date)}${d.uploaded_by ? ' by ' + esc(d.uploaded_by) : ''}</div>
+                    </button>
+                    <div class="flex items-center gap-2">${docExpiryChip(d)}<button type="button" data-cid="${esc(d.client_id)}" onclick="goToSite(this.dataset.cid)" class="btn btn-secondary !px-3 !py-1.5">Site</button></div>
+                </div>`).join('') || `<div class="row-item p-4 t-faint italic text-center">${f === 'all' ? 'No documents yet.' : 'Nothing to renew. 🎉'}</div>`;
+        }
+        async function adminOpenDoc(id) {
+            const d = adminData.docs.find(x => x.id === id);
+            if (!d) return;
+            const w = window.open('', '_blank');
+            const { data, error } = await _supabase.storage.from(DOC_BUCKET).createSignedUrl(d.file_path, 600);
+            if (error || !data) { if (w) w.close(); alert('Could not open the document.'); return; }
+            if (w) w.location.href = data.signedUrl; else location.href = data.signedUrl;
+        }
+
+        // ---------- Activity across all sites ----------
+        function renderAdminActivity() {
+            const sel = document.getElementById('adminActSite');
+            const keep = sel.value;
+            sel.innerHTML = '<option value="">All sites</option>' + clientsData.slice().sort((a, b) => String(a.Name || '').localeCompare(String(b.Name || ''))).map(c => `<option value="${esc(String(c.id))}">${esc(c.Name)}</option>`).join('');
+            sel.value = keep;
+            const kind = document.getElementById('adminActKind').value;
+            const items = [];
+            if (kind !== 'client') adminData.events.forEach(e => items.push({ at: e.at || e.created_at, cid: e.client_id, icon: '✎', title: e.title || 'Site change', detail: [e.station, e.detail].filter(Boolean).join(' · '), by: e.technician }));
+            if (kind !== 'staff') clientUpdates.forEach(u => items.push({ at: u.at, cid: u.client_id, icon: '💬', title: `${u.rec && u.rec.rec_no != null ? fmtRecNo(u.rec.rec_no) : 'Recommendation'} set to ${u.status || 'updated'}`, detail: u.note || '', by: u.technician, client: true, rec: u.rec_id }));
+            const list = items.filter(x => !keep || String(x.cid) === keep).sort((a, b) => (b.at > a.at ? 1 : -1)).slice(0, 300);
+            let lastDay = '';
+            document.getElementById('adminActivityList').innerHTML = list.map(x => {
+                const t = fmtDateTimeLong(x.at), c = siteById(x.cid);
+                const day = t.date !== lastDay ? `<div class="eyebrow t-faint pt-2">${esc(t.date)}</div>` : '';
+                lastDay = t.date;
+                return `${day}<button type="button" data-cid="${esc(String(x.cid))}" data-rec="${esc(x.rec || '')}" onclick="openAdminActivity(this.dataset.cid, this.dataset.rec)" class="act-row act-link">
+                    <span class="act-icon" style="background:${x.client ? 'rgba(8,145,178,.15)' : 'var(--surface3)'};">${x.icon}</span>
+                    <div class="min-w-0 flex-1"><div class="font-bold t-strong">${esc(c ? c.Name : 'Site')} · ${esc(x.title)}${x.client ? ' <span class="chip chip-blue !py-0">Client</span>' : ''}</div>
+                    ${x.detail ? `<div class="t-muted break-words">${esc(x.detail)}</div>` : ''}<div class="t-faint text-[11px]">${esc(t.time)}${x.by ? ' · ' + esc(x.by) : ''}</div></div><span class="act-go t-faint">›</span></button>`;
+            }).join('') || '<div class="row-item p-4 t-faint italic text-center">No activity in the last 30 days.</div>';
+        }
+        function openAdminActivity(cid, rec) { goToSite(cid, rec ? () => { if (findRec(rec)) openRecModal(rec); } : null); }
+
+        // ---------- Exports ----------
+        function csvDownload(name, header, rows) {
+            const cell = v => { const s = v == null ? '' : String(v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+            const blob = new Blob(['﻿' + [header].concat(rows).map(r => r.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob); a.download = `${name} - ${toDayStr(new Date())}.csv`;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        }
+        const ADMIN_EXPORTS = {
+            sites: ['Sites register', 'Every site with contact, contract, technician, services and client logins.', () => {
+                const logins = id => adminClientAccess.filter(a => String(a.client_id) === String(id)).map(a => a.email).join('; ');
+                csvDownload('Pestis sites', ['Site', 'Address', 'Contact', 'Email', 'Contract start', 'Contract end', 'Assigned technician', 'Services', 'Next due', 'Client logins'],
+                    clientsData.map(c => { const sv = getServices(c); const next = sv.map(x => x.nextDue).filter(Boolean).sort()[0];
+                        return [c.Name, c.Address, c.Contact, c.Email, c.contract_start || '', c.contract_end || '', c.assigned_to ? teamName(c.assigned_to) : '', sv.map(x => `${x.type} (${freqLabel(x.frequency)})`).join('; '), next ? fmtDay(next) : '', logins(c.id)]; }));
+            }],
+            recs: ['Outstanding recommendations', 'Every open or pending recommendation across all sites.', () => {
+                csvDownload('Pestis outstanding recommendations', ['Number', 'Site', 'Station', 'Barcode', 'Recommendation', 'Status', 'Raised', 'Raised by', 'Days open'],
+                    adminData.recs.slice().sort((a, b) => (a.raised_at > b.raised_at ? 1 : -1)).map(r => [fmtRecNo(r.rec_no), siteById(r.client_id) ? siteById(r.client_id).Name : r.client_id, r.station_name, r.station_barcode, r.text, r.status,
+                        fmtDay(String(r.raised_at || '').slice(0, 10)), r.raised_by, Math.floor((Date.now() - Date.parse(r.raised_at)) / 86400000)]));
+            }],
+            services: ['Service schedule', 'Every contracted service with when it was last done and next due.', () => {
+                const rows = [];
+                clientsData.forEach(c => getServices(c).forEach(sv => { const d = dueInfo(sv); rows.push([c.Name, sv.type, freqLabel(sv.frequency), sv.lastDone ? fmtDay(sv.lastDone) : '', sv.nextDue ? fmtDay(sv.nextDue) : '', d.text, c.assigned_to ? teamName(c.assigned_to) : '']); }));
+                csvDownload('Pestis service schedule', ['Site', 'Service', 'Frequency', 'Last done', 'Next due', 'Status', 'Technician'], rows);
+            }],
+            documents: ['Documents register', 'Every site document with type and expiry.', () => {
+                csvDownload('Pestis documents', ['Site', 'Document', 'Type', 'File', 'Added', 'Added by', 'Expires'],
+                    adminData.docs.map(d => [siteById(d.client_id) ? siteById(d.client_id).Name : d.client_id, d.title, d.category, d.file_name, fmtDay(String(d.created_at || '').slice(0, 10)), d.uploaded_by, d.expires_on ? fmtDay(d.expires_on) : '']));
+            }],
+            clients: ['Client logins', 'Who can sign in to the Client Portal and which sites they see.', () => {
+                csvDownload('Pestis client logins', ['Name', 'Company', 'Email', 'Status', 'Sites', 'Last signed in'],
+                    adminClients.map(u => [u.full_name, u.company, u.email, u.active ? 'Active' : 'Paused', clientSitesOf(u.email).map(siteLabel).join('; '), u.last_seen_at ? fmtDay(String(u.last_seen_at).slice(0, 10)) : 'Never']));
+            }],
+            staff: ['Staff', 'Everyone with a staff account, their role and sites assigned.', () => {
+                csvDownload('Pestis staff', ['Name', 'Email', 'Role', 'Approved', 'Sites assigned'],
+                    adminProfiles.map(u => [u.full_name, u.email, u.role, u.approved ? 'Yes' : 'Waiting', clientsData.filter(c => c.assigned_to === u.id).length]));
+            }]
+        };
+        function renderAdminExports() {
+            document.getElementById('adminExports').innerHTML = Object.entries(ADMIN_EXPORTS).map(([k, [title, desc]]) => `
+                <div class="row-item p-4 flex items-center justify-between gap-3"><div class="min-w-0"><div class="font-bold t-strong">${title}</div><div class="t-muted text-xs">${desc}</div></div>
+                <button type="button" onclick="ADMIN_EXPORTS['${k}'][2]()" class="btn btn-secondary shrink-0">⬇ CSV</button></div>`).join('');
+        }
 
         // ===================================================================
         //  CONNECTIVITY & SYNC STATUS BADGE
@@ -2584,7 +3115,9 @@
             else if (appStarted) { refreshCoverUrls(); backgroundSyncSite(); }
         }
 
-        setInterval(checkInternetConnectivity, 8000);
+        // every 8 seconds while the app is on screen; in the background (screen off, another app open) it waits, saving battery and data
+        setInterval(() => { if (!document.hidden) checkInternetConnectivity(); }, 8000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) checkInternetConnectivity(); });
         window.addEventListener('online', () => checkInternetConnectivity());
         window.addEventListener('offline', () => { isOnline = false; updateSyncBadge(); });
 
@@ -3515,17 +4048,7 @@
             saveJSON(SIGNED_CACHE_KEY, signedCache);
         }
 
-        const signedErrors = new Map();
-        function getCachedSignedUrls(paths) {
-            const now = Date.now();
-            const out = new Map();
-            paths.forEach(p => {
-                const c = signedCache[p];
-                // offline, an expired link is still fine: the offline photo store looks photos up by file name
-                if (c && (c.e - now > 5 * 60 * 1000 || !isOnline)) out.set(p, c.u);
-            });
-            return out;
-        } // storage path -> why a link could not be made (e.g. "Object not found")
+        const signedErrors = new Map(); // storage path -> why a link could not be made (e.g. "Object not found")
 
         async function getSignedUrls(paths) {
             const now = Date.now();
@@ -4232,7 +4755,7 @@
             clearPendingPhotos(true);
             if (!document.getElementById('visitModal').classList.contains('hidden') && visitEditing && !confirm('Discard the corrections you have not saved?')) return;
             visitEditing = false;
-            ['addClientModal', 'editSiteModal', 'servicesModal', 'completeVisitModal', 'manualScanModal', 'imageModal', 'settingsModal', 'profileModal', 'queueModal',
+            ['addClientModal', 'editSiteModal', 'servicesModal', 'completeVisitModal', 'manualScanModal', 'imageModal', 'settingsModal', 'profileModal', 'queueModal', 'adminPage',
              'mapModal', 'mapEditDialog', 'stationOverviewModal', 'visitModal', 'barcodeModal', 'notifModal']
                 .forEach(id => { const m = document.getElementById(id); if (m) m.classList.add('hidden'); });
             stopFullscreenCameraScanner().catch(() => {});
@@ -4336,14 +4859,21 @@
             contracts.sort((a, b) => a.ci.days - b.ci.days);
             longVisits.sort((a, b) => b.v.hours - a.v.hours);
             const fresh = newClientUpdates();
-            return { missed, dueSoon, contracts, longVisits, fresh, total: missed.length + dueSoon.length + contracts.length + longVisits.length + fresh.length };
+            const inScope = id => notifSites().some(c => String(c.id) === String(id));
+            const docsDue = docsNeedingAttention(notifDocs || adminData.docs).filter(d => inScope(d.client_id)).sort((a, b) => (a.expires_on > b.expires_on ? 1 : -1));
+            // one line per site and limit: the newest breach logged this month
+            const seenB = new Set();
+            const breaches = notifBreaches.filter(b => inScope(b.client_id) && !seenB.has(b.client_id + '|' + b.title) && seenB.add(b.client_id + '|' + b.title));
+            const unplaced = notifUnplaced.filter(o => inScope(o.cid) && siteById(o.cid));
+            return { missed, dueSoon, contracts, longVisits, fresh, docsDue, breaches, unplaced,
+                total: missed.length + dueSoon.length + contracts.length + longVisits.length + fresh.length + docsDue.length + breaches.length + unplaced.length };
         }
         function renderNotifications() {
             const n = buildNotifications();
             const badge = document.getElementById('notifCount');
             badge.textContent = n.total > 99 ? '99+' : n.total;
             badge.classList.toggle('hidden', n.total === 0);
-            badge.style.background = (n.missed.length || n.longVisits.length || n.contracts.some(x => x.ci.days < 0)) ? '#dc2626' : '#ea580c';
+            badge.style.background = (n.missed.length || n.longVisits.length || n.breaches.length || n.contracts.some(x => x.ci.days < 0)) ? '#dc2626' : '#ea580c';
             document.getElementById('notifBtn').title = n.total ? `${n.total} notification${n.total === 1 ? '' : 's'}` : 'No notifications';
 
             const list = document.getElementById('notifList');
@@ -4369,9 +4899,15 @@
             };
             const html = [
                 shownUpdates.length ? `<div class="space-y-2"><div class="eyebrow" style="color:#0891b2;">Client updates, last 30 days${n.fresh.length ? ` (${n.fresh.length} new)` : ''}</div>${shownUpdates.map(updRow).join('')}</div>` : '',
+                section('Critical limits exceeded this month', '#dc2626', n.breaches.map(b => row(siteById(b.client_id) || { id: b.client_id, Name: 'Site' }, `${b.title.replace(/^Critical limit exceeded: /, '')} · ${b.detail || ''} · ${fmtDateTimeLong(b.at).date}`, 'chip-red', 'Over limit'))),
                 section(`Visits open more than ${VISIT_STALE_HOURS} hours`, '#dc2626', n.longVisits.map(x => row(x.c, `Started ${fmtDateTimeLong(x.v.at).date} ${fmtDateTimeLong(x.v.at).time}${x.v.by ? ' by ' + teamName(x.v.by) : ''} - complete or cancel it`, 'chip-red', `Open ${visitAgeText(x.v)}`))),
                 section('Missed services', '#dc2626', n.missed.map(x => row(x.c, `${x.sv.type} · was due ${fmtDay(x.sv.nextDue)}`, 'chip-red', `${-x.days}d overdue`))),
                 section(notifDueMode === 'week' ? 'Due in the next 7 days' : 'Due today', '#ea580c', n.dueSoon.map(x => row(x.c, `${x.sv.type} · due ${fmtDay(x.sv.nextDue)}`, 'chip-amber', x.days === 0 ? 'Today' : `In ${x.days}d`))),
+                section('Site documents to renew', '#d97706', n.docsDue.map(d => { const c = siteById(d.client_id) || { id: d.client_id, Name: 'Site' }; const days = Math.round((Date.parse(d.expires_on + 'T00:00:00') - Date.parse(toDayStr(new Date()) + 'T00:00:00')) / 86400000); return row(c, `${d.title} (${d.category || 'Document'})`, days < 0 ? 'chip-red' : 'chip-amber', days < 0 ? 'Expired' : `${days}d left`); })),
+                section('Stations not placed on a floor plan', '#0891b2', n.unplaced.map(o => `
+                    <button type="button" data-id="${esc(o.cid)}" onclick="closeNotifModal(); startSiteVisit(this.dataset.id).then(() => openMapModal())" class="row-item clickable w-full text-left p-3 flex justify-between items-center gap-3">
+                        <div class="min-w-0"><div class="font-bold t-strong truncate">${esc(siteById(o.cid).Name || 'Unnamed site')}</div><div class="t-muted">${o.n} of ${o.total} station${o.total === 1 ? '' : 's'} not placed on a floor plan yet</div></div>
+                        <span class="chip chip-blue shrink-0">${o.n} to place</span></button>`)),
                 section('Contracts to renegotiate', '#7c3aed', n.contracts.map(x => row(x.c, x.ci.text, x.ci.days < 0 ? 'chip-red' : 'chip-purple', x.ci.days < 0 ? 'Expired' : `${x.ci.days}d left`)))
             ].join('');
             list.innerHTML = html || '<div class="row-item p-4 t-faint italic text-center">Nothing needs attention right now.</div>';
@@ -5151,7 +5687,7 @@
                 if (r.status === 'fulfilled') {
                     if (JSON.stringify(r.value) !== JSON.stringify(prevTables[name] || [])) changed = true;
                     cache.tables[name] = r.value;
-                } else if (missing(r.reason)) splitTablesMissing = true;
+                } else if (missing(r.reason)) { if (!OPTIONAL_SITE_TABLES.includes(name)) splitTablesMissing = true; }
                 else if (!isNetworkError(r.reason)) logAppError('Downloading ' + name, r.reason);
             });
             await saveSiteCache(clientId, cache);
@@ -5234,7 +5770,9 @@
         let recTableMissing = false;    // the database has no recommendations table yet
         let splitTablesMissing = false; // the database doesn't have the stations / plans / visits tables yet
         let siteStations = new Map();   // barcode -> row in the stations table
-        const SITE_TABLES = ['stations', 'site_maps', 'visits', 'recommendation_updates', 'site_events'];
+        const SITE_TABLES = ['stations', 'site_maps', 'visits', 'recommendation_updates', 'site_events', 'critical_limits'];
+        const OPTIONAL_SITE_TABLES = ['critical_limits'];   // added by pestis_client_portal.sql: missing just means no limits yet
+        let siteLimits = [];            // critical limits: [{ id, zone, species ('*' = any pest), max_per_month, notes }]
 
         // A site table as this device sees it: the saved copy plus changes still waiting to upload
         function effectiveTable(cache, name, clientId) {
@@ -5340,6 +5878,7 @@
             }
             rows.push(...tableLogs);
             const stationRows = effectiveTable(saved, 'stations', clientId);
+            siteLimits = effectiveTable(saved, 'critical_limits', clientId).sort((a, b) => String(a.zone).localeCompare(String(b.zone), undefined, { sensitivity: 'base' }) || String(a.species).localeCompare(String(b.species)));
 
             const refs = new Set(rows.map(r => r.payload && r.payload.clientRef).filter(Boolean));
             queueItems
@@ -5847,6 +6386,127 @@
             }
         }
 
+
+        // ===================================================================
+        //  CRITICAL LIMITS: how many of a pest a zone may have in a month.
+        //  Set here or by the client in the Client Portal. Over the limit: the technician is asked to
+        //  double-check, and the visit report, notifications and the Client Portal show an alert.
+        // ===================================================================
+        const ANY_PEST = '*';
+        const zoneKey = z => String(z || '').trim().toLowerCase();
+        const limitPest = l => !l.species || l.species === ANY_PEST ? 'Any pest' : l.species;
+        let limitEditing = null;     // null | 'new' | limit id
+        function monthBounds(t) { const d = new Date(t); return [new Date(d.getFullYear(), d.getMonth(), 1).getTime(), new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime()]; }
+        const monthName = t => new Date(t).toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
+        const pestN = (species, count) => species && species !== NONE_SPECIES ? (parseFloat(count) > 0 ? parseFloat(count) : 1) : 0;
+        // every pest record on this site: [{ barcode, at, species, n, thisVisit }]
+        function sitePestRecords() {
+            const out = [];
+            siteDevices.forEach(d => (d.history || []).forEach(h => { const n = pestN(h.species, h.count); if (n) out.push({ barcode: d.barcode_id, at: h.at, species: h.species, n, thisVisit: !!h.thisVisit }); }));
+            return out;
+        }
+        const stationZoneOf = bc => { const st = siteStations.get(bc); return (st && st.zone) || ''; };
+        // a limit's total for the month containing t (records up to upTo)
+        function limitTotal(l, t, upTo, recs, zoneOf) {
+            const [a, b] = monthBounds(t == null ? Date.now() : t);
+            const zf = zoneOf || stationZoneOf;
+            const list = (recs || sitePestRecords()).filter(r => r.at >= a && r.at < b && (upTo == null || r.at <= upTo) && zoneKey(zf(r.barcode)) === zoneKey(l.zone) && (l.species === ANY_PEST || r.species === l.species));
+            return { limit: l, total: list.reduce((n, r) => n + r.n, 0), records: list, month: a };
+        }
+        // limits a station record would take over the limit (its earlier record on this visit is replaced)
+        function limitsHitBy(barcode, zone, species, count) {
+            const n = pestN(species, count);
+            if (!n || !zone || !siteLimits.length) return [];
+            const now = Date.now();
+            const recs = sitePestRecords().filter(r => !(r.barcode === barcode && r.thisVisit)).concat([{ barcode, at: now, species, n, thisVisit: true }]);
+            const zoneOf = bc => bc === barcode ? zone : stationZoneOf(bc);
+            return siteLimits.filter(l => zoneKey(l.zone) === zoneKey(zone) && (l.species === ANY_PEST || l.species === species))
+                .map(l => limitTotal(l, now, null, recs, zoneOf)).filter(x => x.total > Number(x.limit.max_per_month));
+        }
+        function limitBreachesNow() { const recs = sitePestRecords(); return siteLimits.map(l => limitTotal(l, null, null, recs)).filter(x => x.total > Number(x.limit.max_per_month)); }
+        // limits a visit went over: that month's records up to the end of the visit, with this visit adding to it
+        function visitLimitBreaches(v) {
+            if (!siteLimits.length || !v) return [];
+            const endAt = v.inProgress ? Date.now() : Date.parse(v.endedAt || v.date);
+            const end = (isNaN(endAt) ? Date.now() : endAt) + 5 * 60000;
+            const mine = new Set((v.entries || []).filter(e => !e.recOnly && pestN(e.species, e.count)).map(e => e.barcode + '@' + e.at));
+            const recs = sitePestRecords();
+            return siteLimits.map(l => limitTotal(l, end - 5 * 60000, end, recs)).filter(x => x.total > Number(x.limit.max_per_month) && x.records.some(r => mine.has(r.barcode + '@' + r.at)));
+        }
+        const limitAlertHtml = (list, title) => list.length ? `<div class="inset p-3 space-y-1 limit-alert" style="border-color:#dc2626;background:rgba(220,38,38,.08);" role="alert"><div class="font-black" style="color:#dc2626;">⚠ ${esc(title)}</div>${list.map(x => `<div class="t-strong"><b>${esc(x.limit.zone)} · ${esc(limitPest(x.limit))}:</b> ${x.total} recorded, limit ${esc(x.limit.max_per_month)} a month</div>`).join('')}</div>` : '';
+
+        function renderSiteLimits() {
+            const box = document.getElementById('siteLimitsBox');
+            if (!box) return;
+            const canEdit = isOnline && !splitTablesMissing;
+            document.getElementById('siteLimitAddBtn').classList.toggle('hidden', !canEdit || limitEditing === 'new');
+            const recs = sitePestRecords();
+            const row = l => {
+                const x = limitTotal(l, null, null, recs), max = Number(l.max_per_month);
+                const over = x.total > max, near = !over && max > 0 && x.total >= max * 0.8;
+                if (limitEditing === l.id) return limitFormHtml(l);
+                return `<div class="row-item p-2.5 space-y-1" ${over ? 'style="border-color:#dc2626;"' : ''}>
+                    <div class="flex justify-between items-start gap-2"><div class="min-w-0"><div class="font-bold t-strong">${esc(l.zone)} · ${esc(limitPest(l))}</div>
+                    <div class="t-faint text-[11px]">Limit ${esc(max)} a month · ${x.total} so far in ${esc(monthName(Date.now()))}${l.notes ? ' · ' + esc(l.notes) : ''}${l.updated_by ? ' · set by ' + esc(l.updated_by) : ''}</div></div>
+                    <span class="chip ${over ? 'chip-red' : near ? 'chip-amber' : 'chip-green'} shrink-0">${over ? 'Over limit' : near ? 'Near limit' : 'Within'}</span></div>
+                    ${canEdit ? `<div class="flex gap-3 text-[11px]"><button type="button" class="link-btn" data-id="${esc(l.id)}" onclick="editSiteLimit(this.dataset.id)">Edit</button><button type="button" class="font-bold" style="color:#ef4444;" data-id="${esc(l.id)}" onclick="deleteSiteLimit(this.dataset.id)">Remove</button></div>` : ''}
+                </div>`;
+            };
+            box.innerHTML = (limitEditing === 'new' ? limitFormHtml(null) : '') + (siteLimits.map(row).join('') ||
+                (limitEditing ? '' : `<span class="t-faint italic">No critical limits yet. Give insect stations a zone, then set how many of a pest each zone may have in a month.</span>`)) +
+                (!isOnline && siteLimits.length ? '<div class="t-faint text-[11px]">Limits can be changed when you\'re online.</div>' : '');
+        }
+        function limitFormHtml(l) {
+            const zones = siteZones(), pests = optionLabels('species').filter(x => x !== NONE_SPECIES);
+            return `<form class="inset p-3 space-y-2" onsubmit="event.preventDefault(); saveSiteLimit();">
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="lbl" for="limZone">Zone</label><input id="limZone" list="limZoneList" required maxlength="60" class="field !py-2 !text-xs" value="${esc(l ? l.zone : '')}" placeholder="e.g. Dispatch"><datalist id="limZoneList">${zones.map(z => `<option value="${esc(z)}"></option>`).join('')}</datalist></div>
+                    <div><label class="lbl" for="limPest">Pest</label><input id="limPest" list="limPestList" maxlength="80" class="field !py-2 !text-xs" value="${esc(l && l.species !== ANY_PEST ? l.species : '')}" placeholder="Any pest"><datalist id="limPestList">${pests.map(z => `<option value="${esc(z)}"></option>`).join('')}</datalist></div>
+                    <div><label class="lbl" for="limMax">Most a month</label><input id="limMax" type="number" min="0" step="1" required class="field !py-2 !text-xs" value="${l ? esc(l.max_per_month) : ''}"></div>
+                    <div><label class="lbl" for="limNotes">Note</label><input id="limNotes" maxlength="200" class="field !py-2 !text-xs" value="${esc(l && l.notes ? l.notes : '')}"></div>
+                </div>
+                ${zones.length ? '' : '<div class="t-faint text-[11px]">No zones yet: give insect stations a zone in their station details.</div>'}
+                <div class="flex justify-end gap-2"><button type="button" class="btn btn-secondary !py-1.5" onclick="editSiteLimit(null)">Cancel</button><button type="submit" id="limSaveBtn" class="btn btn-primary !py-1.5">Save limit</button></div>
+            </form>`;
+        }
+        function editSiteLimit(id) { limitEditing = id; renderSiteLimits(); const z = document.getElementById('limZone'); if (z && id === 'new') z.focus(); }
+        async function reloadSiteLimits() {
+            const c = selectedClient;
+            if (!c) return;
+            const { data, error } = await _supabase.from('critical_limits').select('*').eq('client_id', String(c.id));
+            if (error) throw error;
+            const cache = await getSiteCache(c.id);
+            if (cache) { cache.tables = Object.assign({}, cache.tables, { critical_limits: data || [] }); await saveSiteCache(c.id, cache); }
+            await refreshSiteStateFromCache();
+        }
+        async function saveSiteLimit() {
+            const c = selectedClient;
+            if (!c) return;
+            const zone = document.getElementById('limZone').value.trim(), species = document.getElementById('limPest').value.trim() || ANY_PEST;
+            const max = parseFloat(document.getElementById('limMax').value), notes = document.getElementById('limNotes').value.trim();
+            if (!zone || isNaN(max) || max < 0) { alert('Enter the zone and the most allowed a month.'); return; }
+            const btn = document.getElementById('limSaveBtn');
+            btn.disabled = true;
+            try {
+                const { error } = await _supabase.rpc('portal_save_limit', { p_client_id: String(c.id), p_id: limitEditing === 'new' ? null : limitEditing, p_zone: zone, p_species: species, p_max: max, p_notes: notes || null });
+                if (error) throw error;
+                await queueSiteChange({ action: 'limit', title: `Critical limit ${limitEditing === 'new' ? 'added' : 'changed'}: ${zone} · ${species === ANY_PEST ? 'Any pest' : species}`, detail: `${max} a month` });
+                limitEditing = null;
+                await reloadSiteLimits();
+            } catch (e) {
+                alert('Could not save the limit: ' + (portalMissing(e) ? PORTAL_SQL_NOTE : (e.message || e)));
+                btn.disabled = false;
+            }
+        }
+        async function deleteSiteLimit(id) {
+            const l = siteLimits.find(x => x.id === id);
+            if (!l || !confirm(`Remove the limit for ${l.zone} · ${limitPest(l)}?`)) return;
+            const { error } = await _supabase.rpc('portal_delete_limit', { p_id: id });
+            if (error) { alert('Could not remove: ' + (portalMissing(error) ? PORTAL_SQL_NOTE : error.message)); return; }
+            await queueSiteChange({ action: 'limit', title: `Critical limit removed: ${l.zone} · ${limitPest(l)}`, detail: '' });
+            await reloadSiteLimits();
+        }
+
         function rerenderOpenSite() {
             refreshLandingHeader();
             renderLandingRecommendationsAndVisits();
@@ -5929,6 +6589,7 @@
                 wrap.classList.add('hidden');
             }
             renderSiteServices();
+            renderSiteLimits();
         }
 
         // Back to the site cards (does NOT delete anything; visit progress is kept)
@@ -5943,7 +6604,7 @@
             hideStationForm();
             ['mapModal', 'mapEditDialog', 'stationOverviewModal', 'visitModal', 'barcodeModal'].forEach(id => document.getElementById(id).classList.add('hidden'));
             mapPlacing = null; mapFocus = null; currentMapId = null; ovBarcode = null; openVisitIndex = null; visitEditing = false; scanTypeFilter = 'all';
-            siteMaps = []; sitePins = new Map(); siteEvents = []; currentVisitEntries = []; lastVisitStats = null; barcodeAliases = new Map();
+            siteMaps = []; sitePins = new Map(); siteEvents = []; currentVisitEntries = []; lastVisitStats = null; barcodeAliases = new Map(); siteLimits = []; limitEditing = null;
             stationTypeFilter = 'all'; activityFilter = 'all';
             const ss = document.getElementById('siteStationSearch');
             if (ss) ss.value = '';
@@ -6100,7 +6761,6 @@
 
         // Uploaded recommendations still without a number after a full refresh: the database script hasn't been run
         let recNumbersMissing = false;
-        function unnumberedUploadedRecs() { return allSiteRecs().filter(r => r.recNo == null && !r.pending); }
         function recNumbersNotice() {
             if (splitTablesMissing) return `<div class="row-item p-2.5 text-[11px]" style="border-color:#d97706;color:#d97706;">The database doesn't have the new stations / floor plans / visits tables yet. Run <b>pestis_split_tables.sql</b> in the Supabase SQL editor, then tap Sync Site. Changes made meanwhile are kept on this device.</div>`;
             if (!recTableMissing) return '';
@@ -6431,12 +7091,41 @@
                 }));
             document.getElementById('recModalHistory').innerHTML = hist.join('');
 
-            // Adding to an open recommendation moves it to pending by default; any status can be chosen, including re-opening
+            // Adding to an open recommendation moves it to pending by default; any status can be chosen, including re-opening.
+            // Changing the status always needs a note saying what was done or why.
             document.getElementById('recModalStatus').value = rec.status === 'complete' ? 'complete' : 'pending';
             recModalStartStatus = document.getElementById('recModalStatus').value;
             document.getElementById('recModalNote').value = '';
+            updateRecNoteReq();
+            loadRecSeen(rec);
             renderRecNav();
             document.getElementById('recModal').classList.remove('hidden');
+        }
+
+        function updateRecNoteReq() {
+            const rec = findRec(openRecId);
+            const changed = !!rec && document.getElementById('recModalStatus').value !== rec.status;
+            document.getElementById('recModalNoteReq').classList.toggle('hidden', !changed);
+            document.getElementById('recModalNote').required = changed;
+        }
+        // Who has opened this recommendation (staff here, clients in the Client Portal). Opening it records this person.
+        async function loadRecSeen(rec) {
+            const box = document.getElementById('recModalSeen');
+            if (!isOnline) { box.innerHTML = '<span class="t-faint italic">Shows when you\'re online.</span>'; return; }
+            if (rec.pending || rec.recNo == null) { box.innerHTML = '<span class="t-faint italic">Shows once this recommendation has uploaded.</span>'; return; }
+            box.innerHTML = '<span class="t-faint">Loading...</span>';
+            try { await _supabase.rpc('pestis_mark_rec_viewed', { p_rec_id: rec.id }); } catch (e) { /* recorded next time */ }
+            let rows = [], err = null;
+            try { const r = await _supabase.from('recommendation_views').select('*').eq('rec_id', rec.id); if (r.error) throw r.error; rows = r.data || []; } catch (e) { err = e; }
+            if (openRecId !== rec.id) return;
+            if (err) { box.innerHTML = `<span class="t-faint italic">${esc(portalMissing(err) ? 'Not available until the Client Portal database update is run.' : 'Could not load: ' + (err.message || err))}</span>`; return; }
+            rows.sort((a, b) => (b.last_seen_at > a.last_seen_at ? 1 : -1));
+            box.innerHTML = rows.length ? `<div class="flex flex-wrap gap-2">${rows.map(v => {
+                const t = fmtDateTimeLong(v.last_seen_at || v.first_seen_at);
+                return `<div class="row-item px-2.5 py-1.5" title="First opened ${esc(fmtDateTimeLong(v.first_seen_at).date)} · opened ${esc(v.view_count || 1)} time${(v.view_count || 1) == 1 ? '' : 's'}">
+                    <div class="font-bold t-strong">${v.is_client ? '👤' : '🛠'} ${esc(String(v.viewer_name || 'Someone').replace(/ \(client\)$/, ''))} ${v.is_client ? '<span class="chip chip-blue !py-0">Client</span>' : ''}</div>
+                    <div class="t-faint text-[11px]">${esc(t.date)} ${esc(t.time)}${(v.view_count || 1) > 1 ? ' · ' + esc(v.view_count) + ' times' : ''}</div></div>`;
+            }).join('')}</div>` : '<span class="t-faint italic">Nobody has opened it yet.</span>';
         }
 
         // Fetches links for this recommendation's photos only, then shows them
@@ -6468,9 +7157,20 @@
             }
         }
 
-        function openImgAt(i, start) {
-            const r = imageRegistry[i];
-            if (r) viewFullImage(r.src, r.text, r.title, r.note, start);
+        async function openImgAt(i, start) {
+            const r = imageRegistry.get(i);
+            if (!r) return;
+            viewFullImage(r.src, r.text, r.title, r.note, start);
+            // a photo that couldn't be linked earlier: ask storage again now
+            if (r.missing.length && isOnline) {
+                r.missing.forEach(p => { delete signedCache[p]; });
+                const found = await getSignedUrls(r.missing);
+                const srcs = (Array.isArray(r.src) ? r.src : [r.src]).filter(Boolean);
+                const still = r.missing.filter(p => !found.has(p));
+                r.missing.forEach(p => { if (found.has(p)) srcs.push(found.get(p)); });
+                Object.assign(r, { src: srcs, missing: still, note: still.length ? photoErrorText(still[0]) : '' });
+                if (!document.getElementById('imageModal').classList.contains('hidden')) viewFullImage(r.src, r.text, r.title, r.note, viewerIndex);
+            }
         }
 
         function closeRecModal() {
@@ -6488,6 +7188,11 @@
             const status = document.getElementById('recModalStatus').value; // open | pending | complete
             const nothingNew = !note && recPendingPhotos.length === 0 && status === rec.status;
             if (nothingNew) { closeRecModal(); return; }
+            if (status !== rec.status && !note) {
+                alert('Add a note to change the status - say what was done or why.');
+                document.getElementById('recModalNote').focus();
+                return;
+            }
 
             const btn = document.getElementById('recModalSaveBtn');
             btn.disabled = true;
@@ -6591,6 +7296,23 @@
             doc.text(`Visit: ${visitTypeOf(v)}`, 150, 26);
 
             y = 42;
+            const breaches = visitLimitBreaches(v);
+            if (breaches.length) {
+                const bl = breaches.map(x => doc.splitTextToSize(`${x.limit.zone} - ${limitPest(x.limit)}: ${x.total} recorded in ${monthName(x.month)}, limit ${x.limit.max_per_month} a month`, 172));
+                const h = 10 + bl.reduce((n, l) => n + l.length * 5, 0);
+                doc.setFillColor(254, 226, 226);
+                doc.setDrawColor(220, 38, 38);
+                doc.rect(14, y - 5, 182, h, 'FD');
+                doc.setTextColor(185, 28, 28);
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(11);
+                doc.text('CRITICAL LIMITS EXCEEDED', 18, y);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9.5);
+                let by = y + 6;
+                bl.forEach(l => { doc.text(l, 18, by); by += l.length * 5; });
+                y += h + 4;
+            }
             doc.setTextColor(15, 23, 42);
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(12);
@@ -6832,7 +7554,7 @@
                     const lbl = esc(rec ? (fmtRecNo(rec.recNo) || rec.station) : 'Recommendation');
                     return `<div class="row-item p-2.5">${rec ? `<button type="button" onclick="openVisitRec(this.dataset.recLink)" data-rec-link="${esc(rec.id)}" class="visit-link font-bold t-accent">${lbl}</button>` : `<span class="font-bold t-strong">${lbl}</span>`} <span class="t-muted">${esc((u._changes || []).join(', '))}${u.payload.note ? ' · ' + esc(u.payload.note) : ''}</span> <span class="t-faint">${esc(fmtDateTimeLong(recTime(u)).time)}</span></div>`;
                 }).join('');
-                body.innerHTML = `
+                body.innerHTML = limitAlertHtml(visitLimitBreaches(v), 'Critical limits exceeded') + `
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         ${fact('Signed in', signedIn ? esc(fmtDateTimeLong(signedIn).time) + `<div class="t-faint font-normal text-[11px]">${esc(fmtDateTimeLong(signedIn).date)}</div>` : 'Not recorded')}
                         ${fact('Signed out', esc(fmtDateTimeLong(signedOut).time) + `<div class="t-faint font-normal text-[11px]">${esc(fmtDateTimeLong(signedOut).date)}</div>`)}
@@ -7021,7 +7743,8 @@
                 fact('Floor plan', plan ? esc(plan.name) + (pin.x == null ? ' <span class="t-faint font-normal">(pin not placed)</span>' : '') : '<span class="t-faint font-normal">Not on a plan</span>'),
                 fact('Last serviced', last ? `${esc(fmtDateTimeLong(last.at).date)}<div class="t-faint font-normal text-[11px]">${esc(last.technician || '')}</div>` : '<span class="t-faint font-normal">Never</span>'),
                 fact('Last activity', last ? esc(last.activity) + (last.species && last.species !== NONE_SPECIES ? ` · ${esc(last.species)}` : '') : '-'),
-                fact('Open recommendations', String(openRecCount(d)))
+                fact('Open recommendations', String(openRecCount(d))),
+                fact('Zone', stationZoneOf(barcode) ? esc(stationZoneOf(barcode)) : '<span class="t-faint font-normal">None</span>')
             ];
             if (isToxicRodent(d.deviceType)) facts.push(`<div class="col-span-2">${fact('Bait last changed', esc(baitLastChangedText(d)))}</div>`);
             document.getElementById('ovFacts').innerHTML = facts.join('');
@@ -7992,6 +8715,7 @@
                 recommendation: document.getElementById('recommendationNote').value.trim(),
                 name: document.getElementById('newLocName').value.trim(),
                 type: document.getElementById('newDeviceType').value,
+                zone: document.getElementById('stationZone').value.trim(),
                 kept: keptPhotos.map(k => k.path).join('|')
             };
         }
@@ -8178,6 +8902,20 @@
             const dot = document.getElementById('formTypeDot');
             dot.style.background = c.color;
             dot.title = c.label;
+            toggleZoneRow();
+        }
+        // Zones are for insect stations (flying and crawling); a station that already has one keeps showing it
+        const isInsectType = t => /insect|fly|flies|flying|crawl|ilt|moth|beetle|cockroach|midge|monitor|glue|uv/i.test(String(t || ''));
+        function toggleZoneRow() {
+            const t = document.getElementById('newDeviceType').value || currentDeviceType;
+            const z = document.getElementById('stationZone');
+            document.getElementById('stationZoneRow').classList.toggle('hidden', !(isInsectType(t) || (z && z.value.trim())));
+        }
+        function siteZones() {
+            const seen = new Map();
+            siteStations.forEach(st => { const z = String(st.zone || '').trim(); if (z && !seen.has(zoneKey(z))) seen.set(zoneKey(z), z); });
+            siteLimits.forEach(l => { const z = String(l.zone || '').trim(); if (z && !seen.has(zoneKey(z))) seen.set(zoneKey(z), z); });
+            return Array.from(seen.values()).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
         }
 
         // Bait last changed (toxic rodent stations)
@@ -8261,6 +8999,9 @@
             }
             document.getElementById('newStationFields').classList.remove('hidden');
             populateStationMapSelect(barcode);
+            const stRow = siteStations.get(barcode);
+            document.getElementById('stationZone').value = (stRow && stRow.zone) || '';
+            document.getElementById('zoneOptions').innerHTML = siteZones().map(z => `<option value="${esc(z)}"></option>`).join('');
             updateFormTypeDot();
 
             const hadVisit = prefillFromThisVisit(existingDev);
@@ -8541,6 +9282,14 @@
                 return false;
             }
 
+            // Critical limits: ask the technician to double-check a count that takes a zone over its monthly limit
+            const hit = limitsHitBy(currentBarcode, f.zone, f.speciesCaught, f.pestCount);
+            if (hit.length && !confirm('⚠ CRITICAL LIMIT EXCEEDED\n\n' + hit.map(x => `${x.limit.zone} · ${limitPest(x.limit)}: this makes ${x.total} this month (limit ${x.limit.max_per_month}).`).join('\n') +
+                '\n\nPlease double-check the species and number are right.\nOK to save, Cancel to check again.')) {
+                document.getElementById('pestCount').focus();
+                return false;
+            }
+
             savingStation = true;
             const btn = document.getElementById('saveServiceBtn');
             btn.disabled = true;
@@ -8574,11 +9323,13 @@
                 const newRec = f.recommendation || newBlobs.length;
                 const photoBit = newBlobs.length ? ` + ${newBlobs.length} photo${newBlobs.length === 1 ? '' : 's'}` : '';
                 await queueLog(currentBarcode, payloadData, null, `Service record · ${locNameInput}`);
+                for (const x of hit) await queueSiteChange({ action: 'limit_breach', title: `Critical limit exceeded: ${x.limit.zone} · ${limitPest(x.limit)}`,
+                    detail: `${x.total} this month, limit ${x.limit.max_per_month} · ${locNameInput} (${f.speciesCaught} ×${pestN(f.speciesCaught, f.pestCount)})` });
                 // The station's own row: created the first time, updated when its name or type changes
                 const st = siteStations.get(currentBarcode);
-                if (!st || st.name !== locNameInput || (st.type || '') !== (devType || '')) {
-                    const row = st ? { id: st.id, name: locNameInput, type: devType, updated_at: new Date().toISOString() }
-                        : { id: uid(), barcode: currentBarcode, name: locNameInput, type: devType, created_by: technicianLabel(), created_at: new Date().toISOString() };
+                if (!st || st.name !== locNameInput || (st.type || '') !== (devType || '') || (st.zone || '') !== f.zone) {
+                    const row = st ? { id: st.id, name: locNameInput, type: devType, zone: f.zone || null, updated_at: new Date().toISOString() }
+                        : { id: uid(), barcode: currentBarcode, name: locNameInput, type: devType, zone: f.zone || null, created_by: technicianLabel(), created_at: new Date().toISOString() };
                     await queueTableRow('stations', row, st ? `Station details updated · ${locNameInput}` : `New station · ${locNameInput}`);
                     siteStations.set(currentBarcode, Object.assign({}, st || {}, row));
                 }
@@ -9019,7 +9770,8 @@
         // ---------- Team settings (app_settings table; admins change them) ----------
         const TEAM_SETTINGS = {
             renewal_warn_days: { label: 'Warn about contracts ending within (days)', def: 30, min: 1, max: 365 },
-            visit_stale_hours: { label: 'Warn when a visit has been open for (hours)', def: 24, min: 1, max: 720 }
+            visit_stale_hours: { label: 'Warn when a visit has been open for (hours)', def: 24, min: 1, max: 720 },
+            doc_expiry_warn_days: { label: 'Warn about site documents expiring within (days)', def: 60, min: 1, max: 365 }
         };
         let teamSettings = loadJSON('pestis-team-settings', {});
         function teamSetting(key) {
@@ -9104,12 +9856,9 @@
 
         function openSettingsModal() {
             document.getElementById('notifDueSelect').value = notifDueMode;
-            renderTeamSettings();
-            document.getElementById('newPrepUnit').innerHTML = PREP_UNITS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
-            renderSettingsLists();
+            document.getElementById('settingsAdminNote').classList.toggle('hidden', !isAdmin());
             renderDiagnostics();
             document.getElementById('settingsModal').classList.remove('hidden');
-            if (isOnline) loadOptions();
         }
         function closeSettingsModal() {
             document.getElementById('settingsModal').classList.add('hidden');
@@ -9117,7 +9866,7 @@
 
         function renderSettingsLists() {
             const admin = isAdmin();
-            document.querySelectorAll('#settingsModal .admin-only').forEach(el => el.classList.toggle('hidden', !admin));
+            document.querySelectorAll('#adminPage .admin-only').forEach(el => el.classList.toggle('hidden', !admin));
             const note = document.getElementById('optionsAdminNote');
             if (note) note.innerHTML = admin
                 ? "These lists are shared with your whole team. Removing an item doesn't change records that already use it." + (optionsUnitMissing ? ' <span style="color:#d97706;">Units are saved on this device only until pestis_r14_update.sql is run.</span>' : '')
