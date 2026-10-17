@@ -618,6 +618,7 @@
 
             <!-- Body -->
             <div id="stationSheetBody" class="flex-1 overflow-y-auto scroll-thin p-4 sm:p-6 space-y-5">
+                <p id="visitEditNote" class="hidden text-[11px] font-semibold -mb-2" style="color:#10b981;">Showing the service you saved for this station earlier in this visit. Saving again updates it.</p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div id="newStationFields" class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 inset p-4" style="border-color:#f97316;">
                         <div id="stationDetailsHeading" class="sm:col-span-2 eyebrow t-accent">New Barcode Detected - Register Device Details:</div>
@@ -701,7 +702,6 @@
                             <button type="button" id="recEditorCancel" onclick="closeRecEditor()" class="link-btn !no-underline !text-[11px]">Cancel</button>
                         </div>
                         <textarea id="recommendationNote" rows="3" placeholder="e.g. Seal gap around pipes, repair damaged door seal..." class="field"></textarea>
-                        <p id="visitEditNote" class="hidden text-[11px] font-semibold" style="color:#10b981;">Raised earlier in this visit. Saving the service record updates it.</p>
                         <div class="grid grid-cols-2 gap-2">
                             <button type="button" onclick="document.getElementById('issuePhotoCamera').click()" class="btn btn-secondary !py-3">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -717,6 +717,7 @@
                         <div id="photoPreviewGrid" class="flex flex-wrap gap-2"></div>
                     </div>
                     <button type="button" id="addRecBtn" onclick="openRecEditor()" class="btn btn-secondary w-full !py-2.5">+ Add a recommendation</button>
+                    <p id="recSaveHint" class="hidden text-[11px] t-faint">Saved with "Save Complete Service Record" below. It then appears in the list with its number.</p>
 
                     <div id="pastRecommendationsList" class="space-y-2.5 max-h-96 overflow-y-auto scroll-thin text-xs"></div>
                 </div>
@@ -1336,11 +1337,11 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.17-r16';
+        const APP_VERSION = '2026.10.17-r17';
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "stationColorLegend", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "visitEditNote", "photoPreviewGrid", "addRecBtn", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "stationColorLegend", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "imageModal", "viewerPrev", "fullImageDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -4354,7 +4355,7 @@
                 activity: p.activityLevel || 'None', species: p.speciesCaught || 'None', count: p.pestCount,
                 prep: p.prepUsed || '', qty: p.quantity, unit: p.quantityUnit || '', batch: p.batchNumber || '',
                 notes: p.notes || '', technician: p.technician || '', recommendation: p.recommendation || p.recommendationNote || '',
-                recNo: p.recNo, photoCount: payloadPhotoPaths(p).length, edited: !!p.editedAt
+                recNo: p.recNo, photoCount: payloadPhotoPaths(p).length, edited: !!p.editedAt, recOnly: !!p.recOnly
             };
         }
 
@@ -4484,6 +4485,7 @@
                 if (v) { v.entries.push(entry); if (v.firstAt == null) v.firstAt = entry.at; }
                 else currentVisitEntries.push(entry);
 
+                const recOnly = !!payload.recOnly; // a recommendation raised on its own, not a service of the station
                 const existing = map.get(row.barcode_id) || {
                     barcode_id: row.barcode_id,
                     locationName: payload.locationName || 'Unnamed Device',
@@ -4514,8 +4516,10 @@
                     });
                 }
 
-                existing.locationName = payload.locationName || existing.locationName;
-                existing.deviceType = payload.deviceType || existing.deviceType;
+                if (!recOnly || !map.has(row.barcode_id)) {
+                    existing.locationName = payload.locationName || existing.locationName;
+                    existing.deviceType = payload.deviceType || existing.deviceType;
+                }
 
                 const recText = payload.recommendation || payload.recommendationNote || null;
                 const slots = row._slots || [];
@@ -4540,10 +4544,13 @@
                         technician: payload.technician || '',
                         status: 'open',
                         completedAt: null,
+                        thisVisit: inThisVisit,
+                        pending: !!row._pending,
                         updates: []
                     };
                     existing.recommendationsHistory.push(rec);
                 }
+                if (recOnly) { map.set(row.barcode_id, existing); return; }
                 if (inThisVisit) {
                     existing.visitPayload = payload;
                     existing.visitRef = payload.clientRef || null;
@@ -4591,7 +4598,7 @@
             // Last completed visit: how many of the site's stations were scanned
             const lastV = visits[visits.length - 1];
             if (lastV) {
-                const scanned = new Set(lastV.entries.map(e => e.barcode).filter(b => map.has(b)));
+                const scanned = new Set(lastV.entries.filter(e => !e.recOnly).map(e => e.barcode).filter(b => map.has(b)));
                 lastVisitStats = { scanned: scanned.size, total: map.size, visit: lastV };
             } else lastVisitStats = null;
 
@@ -4645,6 +4652,12 @@
                         return;
                 }
                 if (META_IDS.has(r.barcode_id)) return;
+                if (p.recOnly) {
+                    const rec = recById.get(p.recRef);
+                    const no = fmtRecNo(p.recNo != null ? p.recNo : rec && rec.recNo);
+                    add('rec', `Recommendation ${no || '(number on upload)'} raised`, p.recommendation || '', { station: p.locationName || devName(r.barcode_id) });
+                    return;
+                }
                 const isNew = !seen.has('st:' + r.barcode_id);
                 seen.add('st:' + r.barcode_id);
                 const bits = [];
@@ -4790,13 +4803,20 @@
                 step(25, 'Checking site details...');
                 const detailsChanged = await refreshClientRecord(clientId).catch(() => false);
                 step(40, 'Checking for new records...');
-                const { cache, changed, added } = await syncSiteCache(clientId, mode === 'full' ? 'full' : 'auto', null, step);
+                // Numbers added by the database to records we already have only arrive with a full refresh
+                const checkKey = 'pestis-recno-check-' + clientId;
+                const needNumbers = unnumberedUploadedRecs().length > 0;
+                const lastCheck = loadJSON(checkKey, 0);
+                const fullForNumbers = needNumbers && (mode === 'manual' || mode === 'start' || Date.now() - lastCheck > 6 * 3600000);
+                if (fullForNumbers) saveJSON(checkKey, Date.now());
+                const { cache, changed, added } = await syncSiteCache(clientId, mode === 'full' || fullForNumbers ? 'full' : 'auto', null, step);
                 if (mySeq !== siteSyncSeq) return;
                 siteSyncInfo.lastSyncAt = cache.lastSyncAt;
-                if (changed || mode) {
+                if (changed || mode || fullForNumbers) {
                     step(93, 'Updating the screen...');
                     await buildSiteState(clientId, cache.rows, new Set(scannedBarcodesThisVisit), null, { quick: true });
                     if (mySeq !== siteSyncSeq) return;
+                    if (fullForNumbers) recNumbersMissing = unnumberedUploadedRecs().length > 0;
                     rerenderOpenSite();
                     prefetchPhotos(sitePhotoUrls());
                     fetchMissingPhotoLinks();
@@ -4910,6 +4930,7 @@
             selectedClient = null;
             siteSyncSeq++;
             siteSyncInfo = { lastSyncAt: 0, syncing: false, error: null };
+            recNumbersMissing = false;
             const s = document.getElementById('stationSearchInput');
             if (s) s.value = '';
             updateFab();
@@ -5051,6 +5072,14 @@
                 : `<span class="font-black t-faint ${cls || 'text-sm'}" title="The number is given when the recommendation reaches the database">R-····</span>`;
         }
 
+        // Uploaded recommendations still without a number after a full refresh: the database script hasn't been run
+        let recNumbersMissing = false;
+        function unnumberedUploadedRecs() { return allSiteRecs().filter(r => r.recNo == null && !r.pending); }
+        function recNumbersNotice() {
+            if (!recNumbersMissing || !unnumberedUploadedRecs().length) return '';
+            return `<div class="row-item p-2.5 text-[11px]" style="border-color:#d97706;color:#d97706;">Recommendation numbers are given by the database, and it isn't numbering them yet. Run <b>pestis_r14_update.sql</b> in the Supabase SQL editor, then tap Sync Site.</div>`;
+        }
+
         function recRowHtml(item, opts) {
             const dateStr = item.date ? new Date(item.date).toLocaleDateString(LOCALE, NZ_DATE) : '';
             const bits = [esc(dateStr)];
@@ -5063,6 +5092,7 @@
                         ${recNumberHtml(item)}
                         ${recStatusChip(item.status)}
                         ${recAgeChip(item)}
+                        ${item.thisVisit ? '<span class="chip chip-green shrink-0">This visit</span>' : ''}
                         <span class="link-btn !no-underline ml-auto">Open ▸</span>
                     </div>
                     ${station}
@@ -5136,7 +5166,7 @@
             const shown = recFilter === 'all' ? allRecs : allRecs.filter(r => (r.status === 'new' ? 'open' : r.status) === recFilter);
             const emptyText = { open: 'No open recommendations.', pending: 'Nothing pending.', complete: 'No completed recommendations yet.', all: 'No recommendations on record for this site.' };
             recsContainer.innerHTML = shown.length
-                ? shown.map(r => recRowHtml(r)).join('')
+                ? recNumbersNotice() + shown.map(r => recRowHtml(r)).join('')
                 : `<span class="t-faint italic">${emptyText[recFilter]}</span>`;
 
             if (sitePastVisits.length === 0) {
@@ -5144,7 +5174,7 @@
             } else {
                 visitsContainer.innerHTML = sitePastVisits.map((v, index) => {
                     const dt = fmtDateTimeLong(v.date);
-                    const n = new Set(v.entries.map(e => e.barcode)).size;
+                    const n = new Set(v.entries.filter(e => !e.recOnly).map(e => e.barcode)).size;
                     return `
                         <div class="row-item p-3.5 flex justify-between items-center gap-3">
                             <div class="min-w-0">
@@ -5436,7 +5466,8 @@
             const visitDateStr = when.toLocaleDateString(LOCALE, NZ_DATE);
             const tm = iso => iso ? new Date(iso).toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' }) : '';
             const dtm = iso => iso ? `${new Date(iso).toLocaleDateString(LOCALE, NZ_DATE)} ${tm(iso)}` : 'Not recorded';
-            const entries = (v.entries || []).slice().sort((a, b) => a.at - b.at);
+            const allEntries = (v.entries || []).slice().sort((a, b) => a.at - b.at);
+            const entries = allEntries.filter(e => !e.recOnly);
             const pageBreak = (need) => { if (y > 287 - (need || 20)) { doc.addPage(); y = 20; } };
             let y = 15;
 
@@ -5546,7 +5577,7 @@
             }
 
             // Recommendations: those raised on this visit, plus everything still open at the site
-            const raised = new Set(entries.filter(e => e.recommendation).map(e => (e.payload && (e.payload.recRef || e.payload.clientRef)) || ''));
+            const raised = new Set(allEntries.filter(e => e.recommendation).map(e => (e.payload && (e.payload.recRef || e.payload.clientRef)) || ''));
             const recs = allSiteRecs().filter(r => raised.has(r.id) || r.status !== 'complete')
                 .sort((a, b) => (raised.has(b.id) - raised.has(a.id)) || (new Date(a.date) - new Date(b.date)));
             if (recs.length) {
@@ -5660,12 +5691,12 @@
 
             const signedIn = v.startedAt || (v.entries[0] ? new Date(v.entries[0].at).toISOString() : null);
             const signedOut = v.endedAt || v.date;
-            const stations = new Set(v.entries.map(e => e.barcode));
+            const stations = new Set(v.entries.filter(e => !e.recOnly).map(e => e.barcode));
             const fact = (k, val) => `<div class="inset p-2.5"><div class="eyebrow t-faint">${esc(k)}</div><div class="t-strong font-bold mt-0.5 break-words">${val}</div></div>`;
             const body = document.getElementById('visitModalBody');
 
             if (!visitEditing) {
-                const entryRows = v.entries.slice().sort((a, b) => a.at - b.at).map(e => {
+                const entryRows = v.entries.filter(e => !e.recOnly).sort((a, b) => a.at - b.at).map(e => {
                     const sp = e.species && e.species !== NONE_SPECIES ? `${e.species}${e.count ? ' ×' + e.count : ''}` : 'None';
                     const pr = e.prep && e.prep !== NONE_PREP ? `${e.prep} · ${fmtQty(e.qty, e.unit) || '-'}${e.batch ? ' · batch ' + e.batch : ''}` : 'None';
                     return `
@@ -5689,7 +5720,8 @@
                     </div>
                     ${v.servicesCompleted.length ? `<div><span class="eyebrow t-faint">Services completed</span><div class="flex flex-wrap gap-1.5 mt-1.5">${v.servicesCompleted.map(x => `<span class="chip chip-green">${esc(x)}</span>`).join('')}</div></div>` : ''}
                     <div><span class="eyebrow t-faint">Service notes</span><div class="t-strong mt-1 whitespace-pre-line inset p-3">${esc(v.summaryNote)}</div></div>
-                    <div class="space-y-2"><span class="eyebrow t-faint">Station records (${v.entries.length})</span>${entryRows}</div>
+                    <div class="space-y-2"><span class="eyebrow t-faint">Station records (${v.entries.filter(e => !e.recOnly).length})</span>${entryRows}</div>
+                    ${v.entries.some(e => e.recOnly) ? `<div class="space-y-2"><span class="eyebrow t-faint">Recommendations raised</span>${v.entries.filter(e => e.recOnly).map(e => `<div class="row-item p-2.5"><b class="t-accent">${esc(fmtRecNo(e.recNo) || 'Recommendation')}</b> <span class="t-strong">${esc(e.name)}:</span> <span class="t-muted">${esc(e.recommendation)}${e.photoCount ? ' · 📷 ' + e.photoCount : ''}</span></div>`).join('')}</div>` : ''}
                     ${recUps ? `<div class="space-y-2"><span class="eyebrow t-faint">Recommendation updates</span>${recUps}</div>` : ''}`;
                 return;
             }
@@ -5710,7 +5742,7 @@
                 </div>
                 <div class="space-y-3">
                     <span class="eyebrow t-faint">Station records</span>
-                    ${v.entries.slice().sort((a, b) => a.at - b.at).map(e => `
+                    ${v.entries.filter(e => !e.recOnly).sort((a, b) => a.at - b.at).map(e => `
                         <div class="row-item typed p-3 space-y-2 entry-grid" data-entry="${esc(e.key)}" style="border-left-color:${stationColor(e.type).color};">
                             <div class="font-bold t-strong">${esc(e.name)} <span class="t-faint font-normal">${esc(e.type)} · <span class="font-mono">${esc(e.barcode)}</span> · ${esc(fmtDateTimeLong(e.at).time)}</span></div>
                             <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
@@ -6896,13 +6928,6 @@
             if (p.quantity != null && !isNaN(p.quantity)) document.getElementById('qtyCount').value = p.quantity;
             document.getElementById('batchNumber').value = p.batchNumber || '';
             document.getElementById('serviceNotes').value = p.notes || '';
-            const rec = dev.visitRec;
-            if (rec && p.recommendation) {
-                document.getElementById('recommendationNote').value = p.recommendation === 'Issue photo attached' && rec.photoCount ? '' : p.recommendation;
-                keptPhotos = (rec.photoSlots || []).slice(0, (p.photos || []).length).map(k => ({ path: k.path, url: '' }));
-                // photos that couldn't be linked are still kept on the record
-                payloadPhotoPaths(p).forEach(path => { if (!keptPhotos.some(k => k.path === path)) keptPhotos.push({ path: path, url: '' }); });
-            }
             renderPhotoPreviews();
             return true;
         }
@@ -7061,7 +7086,6 @@
 
             const hadVisit = prefillFromThisVisit(existingDev);
             renderStationRecs(existingDev);
-            loadKeptPhotoThumbs(existingDev);
             if (!hadVisit && loadJSON(AUTO_REPEAT_KEY, false)) applyRepeatPrep();
             prepChanged(false);
             if (!hadVisit && document.getElementById('prepUsed').value === NONE_PREP) document.getElementById('qtyCount').value = '';
@@ -7091,57 +7115,32 @@
             setTimeout(() => document.getElementById('recommendationNote').focus(), 30);
         }
         function closeRecEditor() {
-            const dev = siteDevices.find(d => d.barcode_id === currentBarcode);
-            if (dev && dev.visitRec) return; // already saved this visit: it stays (clear the text and photos to remove it)
             document.getElementById('recommendationNote').value = '';
             clearPendingPhotos(true);
             recEditorOpen = false;
             renderRecEditor();
         }
         function renderRecEditor() {
-            const dev = siteDevices.find(d => d.barcode_id === currentBarcode);
-            const rec = dev && dev.visitRec;
-            const open = recEditorOpen || !!rec || !!document.getElementById('recommendationNote').value.trim() || pendingPhotos.length > 0;
+            const open = recEditorOpen || !!document.getElementById('recommendationNote').value.trim() || pendingPhotos.length > 0;
             document.getElementById('recEditor').classList.toggle('hidden', !open);
+            document.getElementById('recSaveHint').classList.toggle('hidden', !open);
             document.getElementById('addRecBtn').classList.toggle('hidden', open);
-            document.getElementById('recEditorCancel').classList.toggle('hidden', !!rec);
-            document.getElementById('recEditorHead').innerHTML = rec
-                ? `${recNumberHtml(rec)} ${recStatusChip(rec.status)} ${recAgeChip(rec)} <span class="text-[11px] t-faint">Raised this visit</span>`
-                : '<span class="font-bold t-strong text-sm">New recommendation</span>';
+            document.getElementById('recEditorCancel').classList.remove('hidden');
+            document.getElementById('recEditorHead').innerHTML = '<span class="font-bold t-strong text-sm">New recommendation</span>';
         }
         function renderStationRecs(dev) {
             const list = document.getElementById('pastRecommendationsList');
             const btn = document.getElementById('loadPastHistoryBtn');
-            const own = dev && dev.visitRec ? dev.visitRec.id : null;
-            const recs = dev ? dev.recommendationsHistory.filter(r => r.id !== own) : [];
+            const recs = dev ? dev.recommendationsHistory.slice() : [];
             recs.forEach(r => { r.station = dev.locationName; r.stationType = dev.deviceType; });
             const open = recs.filter(r => r.status !== 'complete');
             const done = recs.filter(r => r.status === 'complete');
-            const shown = (stationRecsShowAll ? open.concat(done) : open).sort((a, b) => new Date(b.date) - new Date(a.date));
+            const shown = (stationRecsShowAll ? open.concat(done) : open).sort((a, b) => (b.thisVisit - a.thisVisit) || (new Date(b.date) - new Date(a.date)));
             btn.classList.toggle('hidden', !done.length);
             btn.textContent = stationRecsShowAll ? 'Hide completed' : `Show completed (${done.length})`;
-            list.innerHTML = shown.length
-                ? `<div class="eyebrow t-faint pt-1">Earlier at this station</div>` + shown.map(r => recRowHtml(r, { hideStation: true, photos: true })).join('')
-                : '';
+            list.innerHTML = shown.length ? recNumbersNotice() + shown.map(r => recRowHtml(r, { hideStation: true, photos: true })).join('') : '';
             streamRecThumbs(list, shown);
             renderRecEditor();
-        }
-        // This visit's saved photos: show the real pictures (on this device if not uploaded yet, otherwise streamed)
-        async function loadKeptPhotoThumbs(dev) {
-            const rec = dev && dev.visitRec;
-            if (!keptPhotos.length) return;
-            const barcode = currentBarcode;
-            const local = new Map(((rec && rec.allSlots) || []).filter(sl => sl.local).map(sl => [sl.path, sl.local]));
-            keptPhotos.forEach(k => { if (!k.url && local.has(k.path)) k.url = local.get(k.path); });
-            const remote = keptPhotos.filter(k => !k.url).map(k => k.path);
-            if (remote.length && isOnline) {
-                try {
-                    const links = await withSyncBadge('photos', 'Loading photos...', () => getSignedUrls(remote));
-                    if (currentBarcode !== barcode) return;
-                    keptPhotos.forEach(k => { if (!k.url && links.get(k.path)) k.url = links.get(k.path); });
-                } catch (e) {}
-            }
-            renderPhotoPreviews();
         }
         function lazyLoadStationHistory() {
             stationRecsShowAll = !stationRecsShowAll;
@@ -7150,6 +7149,7 @@
         // Photo links are asked for when shown; the images load straight from storage and aren't kept on the device
         async function streamRecThumbs(container, recs) {
             const withPhotos = recs.filter(r => (r.allSlots || []).length);
+            container.querySelectorAll('[data-rec-thumbs]').forEach(b => { if (!withPhotos.some(r => r.id === b.dataset.recThumbs)) b.remove(); });
             if (!withPhotos.length) return;
             const remote = [];
             withPhotos.forEach(r => (r.allSlots || []).slice(0, 8).forEach(sl => { if (!sl.local) remote.push(sl.path); }));
@@ -7162,7 +7162,8 @@
                     + (!links && remote.length && !isOnline ? '<span class="t-faint text-[11px]">Photos show when online</span>' : '');
             });
             if (!remote.length || !isOnline) { fill(null); return; }
-            container.querySelectorAll('[data-rec-thumbs]').forEach(b => { b.innerHTML = '<span class="t-faint text-[11px]">Loading photos...</span>'; });
+            const withIds = new Set(withPhotos.map(r => r.id));
+            container.querySelectorAll('[data-rec-thumbs]').forEach(b => { b.innerHTML = withIds.has(b.dataset.recThumbs) ? '<span class="t-faint text-[11px]">Loading photos...</span>' : ''; });
             try {
                 const links = await withSyncBadge('photos', 'Loading photos...', () => getSignedUrls(remote));
                 fill(links);
@@ -7383,24 +7384,29 @@
                 }
                 if (f.speciesCaught && f.speciesCaught !== NONE_SPECIES && f.pestCount !== '' && !isNaN(parseFloat(f.pestCount))) payloadData.pestCount = parseFloat(f.pestCount);
 
-                // Recommendation + photos travel with the service record
-                const newBlobs = pendingPhotos.map(p => p.blob);
-                const keptPaths = keptPhotos.map(k => k.path);
-                if (f.recommendation || keptPaths.length || newBlobs.length) {
-                    const prevRec = dev && dev.visitRec;
-                    payloadData.recommendation = f.recommendation || 'Issue photo attached';
-                    payloadData.recRef = (prevRec && prevRec.id) || uid();
-                    if (prevRec && prevRec.recNo != null) payloadData.recNo = prevRec.recNo;     // keeps its number
-                    if (prevRec && prevRec.date) payloadData.recCreatedAt = prevRec.date;         // and its age
-                    payloadData.photos = keptPaths;
-                    payloadData.photo = keptPaths[0] || null;
+                // A recommendation already on this visit's service record (saved by an earlier version) stays on it
+                const prevP = dev && dev.visitPayload;
+                if (prevP && (prevP.recommendation || prevP.recommendationNote)) {
+                    ['recommendation', 'recommendationNote', 'recRef', 'recNo', 'recCreatedAt', 'photos', 'photo'].forEach(k => { if (prevP[k] != null) payloadData[k] = prevP[k]; });
                 }
                 // Saved already this visit? This entry replaces that one
                 if (dev && dev.visitRef) payloadData.supersedes = dev.visitRef;
-
-                const recBit = payloadData.recommendation ? ' + recommendation' : '';
+                const newBlobs = pendingPhotos.map(p => p.blob);
+                const newRec = f.recommendation || newBlobs.length;
                 const photoBit = newBlobs.length ? ` + ${newBlobs.length} photo${newBlobs.length === 1 ? '' : 's'}` : '';
-                await queueLog(currentBarcode, payloadData, newBlobs, `Service record${recBit}${photoBit} · ${locNameInput}`);
+                await queueLog(currentBarcode, payloadData, null, `Service record · ${locNameInput}`);
+                // A new recommendation is its own record (the database gives it the next number)
+                if (newRec) {
+                    await queueLog(currentBarcode, {
+                        recOnly: true,
+                        locationName: locNameInput,
+                        deviceType: devType,
+                        recommendation: f.recommendation || 'Issue photo attached',
+                        recRef: uid(),
+                        technician: technicianLabel(),
+                        servicedAt: new Date(Date.now() + 1).toISOString()
+                    }, newBlobs, `New recommendation${photoBit} · ${locNameInput}`);
+                }
                 if (usedPrep) rememberPrep(f);
 
                 clearPendingPhotos(false); // previews stay visible until the upload finishes
