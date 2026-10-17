@@ -165,11 +165,11 @@
                     --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-other: #c98500;
                     --series-4: #c98500; --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; }
         .viz-tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border); border-radius: .6rem; padding: .45rem .6rem; font-size: .68rem; color: var(--text); box-shadow: var(--shadow); white-space: nowrap; z-index: 5; }
-        .site-grid.size-0 .site-due { font-size: .5rem; padding: .1rem .35rem; }
-        .site-grid.size-0 .site-initials { font-size: 2.6rem; }
-        .site-grid.size-0 .site-overlay { padding: 1.6rem .55rem .5rem; }
-        .site-grid.size-0 .site-overlay.has-chips .site-name { padding-right: 0; margin-bottom: 1.1rem; }
-        .site-grid.size-2 .site-initials { font-size: 6rem; }
+        .site-grid.card-size-0 .site-due { font-size: .5rem; padding: .1rem .35rem; }
+        .site-grid.card-size-0 .site-initials { font-size: 2.6rem; }
+        .site-grid.card-size-0 .site-overlay { padding: 1.6rem .55rem .5rem; }
+        .site-grid.card-size-0 .site-overlay.has-chips .site-name { padding-right: 0; margin-bottom: 1.1rem; }
+        .site-grid.card-size-2 .site-initials { font-size: 6rem; }
         .chip-purple { color: #6d28d9; background: #ede9fe; border-color: #c4b5fd; }
         html.dark .chip-purple { color: #c4b5fd; background: rgba(124, 58, 237, .15); border-color: rgba(124, 58, 237, .4); }
         .site-due { align-self: flex-start; font-size: .6rem; font-weight: 800; padding: .15rem .5rem; border-radius: .4rem; color: #fff; margin-bottom: .3rem; }
@@ -1113,7 +1113,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.17-r12';
+        const APP_VERSION = '2026.10.17-r13';
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
@@ -3047,7 +3047,7 @@
         }
         function applyCardSize() {
             const sz = CARD_SIZES[cardSize] || CARD_SIZES[1];
-            document.getElementById('siteCardsGrid').className = 'site-grid size-' + cardSize + ' grid ' + sz.cls;
+            document.getElementById('siteCardsGrid').className = 'site-grid card-size-' + cardSize + ' grid ' + sz.cls;
             document.getElementById('cardSizeLabel').textContent = sz.label;
             document.getElementById('siteSortSelect').value = siteSort;
         }
