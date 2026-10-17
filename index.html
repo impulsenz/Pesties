@@ -128,7 +128,10 @@
         html.dark .chip-red { color: #f87171; background: rgba(239, 68, 68, .12); border-color: rgba(239, 68, 68, .3); }
         html.dark .chip-orange { color: #fb923c; background: rgba(249, 115, 22, .14); border-color: rgba(249, 115, 22, .35); }
 
-        .sync-btn { cursor: pointer; padding: .4rem .75rem; }
+        .sync-btn { cursor: pointer; padding: 0 .85rem; }
+        /* header controls share one height */
+        .visit-act { width: 100%; justify-content: center; text-align: center; line-height: 1.2; padding-left: .5rem; padding-right: .5rem; white-space: normal; }
+        .header-h { height: 2.5rem; border-radius: .8rem; box-sizing: border-box; }
         .sync-btn:hover { filter: brightness(1.05); }
         .queue-count { min-width: 1.15rem; height: 1.15rem; padding: 0 .3rem; border-radius: 999px; background: #f97316; color: #fff; font-size: .62rem; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; }
 
@@ -283,22 +286,22 @@
     <!-- ===================== APP HEADER ===================== -->
     <header id="appHeader" class="app-header hidden sticky top-0 z-40 w-full">
         <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 py-2.5 flex justify-between items-center gap-3">
-            <!-- Left: Logo -->
+            <!-- Left: logo, then sync status (opens Sync Data) -->
             <div class="flex items-center gap-2 sm:gap-3">
                 <button type="button" onclick="goHome()" class="logo-tile cursor-pointer" title="Back to all sites"><img src="images/pesties-logo.png" alt="Pesties - back to all sites" class="h-12 sm:h-14 w-auto rounded-lg"></button>
-            </div>
-
-            <!-- Right: sync status (opens upload queue), theme toggle, profile -->
-            <div class="flex items-center gap-2 sm:gap-3">
-                <button type="button" id="notifBtn" onclick="openNotifModal()" class="icon-btn relative" title="Notifications">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                    <span id="notifCount" class="hidden absolute -top-1.5 -right-1.5 min-w-[1.2rem] h-[1.2rem] px-1 rounded-full text-[10px] font-black text-white flex items-center justify-center" style="background:#dc2626;">0</span>
-                </button>
-                <button type="button" id="syncStatusBadge" onclick="openQueueModal()" class="chip chip-green sync-btn transition-all duration-300" title="View upload queue">
+                <button type="button" id="syncStatusBadge" onclick="openQueueModal()" class="chip chip-green sync-btn header-h transition-all duration-300" title="View upload queue">
                     <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span id="syncText" class="hidden sm:inline">Online & Synced</span>
                     <span id="queueCountBadge" class="queue-count hidden">0</span>
                     <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h10"></path></svg>
+                </button>
+            </div>
+
+            <!-- Right: notifications, settings, theme toggle, profile -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button type="button" id="notifBtn" onclick="openNotifModal()" class="icon-btn relative" title="Notifications">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    <span id="notifCount" class="hidden absolute -top-1.5 -right-1.5 min-w-[1.2rem] h-[1.2rem] px-1 rounded-full text-[10px] font-black text-white flex items-center justify-center" style="background:#dc2626;">0</span>
                 </button>
 
                 <button type="button" onclick="openSettingsModal()" class="icon-btn" title="Settings">
@@ -311,7 +314,7 @@
                 </button>
 
                 <!-- Profile chip -->
-                <button type="button" onclick="openProfileModal()" class="flex items-center gap-2.5 rounded-xl pl-1.5 pr-3 py-1.5 cursor-pointer transition-all" style="background: var(--surface3); border: 1px solid var(--border);">
+                <button type="button" onclick="openProfileModal()" class="header-h flex items-center gap-2.5 pl-1 pr-3 cursor-pointer transition-all" style="background: var(--surface3); border: 1px solid var(--border);">
                     <img id="headerAvatar" src="" alt="" class="w-8 h-8 rounded-lg object-cover hidden">
                     <span id="headerAvatarFallback" class="w-8 h-8 rounded-lg bg-brand-500 text-white font-black text-xs flex items-center justify-center">?</span>
                     <span id="headerName" class="text-xs font-bold t-strong hidden sm:block max-w-[9rem] truncate"></span>
@@ -425,9 +428,38 @@
                             <span id="startServiceLabel">Start Service</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
                         </button>
-                        <button type="button" onclick="openMapModal()" class="btn btn-secondary !px-5 !py-3">📍 Floor Plans</button>
                         <button type="button" onclick="openEditSiteModal()" class="btn btn-secondary !px-5 !py-3">Edit Site</button>
                         <button type="button" onclick="backToSites()" class="btn btn-secondary !px-5 !py-3">Close</button>
+                    </div>
+                </div>
+
+                <!-- At a glance: station numbers, floor plans and where the site is -->
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-4 mt-5 pt-5 border-t divider">
+                    <div class="inset p-4 xl:col-span-4">
+                        <div class="grid grid-cols-3 gap-3 text-center">
+                            <div><div id="statStations" class="text-2xl font-black t-strong">0</div><div class="eyebrow t-faint mt-0.5">Stations</div></div>
+                            <div title="Share of this site's stations scanned on the last completed visit"><div id="statLastVisitPct" class="text-2xl font-black" style="color:#10b981;">-</div><div class="eyebrow t-faint mt-0.5">Scanned last visit</div></div>
+                            <div><div id="statIssues" class="text-2xl font-black t-accent">0</div><div class="eyebrow t-faint mt-0.5">Issues</div></div>
+                        </div>
+                        <p id="statLastVisitNote" class="text-[11px] t-faint text-center mt-2"></p>
+                        <div class="border-t divider mt-3 pt-3">
+                            <div class="eyebrow t-faint mb-2">Stations by type</div>
+                            <div id="stationTypeList" class="space-y-1.5 text-xs"></div>
+                        </div>
+                    </div>
+                    <div class="inset p-4 space-y-3 xl:col-span-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="eyebrow flex items-center gap-2" style="color:#0891b2;"><span class="w-2 h-2 rounded-full" style="background:#0891b2;"></span>Floor Plans</span>
+                            <button type="button" onclick="openMapModal()" class="link-btn !no-underline">Open</button>
+                        </div>
+                        <div id="siteMapsList" class="space-y-2 text-xs"></div>
+                    </div>
+                    <div class="inset overflow-hidden flex flex-col md:col-span-2 xl:col-span-5 min-h-[15rem]">
+                        <div class="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
+                            <span class="eyebrow flex items-center gap-2" style="color:#16a34a;"><span class="w-2 h-2 rounded-full" style="background:#16a34a;"></span>Location</span>
+                            <a id="siteMapsLink" href="#" target="_blank" rel="noopener" class="link-btn !no-underline">Open in Google Maps ↗</a>
+                        </div>
+                        <div id="siteLocation" class="relative flex-1 min-h-[12rem]"></div>
                     </div>
                 </div>
             </div>
@@ -435,18 +467,6 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-12 gap-6">
                 <!-- Left column: stats, services, plans, contact, safety -->
                 <div class="lg:col-span-2 xl:col-span-3 grid gap-4 sm:grid-cols-3 xl:grid-cols-1 content-start">
-                    <div class="card p-5 sm:col-span-3 xl:col-span-1">
-                        <div class="grid grid-cols-3 gap-3 text-center">
-                            <div><div id="statStations" class="text-2xl font-black t-strong">0</div><div class="eyebrow t-faint mt-0.5">Stations</div></div>
-                            <div title="Share of this site's stations scanned on the last completed visit"><div id="statLastVisitPct" class="text-2xl font-black" style="color:#10b981;">-</div><div class="eyebrow t-faint mt-0.5">Scanned last visit</div></div>
-                            <div><div id="statIssues" class="text-2xl font-black t-accent">0</div><div class="eyebrow t-faint mt-0.5">Issues</div></div>
-                        </div>
-                        <p id="statLastVisitNote" class="text-[11px] t-faint text-center mt-2"></p>
-                        <div class="border-t divider mt-4 pt-3">
-                            <div class="eyebrow t-faint mb-2">Stations by type</div>
-                            <div id="stationTypeList" class="space-y-1.5 text-xs"></div>
-                        </div>
-                    </div>
                     <!-- Contracted services & schedule -->
                     <div class="card p-4 sm:p-5 space-y-3 sm:col-span-3 xl:col-span-1">
                         <div class="flex items-center justify-between gap-2">
@@ -454,14 +474,6 @@
                             <button type="button" onclick="openServicesModal()" class="link-btn !no-underline">Manage</button>
                         </div>
                         <div id="siteServicesList" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2"></div>
-                    </div>
-                    <!-- Floor plans -->
-                    <div class="card p-4 sm:p-5 space-y-3 sm:col-span-3 xl:col-span-1">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="eyebrow flex items-center gap-2" style="color:#0891b2;"><span class="w-2 h-2 rounded-full" style="background:#0891b2;"></span>Floor Plans</span>
-                            <button type="button" onclick="openMapModal()" class="link-btn !no-underline">Open</button>
-                        </div>
-                        <div id="siteMapsList" class="space-y-2 text-xs"></div>
                     </div>
                     <div class="card p-5 space-y-1.5 sm:col-span-1">
                         <div class="flex justify-between items-center gap-2">
@@ -593,15 +605,10 @@
             </div>
 
             <!-- Visit actions (bottom of the page) -->
-            <div class="card p-4 sm:p-5 flex flex-wrap items-center justify-center sm:justify-between gap-3">
-                <div class="flex flex-wrap justify-center gap-2">
-                    <button type="button" onclick="showSiteDashboard()" class="btn btn-secondary">← Site Dashboard</button>
-                    <button type="button" onclick="openMapModal()" class="btn btn-secondary">📍 Floor Plans</button>
-                </div>
-                <div class="flex flex-wrap justify-center gap-2">
-                    <button type="button" onclick="openCancelVisitModal()" class="btn btn-outline-danger">Cancel Visit</button>
-                    <button type="button" onclick="openCompleteVisitModal()" class="btn btn-blue">Complete & Close Visit</button>
-                </div>
+            <div id="visitActions" class="card p-3 sm:p-5 grid grid-cols-3 gap-2 sm:gap-3 items-stretch">
+                <button type="button" onclick="openCompleteVisitModal()" class="btn btn-blue visit-act">Complete & Close Visit</button>
+                <button type="button" onclick="openMapModal()" class="btn btn-secondary visit-act">📍 Floor Plans</button>
+                <button type="button" onclick="openCancelVisitModal()" class="btn btn-outline-danger visit-act">Cancel Visit</button>
             </div>
         </section>
 
@@ -2166,6 +2173,9 @@
             const text = document.getElementById('syncText');
             const count = document.getElementById('queueCountBadge');
             if (!badge || !dot || !text) return;
+            // the site map needs a connection: show it, or a note, when that changes
+            const loc = document.getElementById('siteLocation');
+            if (loc && selectedClient && (!!loc.dataset.q) !== !!isOnline) renderSiteLocation();
 
             const unsent = unsentItems();
             const failed = unsent.filter(i => i.status === 'failed');
@@ -5474,11 +5484,29 @@
             }
         }, 60000);
 
+        // Google Maps view of the site's street address (no API key needed for the embedded map)
+        function siteMapQuery(c) { return String((c && (c.Address || '').trim()) || '').replace(/\s+/g, ' '); }
+        function renderSiteLocation() {
+            const box = document.getElementById('siteLocation'), link = document.getElementById('siteMapsLink');
+            if (!box || !link) return;
+            const q = siteMapQuery(selectedClient);
+            link.classList.toggle('hidden', !q);
+            link.href = q ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q) : '#';
+            const msg = t => `<div class="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center p-4 text-xs t-faint"><span class="text-2xl">🗺️</span>${t}</div>`;
+            if (!q) { box.dataset.q = ''; box.innerHTML = msg('Add the street address in <button type="button" class="link-btn" onclick="openEditSiteModal(\'editAddress\')">Edit Site</button> to show the map.'); return; }
+            if (!isOnline) { box.dataset.q = ''; box.innerHTML = msg('The map shows when you\'re online.<br>' + esc(q)); return; }
+            if (box.dataset.q === q) return;  // already showing this address
+            box.dataset.q = q;
+            box.innerHTML = `<iframe title="Map of ${esc(q)}" class="absolute inset-0 w-full h-full" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen
+                src="https://maps.google.com/maps?q=${encodeURIComponent(q)}&z=16&hl=en&output=embed"></iframe>`;
+        }
+
         function refreshLandingHeader() {
             const c = selectedClient;
             if (!c) return;
             document.getElementById('siteLandingTitle').textContent = c.Name;
             document.getElementById('siteLandingAddress').textContent = c.Address || 'No address specified';
+            renderSiteLocation();
             document.getElementById('siteLandingContact').textContent = `Site Contact: ${c.Contact || 'Not specified'}`;
             document.getElementById('siteLandingEmail').textContent = `Email: ${c.Email || 'Not specified'}`;
             document.getElementById('siteLandingNotes').textContent = c.Notes || 'No site-specific safety instructions on file.';
