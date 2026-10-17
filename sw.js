@@ -2,8 +2,8 @@
 // Keeps the app and its libraries available with no connection. Photos are NOT stored on the device.
 // Database calls are NOT cached here - the app's own upload queue handles data.
 
-const SHELL_CACHE = 'pestis-shell-v22';
-const RUNTIME_CACHE = 'pestis-runtime-v22';
+const SHELL_CACHE = 'pestis-shell-v25';
+const RUNTIME_CACHE = 'pestis-runtime-v25';
 
 const SHELL = ['./', './index.html', './images/pesties-logo.png'];
 const CDN = [
@@ -56,11 +56,16 @@ self.addEventListener('fetch', event => {
                 }
                 return res;
             } catch (e) {
-                return (await caches.match(url.origin + url.pathname))
-                    || (await caches.match(req, { ignoreSearch: true }))
-                    || (await caches.match('./index.html'))
-                    || (await caches.match('./'))
-                    || Response.error();
+                const saved = (await caches.match(url.origin + url.pathname)) || (await caches.match(req, { ignoreSearch: true }));
+                if (saved) return saved;
+                // the Client Portal is an online page: never show the staff app in its place
+                if (/client\.html$/.test(url.pathname)) {
+                    return new Response('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pesties Client Portal</title>' +
+                        '<body style="font-family:system-ui,sans-serif;background:#060d1f;color:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center;padding:1rem">' +
+                        '<div><h1 style="font-size:1.2rem">You\'re offline</h1><p style="color:#9db0d1">The Client Portal needs an internet connection. Please reconnect and try again.</p></div></body>',
+                        { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+                }
+                return (await caches.match('./index.html')) || (await caches.match('./')) || Response.error();
             }
         })());
         return;
@@ -79,7 +84,8 @@ self.addEventListener('fetch', event => {
             const network = fetch(req).then(async res => {
                 if (res && (res.ok || res.type === 'opaque')) {
                     const cache = await caches.open(RUNTIME_CACHE);
-                    cache.put(req, res.clone());
+                    await cache.put(req, res.clone());
+                    trimCache(RUNTIME_CACHE, 80).catch(() => {});   // keeps the saved files from growing without limit
                 }
                 return res;
             }).catch(() => null);
