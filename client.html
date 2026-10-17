@@ -163,6 +163,8 @@
         .tech-photo img { width: 100%; height: 100%; object-fit: cover; }
         .tech-contact { display: flex; align-items: center; gap: .5rem; padding: .45rem .7rem; border-radius: .7rem; background: var(--surface3); font-weight: 700; color: var(--text); }
         .tech-contact:hover { outline: 2px solid #f97316; }
+        .breach-box { border-width: 2px; }
+        .breach-row { background: var(--surface); color: var(--text); border-radius: .6rem; padding: .55rem .7rem; }
         .alert-box { border: 1px solid #fca5a5; background: #fee2e2; color: #991b1b; border-radius: .9rem; }
         html.dark .alert-box { border-color: rgba(239, 68, 68, .45); background: rgba(239, 68, 68, .12); color: #fca5a5; }
         .limit-bar { height: .45rem; border-radius: 999px; background: var(--surface3); overflow: hidden; }
@@ -363,7 +365,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.18-p4';
+const PORTAL_VERSION = '2026.10.18-p5';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -371,7 +373,7 @@ const DOC_BUCKET = 'site-documents';
 const NONE_PREP = 'None - Monitoring Only';
 const NONE_SPECIES = 'None';
 const META_IDS = new Set(['SITE_VISIT_SUMMARY', 'REC_UPDATE', 'SITE_MAP', 'MAP_PIN', 'BARCODE_CHANGE', 'SITE_CHANGE']);
-const ACTIVITY_SCORE = { None: 0, Low: 1, Medium: 2, High: 3 };
+const ACTIVITY_SCORE = { None: 0, Low: 1, Medium: 2, High: 3, Caught: 2 };
 const FREQUENCIES = { weekly: { label: 'Weekly', days: 7 }, fortnightly: { label: 'Fortnightly', days: 14 }, monthly: { label: 'Monthly', days: 31 },
     '6weekly': { label: 'Every 6 weeks', days: 42 }, bimonthly: { label: 'Every 2 months', days: 61 }, quarterly: { label: 'Quarterly', days: 92 },
     '6monthly': { label: 'Every 6 months', days: 183 }, annually: { label: 'Annually', days: 366 }, oneoff: { label: 'One-off / On request' } };
@@ -515,6 +517,13 @@ async function loadAllDocs() {
 // what this person has marked as seen (kept on this device)
 const BELL_SEEN_KEY = () => 'pestis-portal-bell-seen:' + ((state.me && state.me.email) || '');
 function bellSeen() { try { return new Set(JSON.parse(localStorage.getItem(BELL_SEEN_KEY()) || '[]')); } catch (e) { return new Set(); } }
+function markBellKeySeen(key) {
+    const seen = bellSeen();
+    if (seen.has(key)) return;
+    seen.add(key);
+    try { localStorage.setItem(BELL_SEEN_KEY(), JSON.stringify(Array.from(seen).slice(-500))); } catch (e) {}
+    renderBell();
+}
 function markAllBellSeen() {
     const seen = bellSeen();
     bellItems(true).forEach(it => seen.add(it.key));
@@ -531,6 +540,7 @@ function bellItems(includeSeen) {
     });
     if (state.model) {
         breachesNow().forEach(x => items.push({ key: `lim:${x.limit.id}:${monthLabel(Date.now())}:${x.total}`, icon: '⚠', red: true, title: `${x.limit.zone} · ${limitPest(x.limit)} over its limit`, sub: `${x.total} recorded in ${monthLabel(Date.now())} (limit ${x.limit.max})`, go: "setTab('reports'); setTimeout(() => $('limitsCard') && $('limitsCard').scrollIntoView({ behavior: 'smooth' }), 300)" }));
+        state.model.visits.filter(v => v.completed > Date.now() - 14 * 86400000).slice().reverse().forEach(v => items.push({ key: 'visit:' + v.id, icon: '✅', title: `New service report: ${v.type}`, sub: `${fmtDate(v.completed)} · finished ${fmtTime(v.end || v.completed)}${v.tech ? ' · ' + v.tech : ''}${visitBreaches(v).length ? ' · ⚠ critical limit breach' : ''}`, red: visitBreaches(v).length > 0, go: `openVisit('${esc(v.id)}')` }));
         const uid = state.me && state.me.uid;
         state.model.recs.filter(r => r.status !== 'complete' && r.raisedAt > Date.now() - 30 * 86400000 && uid && !r.views.some(v => v.viewer_key === uid))
             .forEach(r => items.push({ key: `rec:${r.id}`, icon: '🆕', title: `New recommendation ${fmtRecNo(r.no)}`, sub: `${r.station} · ${r.text}`, go: `openRec('${esc(r.id)}', 'overview')` }));
@@ -968,7 +978,8 @@ function matchesSearch(...vals) {
     const q = ((filterOpts().q) || '').trim().toLowerCase();
     return !q || vals.some(v => String(v || '').toLowerCase().includes(q));
 }
-const zoneKey = z => String(z || '').trim().toLowerCase();
+const zoneKey = z => String(z || '').trim().toLowerCase().replace(/\s+/g, ' ');
+const pestKey = p => String(p || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/ies$/, 'y').replace(/([^s])s$/, '$1');
 function entriesFor(o) {
     const q = (o.q || '').trim().toLowerCase();
     return state.model.entries.filter(e => inRange(e.at, o) && (!o.type || e.type === o.type) && (!o.map || e.mapId === o.map) && (!o.zone || zoneKey(e.zone) === zoneKey(o.zone))
@@ -981,7 +992,7 @@ function filteredEntries() { return entriesFor(filterOpts()); }
 function typeDot(type) { return `<span class="type-dot" style="background:${stationColor(type)}" title="${esc(type)}"></span>`; }
 function statusChip(st) { const s = STATUS[st] || STATUS.open; return `<span class="chip ${s.cls}">${s.label}</span>`; }
 function activityChip(a) {
-    const cls = { None: 'chip-grey', Low: 'chip-blue', Medium: 'chip-amber', High: 'chip-red' }[a] || 'chip-grey';
+    const cls = { None: 'chip-grey', Low: 'chip-blue', Medium: 'chip-amber', High: 'chip-red', Caught: 'chip-red' }[a] || 'chip-grey';
     return `<span class="chip ${cls}">${a === 'None' || !a ? 'No activity' : esc(a)}</span>`;
 }
 function stationCell(s) { return `<div class="flex items-center gap-2">${typeDot(s.type)}<div class="min-w-0"><div class="font-bold t-strong">${esc(s.name)}</div><div class="t-faint mono text-[11px]">${esc(s.barcode)}</div></div></div>`; }
@@ -1012,7 +1023,7 @@ function renderOverview() {
         ${breaches.length ? limitAlertHtml(breaches, `Critical limits exceeded in ${monthLabel(Date.now())}`) : ''}
         <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
             ${tile(m.stations.length, 'Stations', overdue ? `<span style="color:#ef4444" class="font-bold">${overdue} not checked recently</span>` : 'All checked on schedule', 'showStationList()')}
-            ${tile(lastVisit ? fmtDate(lastVisit.completed) : '-', 'Last service', lastVisit ? `${esc(lastVisit.type)}${lastVisit.tech ? ' · ' + esc(lastVisit.tech) : ''}` : 'No visits yet', lastVisit ? `openVisit('${esc(lastVisit.id)}')` : '')}
+            ${tile(lastVisit ? fmtDate(lastVisit.completed) : '-', 'Last service', lastVisit ? `<span class="t-strong font-semibold">Finished ${fmtTime(lastVisit.end || lastVisit.completed)}</span><br>${esc(lastVisit.type)}${lastVisit.tech ? ' · ' + esc(lastVisit.tech) : ''}` : 'No visits yet', lastVisit ? `openVisit('${esc(lastVisit.id)}')` : '')}
             ${tile(due ? fmtDay(due) : '-', 'Next service due', due ? `<span class="t-strong font-semibold">${esc(dueNames.join(', ') || 'Service')}</span>` : 'Not scheduled', '')}
             ${tile(m.stations.length && lastVisit ? Math.round(lastStations / m.stations.length * 100) + '%' : '-', 'Checked last visit', lastVisit ? `${lastStations} of ${m.stations.length} stations` : '', lastVisit ? 'showLastVisitCoverage()' : '', '#10b981')}
             ${tile(openRecs.length, 'Outstanding recommendations', openRecs.length ? `${openRecs.filter(r => r.status === 'open').length} open · ${openRecs.filter(r => r.status === 'pending').length} pending` : 'Nothing outstanding', "setTab('recs')", openRecs.length ? 'var(--accent-text)' : '')}
@@ -1091,9 +1102,44 @@ function monthBounds(t) { const d = new Date(t); return [new Date(d.getFullYear(
 function monthLabel(t) { return new Date(t).toLocaleString('en-NZ', { month: 'long', year: 'numeric' }); }
 function limitStatus(l, t, upTo) {
     const [a, b] = monthBounds(t == null ? Date.now() : t);
-    const es = state.model.entries.filter(e => e.at >= a && e.at < b && (upTo == null || e.at <= upTo) && e.species && zoneKey(e.zone) === zoneKey(l.zone) && (l.species === ANY_PEST || e.species === l.species));
+    const es = state.model.entries.filter(e => e.at >= a && e.at < b && (upTo == null || e.at <= upTo) && e.species && zoneKey(e.zone) === zoneKey(l.zone) && (l.species === ANY_PEST || pestKey(e.species) === pestKey(l.species)));
     const total = es.reduce((n, e) => n + e.count, 0);
     return { limit: l, total, entries: es, over: total > l.max, near: total <= l.max && l.max > 0 && total >= l.max * 0.8, month: a };
+}
+function breachStations(x) {
+    const by = new Map();
+    x.entries.forEach(e => { const o = by.get(e.barcode) || { name: e.name, n: 0 }; o.n += e.count; by.set(e.barcode, o); });
+    return Array.from(by.values()).sort((a, b) => b.n - a.n);
+}
+// Pest activity: breaches of the critical limits, month by month (flying insect control)
+function breachesSectionHtml() {
+    const m = state.model;
+    const months = []; { const d = new Date(); for (let i = 11; i >= 0; i--) months.push(new Date(d.getFullYear(), d.getMonth() - i, 1).getTime()); }
+    if (!m.limits.length) return sectionCard('Critical limit breaches', '#dc2626', emptyNote('No critical limits are set for this site yet. Set them under Reports → Critical limits (for example how many flies or midges a zone may have in a month).'));
+    const events = [];
+    m.limits.forEach(l => months.forEach(t => { const st = limitStatus(l, t); if (st.over) events.push(st); }));
+    events.sort((a, b) => b.month - a.month);
+    const charts = m.limits.map(l => {
+        const vals = months.map(t => limitStatus(l, t).total);
+        const W = 300, H = 120, pl = 30, pr = 6, pt = 10, pb = 20, max = Math.max(l.max, ...vals, 1) * 1.1;
+        const bw = (W - pl - pr) / months.length;
+        const y = v => pt + (H - pt - pb) * (1 - v / max);
+        const ly = y(l.max);
+        return `<div class="inset p-3"><div class="flex flex-wrap items-baseline justify-between gap-1"><b class="text-sm t-strong">${esc(l.zone)} · ${esc(limitPest(l))}</b><span class="text-[11px] t-faint">limit ${l.max} a month</span></div>
+            <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(l.zone)} ${esc(limitPest(l))}: monthly totals against the limit of ${l.max}">
+                <line x1="${pl}" x2="${W - pr}" y1="${y(0)}" y2="${y(0)}" stroke="var(--viz-grid, rgba(148,163,184,.3))"/>
+                ${vals.map((v, i) => { const x = pl + i * bw + 2, h = y(0) - y(v), over = v > l.max; return `<rect x="${x.toFixed(1)}" y="${y(v).toFixed(1)}" width="${(bw - 4).toFixed(1)}" height="${Math.max(0, h).toFixed(1)}" rx="2" fill="${over ? '#dc2626' : 'var(--series-1, #2563eb)'}"><title>${monthLabel(months[i])}: ${v}${over ? ' (over the limit)' : ''}</title></rect>`; }).join('')}
+                <line x1="${pl}" x2="${W - pr}" y1="${ly}" y2="${ly}" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 3"/>
+                <text x="${pl - 4}" y="${ly + 3}" text-anchor="end" font-size="9" fill="#dc2626">${l.max}</text>
+                ${months.map((t, i) => i % 3 === 0 ? `<text x="${(pl + i * bw + bw / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="9" fill="var(--viz-axis, #94a3b8)">${new Date(t).toLocaleString('en-NZ', { month: 'short' })}</text>` : '').join('')}
+            </svg></div>`;
+    }).join('');
+    return sectionCard(`Critical limit breaches · last 12 months (${events.length})`, '#dc2626', `
+        <p class="text-xs t-muted">Monthly totals for each critical limit (mainly flying insect control). Red bars went over the limit; the dashed line is the limit.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">${charts}</div>
+        ${events.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Month</th><th>Zone</th><th>Pest</th><th class="num">Recorded</th><th class="num">Limit</th><th class="num">Over by</th><th>Caught at</th></tr></thead><tbody>
+            ${events.map(x => `<tr><td class="whitespace-nowrap">${esc(monthLabel(x.month))}</td><td class="font-bold">${esc(x.limit.zone)}</td><td>${esc(limitPest(x.limit))}</td><td class="num" style="color:#dc2626;font-weight:800;">${x.total}</td><td class="num">${x.limit.max}</td><td class="num">${x.total - x.limit.max}</td><td class="t-muted">${esc(breachStations(x).slice(0, 4).map(b => `${b.name} (${b.n})`).join(', '))}</td></tr>`).join('')}</tbody></table></div>`
+            : emptyNote('No breaches in the last 12 months. 🎉')}`);
 }
 function breachesNow() { return state.model.limits.map(l => limitStatus(l)).filter(x => x.over); }
 // limits a visit took over (counting that month's records up to the end of the visit)
@@ -1101,7 +1147,8 @@ function visitBreaches(v) {
     return state.model.limits.map(l => limitStatus(l, v.completed, v.completed + 5 * 60000)).filter(x => x.over && x.entries.some(e => v.entries.includes(e)));
 }
 function limitAlertHtml(list, title) {
-    return `<div class="alert-box p-4 space-y-1.5" role="alert"><div class="font-black">⚠ ${esc(title)}</div>${list.map(x => `<div class="text-sm"><b>${esc(x.limit.zone)} · ${esc(limitPest(x.limit))}:</b> ${x.total} recorded, limit ${x.limit.max} a month</div>`).join('')}</div>`;
+    return `<div class="alert-box breach-box p-4 space-y-2" role="alert"><div class="font-black uppercase tracking-wide text-sm">⚠ ${esc(title)}</div>${list.map(x => `<div class="breach-row"><div class="flex flex-wrap items-baseline justify-between gap-2"><b>${esc(x.limit.zone)} · ${esc(limitPest(x.limit))}</b><span class="chip chip-red">${x.total} of ${x.limit.max} allowed${x.limit.max ? ` · ${Math.round(x.total / x.limit.max * 100)}%` : ''}</span></div>
+        <div class="text-xs mt-0.5">${x.total - x.limit.max} over the monthly limit in ${esc(monthLabel(x.month))}. Caught at: ${esc(breachStations(x).map(b => `${b.name} (${b.n})`).join(', '))}</div></div>`).join('')}</div>`;
 }
 
 // ---------- Recommendations ----------
@@ -1702,7 +1749,7 @@ function renderActivity() {
         bySpecies.set(e.species, g);
     });
     const groups = Array.from(bySpecies.values()).filter(g => !F.species || g.species === F.species).sort((a, b) => b.caught - a.caught);
-    const levels = { None: 0, Low: 0, Medium: 0, High: 0 };
+    const levels = { None: 0, Low: 0, Medium: 0, High: 0, Caught: 0 };
     list.forEach(e => { levels[e.activity] = (levels[e.activity] || 0) + 1; });
     $('tabBody').innerHTML = `
         <div class="card p-5 space-y-4">
@@ -1716,8 +1763,9 @@ function renderActivity() {
             </div>
             <div id="activityChart"></div>
         </div>
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">${['None', 'Low', 'Medium', 'High'].map(l => `
-            <div class="card stat"><div class="v">${list.length ? Math.round(levels[l] / list.length * 100) : 0}%</div><div class="k">${l === 'None' ? 'No activity' : l + ' activity'}</div><div class="s">${plural(levels[l], 'check')}</div></div>`).join('')}</div>
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">${['None', 'Low', 'Medium', 'High', 'Caught'].map(l => `
+            <div class="card stat"><div class="v">${list.length ? Math.round(levels[l] / list.length * 100) : 0}%</div><div class="k">${l === 'None' ? 'No activity' : l === 'Caught' ? 'Insects caught' : l + ' activity'}</div><div class="s">${plural(levels[l], 'check')}</div></div>`).join('')}</div>
+        ${breachesSectionHtml()}
         <div class="card p-5 space-y-3">
             <h3 class="font-black t-strong">By species</h3>
             <div class="tbl-wrap"><table class="tbl">
@@ -1810,7 +1858,7 @@ function visitList() {
 function visitRowHtml(v) {
     const n = new Set(v.entries.map(e => e.barcode)).size;
     return `<div class="row-item clickable p-3.5 flex justify-between items-center gap-3" tabindex="0" role="button" onclick="openVisit('${esc(v.id)}')" onkeydown="if (event.key === 'Enter') this.click()">
-        <div class="min-w-0"><div class="font-bold t-strong text-sm">${fmtDate(v.completed)} · ${esc(v.type)}</div>
+        <div class="min-w-0"><div class="font-bold t-strong text-sm">${fmtDate(v.completed)} · ${esc(v.type)} <span class="t-muted font-semibold">· finished ${fmtTime(v.end || v.completed)}</span></div>
         <div class="text-[11px] t-muted">${v.tech ? esc(v.tech) + ' · ' : ''}${plural(n, 'station')} checked${v.recs.length ? ' · ' + plural(v.recs.length, 'recommendation') : ''}</div></div>
         <span class="t-faint text-lg font-black">›</span></div>`;
 }
@@ -1832,12 +1880,13 @@ function showVisit(id) {
     setModalNav(id);
     $('modalEyebrow').textContent = 'Visit report';
     $('modalTitle').textContent = `${fmtDate(v.completed)} · ${v.type}`;
-    $('modalSub').textContent = v.tech || '';
+    $('modalSub').textContent = `Finished ${fmtTime(v.end || v.completed)}${v.tech ? ' · ' + v.tech : ''}`;
+    markBellKeySeen('visit:' + v.id);
     const n = new Set(v.entries.map(e => e.barcode)).size;
     const fact = (k, val) => `<div class="inset p-2.5"><div class="eyebrow t-faint">${k}</div><div class="font-bold t-strong mt-0.5">${val}</div></div>`;
     const breaches = visitBreaches(v);
     $('modalBody').innerHTML = `
-        ${breaches.length ? limitAlertHtml(breaches, `Critical limits exceeded (${monthLabel(v.completed)})`) : ''}
+        ${breaches.length ? limitAlertHtml(breaches, `Critical limit breach (${monthLabel(v.completed)})`) : ''}
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
             ${fact('Arrived', v.start ? fmtTime(v.start) : '-')}${fact('Left', fmtTime(v.end))}${fact('Time on site', durationText(v.start, v.end))}${fact('Stations checked', `${n}${state.model.stations.length ? ' of ' + state.model.stations.length : ''}`)}
         </div>
@@ -2207,7 +2256,7 @@ function downloadVisitPdf(id) {
     if (!v) return;
     const pdf = newPdf('Visit report', `${fmtDate(v.completed)} · ${v.type}${v.tech ? ' · ' + v.tech : ''}`);
     const breaches = visitBreaches(v);
-    if (breaches.length) pdf.alert([`CRITICAL LIMITS EXCEEDED (${monthLabel(v.completed)})`].concat(breaches.map(x => `${x.limit.zone} · ${limitPest(x.limit)}: ${x.total} recorded, limit ${x.limit.max} a month`)));
+    if (breaches.length) pdf.alert([`CRITICAL LIMIT BREACH (${monthLabel(v.completed)})`].concat(breaches.map(x => `${x.limit.zone} · ${limitPest(x.limit)}: ${x.total} recorded, limit ${x.limit.max} a month (${x.total - x.limit.max} over). Caught at: ${breachStations(x).map(b => `${b.name} (${b.n})`).join(', ')}`)));
     pdf.facts([['Arrived', v.start ? fmtTime(v.start) : '-'], ['Left', fmtTime(v.end)], ['Time on site', durationText(v.start, v.end)], ['Stations checked', new Set(v.entries.map(e => e.barcode)).size]]);
     if (v.services.length) pdf.para('Services completed: ' + v.services.join(', '));
     pdf.heading("Technician's notes"); pdf.para(v.notes || 'No notes provided');
