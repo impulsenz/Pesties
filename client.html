@@ -156,6 +156,13 @@
         .clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .rec-hero { position: relative; border-radius: .9rem; overflow: hidden; background: #020617; cursor: zoom-in; }
         .rec-hero img, .rec-hero video { width: 100%; max-height: 55vh; object-fit: contain; display: block; margin: 0 auto; }
+        .st-photo { width: 9rem; height: 9rem; border-radius: .8rem; overflow: hidden; background: var(--surface3); display: flex; align-items: center; justify-content: center; }
+        .st-photo img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+        .sig-img { background: #fff; border-radius: .5rem; padding: .2rem; max-height: 4.5rem; }
+        .tech-photo { width: 4.5rem; height: 4.5rem; border-radius: 999px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.3rem; color: #fff; background: linear-gradient(135deg, #f97316, #c2410c); }
+        .tech-photo img { width: 100%; height: 100%; object-fit: cover; }
+        .tech-contact { display: flex; align-items: center; gap: .5rem; padding: .45rem .7rem; border-radius: .7rem; background: var(--surface3); font-weight: 700; color: var(--text); }
+        .tech-contact:hover { outline: 2px solid #f97316; }
         .alert-box { border: 1px solid #fca5a5; background: #fee2e2; color: #991b1b; border-radius: .9rem; }
         html.dark .alert-box { border-color: rgba(239, 68, 68, .45); background: rgba(239, 68, 68, .12); color: #fca5a5; }
         .limit-bar { height: .45rem; border-radius: 999px; background: var(--surface3); overflow: hidden; }
@@ -356,7 +363,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.18-p3';
+const PORTAL_VERSION = '2026.10.18-p4';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -505,28 +512,39 @@ async function loadAllDocs() {
     try { const { data } = await sb.from('site_documents').select('id, client_id, title, category, expires_on'); allSiteDocs = data || []; } catch (e) { allSiteDocs = []; }
     renderBell();
 }
-function bellItems() {
+// what this person has marked as seen (kept on this device)
+const BELL_SEEN_KEY = () => 'pestis-portal-bell-seen:' + ((state.me && state.me.email) || '');
+function bellSeen() { try { return new Set(JSON.parse(localStorage.getItem(BELL_SEEN_KEY()) || '[]')); } catch (e) { return new Set(); } }
+function markAllBellSeen() {
+    const seen = bellSeen();
+    bellItems(true).forEach(it => seen.add(it.key));
+    try { localStorage.setItem(BELL_SEEN_KEY(), JSON.stringify(Array.from(seen).slice(-500))); } catch (e) {}
+    renderBell();
+}
+function bellItems(includeSeen) {
     const items = [];
     const today = dayStart(toDayStr(new Date()));
     allSiteDocs.filter(d => d.expires_on && dayStart(d.expires_on) - today <= DOC_WARN_DAYS * 86400000).sort((a, b) => String(a.expires_on).localeCompare(String(b.expires_on))).forEach(d => {
         const site = state.sites.find(x => String(x.id) === String(d.client_id));
         const days = Math.round((dayStart(d.expires_on) - today) / 86400000);
-        items.push({ icon: '📄', red: days < 0, title: `${d.title} ${days < 0 ? 'has expired' : days === 0 ? 'expires today' : `expires in ${plural(days, 'day')}`}`, sub: `${site ? siteName(site) + ' · ' : ''}${d.category || 'Document'} · ${fmtDay(d.expires_on)}`, go: `goToDocs('${esc(String(d.client_id))}')` });
+        items.push({ key: `doc:${d.id}:${d.expires_on}:${days < 0 ? 'x' : 'w'}`, icon: '📄', red: days < 0, title: `${d.title} ${days < 0 ? 'has expired' : days === 0 ? 'expires today' : `expires in ${plural(days, 'day')}`}`, sub: `${site ? siteName(site) + ' · ' : ''}${d.category || 'Document'} · ${fmtDay(d.expires_on)}`, go: `goToDocs('${esc(String(d.client_id))}')` });
     });
     if (state.model) {
-        breachesNow().forEach(x => items.push({ icon: '⚠', red: true, title: `${x.limit.zone} · ${limitPest(x.limit)} over its limit`, sub: `${x.total} recorded in ${monthLabel(Date.now())} (limit ${x.limit.max})`, go: "setTab('reports'); setTimeout(() => $('limitsCard') && $('limitsCard').scrollIntoView({ behavior: 'smooth' }), 300)" }));
+        breachesNow().forEach(x => items.push({ key: `lim:${x.limit.id}:${monthLabel(Date.now())}:${x.total}`, icon: '⚠', red: true, title: `${x.limit.zone} · ${limitPest(x.limit)} over its limit`, sub: `${x.total} recorded in ${monthLabel(Date.now())} (limit ${x.limit.max})`, go: "setTab('reports'); setTimeout(() => $('limitsCard') && $('limitsCard').scrollIntoView({ behavior: 'smooth' }), 300)" }));
         const uid = state.me && state.me.uid;
         state.model.recs.filter(r => r.status !== 'complete' && r.raisedAt > Date.now() - 30 * 86400000 && uid && !r.views.some(v => v.viewer_key === uid))
-            .forEach(r => items.push({ icon: '🆕', title: `New recommendation ${fmtRecNo(r.no)}`, sub: `${r.station} · ${r.text}`, go: `openRec('${esc(r.id)}', 'overview')` }));
+            .forEach(r => items.push({ key: `rec:${r.id}`, icon: '🆕', title: `New recommendation ${fmtRecNo(r.no)}`, sub: `${r.station} · ${r.text}`, go: `openRec('${esc(r.id)}', 'overview')` }));
     }
-    return items;
+    if (includeSeen) return items;
+    const seen = bellSeen();
+    return items.filter(it => !seen.has(it.key));
 }
 function renderBell() {
     const items = bellItems();
     const c = $('bellCount');
     c.textContent = items.length > 99 ? '99+' : items.length;
     c.classList.toggle('hidden', !items.length);
-    $('bellPanel').innerHTML = `<div class="eyebrow t-accent px-1">Notifications</div>` + (items.map(it => `
+    $('bellPanel').innerHTML = `<div class="flex items-center justify-between gap-2 px-1"><span class="eyebrow t-accent">Notifications</span>${items.length ? '<button type="button" id="bellSeenBtn" class="link-btn !text-[11px]" onclick="markAllBellSeen()">Mark all as seen</button>' : ''}</div>` + (items.map(it => `
         <button type="button" class="row-item clickable w-full text-left p-2.5 flex gap-2 items-start" onclick="$('bellPanel').classList.add('hidden'); ${it.go}" ${it.red ? 'style="border-color:#ef4444;"' : ''}>
             <span>${it.icon}</span><span class="min-w-0"><span class="block font-bold t-strong">${esc(it.title)}</span><span class="block t-muted break-words">${esc(it.sub)}</span></span></button>`).join('') || '<div class="row-item p-3 t-faint italic text-center">Nothing new.</div>');
 }
@@ -671,7 +689,7 @@ function renderPicker() {
         const dueDays = due ? Math.round((dayStart(due) - dayStart(toDayStr(new Date()))) / 86400000) : null;
         const badges = [];
         if (s.visit_started_at) badges.push('<span class="site-badge">● Visit in progress</span>');
-        if (due) badges.push(`<span class="site-badge ${dueDays < 0 ? 'warn' : ''}">${dueDays < 0 ? 'Service overdue' : dueDays === 0 ? 'Service due today' : 'Next service ' + fmtDay(due)}</span>`);
+        if (due) badges.push(`<span class="site-badge ${dueDays < 0 ? 'warn' : ''}">${dueDays < 0 ? 'Service overdue ' + fmtDay(due) : dueDays === 0 ? 'Service due today' : 'Next service due ' + fmtDay(due)}</span>`);
         return `<button type="button" class="site-card" onclick="location.hash = '#/site/${encodeURIComponent(s.id)}/overview'" aria-label="Open ${esc(siteName(s))}">
             ${cover ? `<img class="site-cover" src="${esc(cover)}" alt="">` : `<span class="site-initials">${esc(initials(siteName(s)))}</span>`}
             <span class="site-badges">${badges.join('')}</span>
@@ -685,7 +703,7 @@ function renderPicker() {
 // ===================================================================
 const TABS = [
     ['overview', 'Overview'], ['recs', 'Recommendations'], ['reports', 'Reports'], ['stations', 'Station register'], ['chemicals', 'Preparations'],
-    ['activity', 'Pest activity'], ['visits', 'Visits'], ['documents', 'Documents'], ['plans', 'Floor plans']
+    ['activity', 'Pest activity'], ['visits', 'Visits'], ['documents', 'Documents'], ['plans', 'Floor plans'], ['techs', 'Technicians']
 ];
 // which filters each report tab offers (hidden filters are not applied)
 const TAB_FILTERS = {
@@ -786,7 +804,7 @@ function buildModel(site, d) {
 
     // stations: the stations table, plus anything only seen in service records
     const st = new Map();
-    d.stations.forEach(s => st.set(s.barcode, { barcode: s.barcode, name: s.name || s.barcode, type: s.type || '', zone: (s.zone || '').trim(), mapId: s.map_id || null, x: s.pin_x, y: s.pin_y, entries: [], fromTable: true }));
+    d.stations.forEach(s => st.set(s.barcode, { barcode: s.barcode, name: s.name || s.barcode, type: s.type || '', zone: (s.zone || '').trim(), mapId: s.map_id || null, x: s.pin_x, y: s.pin_y, photoPath: s.photo_path || null, entries: [], fromTable: true }));
     entries.forEach(e => {
         let s = st.get(e.barcode);
         if (!s) { s = { barcode: e.barcode, name: e.name, type: e.type, zone: '', mapId: null, entries: [] }; st.set(e.barcode, s); }
@@ -813,7 +831,8 @@ function buildModel(site, d) {
     const visits = d.visits.map(v => ({
         id: v.id, type: v.visit_type || 'Routine Service', tech: v.technician || '', notes: v.notes || '',
         start: Date.parse(v.signed_in_at || v.started_at) || null, end: Date.parse(v.signed_out_at || v.completed_at) || Date.parse(v.created_at),
-        completed: Date.parse(v.completed_at) || Date.parse(v.created_at), services: Array.isArray(v.services_completed) ? v.services_completed : [], entries: []
+        completed: Date.parse(v.completed_at) || Date.parse(v.created_at), services: Array.isArray(v.services_completed) ? v.services_completed : [], entries: [],
+        signedBy: v.signed_by || '', signedAt: Date.parse(v.signed_at) || null, noSignatureReason: v.no_signature_reason || '', signaturePath: v.signature_path || null
     })).filter(v => !isNaN(v.completed)).sort((a, b) => a.completed - b.completed);
     let vi = 0;
     entries.forEach(e => {
@@ -849,7 +868,9 @@ function buildModel(site, d) {
     (d.views || []).forEach(v => { const l = views.get(v.rec_id) || []; l.push(v); views.set(v.rec_id, l); });
     recs.forEach(r => { r.views = (views.get(r.id) || []).sort((a, b) => String(b.last_seen_at).localeCompare(String(a.last_seen_at))); });
     const zones = Array.from(new Set(stations.map(s => s.zone).concat(limits.map(l => l.zone)).filter(Boolean))).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-    const folders = Array.from(new Set((d.folders || []).map(f => f.name).concat(docs.map(x => x.folder).filter(Boolean)))).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+    const extraFolders = Array.from(new Set((d.folders || []).map(f => f.name).concat(docs.map(docFolderOf).filter(Boolean)))).filter(f => !STANDARD_FOLDERS.includes(f))
+        .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+    const folders = STANDARD_FOLDERS.concat(extraFolders);
     return { entries, stations, visits, recs, maps, docs, folders, interval, limits, zones };
 }
 
@@ -890,7 +911,7 @@ function renderTab() {
     const shown = TAB_FILTERS[state.tab];
     $('filterBar').classList.toggle('hidden', !shown);
     document.querySelectorAll('#filterBar [data-f]').forEach(el => el.classList.toggle('hidden', !shown || !shown.includes(el.dataset.f)));
-    const fn = { overview: renderOverview, recs: renderRecs, reports: renderReports, stations: renderStations, chemicals: renderChemicals, activity: renderActivity, visits: renderVisits, documents: renderDocuments, plans: renderPlans }[state.tab];
+    const fn = { overview: renderOverview, recs: renderRecs, reports: renderReports, stations: renderStations, chemicals: renderChemicals, activity: renderActivity, visits: renderVisits, documents: renderDocuments, plans: renderPlans, techs: renderTechnicians }[state.tab];
     fn();
 }
 
@@ -964,6 +985,9 @@ function activityChip(a) {
     return `<span class="chip ${cls}">${a === 'None' || !a ? 'No activity' : esc(a)}</span>`;
 }
 function stationCell(s) { return `<div class="flex items-center gap-2">${typeDot(s.type)}<div class="min-w-0"><div class="font-bold t-strong">${esc(s.name)}</div><div class="t-faint mono text-[11px]">${esc(s.barcode)}</div></div></div>`; }
+const STANDARD_FOLDERS = ['SDS', 'Service agreement', 'Maps', 'Site specific', 'Meetings', 'Entomology', 'Training', 'Insurance'];
+const CATEGORY_FOLDER = { 'SDS': 'SDS', 'Service agreement': 'Service agreement', 'Site map': 'Maps', 'Insurance': 'Insurance' };
+const docFolderOf = d => d.folder || CATEGORY_FOLDER[d.category] || '';
 function sectionCard(title, color, body, right) {
     return `<div class="card p-5 space-y-3"><div class="flex items-center justify-between gap-2"><span class="eyebrow flex items-center gap-2" style="color:${color};"><span class="w-2 h-2 rounded-full" style="background:${color};"></span>${title}</span>${right || ''}</div>${body}</div>`;
 }
@@ -979,7 +1003,9 @@ function renderOverview() {
     const due = nextDue(s);
     const dueNames = due ? (s.services || []).filter(x => x.nextDue === due).map(x => x.type) : [];
     const overdue = m.stations.filter(x => x.overdue).length;
-    const tile = (v, k, sub, onclick, color) => `<button type="button" class="card stat" onclick="${onclick}"><div class="v" ${color ? `style="color:${color}"` : ''}>${v}</div><div class="k">${k}</div>${sub ? `<div class="s">${sub}</div>` : ''}</button>`;
+    const tile = (v, k, sub, onclick, color) => onclick
+        ? `<button type="button" class="card stat" onclick="${onclick}"><div class="v" ${color ? `style="color:${color}"` : ''}>${v}</div><div class="k">${k}</div>${sub ? `<div class="s">${sub}</div>` : ''}</button>`
+        : `<div class="card stat"><div class="v" ${color ? `style="color:${color}"` : ''}>${v}</div><div class="k">${k}</div>${sub ? `<div class="s">${sub}</div>` : ''}</div>`;
     const soonDocs = m.docs.filter(d => d.expires_on && dayStart(d.expires_on) < Date.now() + DOC_WARN_DAYS * 86400000);
     const breaches = breachesNow();
     $('tabBody').innerHTML = `
@@ -987,7 +1013,7 @@ function renderOverview() {
         <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
             ${tile(m.stations.length, 'Stations', overdue ? `<span style="color:#ef4444" class="font-bold">${overdue} not checked recently</span>` : 'All checked on schedule', 'showStationList()')}
             ${tile(lastVisit ? fmtDate(lastVisit.completed) : '-', 'Last service', lastVisit ? `${esc(lastVisit.type)}${lastVisit.tech ? ' · ' + esc(lastVisit.tech) : ''}` : 'No visits yet', lastVisit ? `openVisit('${esc(lastVisit.id)}')` : '')}
-            ${tile(due ? fmtDay(due) : '-', 'Next service due', due ? `<span class="t-strong font-semibold">${esc(dueNames.join(', ') || 'Service')}</span>` : 'Not scheduled', "document.getElementById('servicesCard').scrollIntoView({ behavior: 'smooth', block: 'center' })")}
+            ${tile(due ? fmtDay(due) : '-', 'Next service due', due ? `<span class="t-strong font-semibold">${esc(dueNames.join(', ') || 'Service')}</span>` : 'Not scheduled', '')}
             ${tile(m.stations.length && lastVisit ? Math.round(lastStations / m.stations.length * 100) + '%' : '-', 'Checked last visit', lastVisit ? `${lastStations} of ${m.stations.length} stations` : '', lastVisit ? 'showLastVisitCoverage()' : '', '#10b981')}
             ${tile(openRecs.length, 'Outstanding recommendations', openRecs.length ? `${openRecs.filter(r => r.status === 'open').length} open · ${openRecs.filter(r => r.status === 'pending').length} pending` : 'Nothing outstanding', "setTab('recs')", openRecs.length ? 'var(--accent-text)' : '')}
         </div>
@@ -1584,7 +1610,7 @@ function showStation(barcode) {
     $('modalSub').innerHTML = `${typeDot(s.type)} ${esc(s.type)} · <span class="mono">${esc(s.barcode)}</span>`;
     const recs = state.model.recs.filter(r => r.barcode === barcode);
     const hist = s.entries.slice().reverse();
-    $('modalBody').innerHTML = `
+    $('modalBody').innerHTML = (s.photoPath ? `<div class="inset p-3 flex items-center gap-3 flex-wrap"><div id="stPhoto" class="st-photo"></div><div class="min-w-0 flex-1"><div class="eyebrow t-faint">Where to find it</div><div class="text-xs t-muted mt-0.5">Photo taken by your technician. Tap it to enlarge.</div></div></div>` : '') + `
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
             <div class="inset p-2.5"><div class="eyebrow t-faint">Last checked</div><div class="font-bold t-strong mt-0.5">${s.lastAt ? fmtDate(s.lastAt) : 'Never'}</div></div>
             <div class="inset p-2.5"><div class="eyebrow t-faint">Days since</div><div class="font-bold t-strong mt-0.5">${s.daysSince == null ? '-' : s.daysSince}${s.overdue ? ' · <span style="color:#ef4444">overdue</span>' : ''}</div></div>
@@ -1598,6 +1624,7 @@ function showStation(barcode) {
             <td>${e.prep ? `${esc(e.prep)}<div class="t-faint text-[11px]">${fmtQty(e.qty, e.unit)}${e.batch ? ' · batch ' + esc(e.batch) : ''}</div>` : '-'}</td><td class="t-muted">${esc(e.tech || '-')}</td></tr>
             ${e.notes ? `<tr><td colspan="5" class="t-muted text-[11px] !pt-0">Notes: ${esc(e.notes)}</td></tr>` : ''}`).join('')}</tbody></table></div>` : emptyNote('Not serviced yet.')}</div>`;
     $('modalFoot').classList.add('hidden');
+    if (s.photoPath) signPaths([s.photoPath]).then(([u]) => { const el = $('stPhoto'); if (el) if (!el) return; if (!u) { el.innerHTML = '<span class="t-faint text-[11px]">Photo unavailable</span>'; return; } viewerGroups['st:' + s.barcode] = { items: [{ url: u, video: false }], caption: 'Where to find ' + s.name }; el.innerHTML = `<img src="${u}" alt="Where to find ${esc(s.name)}" data-key="${esc('st:' + s.barcode)}" onclick="openViewer(this.dataset.key, 0)">`; });
     openModal();
 }
 
@@ -1822,7 +1849,10 @@ function showVisit(id) {
                 <td>${e.prep ? `${esc(e.prep)}<div class="t-faint text-[11px]">${fmtQty(e.qty, e.unit)}${e.batch ? ' · batch ' + esc(e.batch) : ''}</div>` : '-'}</td></tr>
                 ${e.notes ? `<tr><td colspan="4" class="t-muted text-[11px] !pt-0">Notes: ${esc(e.notes)}</td></tr>` : ''}`).join('')}</tbody></table></div>` : emptyNote('No station records on this visit.')}
         </div>
-        ${v.recs.length ? `<div class="space-y-2"><div class="eyebrow t-faint">Recommendations raised</div>${v.recs.map(r => recRowHtml(r, 'none')).join('')}</div>` : ''}`;
+        ${v.recs.length ? `<div class="space-y-2"><div class="eyebrow t-faint">Recommendations raised</div>${v.recs.map(r => recRowHtml(r, 'none')).join('')}</div>` : ''}
+        ${v.signedBy ? `<div class="inset p-3"><div class="eyebrow t-faint">Customer sign-off</div><div class="flex items-center gap-3 flex-wrap mt-1"><span id="visitSig"></span><span class="font-bold t-strong">✓ Signed by ${esc(v.signedBy)}${v.signedAt ? ` <span class="t-faint font-normal">${fmtDateTime(v.signedAt)}</span>` : ''}</span></div></div>`
+            : v.noSignatureReason ? `<div class="inset p-3"><div class="eyebrow t-faint">Customer sign-off</div><div class="font-bold mt-1" style="color:#d97706;">Not signed: ${esc(v.noSignatureReason)}</div></div>` : ''}`;
+    if (v.signaturePath) signPaths([v.signaturePath]).then(([u]) => { const el = $('visitSig'); if (el && u) el.innerHTML = `<img src="${u}" class="sig-img" alt="Signature of ${esc(v.signedBy)}">`; });
     $('modalFoot').classList.remove('hidden');
     $('modalFoot').innerHTML = `<button type="button" class="btn btn-primary" onclick="downloadVisitPdf('${esc(v.id)}')">⬇ Download PDF</button>`;
     openModal();
@@ -1856,23 +1886,23 @@ function docRowHtml(d) {
 let openFolder = null;
 function renderDocuments() {
     const m = state.model, docs = m.docs;
-    if (!docs.length && !m.folders.length) {
+    if (!docs.length && !m.folders.length) {   // (never: every site has the standard folders)
         $('tabBody').innerHTML = `<div class="card p-5">${emptyNote('No documents have been added for this site yet. Pesties adds service agreements, safety data sheets (SDS), insurance certificates and site maps here.')}</div>`;
         return;
     }
     if (openFolder && !m.folders.includes(openFolder)) openFolder = null;
     if (openFolder) {
-        const inside = docs.filter(d => d.folder === openFolder);
+        const inside = docs.filter(d => docFolderOf(d) === openFolder);
         $('tabBody').innerHTML = `<div class="card p-5 space-y-3">
             <div class="flex items-center gap-2"><button type="button" class="btn btn-secondary !px-3" onclick="openFolder = null; renderDocuments();">← All documents</button><h3 class="font-black t-strong">📁 ${esc(openFolder)}</h3></div>
             ${inside.map(docRowHtml).join('') || emptyNote('This folder is empty.')}</div>`;
         return;
     }
-    const loose = docs.filter(d => !d.folder);
+    const loose = docs.filter(d => !docFolderOf(d));
     const cats = DOC_CATEGORIES.filter(c => loose.some(d => (d.category || 'Other') === c)).concat(Array.from(new Set(loose.map(d => d.category || 'Other'))).filter(c => !DOC_CATEGORIES.includes(c)));
     $('tabBody').innerHTML = (m.folders.length ? sectionCard('Folders', '#0891b2', `<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">${m.folders.map(f => {
-            const n = docs.filter(d => d.folder === f).length;
-            return `<button type="button" class="row-item clickable p-3 text-left flex items-center gap-3" data-folder="${esc(f)}" onclick="openFolder = this.dataset.folder; renderDocuments();"><span class="text-2xl">📁</span><span class="min-w-0"><span class="block font-bold t-strong truncate">${esc(f)}</span><span class="block text-[11px] t-faint">${plural(n, 'file')}</span></span></button>`;
+            const n = docs.filter(d => docFolderOf(d) === f).length;
+            return `<button type="button" class="row-item clickable p-3 text-left flex items-center gap-3" data-folder="${esc(f)}" onclick="openFolder = this.dataset.folder; renderDocuments();"><span class="text-2xl">📁</span><span class="min-w-0"><span class="block font-bold t-strong leading-tight break-words">${esc(f)}</span><span class="block text-[11px] t-faint">${plural(n, 'file')}</span></span></button>`;
         }).join('')}</div>`) : '')
         + cats.map(c => sectionCard(esc(c), '#0891b2', loose.filter(d => (d.category || 'Other') === c).map(docRowHtml).join(''))).join('');
 }
@@ -1883,6 +1913,45 @@ async function openDoc(id) {
     const [url] = await signPaths([d.file_path], DOC_BUCKET);
     if (!url) { if (w) w.close(); alert('This document could not be opened. Please try again, or contact Pesties.'); return; }
     if (w) w.location.href = url; else location.href = url;
+}
+
+// ---------- Technicians: who looks after this site (profiles set up by Pesties) ----------
+let techCache = { site: null, list: null, error: '' };
+async function renderTechnicians() {
+    const cid = String(state.site.id);
+    if (techCache.site !== cid) {
+        techCache = { site: cid, list: null, error: '' };
+        $('tabBody').innerHTML = `<div class="card p-5">${emptyNote('Loading your technicians...')}</div>`;
+        try {
+            const { data, error } = await sb.rpc('portal_technicians', { p_client_id: cid });
+            if (error) throw error;
+            techCache.list = Array.isArray(data) ? data : [];
+        } catch (e) { techCache.list = []; techCache.error = e.message || String(e); }
+        if (state.tab !== 'techs' || String(state.site.id) !== cid) return;
+    }
+    const list = techCache.list || [];
+    if (!list.length) { $('tabBody').innerHTML = `<div class="card p-5">${emptyNote(techCache.error ? 'Technician details are not available yet.' : 'No technician profiles yet.')}</div>`; return; }
+    const initials = n => String(n || '?').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    $('tabBody').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">${list.map((t, i) => `
+        <div class="card p-5 space-y-3 tech-card">
+            <div class="flex items-center gap-4">
+                <div class="tech-photo" data-tech-photo="${i}">${esc(initials(t.name))}</div>
+                <div class="min-w-0"><div class="font-black t-strong text-lg leading-tight">${esc(t.name)}</div>
+                    ${t.title ? `<div class="text-xs t-muted">${esc(t.title)}</div>` : ''}
+                    <div class="flex flex-wrap gap-1.5 mt-1.5">${t.assigned ? '<span class="chip chip-orange">Your technician</span>' : ''}${t.visits ? `<span class="chip chip-grey">${plural(Number(t.visits), 'visit')} to this site</span>` : ''}</div></div>
+            </div>
+            ${t.bio ? `<p class="text-sm t-strong whitespace-pre-line leading-relaxed">${esc(t.bio)}</p>` : ''}
+            <div class="space-y-1.5 text-sm">
+                ${t.phone ? `<a class="tech-contact" href="tel:${esc(String(t.phone).replace(/[^\d+]/g, ''))}">📞 <span>${esc(t.phone)}</span></a>` : ''}
+                ${t.email ? `<a class="tech-contact" href="mailto:${esc(t.email)}">✉ <span class="break-all">${esc(t.email)}</span></a>` : ''}
+                ${t.last_visit ? `<div class="text-[11px] t-faint">Last visit ${fmtDate(Date.parse(t.last_visit))}</div>` : ''}
+            </div>
+        </div>`).join('')}</div>`;
+    const withPhotos = list.map((t, i) => [t, i]).filter(([t]) => t.photo_path);
+    if (withPhotos.length) {
+        const urls = await signPaths(withPhotos.map(([t]) => t.photo_path));
+        withPhotos.forEach(([t, i], k) => { const el = document.querySelector(`[data-tech-photo="${i}"]`); if (el && urls[k]) el.innerHTML = `<img src="${urls[k]}" alt="${esc(t.name)}">`; });
+    }
 }
 
 // ---------- Floor plans ----------
@@ -1903,7 +1972,7 @@ async function renderPlans() {
             </div>
         </div>
         <div class="text-center"><div class="plan-stage" id="planStage"><div class="t-faint text-xs p-10">Loading floor plan...</div></div></div>
-        <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] t-muted justify-center">${Array.from(new Set(pins.map(x => x.type))).map(t => `<span class="inline-flex items-center gap-1.5">${typeDot(t)}${esc(t)}</span>`).join('')}<span class="inline-flex items-center gap-1.5"><span class="type-dot" style="background:transparent;outline:3px solid #dc2626;"></span>Not checked recently</span></div>
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] t-muted justify-center">${Array.from(new Set(pins.map(x => x.type))).map(t => `<span class="inline-flex items-center gap-1.5">${typeDot(t)}${esc(t)}</span>`).join('')}</div>
     </div>`;
     const [url] = await signPaths([plan.image_path]);
     const stage = $('planStage');
@@ -2147,6 +2216,7 @@ function downloadVisitPdf(id) {
         v.entries.map(e => [e.name, e.barcode, e.type, e.activity === 'None' ? 'No activity' : e.activity, e.species ? e.species + (e.count ? ' x' + e.count : '') : '-',
             e.prep ? `${e.prep} ${fmtQty(e.qty, e.unit)}${e.batch ? ' batch ' + e.batch : ''}` : '-', e.notes]));
     if (v.recs.length) { pdf.heading('Recommendations raised'); pdf.table(REC_COLS, recExportRows(v.recs)); }
+    if (v.signedBy || v.noSignatureReason) { pdf.heading('Customer sign-off'); pdf.para(v.signedBy ? `Signed by ${v.signedBy}${v.signedAt ? ' on ' + fmtDateTime(v.signedAt) : ''}` : `Not signed: ${v.noSignatureReason}`); }
     pdf.save(`${safeName(siteName(state.site))} - Visit report - ${toDayStr(new Date(v.completed))}`);
 }
 
