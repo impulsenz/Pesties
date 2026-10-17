@@ -133,6 +133,19 @@
         .visit-act { width: 100%; justify-content: center; text-align: center; line-height: 1.2; padding-left: .5rem; padding-right: .5rem; white-space: normal; }
         .header-h { height: 2.5rem; border-radius: .8rem; box-sizing: border-box; }
         .sync-btn:hover { filter: brightness(1.05); }
+        .station-photo-box { width: 5.5rem; height: 5.5rem; border-radius: .8rem; overflow: hidden; background: var(--surface3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0; }
+        .station-photo-box img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+        .station-photo-lg { width: 8rem; height: 8rem; }
+        .station-photo-empty { font-size: .65rem; text-align: center; color: var(--faint); line-height: 1.3; }
+        .station-photo-new { position: absolute; bottom: .25rem; right: .25rem; background: #f97316; color: #fff; font-size: .55rem; font-weight: 900; padding: .05rem .35rem; border-radius: 999px; }
+        .station-thumb { width: 3.25rem; height: 3.25rem; border-radius: .6rem; overflow: hidden; background: var(--surface3); display: flex; align-items: center; justify-content: center; font-size: 1rem; opacity: .9; }
+        .station-thumb img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+        .sign-pad { width: 100%; height: 11rem; background: #fff; border-radius: .8rem; border: 2px dashed rgba(148,163,184,.7); touch-action: none; display: block; cursor: crosshair; }
+        .sign-img { background: #fff; border-radius: .6rem; padding: .25rem; max-height: 6rem; }
+        .role-toggle { font-size: .7rem; font-weight: 800; padding: .3rem .65rem; border-radius: 999px; border: 1.5px solid var(--border); color: var(--muted); background: transparent; cursor: pointer; }
+        .role-toggle.on { background: rgba(249,115,22,.14); border-color: #f97316; color: #ea580c; }
+        html.dark .role-toggle.on { color: #fb923c; }
+        .role-toggle:disabled { opacity: .55; cursor: not-allowed; }
         .ms-opt:hover, .ms-opt:focus-visible { background: var(--surface3); outline: none; }
         .ms-opt.ms-on { background: rgba(249,115,22,.12); }
         .ms-tick { width: 1.1rem; height: 1.1rem; flex-shrink: 0; border-radius: .3rem; border: 1.5px solid rgba(148,163,184,.6); display: inline-flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: 900; color: #fff; }
@@ -310,6 +323,11 @@
                     <span id="notifCount" class="hidden absolute -top-1.5 -right-1.5 min-w-[1.2rem] h-[1.2rem] px-1 rounded-full text-[10px] font-black text-white flex items-center justify-center" style="background:#dc2626;">0</span>
                 </button>
 
+                <button type="button" id="actionsBtn" onclick="openActionsModal()" class="icon-btn relative" title="Needs action" aria-label="Needs action">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    <span id="actionsCount" class="hidden absolute -top-1.5 -right-1.5 min-w-[1.2rem] h-[1.2rem] px-1 rounded-full text-[10px] font-black text-white flex items-center justify-center" style="background:#0891b2;">0</span>
+                </button>
+
                 <button type="button" id="adminBtn" onclick="openAdmin('overview')" class="icon-btn hidden" title="Admin" aria-label="Admin">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                 </button>
@@ -480,7 +498,7 @@
                     <div class="card p-4 sm:p-5 space-y-3 sm:col-span-3 xl:col-span-1">
                         <div class="flex items-center justify-between gap-2">
                             <span class="eyebrow flex items-center gap-2" style="color:#10b981;"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Services & Schedule</span>
-                            <button type="button" onclick="openServicesModal()" class="link-btn !no-underline">Manage</button>
+                            <button type="button" id="siteServicesManageBtn" onclick="openServicesModal()" class="link-btn !no-underline hidden">Manage</button>
                         </div>
                         <div id="siteServicesList" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2"></div>
                     </div>
@@ -547,7 +565,7 @@
                                 <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                                 Recommendations
                             </h3>
-                            <div id="recFilterTabs" class="flex flex-wrap gap-1.5"></div>
+                            <div class="flex flex-wrap items-center gap-1.5"><div id="recFilterTabs" class="flex flex-wrap gap-1.5"></div><span id="recPhotoToggle"></span></div>
                         </div>
                         <div id="recAgeChart" class="viz-root"></div>
                         <div id="siteLandingRecsList" class="space-y-2.5 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1">
@@ -562,7 +580,7 @@
                                 <span class="w-2 h-2 rounded-full bg-green-600"></span>
                                 Stations
                             </h3>
-                            <input type="text" id="siteStationSearch" oninput="renderSiteStationList()" placeholder="Search stations..." class="field !w-44 !py-1.5 !text-xs">
+                            <div class="flex items-center gap-2"><span id="stationPhotoToggle"></span><input type="text" id="siteStationSearch" oninput="renderSiteStationList()" placeholder="Search stations..." class="field !w-44 !py-1.5 !text-xs"></div>
                         </div>
                         <div id="stationTypeTabs" class="flex flex-wrap gap-1.5"></div>
                         <div id="siteStationList" class="space-y-2 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1"></div>
@@ -696,6 +714,18 @@
                         <div class="sm:col-span-2">
                             <label class="lbl">Floor plan location</label>
                             <select id="stationMapSelect" class="field cursor-pointer" onchange="stationMapChosen(this.value)"></select>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="lbl">Station location photo <span class="t-faint font-normal normal-case tracking-normal">- so the next technician can find it</span></label>
+                            <div class="flex items-center gap-3 flex-wrap">
+                                <div id="stationPhotoPreview" class="station-photo-box"></div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="document.getElementById('stationPhotoCamera').click()" class="btn btn-secondary !py-2">📷 Take photo</button>
+                                    <button type="button" onclick="document.getElementById('stationPhotoGallery').click()" class="btn btn-secondary !py-2">🖼 Choose</button>
+                                </div>
+                            </div>
+                            <input type="file" id="stationPhotoCamera" accept="image/*" capture="environment" class="hidden" onchange="stationPhotoChosen(this)">
+                            <input type="file" id="stationPhotoGallery" accept="image/*" class="hidden" onchange="stationPhotoChosen(this)">
                         </div>
                         <div id="stationZoneRow" class="sm:col-span-2 hidden">
                             <label class="lbl" for="stationZone">Zone <span class="t-faint font-normal normal-case tracking-normal">- for critical limits, e.g. Dispatch or Kitchen</span></label>
@@ -868,7 +898,8 @@
                 <div class="sm:col-span-2"><label class="lbl">Assigned technician</label><select id="newAssignedTo" class="field cursor-pointer"></select></div>
                 <div class="sm:col-span-2 border-t divider pt-4 mt-1 flex flex-wrap justify-between items-center gap-2">
                     <span class="eyebrow" style="color:#10b981;">Contracted Services & Schedule</span>
-                    <button type="button" onclick="openServicesModal('new')" class="btn btn-secondary !py-2">Add / Edit Services</button>
+                    <button type="button" id="newClientServicesBtn" onclick="openServicesModal('new')" class="btn btn-secondary !py-2">Add / Edit Services</button>
+                    <span id="newClientServicesNote" class="hidden text-[11px] t-faint">An admin adds the services.</span>
                 </div>
                 <div id="newClientServicesList" class="sm:col-span-2 space-y-2 text-xs"></div>
                 <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
@@ -1034,31 +1065,36 @@
             <section data-admin-tab="team" class="hidden card p-5 sm:p-6 space-y-5">
                 <div id="adminPanel" class="space-y-5">
                         <div>
-                            <h4 class="eyebrow" style="color:#d97706;">Team Access (Admin)</h4>
-                            <p class="text-xs t-muted mt-1">Pre-approve a staff Google email, or approve / revoke people who have already signed in.</p>
+                            <h4 class="eyebrow" style="color:#d97706;">Users (Admin)</h4>
+                            <p class="text-xs t-muted mt-1">Technicians and admins use this app; clients use the Client Portal. One person can be all three - tap the role buttons on their row to change what they are.</p>
                         </div>
 
                         <div class="flex flex-col sm:flex-row gap-2">
-                            <input type="email" id="adminNewEmail" placeholder="staff@gmail.com" class="field flex-1">
-                            <select id="adminNewRole" class="field !w-auto cursor-pointer">
+                            <input type="email" id="adminNewEmail" placeholder="name@company.co.nz" class="field flex-1">
+                            <select id="adminNewRole" class="field !w-auto cursor-pointer" aria-label="Role">
                                 <option value="technician">Technician</option>
                                 <option value="admin">Admin</option>
+                                <option value="client">Client</option>
                             </select>
-                            <button type="button" onclick="addAllowedEmail()" class="btn btn-primary">Approve Email</button>
+                            <button type="button" onclick="addAllowedEmail()" class="btn btn-primary">Add user</button>
                         </div>
 
-                        <div>
-                            <h5 class="eyebrow t-faint mb-2">Users who have signed in</h5>
+                        <div class="space-y-2">
+                            <div id="userFilterChips" class="flex flex-wrap gap-1.5" role="group" aria-label="Show"></div>
                             <div id="adminProfilesList" class="space-y-2 text-xs"></div>
-                        </div>
-
-                        <div>
-                            <h5 class="eyebrow t-faint mb-2">Pre-approved emails</h5>
-                            <div id="adminAllowedList" class="space-y-2 text-xs"></div>
+                            <div id="adminAllowedList" class="hidden"></div>
                         </div>
 
 
                 </div>
+            </section>
+
+            <section data-admin-tab="services" class="hidden card p-5 sm:p-6 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div><h4 class="eyebrow" style="color:#10b981;">Services & schedules (Admin)</h4><p class="text-xs t-muted mt-1">Only admins add or remove a site's services and their notes. Technicians see them, and tick services off when they close a visit.</p></div>
+                    <input type="search" id="adminSvcSearch" placeholder="Find a site..." class="field !w-52 !py-1.5 !text-xs" oninput="renderAdminServices()">
+                </div>
+                <div id="adminServicesList" class="space-y-2 text-xs"></div>
             </section>
 
             <section data-admin-tab="clients" class="hidden card p-5 sm:p-6 space-y-4">
@@ -1231,12 +1267,91 @@
                 <label class="lbl !font-bold">Overall Site Summary Notes</label>
                 <textarea id="closingSiteNotes" rows="4" placeholder="Client was present. All exterior bait stations serviced successfully..." class="field"></textarea>
             </div>
+            <div class="inset p-3 space-y-2">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <label class="lbl !font-bold !mb-0">Customer sign-off</label>
+                    <button type="button" id="signOffBtn" onclick="openSignOff()" class="btn btn-primary !py-2">✍ Customer review & sign</button>
+                </div>
+                <div id="signOffStatus" class="text-xs"></div>
+            </div>
             <div class="flex flex-wrap justify-end gap-2 pt-2">
                 <button type="button" onclick="closeCompleteVisitModal()" class="btn btn-secondary">Cancel</button>
                 <button type="button" onclick="downloadCurrentVisitReport()" class="btn btn-secondary" title="Download a report of the visit so far without submitting it">Download</button>
                 <button type="button" onclick="finalizeAndSubmitVisit(false)" class="btn btn-blue">Submit</button>
                 <button type="button" onclick="finalizeAndSubmitVisit(true)" class="btn btn-primary">Submit & Download</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ===================== INFO POP-UP (service details ...) ===================== -->
+    <div id="infoModal" class="hidden overlay fixed inset-0 z-[63] flex justify-center items-center p-4" onclick="if (event.target === this) closeInfoModal()">
+        <div class="card p-5 sm:p-6 max-w-md w-full max-h-[88vh] overflow-y-auto scroll-thin" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+            <div class="flex justify-between items-start gap-3 mb-3"><h3 id="infoTitle" class="font-black text-lg t-strong break-words"></h3><button type="button" onclick="closeInfoModal()" class="icon-btn shrink-0" title="Close" aria-label="Close">✕</button></div>
+            <div id="infoBody"></div>
+            <div id="infoFoot" class="flex flex-wrap items-center gap-2 pt-4 mt-4 border-t divider"></div>
+        </div>
+    </div>
+
+    <!-- ===================== CUSTOMER SIGN-OFF ===================== -->
+    <div id="signOffModal" class="hidden fixed inset-0 z-[64] overlay flex justify-center items-stretch sm:items-center sm:p-6">
+        <div class="w-full sm:max-w-3xl h-full sm:h-auto sm:max-h-[94vh] flex flex-col sm:rounded-[1.25rem] overflow-hidden" style="background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);" role="dialog" aria-modal="true" aria-labelledby="signOffTitle">
+            <div class="flex justify-between items-start gap-3 p-4 sm:p-5 border-b divider shrink-0">
+                <div class="min-w-0"><div class="eyebrow t-accent">Customer sign-off</div><h3 id="signOffTitle" class="font-black text-lg t-strong break-words"></h3><div id="signOffSub" class="text-[11px] t-faint"></div></div>
+                <button type="button" onclick="closeSignOff()" class="icon-btn shrink-0" title="Close" aria-label="Close">✕</button>
+            </div>
+            <div class="flex-1 overflow-y-auto scroll-thin p-4 sm:p-6 space-y-5">
+                <div><div class="eyebrow t-faint mb-2">Please review today's service</div><div id="signOffReview" class="space-y-3 text-xs"></div></div>
+                <div class="inset p-4 space-y-3">
+                    <div class="eyebrow t-accent">Sign here</div>
+                    <div><label class="lbl" for="signName">Customer name</label><input id="signName" type="text" maxlength="80" autocomplete="name" placeholder="e.g. Jane Smith" class="field"></div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1"><span class="lbl !mb-0">Signature</span><button type="button" class="link-btn !text-xs" onclick="clearSignPad()">Clear</button></div>
+                        <canvas id="signPad" class="sign-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas>
+                        <p class="text-[11px] t-faint mt-1">By signing, the customer confirms they have seen the work, notes and preparations above.</p>
+                    </div>
+                </div>
+                <div class="inset p-4 space-y-2">
+                    <div class="eyebrow" style="color:#d97706;">Can't get a signature?</div>
+                    <div id="signReasonChips" class="flex flex-wrap gap-1.5"></div>
+                    <input id="signReason" type="text" maxlength="200" placeholder="Why no signature, e.g. customer not on site" class="field !text-xs" oninput="renderSignReasonChips()">
+                </div>
+            </div>
+            <div class="p-4 sm:p-5 border-t divider shrink-0 flex gap-3" style="padding-bottom: max(1rem, env(safe-area-inset-bottom));">
+                <button type="button" onclick="closeSignOff()" class="btn btn-secondary">Back</button>
+                <button type="button" id="signOffDoneBtn" onclick="saveSignOff()" class="btn btn-primary flex-1 !py-3">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== TECHNICIAN PROFILE (what clients see) ===================== -->
+    <div id="staffProfileModal" class="hidden overlay fixed inset-0 z-[66] flex justify-center items-center p-4" onclick="if (event.target === this) closeStaffProfile()">
+        <form class="card p-5 sm:p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto scroll-thin space-y-3" onsubmit="event.preventDefault(); saveStaffProfile();" role="dialog" aria-modal="true" aria-labelledby="spName">
+            <div class="flex justify-between items-start gap-3"><div><div class="eyebrow t-accent">Technician profile · shown in the Client Portal</div><h3 id="spName" class="font-black text-lg t-strong"></h3></div><button type="button" onclick="closeStaffProfile()" class="icon-btn shrink-0" title="Close" aria-label="Close">✕</button></div>
+            <div class="flex items-center gap-3">
+                <div id="spPhoto" class="station-photo-box !rounded-full"></div>
+                <div class="space-y-1"><button type="button" class="btn btn-secondary !py-1.5 !text-xs" onclick="document.getElementById('spPhotoInput').click()">📷 Choose photo</button><input type="file" id="spPhotoInput" accept="image/*" class="hidden" onchange="staffPhotoChosen(this)"><div class="text-[11px] t-faint">A friendly head-and-shoulders photo works best.</div></div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div class="sm:col-span-2"><label class="lbl" for="spTitle">Job title</label><input id="spTitle" maxlength="80" class="field" placeholder="e.g. Senior Pest Technician"></div>
+                <div><label class="lbl" for="spPhone">Phone</label><input id="spPhone" type="tel" maxlength="40" class="field" placeholder="021 123 4567"></div>
+                <div><label class="lbl" for="spEmail">Email for clients</label><input id="spEmail" type="email" maxlength="120" class="field"></div>
+                <div class="sm:col-span-2"><label class="lbl" for="spBio">About them</label><textarea id="spBio" rows="4" maxlength="800" class="field" placeholder="A little about them: experience, qualifications, what they specialise in..."></textarea></div>
+            </div>
+            <label class="flex items-center gap-2 text-xs t-strong"><input type="checkbox" id="spVisible" class="w-4 h-4 accent-orange-500"> Show in the Client Portal's Technicians tab</label>
+            <div class="flex justify-end gap-2 pt-1"><button type="button" class="btn btn-secondary" onclick="closeStaffProfile()">Cancel</button><button type="submit" id="spSaveBtn" class="btn btn-primary">Save profile</button></div>
+        </form>
+    </div>
+
+    <!-- ===================== SETUP ACTIONS (sites missing things) ===================== -->
+    <div id="actionsModal" class="hidden overlay fixed inset-0 z-50 flex flex-col justify-center items-center p-4" onclick="if(event.target===this) closeActionsModal()">
+        <div class="card p-6 sm:p-7 max-w-xl w-full max-h-[90vh] overflow-y-auto scroll-thin space-y-4">
+            <div class="flex justify-between items-start gap-3">
+                <div><h3 class="font-black text-lg" style="color:#0891b2;">Needs action</h3><p class="text-xs t-muted mt-1">Things your sites are missing, so every site is set up properly.</p></div>
+                <button type="button" onclick="closeActionsModal()" class="t-faint hover:opacity-70 text-xs font-semibold cursor-pointer shrink-0">✕ Close</button>
+            </div>
+            <div class="flex items-center gap-2 text-xs"><span class="t-muted font-semibold">Show for</span>
+                <select id="actionsScope" onchange="setActionsScope(this.value)" class="field !w-auto !py-2 cursor-pointer"><option value="mine">My sites</option><option value="all">All sites</option></select></div>
+            <div id="actionsList" class="space-y-4 text-xs"></div>
         </div>
     </div>
 
@@ -1565,13 +1680,13 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r25';
+        const APP_VERSION = '2026.10.18-r26';
         // after Check for updates, tidy the address bar
         try { if (/[?&]fresh=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "adminPage", "adminTabs", "adminTiles", "adminAttention", "adminWorkload", "adminDocsList", "adminDocSite", "adminActivityList", "adminExports", "adminSitesNoClient", "adminBtn", "profileAdminLink", "settingsAdminNote", "siteDocsList", "siteDocForm", "sitePortalAccess", "siteDocsFolderBtn", "docFolder", "adminDocFolder", "siteLimitsBox", "siteLimitAddBtn", "stationZoneRow", "stationZone", "zoneOptions", "recModalSeen", "recModalNoteReq", "adminClientsList", "clientNewSites", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "adminPage", "adminTabs", "adminTiles", "adminAttention", "adminWorkload", "adminDocsList", "adminDocSite", "adminActivityList", "adminExports", "adminSitesNoClient", "adminBtn", "profileAdminLink", "settingsAdminNote", "siteDocsList", "siteDocForm", "sitePortalAccess", "infoModal", "infoTitle", "infoBody", "infoFoot", "siteServicesManageBtn", "stationPhotoPreview", "stationPhotoToggle", "recPhotoToggle", "signOffModal", "signOffReview", "signPad", "signName", "signReason", "signOffStatus", "signOffBtn", "staffProfileModal", "actionsModal", "actionsBtn", "actionsCount", "actionsList", "userFilterChips", "adminServicesList", "adminSvcSearch", "newClientServicesBtn", "siteDocsFolderBtn", "docFolder", "adminDocFolder", "siteLimitsBox", "siteLimitAddBtn", "stationZoneRow", "stationZone", "zoneOptions", "recModalSeen", "recModalNoteReq", "adminClientsList", "clientNewSites", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -2217,42 +2332,98 @@
                 if (a.error) throw a.error;
                 adminProfiles = p.data || [];
                 adminAllowed = a.data || [];
-                // client logins are managed under Client Portal Access, not here
-                const cu = await _supabase.from('client_users').select('email');
-                const clientEmails = new Set(((cu && cu.data) || []).map(x => x.email));
-                adminProfiles = adminProfiles.filter(u => !clientEmails.has(String(u.email || '').toLowerCase()));
+                const cu = await _supabase.from('client_users').select('*');
+                if (cu && !cu.error) adminClients = cu.data || [];
             } catch (err) {
                 profList.innerHTML = '<span style="color:#ef4444;">Could not load: ' + esc(err.message) + '</span>';
                 return;
             }
-
-            profList.innerHTML = adminProfiles.map((u, i) => {
-                const isMe = u.id === currentUser.id;
-                const badge = u.approved ? '<span class="chip chip-green">Approved</span>' : '<span class="chip chip-amber">Pending</span>';
-                const btn = isMe ? '<span class="t-faint italic">You</span>' :
-                    `${u.approved ? `<select onchange="setUserRole(${i}, this.value)" class="field !w-auto !py-1 !px-2 !text-xs cursor-pointer" aria-label="Role"><option value="technician" ${u.role !== 'admin' ? 'selected' : ''}>Technician</option><option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option></select>` : ''}
-                     <button type="button" onclick="toggleApproval(${i})" class="btn ${u.approved ? 'btn-danger' : 'btn-primary'} !px-3 !py-1.5">${u.approved ? 'Revoke' : 'Approve'}</button>`;
-                const assigned = clientsData.filter(c => c.assigned_to === u.id).length;
-                return `
-                    <div class="row-item p-3 flex flex-wrap justify-between items-center gap-2">
-                        <div class="min-w-0">
-                            <div class="font-bold t-strong truncate">${esc(u.full_name || u.email)}</div>
-                            <div class="t-muted font-mono truncate">${esc(u.email)} • ${esc(u.role)}</div>
-                            ${u.approved ? `<div class="t-faint text-[11px]">${assigned} site${assigned === 1 ? '' : 's'} assigned</div>` : ''}
-                        </div>
-                        <div class="flex items-center gap-2">${badge}${btn}</div>
-                    </div>`;
-            }).join('') || '<span class="t-faint italic">No users yet.</span>';
-
-            allowedList.innerHTML = adminAllowed.map((a2, i) => `
-                <div class="row-item p-3 flex justify-between items-center gap-2">
-                    <div class="font-mono t-strong truncate">${esc(a2.email)} <span class="t-faint">(${esc(a2.role)})</span></div>
-                    <button type="button" onclick="removeAllowedEmail(${i})" class="font-bold cursor-pointer" style="color:#ef4444;">Remove</button>
-                </div>`).join('') || '<span class="t-faint italic">No pre-approved emails.</span>';
+            renderUsers();
             loadClientAdmin();
             if (!document.getElementById('adminPage').classList.contains('hidden')) document.getElementById('adminTabs').innerHTML = ADMIN_TABS.map(([k, l]) => `<button type="button" class="tab-btn shrink-0 ${adminTab === k ? 'active' : ''}" onclick="setAdminTab('${k}')">${l}${adminTabBadge(k)}</button>`).join('');
         }
 
+        // ---------- everyone in one list: technicians, admins and clients ----------
+        const USER_FILTERS = [['all', 'All'], ['technician', 'Technicians'], ['admin', 'Admins'], ['client', 'Clients'], ['pending', 'Waiting for approval']];
+        let userFilter = 'all';
+        const clientEmailSet = () => new Set(adminClients.map(c => String(c.email || '').toLowerCase()));
+        function teamPeople() {
+            const byEmail = new Map();
+            const get = e => { const k = String(e || '').toLowerCase(); if (!byEmail.has(k)) byEmail.set(k, { email: k }); return byEmail.get(k); };
+            adminProfiles.forEach(u => { if (u.email) get(u.email).profile = u; });
+            adminAllowed.forEach(a => { if (a.email) get(a.email).allowed = a; });
+            adminClients.forEach(c => { if (c.email) get(c.email).client = c; });
+            return Array.from(byEmail.values()).map(x => {
+                const p = x.profile, a = x.allowed;
+                const staff = p ? !!p.approved : !!a;
+                const admin = staff && (p ? p.role === 'admin' : a.role === 'admin');
+                return Object.assign(x, {
+                    name: (p && p.full_name) || (x.client && x.client.full_name) || x.email,
+                    staff, admin, technician: staff, clientOn: !!x.client,
+                    pending: !!p && !p.approved && !x.client,
+                    invited: !p && !!a,
+                    me: !!(p && currentUser && p.id === currentUser.id)
+                });
+            }).sort((a, b) => (b.pending - a.pending) || a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+        }
+        function setUserFilter(f) { userFilter = f; renderUsers(); }
+        function renderUsers() {
+            const people = teamPeople();
+            const is = { all: () => true, technician: x => x.staff && !x.admin, admin: x => x.admin, client: x => x.clientOn, pending: x => x.pending };
+            document.getElementById('userFilterChips').innerHTML = USER_FILTERS.map(([k, l]) => { const n = people.filter(is[k]).length; return `<button type="button" class="tab-btn ${userFilter === k ? 'active' : ''}" aria-pressed="${userFilter === k}" onclick="setUserFilter('${k}')">${l} ${n}</button>`; }).join('');
+            const list = people.filter(is[userFilter] || is.all);
+            const roleBtn = (x, kind, on, label) => `<button type="button" class="role-toggle ${on ? 'on' : ''}" aria-pressed="${on}" data-email="${esc(x.email)}" ${x.me && kind !== 'client' ? 'disabled title="You can\'t change your own staff access"' : ''} onclick="toggleUserRole(this.dataset.email, '${kind}')">${on ? '✓ ' : ''}${label}</button>`;
+            document.getElementById('adminProfilesList').innerHTML = list.map(x => {
+                const assigned = x.profile ? clientsData.filter(c => c.assigned_to === x.profile.id).length : 0;
+                const clientSites = x.clientOn ? adminClientAccess.filter(a => a.email === x.email).length : 0;
+                const status = x.pending ? '<span class="chip chip-amber">Waiting for approval</span>' : x.invited ? '<span class="chip chip-blue">Invited - not signed in yet</span>' : '';
+                const facts = [x.staff && x.profile ? `${assigned} site${assigned === 1 ? '' : 's'} assigned` : '', x.clientOn ? `client of ${clientSites} site${clientSites === 1 ? '' : 's'}${x.client.active ? '' : ' (paused)'}` : ''].filter(Boolean).join(' · ');
+                return `<div class="row-item p-3 space-y-2" data-user="${esc(x.email)}">
+                    <div class="flex flex-wrap justify-between items-start gap-2">
+                        <div class="min-w-0"><div class="font-bold t-strong truncate">${esc(x.name)}${x.me ? ' <span class="t-faint font-normal">(you)</span>' : ''}</div>
+                            <div class="t-muted font-mono truncate">${esc(x.email)}</div>${facts ? `<div class="t-faint text-[11px]">${esc(facts)}</div>` : ''}</div>
+                        <div class="flex flex-wrap items-center gap-1.5">${status}${x.pending ? `<button type="button" class="btn btn-primary !px-3 !py-1.5" data-email="${esc(x.email)}" onclick="toggleUserRole(this.dataset.email, 'technician')">Approve</button>` : ''}</div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        ${roleBtn(x, 'technician', x.staff, 'Technician')}${roleBtn(x, 'admin', x.admin, 'Admin')}${roleBtn(x, 'client', x.clientOn, 'Client')}
+                        ${x.profile && x.staff ? `<button type="button" class="link-btn !text-[11px] ml-1" data-id="${esc(x.profile.id)}" onclick="openStaffProfile(this.dataset.id)">Profile for clients</button>` : ''}
+                        ${x.clientOn ? `<button type="button" class="link-btn !text-[11px] ml-1" onclick="setAdminTab('clients')">Client sites</button>` : ''}
+                    </div>
+                </div>`;
+            }).join('') || '<span class="t-faint italic">Nobody here.</span>';
+        }
+        // turn one role on or off for a person (Technician = staff access; Admin = staff + admin; Client = Client Portal login)
+        async function toggleUserRole(email, kind) {
+            const x = teamPeople().find(p => p.email === email);
+            if (!x) return;
+            const p = x.profile;
+            const fail = e => { alert('Could not change: ' + (e.message || e)); loadAdminPanel(); };
+            if (kind === 'client') {
+                if (x.clientOn) {
+                    if (!confirm(`Remove ${x.name}'s Client Portal login?`)) return;
+                    const { error } = await _supabase.from('client_users').delete().eq('email', email);
+                    if (error) return fail(error);
+                } else {
+                    const { error } = await _supabase.from('client_users').insert({ email, full_name: p && p.full_name ? p.full_name : null, active: true, added_by: technicianLabel() });
+                    if (error) return fail(portalMissing(error) ? new Error(PORTAL_SQL_NOTE) : error);
+                    alert(`${x.name} is now a client too. Choose the sites they can see under Client portal.`);
+                }
+                return loadAdminPanel();
+            }
+            if (x.me) return;
+            if (kind === 'technician' && x.staff) {
+                if (!confirm(`Remove ${x.name}'s staff access? ${x.admin ? 'They will stop being an admin too.' : ''}`)) return;
+                if (p) { const { error } = await _supabase.from('profiles').update({ approved: false, role: 'technician' }).eq('id', p.id); if (error) return fail(error); }
+                if (x.allowed) await _supabase.from('allowed_emails').delete().eq('email', x.allowed.email);
+                return loadAdminPanel();
+            }
+            const role = kind === 'admin' ? (x.admin ? 'technician' : 'admin') : (x.admin ? 'admin' : 'technician');
+            if (kind === 'admin' && !confirm(x.admin ? `Make ${x.name} a technician? They will lose admin access.` : `Make ${x.name} an admin? Admins can manage staff, client logins, services, limits, lists, settings and documents.`)) return;
+            if (p) { const { error } = await _supabase.from('profiles').update({ approved: true, role }).eq('id', p.id); if (error) return fail(error); }
+            const { error } = await _supabase.from('allowed_emails').upsert({ email: (x.allowed && x.allowed.email) || email, role });
+            if (error && !p) return fail(error);
+            loadAdminPanel();
+        }
         async function setUserRole(i, role) {
             const u = adminProfiles[i];
             if (!u || u.id === currentUser.id) return;
@@ -2273,7 +2444,15 @@
             const email = document.getElementById('adminNewEmail').value.trim().toLowerCase();
             const role = document.getElementById('adminNewRole').value;
             if (!email || !email.includes('@')) { alert('Enter a valid email address.'); return; }
-            if (adminClients.some(u => u.email === email)) { alert(email + ' is a client login (Client Portal). Staff need their own email.'); return; }
+            if (role === 'client') {
+                if (adminClients.some(u => u.email === email)) { alert(email + ' is already a client.'); return; }
+                const { error } = await _supabase.from('client_users').insert({ email, active: true, added_by: technicianLabel() });
+                if (error) { alert('Could not add: ' + (portalMissing(error) ? PORTAL_SQL_NOTE : error.message)); return; }
+                document.getElementById('adminNewEmail').value = '';
+                await loadAdminPanel();
+                alert(`${email} added as a client. Choose the sites they can see under Client portal, then send them the link:\n${portalUrl()}`);
+                return;
+            }
 
             const { error } = await _supabase.from('allowed_emails').upsert({ email: email, role: role });
             if (error) { alert('Could not add: ' + error.message); return; }
@@ -2415,7 +2594,6 @@
         async function addClientUser() {
             const email = document.getElementById('clientNewEmail').value.trim().toLowerCase();
             if (!email.includes('@')) { alert('Enter the client\'s email address.'); return; }
-            if (adminProfiles.some(p => (p.email || '').toLowerCase() === email && p.approved)) { alert(email + ' is a staff account. Use a different email for the client login.'); return; }
             if (adminClients.some(u => u.email === email)) { alert(email + ' already has a client login. Use "Sites" on their row to change what they can see.'); return; }
             if (!clientPicks.new.size && !confirm('No sites are chosen, so they won\'t see anything yet. Add them anyway?')) return;
             const { error } = await _supabase.from('client_users').insert({
@@ -2517,17 +2695,17 @@
                         <div class="t-faint text-[11px]">${esc(d.category || 'Other')} · added ${esc(fmtDateTimeLong(d.created_at).date)}${d.notes ? ' · ' + esc(d.notes) : ''}</div>
                         ${d.expires_on ? `<div class="mt-1">${docExpiryChip(d)}</div>` : ''}
                     </button>
-                    ${admin ? `<div class="flex items-center gap-2 shrink-0">${siteDocFolders.length ? `<select data-id="${esc(d.id)}" onchange="moveSiteDoc(this.dataset.id, this.value)" class="field !w-auto !py-0.5 !px-1 !text-[10px]" title="Move to a folder" aria-label="Folder"><option value="">No folder</option>${siteDocFolders.map(f => `<option value="${esc(f)}" ${d.folder === f ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select>` : ''}
+                    ${admin ? `<div class="flex items-center gap-2 shrink-0">${siteDocFolders.length ? `<select data-id="${esc(d.id)}" onchange="moveSiteDoc(this.dataset.id, this.value)" class="field !w-auto !py-0.5 !px-1 !text-[10px]" title="Move to a folder" aria-label="Folder"><option value="">No folder</option>${siteDocFolders.map(f => `<option value="${esc(f)}" ${docFolderOf(d) === f ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select>` : ''}
                         <button type="button" data-id="${esc(d.id)}" onclick="deleteSiteDoc(this.dataset.id)" class="t-faint hover:opacity-70 font-bold" title="Remove document" aria-label="Remove document">✕</button></div>` : ''}
                 </div>`;
                 const folders = siteDocFolders.map(f => {
-                    const inside = siteDocs.filter(d => d.folder === f), open = openDocFolders.has(f);
+                    const inside = siteDocs.filter(d => docFolderOf(d) === f), open = openDocFolders.has(f);
                     return `<div class="space-y-1.5"><div class="row-item p-2 flex items-center justify-between gap-2">
                         <button type="button" data-folder="${esc(f)}" onclick="toggleDocFolder(this.dataset.folder)" class="text-left flex-1 min-w-0 font-bold t-strong flex items-center gap-2"><span>${open ? '📂' : '📁'}</span><span class="truncate">${esc(f)}</span><span class="t-faint font-normal text-[11px] shrink-0">${inside.length} file${inside.length === 1 ? '' : 's'}</span></button>
-                        ${admin ? `<button type="button" data-folder="${esc(f)}" onclick="deleteDocFolder(this.dataset.folder)" class="t-faint hover:opacity-70 font-bold" title="Remove folder" aria-label="Remove folder">✕</button>` : ''}</div>
+                        ${admin && !isStandardFolder(f) ? `<button type="button" data-folder="${esc(f)}" onclick="deleteDocFolder(this.dataset.folder)" class="t-faint hover:opacity-70 font-bold" title="Remove folder" aria-label="Remove folder">✕</button>` : ''}</div>
                         ${open ? `<div class="pl-4 space-y-1.5 border-l-2 divider ml-2">${inside.map(docRow).join('') || '<span class="t-faint italic">Empty folder.</span>'}</div>` : ''}</div>`;
                 }).join('');
-                const loose = siteDocs.filter(d => !d.folder || !siteDocFolders.includes(d.folder)).map(docRow).join('');
+                const loose = siteDocs.filter(d => !docFolderOf(d) || !siteDocFolders.includes(docFolderOf(d))).map(docRow).join('');
                 box.innerHTML = (folders + loose) || `<span class="t-faint italic">No documents yet.${admin ? ' Add SDSs, insurance, agreements or maps for the client to see.' : ''}</span>`;
             }
             fillFolderSelect('docFolder', siteDocFolders);
@@ -2593,8 +2771,14 @@
             } finally { btn.disabled = false; btn.textContent = 'Upload'; }
         }
         // ---------- document folders (admins make them; clients see them in the portal) ----------
+        const STANDARD_FOLDERS = ['SDS', 'Service agreement', 'Maps', 'Site specific', 'Meetings', 'Entomology', 'Training', 'Insurance'];
+        const CATEGORY_FOLDER = { 'SDS': 'SDS', 'Service agreement': 'Service agreement', 'Site map': 'Maps', 'Insurance': 'Insurance' };
+        const docFolderOf = d => d.folder || CATEGORY_FOLDER[d.category] || '';
+        const isStandardFolder = f => STANDARD_FOLDERS.includes(f);
         function folderNames(rows, docs) {
-            return Array.from(new Set(rows.map(f => f.name).concat(docs.map(d => d.folder).filter(Boolean)))).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+            const extra = Array.from(new Set(rows.map(f => f.name).concat(docs.map(docFolderOf).filter(Boolean)))).filter(f => !isStandardFolder(f))
+                .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+            return STANDARD_FOLDERS.concat(extra);
         }
         function fillFolderSelect(id, names, pick) {
             const sel = document.getElementById(id);
@@ -2661,6 +2845,122 @@
             loadSiteDocs(true);
         }
 
+
+        // ---------- technician profiles shown to clients (admins set them) ----------
+        let spEditing = null, spPhotoBlob = null;
+        async function openStaffProfile(id) {
+            const u = adminProfiles.find(p => p.id === id);
+            if (!u) return;
+            spEditing = u; spPhotoBlob = null;
+            document.getElementById('spName').textContent = u.full_name || u.email;
+            document.getElementById('spTitle').value = u.job_title || '';
+            document.getElementById('spPhone').value = u.phone || '';
+            document.getElementById('spEmail').value = u.contact_email || u.email || '';
+            document.getElementById('spBio').value = u.bio || '';
+            document.getElementById('spVisible').checked = u.portal_visible !== false;
+            const box = document.getElementById('spPhoto');
+            box.innerHTML = '<span class="station-photo-empty">👤<br>No photo</span>';
+            document.getElementById('staffProfileModal').classList.remove('hidden');
+            const src = u.photo_path ? (await getSignedUrls([u.photo_path])).get(u.photo_path) : (u.avatar_url || null);
+            if (src && spEditing === u) box.innerHTML = `<img src="${src}" alt="">`;
+        }
+        function closeStaffProfile() { document.getElementById('staffProfileModal').classList.add('hidden'); spEditing = null; }
+        async function staffPhotoChosen(input) {
+            const f = input.files && input.files[0];
+            input.value = '';
+            if (!f) return;
+            spPhotoBlob = await compressImage(f, 800, 0.85);
+            document.getElementById('spPhoto').innerHTML = `<img src="${URL.createObjectURL(spPhotoBlob)}" alt="">`;
+        }
+        async function saveStaffProfile() {
+            const u = spEditing;
+            if (!u) return;
+            if (!isOnline) { alert('Profiles can be changed when you are online.'); return; }
+            const btn = document.getElementById('spSaveBtn');
+            btn.disabled = true;
+            try {
+                const fields = { job_title: document.getElementById('spTitle').value.trim() || null, phone: document.getElementById('spPhone').value.trim() || null,
+                    contact_email: document.getElementById('spEmail').value.trim() || null, bio: document.getElementById('spBio').value.trim() || null,
+                    portal_visible: document.getElementById('spVisible').checked };
+                if (spPhotoBlob) {
+                    const path = `staff/${u.id}/${Date.now()}.${extFor(spPhotoBlob)}`;
+                    const up = await _supabase.storage.from(PHOTO_BUCKET).upload(path, spPhotoBlob, { contentType: spPhotoBlob.type || 'image/jpeg', upsert: false });
+                    if (up.error) throw up.error;
+                    fields.photo_path = path;
+                }
+                const { error } = await _supabase.from('profiles').update(fields).eq('id', u.id);
+                if (error) throw error;
+                Object.assign(u, fields);
+                closeStaffProfile();
+                renderUsers();
+            } catch (e) {
+                alert('Could not save the profile: ' + (/column|schema cache/i.test(e.message || '') ? PORTAL_SQL_NOTE : (e.message || e)));
+            } finally { btn.disabled = false; }
+        }
+
+        // ===================================================================
+        //  NEEDS ACTION: sites missing floor plans, placed stations, services, client logins ...
+        //  For a technician: the sites assigned to them. Admins can look at every site.
+        // ===================================================================
+        const ACTIONS_SCOPE_KEY = 'pestis-actions-scope';
+        let actionsScope = loadJSON(ACTIONS_SCOPE_KEY, null);
+        let siteSetup = null;    // Map site id -> { stations, unplaced, maps, clients, limits, insectNoZone } (null until loaded)
+        function effectiveActionsScope() {
+            if (actionsScope === 'all' || actionsScope === 'mine') return actionsScope;
+            return currentUser && clientsData.some(c => c.assigned_to === currentUser.id) ? 'mine' : 'all';
+        }
+        function setActionsScope(v) { actionsScope = v; saveJSON(ACTIONS_SCOPE_KEY, v); renderActions(); }
+        function actionSites() {
+            if (effectiveActionsScope() === 'all' || !currentUser) return clientsData;
+            return clientsData.filter(c => c.assigned_to === currentUser.id);
+        }
+        function buildActions() {
+            const out = [];
+            if (!siteSetup) return out;
+            const all = effectiveActionsScope() === 'all';
+            actionSites().forEach(c => {
+                const s = siteSetup.get(String(c.id)) || { stations: 0, unplaced: 0, maps: 0, clients: 0, limits: 0, insectNoZone: 0 };
+                const add = (kind, text, go) => out.push({ c, kind, text, go });
+                if (!s.maps) add('plan', 'No floor plan uploaded', 'plans');
+                else if (s.unplaced) add('pins', `${s.unplaced} of ${s.stations} station${s.stations === 1 ? '' : 's'} not placed on a floor plan`, 'plans');
+                if (!s.stations) add('stations', 'No stations registered yet', 'site');
+                if (!getServices(c).length) add('services', 'No services set up (an admin adds them)', isAdmin() ? 'services' : 'site');
+                if (!s.clients && clientAdminReadyOrUnknown()) add('client', 'No client login for the Client Portal', isAdmin() ? 'clients' : 'site');
+                if (all && !c.assigned_to) add('tech', 'No technician assigned', 'edit');
+                if (!String(c.Address || '').trim()) add('address', 'No address (the map and directions need one)', 'edit');
+                if (s.limits && s.insectNoZone) add('zone', `${s.insectNoZone} insect station${s.insectNoZone === 1 ? ' has' : 's have'} no zone (critical limits need one)`, 'site');
+            });
+            return out;
+        }
+        const clientAdminReadyOrUnknown = () => siteSetup && siteSetup.clientsKnown;
+        const ACTION_KINDS = { plan: ['🗺', 'Floor plans'], pins: ['📍', 'Stations to place'], stations: ['▣', 'No stations'], services: ['📅', 'Services'], client: ['👥', 'Client Portal'], tech: ['🧭', 'Technician'], address: ['🏠', 'Address'], zone: ['🏷', 'Zones'] };
+        function renderActions() {
+            const list = buildActions();
+            const badge = document.getElementById('actionsCount');
+            badge.textContent = list.length > 99 ? '99+' : list.length;
+            badge.classList.toggle('hidden', !list.length);
+            document.getElementById('actionsBtn').title = list.length ? `${list.length} thing${list.length === 1 ? '' : 's'} need action` : 'Nothing needs action';
+            if (document.getElementById('actionsModal').classList.contains('hidden')) return;
+            document.getElementById('actionsScope').value = effectiveActionsScope();
+            const groups = new Map();
+            list.forEach(a => { const k = String(a.c.id); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(a); });
+            document.getElementById('actionsList').innerHTML = !siteSetup ? '<div class="row-item p-4 t-faint italic text-center">' + (isOnline ? 'Checking your sites...' : 'Needs action shows when you are online.') + '</div>'
+                : Array.from(groups.values()).map(items => `<div class="space-y-1.5"><div class="font-bold t-strong text-sm">${esc(items[0].c.Name || 'Unnamed site')}</div>${items.map(a => `
+                    <button type="button" class="row-item clickable w-full text-left p-3 flex justify-between items-center gap-3" data-cid="${esc(String(a.c.id))}" data-go="${a.go}" onclick="goToAction(this.dataset.cid, this.dataset.go)">
+                        <span class="min-w-0 flex items-start gap-2"><span>${ACTION_KINDS[a.kind][0]}</span><span class="t-muted">${esc(a.text)}</span></span><span class="chip chip-blue shrink-0">${ACTION_KINDS[a.kind][1]}</span></button>`).join('')}</div>`).join('')
+                || '<div class="row-item p-4 t-faint italic text-center">Every site is set up. 🎉</div>';
+        }
+        async function goToAction(cid, go) {
+            closeActionsModal();
+            if (go === 'services' && isAdmin()) { await startSiteVisit(cid); openServicesModal(); return; }
+            if (go === 'clients' && isAdmin()) { openAdmin('clients'); return; }
+            await startSiteVisit(cid);
+            if (go === 'plans') openMapModal();
+            else if (go === 'edit') openEditSiteModal();
+        }
+        function openActionsModal() { document.getElementById('actionsModal').classList.remove('hidden'); renderActions(); if (!siteSetup) loadBellExtras().then(() => { renderNotifications(); renderActions(); }); }
+        function closeActionsModal() { document.getElementById('actionsModal').classList.add('hidden'); }
+
         // ---------- client updates to recommendations (shown in the bell) ----------
         const CLIENT_SEEN_KEY = 'pestis-client-updates-seen';
         let clientUpdates = [];
@@ -2671,19 +2971,22 @@
         async function loadBellExtras() {
             const grab = async q => { try { const r = await q; if (r.error) throw r.error; return r.data || []; } catch (e) { return null; } };
             const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-            const [docs, breaches, maps] = await Promise.all([
+            const [docs, breaches, maps, access, limits] = await Promise.all([
                 grab(_supabase.from('site_documents').select('id, client_id, title, category, expires_on')),
                 grab(_supabase.from('site_events').select('id, client_id, title, detail, technician, at').eq('action', 'limit_breach').gte('at', monthStart).order('at', { ascending: false }).limit(100)),
-                grab(_supabase.from('site_maps').select('client_id'))
+                grab(_supabase.from('site_maps').select('client_id')),
+                grab(_supabase.from('client_access').select('client_id')),
+                grab(_supabase.from('critical_limits').select('client_id'))
             ]);
             if (docs) notifDocs = docs.filter(d => d.expires_on);
             if (breaches) notifBreaches = breaches;
             if (maps) {
                 const withPlans = new Set(maps.map(m => String(m.client_id)));
                 const stations = [];
-                for (let page = 0; page < 20 && withPlans.size; page++) {
-                    const rows = await grab(_supabase.from('stations').select('client_id, map_id, pin_x').range(page * 1000, page * 1000 + 999));
-                    if (!rows) break;
+                let stationsOk = true;
+                for (let page = 0; page < 20; page++) {
+                    const rows = await grab(_supabase.from('stations').select('client_id, map_id, pin_x, type, zone').range(page * 1000, page * 1000 + 999));
+                    if (!rows) { stationsOk = false; break; }
                     stations.push(...rows);
                     if (rows.length < 1000) break;
                 }
@@ -2694,6 +2997,17 @@
                     by.set(k, o);
                 });
                 notifUnplaced = Array.from(by.values()).filter(o => o.n > 0);
+                // what each site has, for Needs action
+                if (stationsOk) {
+                    const setup = new Map();
+                    const g = k => { k = String(k); if (!setup.has(k)) setup.set(k, { stations: 0, unplaced: 0, maps: 0, clients: 0, limits: 0, insectNoZone: 0 }); return setup.get(k); };
+                    maps.forEach(m => g(m.client_id).maps++);
+                    stations.forEach(st => { const o = g(st.client_id); o.stations++; if (!st.map_id || st.pin_x == null) o.unplaced++; if (isInsectType(st.type) && !String(st.zone || '').trim()) o.insectNoZone++; });
+                    (access || []).forEach(a => g(a.client_id).clients++);
+                    (limits || []).forEach(l => g(l.client_id).limits++);
+                    setup.clientsKnown = !!access;
+                    siteSetup = setup;
+                }
             }
         }
         async function loadClientUpdates() {
@@ -2723,7 +3037,7 @@
         // ===================================================================
         //  ADMIN PAGE: team-wide information and settings in one place (admins only)
         // ===================================================================
-        const ADMIN_TABS = [['overview', 'Overview'], ['team', 'Staff'], ['clients', 'Client portal'], ['documents', 'Documents'], ['lists', 'Lists'], ['settings', 'Team settings'], ['activity', 'Activity'], ['exports', 'Exports']];
+        const ADMIN_TABS = [['overview', 'Overview'], ['team', 'Users'], ['clients', 'Client portal'], ['services', 'Services'], ['documents', 'Documents'], ['lists', 'Lists'], ['settings', 'Team settings'], ['activity', 'Activity'], ['exports', 'Exports']];
         let adminTab = 'overview';
         const adminData = { loadedAt: 0, recs: [], docs: [], events: [], errors: {} };
         function openAdmin(tab) {
@@ -2748,13 +3062,14 @@
             document.getElementById('adminPage').scrollTop = 0;
         }
         function adminTabBadge(k) {
-            const n = k === 'team' ? adminProfiles.filter(u => !u.approved).length : k === 'documents' ? adminDocsNeedingAttention().length : 0;
+            const n = k === 'team' ? adminProfiles.filter(u => !u.approved && !clientEmailSet().has(String(u.email || '').toLowerCase())).length : k === 'documents' ? adminDocsNeedingAttention().length : 0;
             return n ? ` <span class="queue-count ml-0.5" style="background:#dc2626;">${n}</span>` : '';
         }
         function renderAdminTab() {
             if (adminTab === 'overview') renderAdminOverview();
             else if (adminTab === 'team') loadAdminPanel();
             else if (adminTab === 'clients') { loadClientAdmin(); renderSitesWithoutClients(); }
+            else if (adminTab === 'services') renderAdminServices();
             else if (adminTab === 'documents') renderAdminDocs();
             else if (adminTab === 'lists') { document.getElementById('newPrepUnit').innerHTML = PREP_UNITS.map(([v, l]) => `<option value="${v}">${l}</option>`).join(''); renderSettingsLists(); if (isOnline) loadOptions(); }
             else if (adminTab === 'settings') renderTeamSettings();
@@ -2774,9 +3089,8 @@
                 grab('clientUsers', _supabase.from('client_users').select('*')),
                 grab('clientAccess', _supabase.from('client_access').select('*'))
             ]);
-            const clientEmails = new Set(cus.map(x => x.email));
             Object.assign(adminData, { recs, docs, events, loadedAt: Date.now() });
-            adminProfiles = profs.filter(u => !clientEmails.has(String(u.email || '').toLowerCase()));
+            adminProfiles = profs;
             adminAllowed = allowed; adminClients = cus; adminClientAccess = cas; clientAdminReady = !adminData.errors.clientUsers;
             await loadClientUpdates();
             setAdminTab(adminTab);
@@ -2795,7 +3109,7 @@
         // ---------- Overview ----------
         function renderAdminOverview() {
             const n = buildNotifications();
-            const pending = adminProfiles.filter(u => !u.approved);
+            const pending = adminProfiles.filter(u => !u.approved && !clientEmailSet().has(String(u.email || '').toLowerCase()));
             const docs = adminDocsNeedingAttention();
             const expired = docs.filter(d => d.expires_on < toDayStr(new Date()));
             const recent = clientUpdates.filter(u => Date.parse(u.at) > Date.now() - 7 * 86400000);
@@ -2820,6 +3134,8 @@
             expired.forEach(d => rows.push(item('📄', `${esc(siteById(d.client_id) ? siteById(d.client_id).Name : 'Site')}: "${esc(d.title)}" has expired`, `${esc(d.category || 'Document')} · expired ${esc(fmtDay(d.expires_on))}`, "setAdminTab('documents')", '<span class="chip chip-red">Document</span>')));
             n.contracts.filter(x => x.ci.days < 0).forEach(x => rows.push(item('📝', `${esc(x.c.Name)}: contract ended`, esc(x.ci.text), `goToSite('${esc(String(x.c.id))}')`, '<span class="chip chip-purple">Contract</span>')));
             if (noTech.length) rows.push(item('🧭', `${noTech.length} site${noTech.length === 1 ? ' has' : 's have'} no technician assigned`, esc(noTech.slice(0, 4).map(c => c.Name).join(', ') + (noTech.length > 4 ? '...' : '')), "setAdminTab('exports')", '<span class="chip chip-blue">Sites</span>'));
+            const noClient = clientsData.filter(c => !portalSites.has(String(c.id)));
+            if (clientAdminReady && noClient.length) rows.push(item('👥', `${noClient.length} site${noClient.length === 1 ? ' has' : 's have'} no client assigned`, esc(noClient.slice(0, 4).map(c => c.Name).join(', ') + (noClient.length > 4 ? '...' : '')), "setAdminTab('clients')", '<span class="chip chip-blue">Clients</span>'));
             const errs = Object.entries(adminData.errors).filter(([, e]) => e).map(([k, e]) => `<div class="row-item p-3" style="color:#ef4444;">${esc(k)}: ${esc(e)}</div>`);
             document.getElementById('adminAttention').innerHTML = errs.join('') + (rows.join('') || '<div class="row-item p-4 t-faint italic text-center">Nothing needs attention. 🎉</div>');
             // technician workload
@@ -2831,6 +3147,20 @@
                 return `<div class="row-item p-3 flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-bold t-strong truncate">${esc(u.full_name || u.email)}</div><div class="t-faint text-[11px]">${esc(u.role === 'admin' ? 'Admin' : 'Technician')}</div></div>
                     <div class="flex flex-wrap gap-1.5 justify-end"><span class="chip chip-blue">${sites} site${sites === 1 ? '' : 's'}</span>${missedBy(u.id) ? `<span class="chip chip-red">${missedBy(u.id)} missed</span>` : ''}${recsBy(u.id) ? `<span class="chip chip-amber">${recsBy(u.id)} recs</span>` : ''}</div></div>`;
             }).join('') + (noTech.length ? `<div class="row-item p-3 flex justify-between"><span class="t-muted">Unassigned</span><span class="chip chip-grey">${noTech.length} site${noTech.length === 1 ? '' : 's'}</span></div>` : '') || '<span class="t-faint italic">No staff loaded yet.</span>';
+        }
+
+        // ---------- Services: only admins add or remove a site's services and their notes ----------
+        function renderAdminServices() {
+            const q = (document.getElementById('adminSvcSearch').value || '').trim().toLowerCase();
+            const list = clientsData.slice().sort((a, b) => String(a.Name || '').localeCompare(String(b.Name || ''), undefined, { sensitivity: 'base' }))
+                .filter(c => !q || `${c.Name || ''} ${c.Address || ''}`.toLowerCase().includes(q));
+            document.getElementById('adminServicesList').innerHTML = list.map(c => {
+                const svcs = getServices(c);
+                return `<div class="row-item p-3 flex flex-wrap items-center justify-between gap-2">
+                    <div class="min-w-0"><div class="font-bold t-strong">${esc(c.Name || 'Unnamed site')}</div>
+                        <div class="t-muted text-[11px]">${svcs.length ? svcs.map(sv => esc(sv.type) + ' · ' + esc(freqLabel(sv.frequency)) + (sv.notes ? ' 📝' : '')).join(' &nbsp;|&nbsp; ') : '<span class="italic" style="color:#d97706;">No services set up</span>'}</div></div>
+                    <button type="button" class="btn btn-secondary !px-3 !py-1.5" data-cid="${esc(String(c.id))}" onclick="goToSite(this.dataset.cid, () => openServicesModal())">Manage services</button></div>`;
+            }).join('') || '<span class="t-faint italic">No sites match.</span>';
         }
 
         // ---------- Client portal: sites nobody can see yet ----------
@@ -2849,7 +3179,7 @@
             const path = `${cid}/${Date.now()}_${clean}`;
             const up = await _supabase.storage.from(DOC_BUCKET).upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
             if (up.error) throw up.error;
-            const row = { id: uid(), client_id: String(cid), category: meta.category || 'Other', title: meta.title || file.name, file_path: path, file_name: file.name, folder: meta.folder && meta.folder !== '__new' ? meta.folder : null,
+            const row = { id: uid(), client_id: String(cid), category: meta.category || 'Other', title: meta.title || file.name, file_path: path, file_name: file.name, folder: meta.folder && meta.folder !== '__new' ? meta.folder : (CATEGORY_FOLDER[meta.category] || null),
                 mime_type: file.type || null, size_bytes: file.size, expires_on: meta.expires_on || null, notes: meta.notes || null, uploaded_by: technicianLabel() };
             const { error } = await _supabase.from('site_documents').insert(row);
             if (error) { await _supabase.storage.from(DOC_BUCKET).remove([path]).catch(() => {}); throw error; }
@@ -2893,7 +3223,7 @@
                 <div class="row-item p-3 flex flex-wrap items-center justify-between gap-2">
                     <button type="button" data-id="${esc(d.id)}" onclick="adminOpenDoc(this.dataset.id)" class="text-left min-w-0 flex-1">
                         <div class="font-bold t-strong">📄 ${esc(d.title)}</div>
-                        <div class="t-faint text-[11px]">${esc(d.site ? d.site.Name : 'Site ' + d.client_id)}${d.folder ? ' · 📁 ' + esc(d.folder) : ''} · ${esc(d.category || 'Other')} · added ${esc(fmtDateTimeLong(d.created_at).date)}${d.uploaded_by ? ' by ' + esc(d.uploaded_by) : ''}</div>
+                        <div class="t-faint text-[11px]">${esc(d.site ? d.site.Name : 'Site ' + d.client_id)}${docFolderOf(d) ? ' · 📁 ' + esc(docFolderOf(d)) : ''} · ${esc(d.category || 'Other')} · added ${esc(fmtDateTimeLong(d.created_at).date)}${d.uploaded_by ? ' by ' + esc(d.uploaded_by) : ''}</div>
                     </button>
                     <div class="flex items-center gap-2">${docExpiryChip(d)}<button type="button" data-cid="${esc(d.client_id)}" onclick="goToSite(this.dataset.cid)" class="btn btn-secondary !px-3 !py-1.5">Site</button></div>
                 </div>`).join('') || `<div class="row-item p-4 t-faint italic text-center">${f === 'all' ? 'No documents yet.' : 'Nothing to renew. 🎉'}</div>`;
@@ -4864,11 +5194,12 @@
             // one line per site and limit: the newest breach logged this month
             const seenB = new Set();
             const breaches = notifBreaches.filter(b => inScope(b.client_id) && !seenB.has(b.client_id + '|' + b.title) && seenB.add(b.client_id + '|' + b.title));
-            const unplaced = notifUnplaced.filter(o => inScope(o.cid) && siteById(o.cid));
+            const unplaced = [];   // stations not placed on a plan are listed under Needs action
             return { missed, dueSoon, contracts, longVisits, fresh, docsDue, breaches, unplaced,
-                total: missed.length + dueSoon.length + contracts.length + longVisits.length + fresh.length + docsDue.length + breaches.length + unplaced.length };
+                total: missed.length + dueSoon.length + contracts.length + longVisits.length + fresh.length + docsDue.length + breaches.length };
         }
         function renderNotifications() {
+            try { renderActions(); } catch (e) { /* Needs action is extra; never stop the bell */ }
             const n = buildNotifications();
             const badge = document.getElementById('notifCount');
             badge.textContent = n.total > 99 ? '99+' : n.total;
@@ -5027,6 +5358,8 @@
         });
 
         function openAddClientModal() {
+            document.getElementById('newClientServicesBtn').classList.toggle('hidden', !isAdmin());
+            document.getElementById('newClientServicesNote').classList.toggle('hidden', isAdmin());
             newClientImageBlob = null;
             newSiteServices = [];
             renderNewClientServices();
@@ -5196,6 +5529,7 @@
 
         // ---------- Services editor ----------
         function openServicesModal(target) {
+            if (!isAdmin()) { alert('Only an admin can add or remove services and their notes. Ask an admin, or use Admin → Services.'); return; }
             servicesTarget = target === 'new' ? 'new' : 'site';
             if (servicesTarget === 'site' && !selectedClient) return;
             editingServices = (servicesTarget === 'new' ? newSiteServices : getServices(selectedClient)).map(s => Object.assign({}, s));
@@ -5317,27 +5651,44 @@
             });
             el.innerHTML = list.map(s => {
                 const d = dueInfo(s);
-                const open = openServiceNotes.has(s.id);
                 return `
-                    <div class="row-item p-4 space-y-1.5 ${s.notes ? 'svc-row' : ''}" ${s.notes ? `data-id="${esc(s.id)}" onclick="toggleServiceNote(this.dataset.id)" title="Tap to ${open ? 'hide' : 'read'} the note"` : ''}>
+                    <div class="row-item clickable p-4 space-y-1.5 svc-row" data-id="${esc(s.id)}" onclick="showServiceDetails(this.dataset.id)" title="Tap for the details${s.notes ? ' and note' : ''}" role="button" tabindex="0" onkeydown="if (event.key === 'Enter') this.click()">
                         <div class="flex justify-between items-start gap-2">
                             <div class="font-bold t-strong text-sm break-words">${esc(s.type)}</div>
                             <span class="chip ${d.cls} shrink-0">${esc(d.text)}</span>
                         </div>
                         <div class="text-xs t-muted">${esc(freqLabel(s.frequency))}</div>
                         <div class="text-xs t-muted">Last done: <span class="t-strong font-semibold">${esc(fmtDay(s.lastDone))}</span></div>
-                        <div class="text-xs t-muted">Next due: <span class="t-strong font-semibold">${esc(s.nextDue ? fmtDay(s.nextDue) : (s.frequency === 'oneoff' ? 'On request' : 'Not set'))}</span></div>
-                        ${s.notes ? (open
-                            ? `<div class="text-xs t-strong inset p-2 mt-1 break-words whitespace-pre-line">${esc(s.notes)}</div>`
-                            : '<div class="text-[11px] t-accent font-semibold">📝 Note - tap to read</div>') : ''}
+                        <div class="text-xs t-muted">Next service due: <span class="t-strong font-semibold">${esc(s.nextDue ? fmtDay(s.nextDue) : (s.frequency === 'oneoff' ? 'On request' : 'Not set'))}</span></div>
+                        ${s.notes ? '<div class="text-[11px] t-accent font-semibold">📝 Note - tap to read</div>' : ''}
                     </div>`;
             }).join('');
         }
-        const openServiceNotes = new Set();
-        function toggleServiceNote(id) {
-            if (openServiceNotes.has(id)) openServiceNotes.delete(id); else openServiceNotes.add(id);
-            renderSiteServices();
+        function showServiceDetails(id) {
+            const s = getServices(selectedClient).find(x => String(x.id) === String(id));
+            if (!s) return;
+            const d = dueInfo(s);
+            const fact = (k, v) => `<div class="inset p-2.5"><div class="eyebrow t-faint">${esc(k)}</div><div class="t-strong font-bold mt-0.5">${v}</div></div>`;
+            openInfoModal(s.type, `
+                <div class="flex flex-wrap gap-2 mb-3"><span class="chip ${d.cls}">${esc(d.text)}</span></div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    ${fact('How often', esc(freqLabel(s.frequency)))}
+                    ${fact('Last done', esc(fmtDay(s.lastDone)))}
+                    <div class="col-span-2">${fact('Next service due', esc(s.nextDue ? fmtDay(s.nextDue) : (s.frequency === 'oneoff' ? 'On request' : 'Not set')))}</div>
+                </div>
+                <div class="mt-4"><div class="eyebrow t-faint mb-1">Notes</div>
+                    <div class="text-sm t-strong whitespace-pre-line break-words inset p-3">${s.notes ? esc(s.notes) : '<span class="t-faint italic">No notes for this service.</span>'}</div></div>`,
+                isAdmin() ? '<button type="button" class="btn btn-secondary" onclick="closeInfoModal(); openServicesModal()">Edit services (admin)</button>' : '<span class="text-[11px] t-faint">Only an admin can change services and their notes.</span>');
         }
+        // A simple pop-up for reading details
+        function openInfoModal(title, bodyHtml, footHtml) {
+            document.getElementById('infoTitle').textContent = title;
+            document.getElementById('infoBody').innerHTML = bodyHtml;
+            const f = document.getElementById('infoFoot');
+            f.innerHTML = (footHtml || '') + '<button type="button" class="btn btn-primary ml-auto" onclick="closeInfoModal()">Close</button>';
+            document.getElementById('infoModal').classList.remove('hidden');
+        }
+        function closeInfoModal() { document.getElementById('infoModal').classList.add('hidden'); }
 
         // ===================================================================
         //  SITE DATA - saved on this device, only new changes are downloaded
@@ -5810,7 +6161,8 @@
             t('visits').forEach(r => out.push(base('SITE_VISIT_SUMMARY', r.created_at || r.completed_at, {
                 clientRef: r.id, siteNotes: r.notes, technician: r.technician, visitType: r.visit_type,
                 startedAt: r.started_at, completedAt: r.completed_at, signedInAt: r.signed_in_at, signedOutAt: r.signed_out_at,
-                servicesCompleted: r.services_completed || [], unscannedCount: r.unscanned_count, editedAt: r.edited_at, editedBy: r.edited_by
+                servicesCompleted: r.services_completed || [], unscannedCount: r.unscanned_count, editedAt: r.edited_at, editedBy: r.edited_by,
+                signedBy: r.signed_by || '', signedAt: r.signed_at || null, noSignatureReason: r.no_signature_reason || '', signaturePath: r.signature_path || null
             }, r)));
             t('recommendation_updates').forEach(r => out.push(base(REC_UPDATE_ID, r.created_at || r.at, {
                 clientRef: r.id, recRef: r.rec_id, status: r.status, note: r.note || '', photos: r.photos || [], technician: r.technician, servicedAt: r.at
@@ -5939,6 +6291,8 @@
                     startedAt: p.signedInAt || p.startedAt || null,
                     endedAt: p.signedOutAt || p.completedAt || r.created_at,
                     edited: !!p.editedAt, editedBy: p.editedBy || '',
+                    signedBy: p.signedBy || '', signedAt: p.signedAt || null, noSignatureReason: p.noSignatureReason || '',
+                    signaturePath: p.signaturePath || null, signatureBlobKey: (r._blobKeys && r._blobKeys[0]) || null,
                     entries: [], recUpdates: [], other: [], firstAt: null
                 };
             });
@@ -6438,7 +6792,7 @@
         function renderSiteLimits() {
             const box = document.getElementById('siteLimitsBox');
             if (!box) return;
-            const canEdit = isOnline && !splitTablesMissing;
+            const canEdit = isOnline && !splitTablesMissing && isAdmin();
             document.getElementById('siteLimitAddBtn').classList.toggle('hidden', !canEdit || limitEditing === 'new');
             const recs = sitePestRecords();
             const row = l => {
@@ -6453,7 +6807,8 @@
                 </div>`;
             };
             box.innerHTML = (limitEditing === 'new' ? limitFormHtml(null) : '') + (siteLimits.map(row).join('') ||
-                (limitEditing ? '' : `<span class="t-faint italic">No critical limits yet. Give insect stations a zone, then set how many of a pest each zone may have in a month.</span>`)) +
+                (limitEditing ? '' : `<span class="t-faint italic">No critical limits yet.${isAdmin() ? ' Give insect stations a zone, then set how many of a pest each zone may have in a month.' : ' An admin (or the client) sets them.'}</span>`)) +
+                (!isAdmin() && siteLimits.length ? '<div class="t-faint text-[11px]">Only an admin can change critical limits.</div>' : '') +
                 (!isOnline && siteLimits.length ? '<div class="t-faint text-[11px]">Limits can be changed when you\'re online.</div>' : '');
         }
         function limitFormHtml(l) {
@@ -6469,7 +6824,7 @@
                 <div class="flex justify-end gap-2"><button type="button" class="btn btn-secondary !py-1.5" onclick="editSiteLimit(null)">Cancel</button><button type="submit" id="limSaveBtn" class="btn btn-primary !py-1.5">Save limit</button></div>
             </form>`;
         }
-        function editSiteLimit(id) { limitEditing = id; renderSiteLimits(); const z = document.getElementById('limZone'); if (z && id === 'new') z.focus(); }
+        function editSiteLimit(id) { if (id && !isAdmin()) return; limitEditing = id; renderSiteLimits(); const z = document.getElementById('limZone'); if (z && id === 'new') z.focus(); }
         async function reloadSiteLimits() {
             const c = selectedClient;
             if (!c) return;
@@ -6578,6 +6933,7 @@
             cn.textContent = c.contract_notes || '';
             cn.classList.toggle('hidden', !c.contract_notes);
             updateStartServiceButton();
+            document.getElementById('siteServicesManageBtn').classList.toggle('hidden', !isAdmin());
             document.getElementById('siteAssignedTech').textContent = c.assigned_to ? teamName(c.assigned_to) + (currentUser && c.assigned_to === currentUser.id ? ' (me)' : '') : 'Unassigned';
 
             const cover = coverUrl(c);
@@ -6650,8 +7006,8 @@
             const max = Math.max(...counts.values());
             el.innerHTML = Array.from(counts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([t, n]) => `
                 <div class="flex items-center gap-2">
-                    <span class="flex-1 min-w-0 truncate t-strong">${esc(t)}</span>
-                    <span class="w-16 h-1.5 rounded-full overflow-hidden" style="background:var(--surface2);"><span class="block h-full rounded-full" style="width:${Math.max(8, n / max * 100)}%;background:#f97316;"></span></span>
+                    ${typeDot(t, '.6rem')}<span class="flex-1 min-w-0 truncate t-strong">${esc(t)}</span>
+                    <span class="w-16 h-1.5 rounded-full overflow-hidden" style="background:var(--surface2);"><span class="block h-full rounded-full" style="width:${Math.max(8, n / max * 100)}%;background:${stationColor(t).color};"></span></span>
                     <span class="w-6 text-right font-black t-strong">${n}</span>
                 </div>`).join('');
         }
@@ -6852,9 +7208,11 @@
                 `<button type="button" onclick="setRecFilter('${k}')" class="tab-btn ${recFilter === k ? 'active' : ''}">${l} ${k === 'all' ? allRecs.length : counts[k]}</button>`).join('');
             const shown = recFilter === 'all' ? allRecs : allRecs.filter(r => (r.status === 'new' ? 'open' : r.status) === recFilter);
             const emptyText = { open: 'No open recommendations.', pending: 'Nothing pending.', complete: 'No completed recommendations yet.', all: 'No recommendations on record for this site.' };
+            document.getElementById('recPhotoToggle').innerHTML = photoToggleHtml(showRecPhotos, 'setRecPhotos', 'recommendation photos');
             recsContainer.innerHTML = shown.length
-                ? recNumbersNotice() + shown.map(r => recRowHtml(r)).join('')
+                ? recNumbersNotice() + shown.map(r => recRowHtml(r, showRecPhotos ? { photos: true } : null)).join('')
                 : `<span class="t-faint italic">${emptyText[recFilter]}</span>`;
+            if (showRecPhotos && shown.length) streamRecThumbs(recsContainer, shown);
 
             if (sitePastVisits.length === 0) {
                 visitsContainer.innerHTML = '<span class="t-faint italic">No past visit history recorded yet.</span>';
@@ -6883,6 +7241,80 @@
             renderSiteMapsList();
         }
 
+
+        // ===================================================================
+        //  STATION LOCATION PHOTOS: one photo per station showing where it is
+        // ===================================================================
+        let pendingStationPhoto = null;   // { blob, url } chosen in the station form, saved with the record
+        const safeName = v => String(v || '').replace(/[^\w-]+/g, '_').slice(0, 40);
+        function clearStationPhoto() {
+            if (pendingStationPhoto) URL.revokeObjectURL(pendingStationPhoto.url);
+            pendingStationPhoto = null;
+            ['stationPhotoCamera', 'stationPhotoGallery'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        }
+        async function stationPhotoChosen(input) {
+            const f = input.files && input.files[0];
+            input.value = '';
+            if (!f) return;
+            const blob = await compressImage(f, 1600, 0.8);
+            clearStationPhoto();
+            pendingStationPhoto = { blob, url: URL.createObjectURL(blob) };
+            const box = document.getElementById('stationPhotoPreview');
+            const idx = regImg([pendingStationPhoto.url], 'Station location photo (not saved yet)', currentDeviceName || currentBarcode, '', []);
+            box.innerHTML = `<img src="${pendingStationPhoto.url}" alt="Station location photo" onclick="openImgAt(${idx}, 0)"><span class="station-photo-new">New</span>`;
+        }
+        // where a station's photo can be seen: on this device (not uploaded yet) or a link from storage
+        async function stationPhotoUrls(barcodes) {
+            const out = new Map(), remote = [];
+            for (const bc of barcodes) {
+                const st = siteStations.get(bc);
+                if (!st || !st.photo_path) continue;
+                if (st._blobKeys && st._blobKeys[0]) { const u = await localBlobUrl(st._blobKeys[0]); if (u) { out.set(bc, u); continue; } }
+                remote.push([bc, st.photo_path]);
+            }
+            if (remote.length && isOnline) {
+                try {
+                    const links = await getSignedUrls(remote.map(x => x[1]));
+                    remote.forEach(([bc, path]) => { if (links.get(path)) out.set(bc, links.get(path)); });
+                } catch (e) { /* shown as "online only" */ }
+            }
+            return out;
+        }
+        async function showStationPhotoIn(box, barcode, opts) {
+            if (!box) return;
+            opts = opts || {};
+            const st = siteStations.get(barcode);
+            if (!st || !st.photo_path) { box.innerHTML = `<span class="station-photo-empty">📷<br>${esc(opts.empty || 'No photo')}</span>`; return; }
+            box.innerHTML = '<span class="station-photo-empty">Loading...</span>';
+            const u = (await stationPhotoUrls([barcode])).get(barcode);
+            if (!u) { box.innerHTML = `<span class="station-photo-empty">📷<br>${isOnline ? 'Photo unavailable' : 'Shows online'}</span>`; return; }
+            const d = siteDevices.find(x => x.barcode_id === barcode);
+            const idx = regImg([u], 'Where to find this station', d ? d.locationName : barcode, '', []);
+            box.innerHTML = `<img src="${u}" alt="Where to find ${esc(d ? d.locationName : barcode)}" onclick="event.stopPropagation(); openImgAt(${idx}, 0)">`;
+        }
+        // add or replace the photo straight from the station overview (no visit needed)
+        async function stationPhotoFromOverview(input) {
+            const f = input.files && input.files[0];
+            input.value = '';
+            const bc = ovBarcode, st = bc && siteStations.get(bc), d = bc && siteDevices.find(x => x.barcode_id === bc);
+            if (!f || !bc) return;
+            try {
+                const blob = await compressImage(f, 1600, 0.8);
+                const row = st ? { id: st.id, updated_at: new Date().toISOString() }
+                    : { id: uid(), barcode: bc, name: d ? d.locationName : bc, type: d ? d.deviceType : null, created_by: technicianLabel(), created_at: new Date().toISOString() };
+                await queueTableRow('stations', row, `Station location photo · ${d ? d.locationName : bc}`, { blobs: [blob], photoField: 'photo_path', prefix: 'STATION_' + safeName(bc) });
+                await refreshSiteStateFromCache();
+                openStationOverview(bc);
+            } catch (e) { alert('Could not save the photo on this device: ' + (e.message || e)); }
+        }
+
+        // ---------- your choice: photos in the Stations and Recommendations boxes ----------
+        const STATION_PHOTOS_KEY = 'pestis-show-station-photos', REC_PHOTOS_KEY = 'pestis-show-rec-photos';
+        let showStationPhotos = !!loadJSON(STATION_PHOTOS_KEY, false), showRecPhotos = !!loadJSON(REC_PHOTOS_KEY, false);
+        function setStationPhotos(on) { showStationPhotos = !!on; saveJSON(STATION_PHOTOS_KEY, showStationPhotos); renderSiteStationList(); }
+        function setRecPhotos(on) { showRecPhotos = !!on; saveJSON(REC_PHOTOS_KEY, showRecPhotos); renderLandingRecommendationsAndVisits(); }
+        const photoToggleHtml = (on, fn, label) => `<button type="button" class="tab-btn photo-toggle ${on ? 'active' : ''}" aria-pressed="${on}" onclick="${fn}(${!on})" title="${on ? 'Hide' : 'Show'} ${label}">📷 ${on ? 'Photos on' : 'Photos off'}</button>`;
+
         // ---------- Dashboard: station list filtered by type ----------
         let stationTypeFilter = 'all';
         function setStationTypeFilter(v) { stationTypeFilter = v; renderSiteStationList(); }
@@ -6904,6 +7336,7 @@
                 .filter(d => stationTypeFilter === 'all' || d.deviceType === stationTypeFilter)
                 .filter(d => !q || d.locationName.toLowerCase().includes(q) || d.barcode_id.toLowerCase().includes(q))
                 .sort((a, b) => a.locationName.localeCompare(b.locationName, LOCALE, { numeric: true }));
+            document.getElementById('stationPhotoToggle').innerHTML = photoToggleHtml(showStationPhotos, 'setStationPhotos', 'station photos');
             if (!list.length) { el.innerHTML = `<span class="t-faint italic">${siteDevices.length ? 'No stations match.' : 'No stations recorded yet.'}</span>`; return; }
             el.innerHTML = list.map(d => {
                 const last = lastServiceOf(d);
@@ -6913,7 +7346,8 @@
                 const plan = pin && pin.mapId ? (siteMaps.find(m => m.id === pin.mapId) || {}).name : '';
                 return `
                     <div data-barcode="${esc(d.barcode_id)}" onclick="openStationOverview(this.dataset.barcode)" class="row-item typed clickable p-3 flex justify-between items-center gap-2" style="border-left-color:${stationColor(d.deviceType).color};">
-                        <div class="min-w-0">
+                        ${showStationPhotos ? `<div class="station-thumb shrink-0" data-st-photo="${esc(d.barcode_id)}">${(siteStations.get(d.barcode_id) || {}).photo_path ? '' : '<span>📷</span>'}</div>` : ''}
+                        <div class="min-w-0 flex-1">
                             <div class="font-bold t-strong break-words">${esc(d.locationName)}${openN ? ` <span class="chip chip-orange !py-0 ml-1">${openN} open</span>` : ''}</div>
                             <div class="t-muted">${esc(d.deviceType)} · <span class="font-mono t-accent">${esc(d.barcode_id)}</span>${plan ? ` · 📍 ${esc(plan)}` : ''}</div>
                             <div class="t-faint text-[11px] mt-0.5">${lt ? `Last serviced ${esc(lt.date)} · ${esc(last.activity)} activity` : 'Not serviced yet'}</div>
@@ -6921,6 +7355,20 @@
                         <span class="link-btn !no-underline shrink-0">View ▸</span>
                     </div>`;
             }).join('');
+            if (showStationPhotos) fillStationThumbs(el, list.map(d => d.barcode_id));
+        }
+        async function fillStationThumbs(el, barcodes) {
+            const want = barcodes.filter(bc => (siteStations.get(bc) || {}).photo_path);
+            if (!want.length) return;
+            const urls = await stationPhotoUrls(want);
+            want.forEach(bc => {
+                const box = el.querySelector(`[data-st-photo="${cssEsc(bc)}"]`);
+                if (!box) return;
+                const u = urls.get(bc), d = siteDevices.find(x => x.barcode_id === bc);
+                if (!u) { box.innerHTML = `<span title="${isOnline ? 'Photo unavailable' : 'Shows when online'}">📷</span>`; return; }
+                const idx = regImg([u], 'Where to find this station', d ? d.locationName : bc, '', []);
+                box.innerHTML = `<img src="${u}" alt="" onclick="event.stopPropagation(); openImgAt(${idx}, 0)">`;
+            });
         }
 
         // ---------- Dashboard: activity log ----------
@@ -7459,6 +7907,29 @@
                 }
             }
 
+            // Customer sign-off
+            if (v.signedBy || v.noSignatureReason) {
+                pageBreak(44);
+                y += 4;
+                doc.setTextColor(15, 23, 42);
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.text('Customer Sign-off', 14, y);
+                y += 6;
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                if (v.signedBy) {
+                    let sig = null;
+                    try { const u = await visitSignatureUrl(v); if (u) sig = await getBase64ImageFromUrl(u); } catch (e) { sig = null; }
+                    if (sig) { try { doc.addImage(sig, 'PNG', 14, y, 70, 24); } catch (e) { console.warn('Signature skipped', e); } y += 27; }
+                    doc.text(`Signed by ${v.signedBy}${v.signedAt ? ' - ' + dtm(v.signedAt) : ''}`, 14, y);
+                    y += 6;
+                } else {
+                    doc.text(doc.splitTextToSize(`Not signed by the customer: ${v.noSignatureReason}`, 182), 14, y);
+                    y += 6;
+                }
+            }
+
             doc.save(`Service_Report_${String(selectedClient.Name || 'Site').replace(/\s+/g, '_')}_${visitDateStr.replace(/\//g, '-')}.pdf`);
         }
 
@@ -7493,6 +7964,8 @@
             openVisitIndex = index;
             visitEditing = false;
             renderVisitModal();
+            const v = sitePastVisits[index];
+            if (v && v.signedBy) visitSignatureUrl(v).then(u => { const el = document.getElementById('visitSigImg'); if (el && u && openVisitIndex === index) el.innerHTML = `<img src="${u}" class="sign-img" alt="Signature of ${esc(v.signedBy)}">`; });
             document.getElementById('visitModal').classList.remove('hidden');
         }
         function closeVisitModal() {
@@ -7560,6 +8033,7 @@
                         ${fact('Signed out', esc(fmtDateTimeLong(signedOut).time) + `<div class="t-faint font-normal text-[11px]">${esc(fmtDateTimeLong(signedOut).date)}</div>`)}
                         ${fact('Time on site', esc(durationText(signedIn, signedOut) || '-'))}
                         ${fact('Stations serviced', `${stations.size}${siteDevices.length ? ' of ' + siteDevices.length : ''}`)}
+                        ${signOffFactHtml(v)}
                     </div>
                     ${v.servicesCompleted.length ? `<div><span class="eyebrow t-faint">Services completed</span><div class="flex flex-wrap gap-1.5 mt-1.5">${v.servicesCompleted.map(x => `<span class="chip chip-green">${esc(x)}</span>`).join('')}</div></div>` : ''}
                     <div><span class="eyebrow t-faint">Service notes</span><div class="t-strong mt-1 whitespace-pre-line inset p-3">${esc(v.summaryNote)}</div></div>
@@ -7747,7 +8221,13 @@
                 fact('Zone', stationZoneOf(barcode) ? esc(stationZoneOf(barcode)) : '<span class="t-faint font-normal">None</span>')
             ];
             if (isToxicRodent(d.deviceType)) facts.push(`<div class="col-span-2">${fact('Bait last changed', esc(baitLastChangedText(d)))}</div>`);
+            const hasPhoto = !!(siteStations.get(barcode) || {}).photo_path;
+            facts.unshift(`<div class="col-span-2 inset p-2.5 flex items-center gap-3 flex-wrap"><div id="ovPhotoBox" class="station-photo-box station-photo-lg"></div>
+                <div class="min-w-0 flex-1"><div class="eyebrow t-faint">Where to find it</div><div class="text-[11px] t-muted mt-0.5">${hasPhoto ? 'Tap the photo to enlarge it.' : 'Add a photo so the next technician can find this station.'}</div>
+                <button type="button" class="btn btn-secondary !py-1.5 !text-xs mt-2" onclick="document.getElementById('ovPhotoInput').click()">📷 ${hasPhoto ? 'Replace photo' : 'Add photo'}</button>
+                <input type="file" id="ovPhotoInput" accept="image/*" capture="environment" class="hidden" onchange="stationPhotoFromOverview(this)"></div></div>`);
             document.getElementById('ovFacts').innerHTML = facts.join('');
+            showStationPhotoIn(document.getElementById('ovPhotoBox'), barcode, { empty: 'No photo yet' });
             const recs = d.recommendationsHistory.filter(r => r.status !== 'complete');
             recs.forEach(r => { r.station = d.locationName; r.stationType = d.deviceType; });
             const recBox = document.getElementById('ovRecs');
@@ -8720,7 +9200,7 @@
             };
         }
         function stationFormDirty() {
-            return pendingPhotos.length > 0 || JSON.stringify(readStationForm()) !== formSnapshot;
+            return pendingPhotos.length > 0 || !!pendingStationPhoto || JSON.stringify(readStationForm()) !== formSnapshot;
         }
 
         // ---------- Preparation units ----------
@@ -8791,6 +9271,23 @@
             saveJSON(AUTO_REPEAT_KEY, !!on);
             const prep = document.getElementById('prepUsed').value;
             if (on && (!prep || prep === NONE_PREP)) applyRepeatPrep();
+        }
+
+        // Flying insect stations: a glue board is the usual preparation
+        const GLUE_BATCH_KEY = 'pestis-last-glue-batch';
+        const isFlyingType = t => stationColor(t).key === 'flying';
+        const gluePrep = () => optionLabels('prep').find(l => /glue/i.test(l)) || null;
+        function applyGlueBoard() {
+            const g = gluePrep();
+            if (!g) return false;
+            setSelectValue('prepUsed', g);
+            currentQtyUnit = prepUnit(g);
+            prepChanged(false);
+            const qty = document.getElementById('qtyCount');
+            if (!qty.value) qty.value = currentQtyUnit === 'each' ? 1 : '';
+            const batch = document.getElementById('batchNumber');
+            if (!batch.value) batch.value = loadJSON(GLUE_BATCH_KEY, '') || '';
+            return true;
         }
 
         function resetServiceFields() {
@@ -9001,12 +9498,15 @@
             populateStationMapSelect(barcode);
             const stRow = siteStations.get(barcode);
             document.getElementById('stationZone').value = (stRow && stRow.zone) || '';
+            clearStationPhoto();
+            showStationPhotoIn(document.getElementById('stationPhotoPreview'), barcode, { empty: 'No photo yet' });
             document.getElementById('zoneOptions').innerHTML = siteZones().map(z => `<option value="${esc(z)}"></option>`).join('');
             updateFormTypeDot();
 
             const hadVisit = prefillFromThisVisit(existingDev);
             renderStationRecs(existingDev);
             if (!hadVisit && loadJSON(AUTO_REPEAT_KEY, false)) applyRepeatPrep();
+            if (!hadVisit && isFlyingType(document.getElementById('newDeviceType').value || devType)) applyGlueBoard();
             prepChanged(false);
             if (!hadVisit && document.getElementById('prepUsed').value === NONE_PREP) document.getElementById('qtyCount').value = '';
             updatePestCountField();
@@ -9282,6 +9782,15 @@
                 return false;
             }
 
+            // Flying insect station with no glue board recorded: offer to add one
+            if (isFlyingType(devType) && gluePrep() && !/glue/i.test(f.prepUsed || '')) {
+                if (confirm(`No glue board is recorded for this flying insect station.\n\nAdd a glue board (${gluePrep()}) now?\nOK to add it, Cancel to save without one.`)) {
+                    applyGlueBoard();
+                    const b = document.getElementById('batchNumber');
+                    (b.value ? document.getElementById('qtyCount') : b).focus();
+                    return false;
+                }
+            }
             // Critical limits: ask the technician to double-check a count that takes a zone over its monthly limit
             const hit = limitsHitBy(currentBarcode, f.zone, f.speciesCaught, f.pestCount);
             if (hit.length && !confirm('⚠ CRITICAL LIMIT EXCEEDED\n\n' + hit.map(x => `${x.limit.zone} · ${limitPest(x.limit)}: this makes ${x.total} this month (limit ${x.limit.max_per_month}).`).join('\n') +
@@ -9327,10 +9836,13 @@
                     detail: `${x.total} this month, limit ${x.limit.max_per_month} · ${locNameInput} (${f.speciesCaught} ×${pestN(f.speciesCaught, f.pestCount)})` });
                 // The station's own row: created the first time, updated when its name or type changes
                 const st = siteStations.get(currentBarcode);
-                if (!st || st.name !== locNameInput || (st.type || '') !== (devType || '') || (st.zone || '') !== f.zone) {
+                if (!st || st.name !== locNameInput || (st.type || '') !== (devType || '') || (st.zone || '') !== f.zone || pendingStationPhoto) {
                     const row = st ? { id: st.id, name: locNameInput, type: devType, zone: f.zone || null, updated_at: new Date().toISOString() }
                         : { id: uid(), barcode: currentBarcode, name: locNameInput, type: devType, zone: f.zone || null, created_by: technicianLabel(), created_at: new Date().toISOString() };
-                    await queueTableRow('stations', row, st ? `Station details updated · ${locNameInput}` : `New station · ${locNameInput}`);
+                    const sp = pendingStationPhoto;
+                    await queueTableRow('stations', row, (st ? `Station details updated · ${locNameInput}` : `New station · ${locNameInput}`) + (sp ? ' + location photo' : ''),
+                        sp ? { blobs: [sp.blob], photoField: 'photo_path', prefix: 'STATION_' + safeName(currentBarcode) } : undefined);
+                    clearStationPhoto();
                     siteStations.set(currentBarcode, Object.assign({}, st || {}, row));
                 }
                 // A new recommendation is its own record (the database gives it the next number)
@@ -9343,6 +9855,7 @@
                     }, newBlobs, `New recommendation${photoBit} · ${locNameInput}`);
                 }
                 if (usedPrep) rememberPrep(f);
+                if (usedPrep && /glue/i.test(f.prepUsed) && f.batch) saveJSON(GLUE_BATCH_KEY, f.batch);
 
                 clearPendingPhotos(false); // previews stay visible until the upload finishes
                 keptPhotos = [];
@@ -9534,6 +10047,7 @@
                 note.innerHTML = '';
             }
             document.getElementById('closingSiteNotes').value = '';
+            renderSignOffStatus();
             const vt = document.getElementById('closingVisitType');
             vt.innerHTML = VISIT_TYPES.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
             vt.value = (selectedClient && selectedClient.visit_type) || 'Routine Service';
@@ -9581,17 +10095,130 @@
                 servicesCompleted: f.doneTypes,
                 visitType: f.visitType,
                 entries: currentVisitEntries.slice(),
-                recUpdates: []
+                recUpdates: [],
+                signedBy: signOff && signOff.blob ? signOff.name : '', signedAt: signOff && signOff.at, noSignatureReason: signOff && !signOff.blob ? signOff.reason : '',
+                signatureLocalUrl: signOff && signOff.url
             };
             try { await generatePDFReport(v); }
             catch (err) { logAppError('PDF report', err); alert('The report could not be created: ' + (err.message || err)); }
         }
 
+
+        // ===================================================================
+        //  CUSTOMER SIGN-OFF: the customer reviews the notes and preparations, then signs
+        //  (or the technician records why there's no signature)
+        // ===================================================================
+        const SIGN_REASONS = ['Not on site', 'In a meeting', 'Not available', 'Declined to sign', 'Left before the visit ended'];
+        let signOff = null;          // { name, blob, url, reason, at }
+        let signPadDrawn = false;
+        function renderSignOffStatus() {
+            const el = document.getElementById('signOffStatus');
+            if (!el) return;
+            if (signOff && signOff.blob) el.innerHTML = `<div class="flex items-center gap-3"><img src="${signOff.url}" class="sign-img" alt="Customer signature" style="max-height:3rem;"><span class="t-strong font-bold">✓ Signed by ${esc(signOff.name)}</span></div>`;
+            else if (signOff && signOff.reason) el.innerHTML = `<span class="font-bold" style="color:#d97706;">No signature: ${esc(signOff.reason)}</span>`;
+            else el.innerHTML = '<span class="t-faint">Not signed yet. Show the customer the visit summary and ask them to sign, or record why they can\'t.</span>';
+            document.getElementById('signOffBtn').textContent = signOff ? '✍ Change sign-off' : '✍ Customer review & sign';
+        }
+        function signOffReviewHtml() {
+            const f = closingFormValues();
+            const entries = currentVisitEntries.filter(e => !e.recOnly).slice().sort((a, b) => a.at - b.at);
+            const preps = new Map();
+            entries.forEach(e => { if (!e.prep || e.prep === NONE_PREP) return; const k = e.prep + '|' + (e.unit || 'each'); const p = preps.get(k) || { name: e.prep, unit: e.unit || 'each', qty: 0, n: 0, batches: new Set() }; if (!isNaN(parseFloat(e.qty))) p.qty += parseFloat(e.qty); p.n++; if (e.batch) p.batches.add(e.batch); preps.set(k, p); });
+            const recs = currentVisitEntries.filter(e => e.recommendation);
+            const box = (title, inner) => `<div class="row-item p-3 space-y-1.5"><div class="eyebrow t-faint">${title}</div>${inner}</div>`;
+            return [
+                box('Visit', `<div class="t-strong font-bold">${esc(f.visitType)} · ${esc(technicianLabel())}</div>${f.doneTypes.length ? `<div class="t-muted">Services done: ${esc(f.doneTypes.join(', '))}</div>` : ''}`),
+                box('Technician notes', `<div class="t-strong whitespace-pre-line break-words">${f.siteNotes ? esc(f.siteNotes) : '<span class="t-faint italic">No overall notes yet - add them in the Complete box.</span>'}</div>`),
+                box(`Preparations used (${preps.size})`, preps.size ? Array.from(preps.values()).map(p => `<div><b class="t-strong">${esc(p.name)}</b> <span class="t-muted">· ${esc(fmtQty(p.qty, p.unit) || '-')} across ${p.n} station${p.n === 1 ? '' : 's'}${p.batches.size ? ' · batch ' + esc(Array.from(p.batches).join(', ')) : ''}</span></div>`).join('') : '<span class="t-faint italic">None.</span>'),
+                box(`Stations serviced (${new Set(entries.map(e => e.barcode)).size} of ${siteDevices.length})`, entries.length ? `<div class="space-y-2">${entries.map(e => {
+                    const sp = e.species && e.species !== NONE_SPECIES ? `${e.species}${e.count ? ' ×' + e.count : ''}` : 'None';
+                    const pr = e.prep && e.prep !== NONE_PREP ? `${e.prep} · ${fmtQty(e.qty, e.unit) || '-'}${e.batch ? ' · batch ' + e.batch : ''}` : 'None';
+                    return `<div class="border-l-4 pl-2" style="border-color:${stationColor(e.type).color};"><div class="font-bold t-strong">${esc(e.name)} <span class="t-faint font-normal">${esc(e.type)}</span></div>
+                        <div class="t-muted">Activity ${esc(activityLabel(e.activity))} · Pests ${esc(sp)} · Preparation ${esc(pr)}</div>${e.notes ? `<div class="t-strong">Notes: ${esc(e.notes)}</div>` : ''}</div>`;
+                }).join('')}</div>` : '<span class="t-faint italic">No stations recorded.</span>'),
+                recs.length ? box(`Recommendations (${recs.length})`, recs.map(e => `<div><b class="t-accent">${esc(fmtRecNo(e.recNo) || 'New')}</b> <span class="t-strong">${esc(e.recommendation)}</span> <span class="t-faint">· ${esc(e.name)}</span></div>`).join('')) : ''
+            ].join('');
+        }
+        function openSignOff() {
+            const c = selectedClient;
+            document.getElementById('signOffTitle').textContent = c ? c.Name : 'Visit';
+            document.getElementById('signOffSub').textContent = new Date().toLocaleDateString(LOCALE, NZ_DATE) + ' · ' + technicianLabel();
+            document.getElementById('signOffReview').innerHTML = signOffReviewHtml();
+            document.getElementById('signName').value = (signOff && signOff.name) || (c && c.Contact) || '';
+            document.getElementById('signReason').value = (signOff && !signOff.blob && signOff.reason) || '';
+            document.getElementById('signOffModal').classList.remove('hidden');
+            setupSignPad();
+            if (signOff && signOff.blob) {
+                const img = new Image();
+                img.onload = () => { const cv = document.getElementById('signPad'), r = cv.getBoundingClientRect(); cv.getContext('2d').drawImage(img, 0, 0, r.width, r.height); signPadDrawn = true; };
+                img.src = signOff.url;
+            }
+            renderSignReasonChips();
+        }
+        function closeSignOff() { document.getElementById('signOffModal').classList.add('hidden'); }
+        function renderSignReasonChips() {
+            const v = document.getElementById('signReason').value.trim();
+            document.getElementById('signReasonChips').innerHTML = SIGN_REASONS.map(r => `<button type="button" class="chip ${v === r ? 'chip-orange' : 'chip-grey'} cursor-pointer" aria-pressed="${v === r}" data-r="${esc(r)}" onclick="document.getElementById('signReason').value = this.dataset.r; renderSignReasonChips()">${esc(r)}</button>`).join('');
+        }
+        function setupSignPad() {
+            const cv = document.getElementById('signPad');
+            const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+            cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr));
+            const ctx = cv.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#0c1733';
+            signPadDrawn = false;
+            if (cv._wired) return;
+            cv._wired = true;
+            let drawing = false, last = null;
+            const pt = e => { const b = cv.getBoundingClientRect(); return { x: e.clientX - b.left, y: e.clientY - b.top }; };
+            cv.addEventListener('pointerdown', e => { drawing = true; last = pt(e); try { cv.setPointerCapture(e.pointerId); } catch (x) {} e.preventDefault(); });
+            cv.addEventListener('pointermove', e => {
+                if (!drawing) return;
+                const p = pt(e), c2 = cv.getContext('2d');
+                c2.beginPath(); c2.moveTo(last.x, last.y); c2.lineTo(p.x, p.y); c2.stroke();
+                last = p; signPadDrawn = true; e.preventDefault();
+            });
+            const end = () => { drawing = false; };
+            cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end); cv.addEventListener('pointerleave', end);
+        }
+        function clearSignPad() { const cv = document.getElementById('signPad'); cv.getContext('2d').clearRect(0, 0, cv.width, cv.height); signPadDrawn = false; }
+        async function saveSignOff() {
+            const name = document.getElementById('signName').value.trim(), reason = document.getElementById('signReason').value.trim();
+            if (signPadDrawn) {
+                if (!name) { alert("Add the customer's name next to their signature."); document.getElementById('signName').focus(); return; }
+                const blob = await new Promise(res => document.getElementById('signPad').toBlob(res, 'image/png'));
+                if (signOff && signOff.url) URL.revokeObjectURL(signOff.url);
+                signOff = { name, blob, url: URL.createObjectURL(blob), reason: '', at: new Date().toISOString() };
+            } else if (reason) {
+                if (signOff && signOff.url) URL.revokeObjectURL(signOff.url);
+                signOff = { name: '', blob: null, url: null, reason, at: new Date().toISOString() };
+            } else { alert('Ask the customer to sign, or say why there is no signature.'); return; }
+            closeSignOff();
+            renderSignOffStatus();
+        }
+        function resetSignOff() { if (signOff && signOff.url) URL.revokeObjectURL(signOff.url); signOff = null; }
+        // a visit's signature as a picture: on this device, or from storage
+        async function visitSignatureUrl(v) {
+            if (!v) return null;
+            if (v.signatureLocalUrl) return v.signatureLocalUrl;
+            if (v.signatureBlobKey) { const u = await localBlobUrl(v.signatureBlobKey); if (u) return u; }
+            if (v.signaturePath && isOnline) { try { return (await getSignedUrls([v.signaturePath])).get(v.signaturePath) || null; } catch (e) { return null; } }
+            return null;
+        }
+        function signOffFactHtml(v) {
+            if (v.signedBy) return `<div class="inset p-2.5 col-span-2 sm:col-span-4"><div class="eyebrow t-faint">Customer sign-off</div><div class="flex items-center gap-3 flex-wrap mt-1"><span id="visitSigImg"></span><span class="t-strong font-bold">✓ Signed by ${esc(v.signedBy)}${v.signedAt ? ` <span class="t-faint font-normal">${esc(fmtDateTimeLong(v.signedAt).time)}</span>` : ''}</span></div></div>`;
+            if (v.noSignatureReason) return `<div class="inset p-2.5 col-span-2 sm:col-span-4"><div class="eyebrow t-faint">Customer sign-off</div><div class="font-bold mt-0.5" style="color:#d97706;">Not signed: ${esc(v.noSignatureReason)}</div></div>`;
+            return '';
+        }
+
         let closingVisit = false;
         async function finalizeAndSubmitVisit(download) {
             if (closingVisit) return; // stop a double tap saving the visit twice
+            if (!signOff) { alert('Get the customer to review and sign the visit, or record why they can\'t sign.'); openSignOff(); return; }
             closingVisit = true;
             const f = closingFormValues();
+            const so = signOff;
             const summaryRef = uid();
 
             // The box closes straight away so it's clear the visit has gone
@@ -9609,8 +10236,11 @@
                     started_at: (selectedClient && selectedClient.visit_started_at) || null,
                     services_completed: f.doneTypes,
                     unscanned_count: siteDevices.filter(d => !scannedBarcodesThisVisit.has(d.barcode_id)).length,
+                    signed_by: so.blob ? so.name : null,
+                    signed_at: so.blob ? so.at : null,
+                    no_signature_reason: so.blob ? null : so.reason,
                     completed_at: new Date().toISOString()
-                }, 'Visit completed');
+                }, so.blob ? `Visit completed · signed by ${so.name}` : 'Visit completed · not signed', so.blob ? { blobs: [so.blob], photoField: 'signature_path', prefix: 'SIGNATURE' } : undefined);
 
                 await markVisitClosed(selectedClient, 'Visit completed - closed');
                 if (f.doneIds.size > 0) {
@@ -9628,6 +10258,7 @@
                 alert('The visit could not be saved on this device: ' + (err.message || err));
                 return;
             }
+            resetSignOff();
             syncToast.set(70, download ? 'Visit submitted · creating the report...' : 'Visit submitted');
 
             // 2. The report (optional). A problem here doesn't undo the saved visit.
