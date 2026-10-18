@@ -185,6 +185,9 @@
         .breach-row { background: var(--surface); color: var(--text); border-radius: .6rem; padding: .55rem .7rem; }
         .rec-grid-lg { grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); }
         .row-breach td { background: rgba(239, 68, 68, .09); }
+        #limitStationPanel svg { max-width: 760px; display: block; margin: 0 auto; }
+        tr.row-selected td { box-shadow: inset 0 2px 0 #f97316, inset 0 -2px 0 #f97316; }
+        tr.row-selected td:first-child { box-shadow: inset 2px 2px 0 #f97316, inset 0 -2px 0 #f97316; }
         .zone-over { border-color: #ef4444 !important; }
         .alert-box { border: 1px solid #fca5a5; background: #fee2e2; color: #991b1b; border-radius: .9rem; }
         html.dark .alert-box { border-color: rgba(239, 68, 68, .45); background: rgba(239, 68, 68, .12); color: #fca5a5; }
@@ -313,11 +316,11 @@
                     <div><label class="lbl" for="fTo">To</label><input id="fTo" type="date" class="field !w-auto !py-2" onchange="setCustomDates()"></div>
                     <div data-f="type"><label class="lbl" for="fType">Station type</label><select id="fType" class="field !w-auto !py-2 max-w-[15rem]" onchange="F.type = this.value; renderTab();"></select></div>
                     <div data-f="map"><label class="lbl" for="fMap">Floor plan</label><select id="fMap" class="field !w-auto !py-2 max-w-[13rem]" onchange="F.map = this.value; renderTab();"></select></div>
-                    <div data-f="zone"><label class="lbl" for="fZone">Zone</label><select id="fZone" class="field !w-auto !py-2 max-w-[13rem]" onchange="F.zone = this.value; renderTab();"></select></div>
+                    <div data-f="zone"><label class="lbl" for="fZone">Critical limits</label><select id="fZone" class="field !w-auto !py-2 max-w-[13rem]" onchange="F.zone = this.value; renderTab();"></select></div>
                     <div data-f="station"><label class="lbl" for="fStation">Station</label><select id="fStation" class="field !w-auto !py-2 max-w-[15rem]" onchange="F.station = this.value; renderTab();"></select></div>
                     <div data-f="species"><label class="lbl" for="fSpecies">Pest</label><select id="fSpecies" class="field !w-auto !py-2 max-w-[13rem]" onchange="F.species = this.value; renderTab();"></select></div>
                     <div data-f="prep"><label class="lbl" for="fPrep">Preparation</label><select id="fPrep" class="field !w-auto !py-2 max-w-[15rem]" onchange="F.prep = this.value; renderTab();"></select></div>
-                    <div data-f="batch"><label class="lbl" for="fBatch">Batch number</label><select id="fBatch" class="field !w-auto !py-2 max-w-[12rem]" onchange="F.batch = this.value; renderTab();"></select></div>
+                    <div data-f="batch"><label class="lbl" for="fBatch">Batch number</label><input type="search" id="fBatch" placeholder="Search batch..." autocomplete="off" class="field !w-40 !py-2" oninput="F.batch = this.value.trim(); clearTimeout(window.__batchT); window.__batchT = setTimeout(renderTab, 250);"></div>
                     <div data-f="tech"><label class="lbl" for="fTech">Technician</label><select id="fTech" class="field !w-auto !py-2 max-w-[12rem]" onchange="F.tech = this.value; renderTab();"></select></div>
                     <div data-f="q" class="flex-1 min-w-[10rem]"><label class="lbl" for="fSearch">Search</label><input id="fSearch" type="search" placeholder="Station, barcode, batch..." class="field !py-2" oninput="F.q = this.value; renderTab();"></div>
                     <div class="flex gap-2">
@@ -386,7 +389,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.18-p8';
+const PORTAL_VERSION = '2026.10.18-p9';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -982,11 +985,10 @@ function fillFilterOptions() {
     const m = state.model;
     $('fType').innerHTML = optionsHtml(sortText(m.stations.map(s => s.type)), 'All types');
     $('fMap').innerHTML = optionsHtml(m.maps.map(p => [p.id, p.name]), 'All floor plans');
-    $('fZone').innerHTML = optionsHtml(m.zones, 'All zones');
+    $('fZone').innerHTML = optionsHtml(m.zones, 'All areas');
     $('fStation').innerHTML = optionsHtml(m.stations.map(s => [s.barcode, `${s.name} (${s.barcode})`]), 'All stations');
     $('fSpecies').innerHTML = optionsHtml(sortText(m.entries.map(e => e.species)), 'All pests');
     $('fPrep').innerHTML = optionsHtml(sortText(m.entries.map(e => e.prep)), 'All preparations');
-    $('fBatch').innerHTML = optionsHtml(sortText(m.entries.map(e => e.batch)), 'All batches');
     $('fTech').innerHTML = optionsHtml(sortText(m.entries.map(e => e.tech).concat(m.visits.map(v => v.tech))), 'All technicians');
     [['fType', 'type'], ['fMap', 'map'], ['fZone', 'zone'], ['fStation', 'station'], ['fSpecies', 'species'], ['fPrep', 'prep'], ['fBatch', 'batch'], ['fTech', 'tech']].forEach(([id, k]) => { $(id).value = F[k]; });
 }
@@ -1005,7 +1007,7 @@ const pestKey = p => String(p || '').trim().toLowerCase().replace(/\s+/g, ' ').r
 function entriesFor(o) {
     const q = (o.q || '').trim().toLowerCase();
     return state.model.entries.filter(e => inRange(e.at, o) && (!o.type || e.type === o.type) && (!o.map || e.mapId === o.map) && (!o.zone || zoneKey(e.zone) === zoneKey(o.zone))
-        && (!o.station || e.barcode === o.station) && (!o.species || e.species === o.species) && (!o.prep || e.prep === o.prep) && (!o.batch || e.batch === o.batch) && (!o.tech || e.tech === o.tech)
+        && (!o.station || e.barcode === o.station) && (!o.species || e.species === o.species) && (!o.prep || e.prep === o.prep) && (!o.batch || String(e.batch || '').toLowerCase().includes(String(o.batch).toLowerCase())) && (!o.tech || e.tech === o.tech)
         && (!q || [e.name, e.barcode, e.batch, e.prep, e.species, e.tech, e.notes, e.zone].some(v => String(v || '').toLowerCase().includes(q))));
 }
 function filteredEntries() { return entriesFor(filterOpts()); }
@@ -1097,12 +1099,12 @@ function stationTrendHtml(st) {
     const y = v => 8 + (H - pb - 8) * (1 - v / max);
     const svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Pests caught or sighted at ${esc(st.name)} each month">
         <line x1="${pl}" x2="${W}" y1="${y(0)}" y2="${y(0)}" stroke="var(--border)"/>
-        ${vals.map((v, i) => `<rect x="${(pl + i * bw + 2).toFixed(1)}" y="${y(v).toFixed(1)}" width="${(bw - 4).toFixed(1)}" height="${(y(0) - y(v)).toFixed(1)}" rx="2" fill="${zoneOver[i] && v ? '#dc2626' : '#2a78d6'}"><title>${monthLabel(months[i])}: ${v} (${checks[i]} check${checks[i] === 1 ? '' : 's'})${zoneOver[i] && v ? ' - zone over its limit' : ''}</title></rect>
+        ${vals.map((v, i) => `<rect x="${(pl + i * bw + 2).toFixed(1)}" y="${y(v).toFixed(1)}" width="${(bw - 4).toFixed(1)}" height="${(y(0) - y(v)).toFixed(1)}" rx="2" fill="${zoneOver[i] && v ? '#dc2626' : '#2a78d6'}"><title>${monthLabel(months[i])}: ${v} (${checks[i]} check${checks[i] === 1 ? '' : 's'})${zoneOver[i] && v ? ' - over the critical limit' : ''}</title></rect>
             ${i % 3 === 0 ? `<text x="${(pl + i * bw + bw / 2).toFixed(1)}" y="${H - 4}" text-anchor="middle" font-size="9" fill="var(--faint)">${new Date(months[i]).toLocaleString('en-NZ', { month: 'short' })}</text>` : ''}`).join('')}
         ${lim ? `<line x1="${pl}" x2="${W}" y1="${y(lim.max)}" y2="${y(lim.max)}" stroke="#dc2626" stroke-dasharray="4 3"/><text x="${pl - 3}" y="${y(lim.max) + 3}" text-anchor="end" font-size="9" fill="#dc2626">${lim.max}</text>` : ''}
         <text x="${pl - 3}" y="${y(0) + 3}" text-anchor="end" font-size="9" fill="var(--faint)">0</text></svg>`;
     return `<div class="inset p-3 space-y-2">
-        <div class="flex flex-wrap items-baseline justify-between gap-2"><span class="eyebrow t-faint">Pests per month · last 12 months</span>${lim ? `<span class="text-[11px]" style="color:#dc2626;">red: months ${esc(lim.zone)} went over its limit · dashed line: the zone's limit (${lim.max} a month)</span>` : ''}</div>
+        <div class="flex flex-wrap items-baseline justify-between gap-2"><span class="eyebrow t-faint">Pests per month · last 12 months</span>${lim ? `<span class="text-[11px]" style="color:#dc2626;">red: months ${esc(lim.zone)} went over its limit · dashed line: the critical limit (${lim.max} a month)</span>` : ''}</div>
         ${svg}
         <div class="grid grid-cols-3 gap-2 text-xs">
             <div><div class="t-faint">This month</div><div class="font-black text-base t-strong">${cur}</div></div>
@@ -1143,7 +1145,7 @@ function showStationList() {
     openModal();
 }
 function stationTableHtml(list) {
-    return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Station</th><th>Type</th><th>Zone</th><th>Floor plan</th><th>Last checked</th></tr></thead><tbody>${list.map(x => `
+    return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Station</th><th>Type</th><th>Critical limits</th><th>Floor plan</th><th>Last checked</th></tr></thead><tbody>${list.map(x => `
         <tr class="clickable" onclick="showStation('${esc(x.barcode)}')"><td>${stationCell(x)}</td><td class="t-muted">${esc(x.type || '-')}</td><td class="t-muted">${esc(x.zone || '-')}</td><td class="t-muted">${esc(mapName(x.mapId) || '-')}</td>
         <td>${x.lastAt ? fmtDate(x.lastAt) : '<span class="t-faint">Never</span>'}${x.overdue ? ' <span class="chip chip-red !py-0">Overdue</span>' : ''}</td></tr>`).join('') || '<tr><td colspan="5" class="t-faint italic text-center p-5">No stations.</td></tr>'}</tbody></table></div>`;
 }
@@ -1187,7 +1189,7 @@ function breachStations(x) {
 function breachesSectionHtml() {
     const m = state.model;
     const months = []; { const d = new Date(); for (let i = 11; i >= 0; i--) months.push(new Date(d.getFullYear(), d.getMonth() - i, 1).getTime()); }
-    if (!m.limits.length) return sectionCard('Critical limit breaches', '#dc2626', emptyNote('No critical limits are set for this site yet. Set them under Reports → Critical limits (for example how many flies or midges a zone may have in a month).'));
+    if (!m.limits.length) return sectionCard('Critical limit breaches', '#dc2626', emptyNote('No critical limits are set for this site yet. Set them under Reports → Critical limits (for example how many flies or midges an area may have in a month).'));
     const events = [];
     m.limits.forEach(l => months.forEach(t => { const st = limitStatus(l, t); if (st.over) events.push(st); }));
     events.sort((a, b) => b.month - a.month);
@@ -1209,7 +1211,7 @@ function breachesSectionHtml() {
     return sectionCard(`Critical limit breaches · last 12 months (${events.length})`, '#dc2626', `
         <p class="text-xs t-muted">Monthly totals for each critical limit (mainly flying insect control). Red bars went over the limit; the dashed line is the limit.</p>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">${charts}</div>
-        ${events.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Month</th><th>Zone</th><th>Pest</th><th class="num">Recorded</th><th class="num">Limit</th><th class="num">Over by</th><th>Caught at</th></tr></thead><tbody>
+        ${events.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Month</th><th>Critical limits</th><th>Pest</th><th class="num">Recorded</th><th class="num">Limit</th><th class="num">Over by</th><th>Caught at</th></tr></thead><tbody>
             ${events.map(x => `<tr><td class="whitespace-nowrap">${esc(monthLabel(x.month))}</td><td class="font-bold">${esc(x.limit.zone)}</td><td>${esc(limitPest(x.limit))}</td><td class="num" style="color:#dc2626;font-weight:800;">${x.total}</td><td class="num">${x.limit.max}</td><td class="num">${x.total - x.limit.max}</td><td class="t-muted">${esc(breachStations(x).slice(0, 4).map(b => `${b.name} (${b.n})`).join(', '))}</td></tr>`).join('')}</tbody></table></div>`
             : emptyNote('No breaches in the last 12 months. 🎉')}`);
 }
@@ -1239,8 +1241,30 @@ function showBreach(limitId, month) {
     $('modalFoot').innerHTML = `<button type="button" class="btn btn-secondary" onclick="closeModal(true); setTab('limits')">All critical limits</button>`;
     openModal();
 }
+let limitStation = null;
 function renderLimitsTab() {
-    $('tabBody').innerHTML = limitsCardHtml() + limitStationsHtml() + breachesSectionHtml();
+    $('tabBody').innerHTML = limitsCardHtml() + limitStationsHtml() + `<div class="card p-5 space-y-3" id="limitStationPanel"></div>`;
+    const first = document.querySelector('#tabBody [data-limit-station]');
+    if (!limitStation || !document.querySelector(`#tabBody [data-limit-station="${CSS.escape(limitStation)}"]`)) limitStation = first ? first.dataset.limitStation : null;
+    selectLimitStation(limitStation, true);
+}
+// the station picked in the table above: its graph and its records, right here on the page
+function selectLimitStation(barcode, quiet) {
+    limitStation = barcode;
+    document.querySelectorAll('#tabBody [data-limit-station]').forEach(tr => tr.classList.toggle('row-selected', tr.dataset.limitStation === barcode));
+    const box = $('limitStationPanel');
+    if (!box) return;
+    const st = barcode && state.model.stations.find(x => x.barcode === barcode);
+    if (!st) { box.innerHTML = emptyNote('Tap a station in the table above to see its graph and history.'); return; }
+    const recs = st.entries.filter(e => e.species && e.at > Date.now() - 365 * 86400000).slice().reverse();
+    box.innerHTML = `<div class="flex flex-wrap items-start justify-between gap-2"><div><div class="eyebrow t-faint">Station history</div><h3 class="font-black t-strong text-lg flex items-center gap-2">${typeDot(st.type)}${esc(st.name)}</h3>
+            <div class="text-xs t-muted">${esc(st.type || 'Station')}${st.zone ? ' · ' + esc(st.zone) : ''} · <span class="mono">${esc(st.barcode)}</span></div></div>
+            <button type="button" class="btn btn-secondary !py-1.5" onclick="showStation('${esc(st.barcode)}')">Full details</button></div>
+        ${stationTrendHtml(st) || emptyNote('No records for this station yet.')}
+        <div class="eyebrow t-faint">Pests recorded in the last 12 months</div>
+        <div class="tbl-wrap max-h-[22rem] overflow-y-auto scroll-thin"><table class="tbl"><thead><tr><th>Date</th><th>Pest</th><th class="num">Number</th><th>Activity</th><th>Technician</th></tr></thead><tbody>
+            ${recs.map(e => `<tr><td class="whitespace-nowrap">${fmtDateTime(e.at)}</td><td>${esc(e.species)}</td><td class="num font-bold">${e.count}</td><td>${activityChip(e.activity)}</td><td class="t-muted">${esc(e.tech || '-')}</td></tr>`).join('') || '<tr><td colspan="5" class="t-faint italic text-center p-4">No pests recorded in the last 12 months.</td></tr>'}</tbody></table></div>`;
+    if (!quiet) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 // every station in a zone with a limit: this month, last month, change, share of the zone, months it was part of a breach
 function limitStationsHtml() {
@@ -1265,7 +1289,7 @@ function limitStationsHtml() {
     const chg = r => r.change == null ? '<span class="chip chip-red">New</span>' : r.change === 0 ? '<span class="t-faint">-</span>' : `<span style="color:${r.change > 0 ? '#dc2626' : '#10b981'};font-weight:800;">${r.change > 0 ? '▲' : '▼'} ${Math.abs(r.change)}%</span>`;
     const zones = m.limits.map(l => { const z = limitStatus(l, thisM); return `<button type="button" class="card p-3 text-left ${z.over ? 'zone-over' : ''}" onclick="showBreach('${esc(l.id)}')"><div class="eyebrow t-faint">${esc(l.zone)}</div><div class="font-black text-lg" ${z.over ? 'style="color:#dc2626;"' : ''}>${z.total} <span class="text-xs t-faint font-normal">/ ${l.max}</span></div><div class="text-[11px] t-muted">${esc(limitPest(l))} · ${z.over ? 'over the limit' : 'within the limit'}</div></button>`; }).join('');
     return `<div class="card p-5 space-y-4">
-        <div><h3 class="font-black t-strong">Breaches by station · ${esc(monthLabel(thisM))}</h3><p class="text-xs t-muted">Every station in a zone with a critical limit. Red rows are units adding to a breach right now. Tap a station for its trend and history.</p></div>
+        <div><h3 class="font-black t-strong">Breaches by station · ${esc(monthLabel(thisM))}</h3><p class="text-xs t-muted">Every station in an area with a critical limit. Red rows are units adding to a breach right now. Tap a station to see its graph and history below.</p></div>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">${zones}</div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
             <div class="inset p-2.5"><div class="eyebrow t-faint">Units in breach</div><div class="font-black text-lg" ${breached.length ? 'style="color:#dc2626;"' : ''}>${breached.length}</div></div>
@@ -1273,9 +1297,9 @@ function limitStationsHtml() {
             <div class="inset p-2.5"><div class="eyebrow t-faint">Last month</div><div class="font-black text-lg">${rows.reduce((n, r) => n + r.prev, 0)}</div></div>
             <div class="inset p-2.5"><div class="eyebrow t-faint">Worst unit</div><div class="font-black text-sm truncate">${rows[0] && rows[0].now1 ? esc(rows[0].st.name) + ' (' + rows[0].now1 + ')' : '-'}</div></div>
         </div>
-        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Station</th><th>Zone · limit</th><th class="num">This month</th><th class="num">Last month</th><th class="num">Change</th><th class="num">Share of zone</th><th class="num">12 months</th><th class="num">Months in breach</th></tr></thead><tbody>
-            ${rows.map(r => `<tr class="clickable ${r.zoneOver && r.now1 > 0 ? 'row-breach' : ''}" onclick="showStation('${esc(r.st.barcode)}')"><td>${stationCell(r.st)}</td><td class="whitespace-nowrap">${esc(r.l.zone)} · ${esc(limitPest(r.l))} <span class="t-faint">(${r.l.max})</span></td>
-                <td class="num font-black" ${r.zoneOver && r.now1 > 0 ? 'style="color:#dc2626;"' : ''}>${r.now1}</td><td class="num">${r.prev}</td><td class="num">${chg(r)}</td><td class="num">${r.share}%</td><td class="num">${r.total12}</td><td class="num">${r.breachedMonths || '-'}</td></tr>`).join('') || '<tr><td colspan="8" class="t-faint italic text-center p-4">No stations are in a zone with a limit yet.</td></tr>'}</tbody></table></div>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Station</th><th>Critical limit</th><th class="num">This month</th><th class="num">Last month</th><th class="num">Change</th><th class="num">Share of area</th><th class="num">12 months</th><th class="num">Months in breach</th></tr></thead><tbody>
+            ${rows.map(r => `<tr class="clickable ${r.zoneOver && r.now1 > 0 ? 'row-breach' : ''}" data-limit-station="${esc(r.st.barcode)}" onclick="selectLimitStation(this.dataset.limitStation)" title="Show this station's graph and history below"><td>${stationCell(r.st)}</td><td class="whitespace-nowrap">${esc(r.l.zone)} · ${esc(limitPest(r.l))} <span class="t-faint">(${r.l.max})</span></td>
+                <td class="num font-black" ${r.zoneOver && r.now1 > 0 ? 'style="color:#dc2626;"' : ''}>${r.now1}</td><td class="num">${r.prev}</td><td class="num">${chg(r)}</td><td class="num">${r.share}%</td><td class="num">${r.total12}</td><td class="num">${r.breachedMonths || '-'}</td></tr>`).join('') || '<tr><td colspan="8" class="t-faint italic text-center p-4">No stations are in a critical limits area yet.</td></tr>'}</tbody></table></div>
     </div>`;
 }
 // every breach in the last few months, grouped by limit (records from a visit still in progress aren't counted)
@@ -1668,7 +1692,7 @@ function showViewerItem() {
 // ---------- Reports: build a trend chart, a summary table or the raw records, for any part of the site ----------
 const REP = { style: 'trend', measure: 'count', group: 'species' };
 const MEASURES = { count: 'Pests caught / sighted', activity: 'Average activity level (0-3)', checks: 'Station checks', apps: 'Preparation applications' };
-const GROUPS = { species: 'Pest', station: 'Station', type: 'Station type', zone: 'Zone', map: 'Floor plan', tech: 'Technician', month: 'Month', none: 'Whole site' };
+const GROUPS = { species: 'Pest', station: 'Station', type: 'Station type', zone: 'Critical limits area', map: 'Floor plan', tech: 'Technician', month: 'Month', none: 'Whole site' };
 const REPORT_PRESETS = [
     ['📈 Pest trend by species', { style: 'trend', measure: 'count', group: 'species' }],
     ['🏷 Pests by station', { style: 'summary', measure: 'count', group: 'station' }],
@@ -1684,7 +1708,7 @@ function groupOf(e, g) {
     if (g === 'species') return e.species || '(no pest)';
     if (g === 'station') return `${e.name} (${e.barcode})`;
     if (g === 'type') return e.type || '(no type)';
-    if (g === 'zone') return e.zone || '(no zone)';
+    if (g === 'zone') return e.zone || '(no critical limits area)';
     if (g === 'map') return mapName(e.mapId) || '(not on a plan)';
     if (g === 'tech') return e.tech || '(not recorded)';
     if (g === 'month') { const d = new Date(e.at); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`; }
@@ -1736,12 +1760,12 @@ function renderReports() {
     } else {
         const rows = list.slice().reverse();
         out = `<p class="text-[11px] t-faint">${rows.length > 500 ? `Showing the latest 500 of ${rows.length} records. Download the CSV for all of them.` : plural(rows.length, 'record')}</p>
-            <div class="tbl-wrap max-h-[70vh] overflow-y-auto scroll-thin"><table class="tbl"><thead><tr><th>Date</th><th>Station</th><th>Zone</th><th>Activity</th><th>Pest</th><th class="num">No.</th><th>Preparation</th><th>Batch</th><th>Technician</th><th>Notes</th></tr></thead><tbody>
+            <div class="tbl-wrap max-h-[70vh] overflow-y-auto scroll-thin"><table class="tbl"><thead><tr><th>Date</th><th>Station</th><th>Critical limits</th><th>Activity</th><th>Pest</th><th class="num">No.</th><th>Preparation</th><th>Batch</th><th>Technician</th><th>Notes</th></tr></thead><tbody>
             ${rows.slice(0, 500).map(e => `<tr class="clickable" onclick="showStation('${esc(e.barcode)}')"><td>${fmtDateTime(e.at)}</td><td>${stationCell(e.station || e)}</td><td class="t-muted">${esc(e.zone || '-')}</td><td>${activityChip(e.activity)}</td><td>${esc(e.species || '-')}</td><td class="num">${e.count || ''}</td><td>${esc(e.prep || '-')}${e.prep && e.qty != null ? `<div class="t-faint text-[11px]">${fmtQty(e.qty, e.unit)}</div>` : ''}</td><td class="mono">${esc(e.batch || '')}</td><td class="t-muted">${esc(e.tech || '')}</td><td class="t-muted">${esc(e.notes || '')}</td></tr>`).join('') || '<tr><td colspan="10" class="t-faint italic text-center p-6">No records match these filters.</td></tr>'}</tbody></table></div>`;
     }
     $('tabBody').innerHTML = `
         <div class="card p-5 space-y-4">
-            <div><h3 class="font-black t-strong">Reports</h3><p class="text-xs t-muted">Pick a ready-made report or build your own. Use the filters above for the period, a station type, one station, a zone, a floor plan or a pest. Download any report as CSV (Excel) or PDF.</p></div>
+            <div><h3 class="font-black t-strong">Reports</h3><p class="text-xs t-muted">Pick a ready-made report or build your own. Use the filters above for the period, a station type, one station, a critical limits area, a floor plan or a pest. Download any report as CSV (Excel) or PDF.</p></div>
             <div class="flex flex-wrap gap-1.5">${REPORT_PRESETS.map((pr, i) => `<button type="button" class="tab-btn ${isPreset(pr) ? 'active' : ''}" onclick="Object.assign(REP, REPORT_PRESETS[${i}][1]); renderReports();">${pr[0]}</button>`).join('')}</div>
             <div class="flex flex-wrap items-end gap-3 inset p-3">
                 ${sel('repStyle', { trend: 'Trend chart', summary: 'Summary table', raw: 'Raw records' }, REP.style, 'Report style')}
@@ -1775,7 +1799,7 @@ function limitsCardHtml() {
     const ed = limitEditing && limitEditing !== 'new' ? m.limits.find(l => l.id === limitEditing) : null;
     const species = sortText(m.entries.map(e => e.species));
     const form = limitEditing ? `<form class="inset p-3 grid grid-cols-1 sm:grid-cols-5 gap-2 items-end" onsubmit="event.preventDefault(); saveLimit();">
-            <div><label class="lbl" for="limZone">Zone</label><input id="limZone" list="limZones" required maxlength="60" class="field !py-2" value="${esc(ed ? ed.zone : '')}" placeholder="e.g. Dispatch"><datalist id="limZones">${m.zones.map(z => `<option value="${esc(z)}">`).join('')}</datalist></div>
+            <div><label class="lbl" for="limZone">Critical limits area</label><input id="limZone" list="limZones" required maxlength="60" class="field !py-2" value="${esc(ed ? ed.zone : '')}" placeholder="e.g. Dispatch"><datalist id="limZones">${m.zones.map(z => `<option value="${esc(z)}">`).join('')}</datalist></div>
             <div><label class="lbl" for="limPest">Pest</label><input id="limPest" list="limPests" maxlength="80" class="field !py-2" value="${esc(ed ? (ed.species === ANY_PEST ? 'Any pest' : ed.species) : 'Any pest')}"><datalist id="limPests"><option value="Any pest">${species.map(x => `<option value="${esc(x)}">`).join('')}</datalist></div>
             <div><label class="lbl" for="limMax">Most allowed per month</label><input id="limMax" type="number" min="0" step="1" required class="field !py-2" value="${ed ? ed.max : ''}"></div>
             <div><label class="lbl" for="limNotes">Note (optional)</label><input id="limNotes" maxlength="200" class="field !py-2" value="${esc(ed ? ed.notes : '')}"></div>
@@ -1784,11 +1808,11 @@ function limitsCardHtml() {
     return `<div class="card p-5 space-y-4" id="limitsCard">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div><h3 class="font-black t-strong">Critical limits</h3>
-                <p class="text-xs t-muted max-w-3xl">Set how many of a pest (for example flies, midges or carpet beetles) a zone may have in a month. If a service records more, the technician is asked to double-check, and it's flagged on the visit report and here.${m.zones.length ? '' : ' Pesties sets which zone each station belongs to: ask your technician to set up zones if none are listed.'}</p></div>
+                <p class="text-xs t-muted max-w-3xl">Set how many of a pest (for example flies, midges or carpet beetles) an area may have in a month. If a service records more, the technician is asked to double-check, and it's flagged on the visit report and here.${m.zones.length ? '' : ' Pesties sets which critical limits area each station belongs to: ask your technician to set these up if none are listed.'}</p></div>
             ${limitEditing ? '' : '<button type="button" class="btn btn-primary" onclick="limitEditing = \'new\'; renderTab(); $(\'limZone\').focus();">+ Add a limit</button>'}
         </div>
         ${form}
-        ${m.limits.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Zone</th><th>Pest</th><th class="num">Limit / month</th><th class="num">${esc(new Date().toLocaleString('en-NZ', { month: 'long' }))} so far</th><th></th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+        ${m.limits.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Area</th><th>Pest</th><th class="num">Limit / month</th><th class="num">${esc(new Date().toLocaleString('en-NZ', { month: 'long' }))} so far</th><th></th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
             <div class="eyebrow t-faint">Last 12 months</div>${hist}` : emptyNote('No critical limits set yet.')}
     </div>`;
 }
@@ -1852,7 +1876,7 @@ function renderStations() {
             </div>
             <div class="tbl-wrap max-h-[70vh] overflow-y-auto scroll-thin">
                 <table class="tbl">
-                    <thead><tr>${th('name', 'Station')}${th('type', 'Type')}<th>Zone</th><th>Floor plan</th>${th('last', 'Last checked')}${th('days', 'Days since', 'num')}<th>Last activity</th><th>Last preparation</th>${th('checks', 'Checks', 'num')}${th('caught', 'Pests caught', 'num')}</tr></thead>
+                    <thead><tr>${th('name', 'Station')}${th('type', 'Type')}<th>Critical limits</th><th>Floor plan</th>${th('last', 'Last checked')}${th('days', 'Days since', 'num')}<th>Last activity</th><th>Last preparation</th>${th('checks', 'Checks', 'num')}${th('caught', 'Pests caught', 'num')}</tr></thead>
                     <tbody>${rows.map(r => `
                         <tr class="clickable" onclick="showStation('${esc(r.s.barcode)}')">
                             <td>${stationCell(r.s)}</td>
@@ -2305,7 +2329,7 @@ function fileBase(what) { return `${safeName(siteName(state.site))} - ${what} - 
 
 const EXPORTS = {
     stations: () => ({
-        title: 'Station register', cols: [['Station', 28], ['Barcode', 16], ['Type', 28], ['Zone', 16], ['Floor plan', 18], ['Last checked', 18], ['Days', 10], ['Last activity', 16], ['Last preparation', 34], ['Checks', 11], ['Caught', 11]],
+        title: 'Station register', cols: [['Station', 28], ['Barcode', 16], ['Type', 28], ['Critical limits', 16], ['Floor plan', 18], ['Last checked', 18], ['Days', 10], ['Last activity', 16], ['Last preparation', 34], ['Checks', 11], ['Caught', 11]],
         rows: sortStations(stationRows()).map(r => [r.s.name, r.s.barcode, r.s.type, r.s.zone || '', mapName(r.s.mapId) || '', r.s.lastAt ? fmtDate(r.s.lastAt) : 'Never', r.s.daysSince == null ? '' : r.s.daysSince + (r.s.overdue ? ' (overdue)' : ''),
             r.s.last ? (r.s.last.activity === 'None' ? 'No activity' : r.s.last.activity) : '', r.lastPrep ? `${r.lastPrep.prep} ${fmtQty(r.lastPrep.qty, r.lastPrep.unit)}${r.lastPrep.batch ? ' batch ' + r.lastPrep.batch : ''} (${fmtDate(r.lastPrep.at)})` : '', r.checks, r.caught])
     }),
@@ -2320,7 +2344,7 @@ const EXPORTS = {
     },
     reports: () => {
         const list = reportEntries();
-        if (REP.style === 'raw') return { title: 'Service records', cols: [['Date', 24], ['Station', 28], ['Barcode', 16], ['Type', 24], ['Zone', 16], ['Activity', 14], ['Pest', 20], ['Number', 12], ['Preparation', 30], ['Quantity', 14], ['Batch', 16], ['Technician', 20], ['Notes', 40]],
+        if (REP.style === 'raw') return { title: 'Service records', cols: [['Date', 24], ['Station', 28], ['Barcode', 16], ['Type', 24], ['Critical limits', 16], ['Activity', 14], ['Pest', 20], ['Number', 12], ['Preparation', 30], ['Quantity', 14], ['Batch', 16], ['Technician', 20], ['Notes', 40]],
             rows: list.slice().reverse().map(e => [fmtDateTime(e.at), e.name, e.barcode, e.type, e.zone, e.activity === 'None' ? 'No activity' : e.activity, e.species, e.count || '', e.prep, e.prep ? fmtQty(e.qty, e.unit) : '', e.batch, e.tech, e.notes]) };
         if (REP.style === 'summary') return { title: `${MEASURES[REP.measure]} by ${GROUPS[REP.group].toLowerCase()}`, cols: [[GROUPS[REP.group], 40], [MEASURES[REP.measure], 26], ['Checks', 14], ['Pests', 14], ['First', 20], ['Last', 20]],
             rows: reportGroups(list).map(r => [r.key, r.value == null ? '' : r.value, r.entries.length, r.entries.reduce((n, e) => n + e.count, 0), fmtDate(r.entries[0].at), fmtDate(r.entries[r.entries.length - 1].at)]) };
@@ -2575,7 +2599,7 @@ async function buildAuditPack() {
             m.limits.forEach(l => months.forEach(t => { const st = limitStatus(l, t); rows.push([monthLabel(t), l.zone, limitPest(l), l.max, st.total, st.over ? 'OVER LIMIT' : 'Within limit']); }));
             const over = rows.filter(r => r[5] === 'OVER LIMIT').length;
             pdf.para(`${plural(m.limits.length, 'limit')} checked for each month in the period. ${over ? plural(over, 'month') + ' over a limit.' : 'No limits were exceeded.'}`);
-            pdf.table([['Month', 24], ['Zone', 24], ['Pest', 24], ['Limit / month', 16], ['Recorded', 14], ['Result', 18]], rows);
+            pdf.table([['Month', 24], ['Critical limits', 24], ['Pest', 24], ['Limit / month', 16], ['Recorded', 14], ['Result', 18]], rows);
         });
         section('recs', 'Recommendations register', () => { pdf.para('Recommendations raised or updated in the period, and all that are still open.'); pdf.table(REC_COLS, recExportRows(recsIn)); });
         section('docs', 'Document register', () => {
@@ -2588,7 +2612,7 @@ async function buildAuditPack() {
         });
         if (plans.length) {
             pdf.newPage('Floor plan stations');
-            pdf.table([['Floor plan', 30], ['Station', 34], ['Barcode', 18], ['Type', 30], ['Zone', 18], ['Last checked', 18]],
+            pdf.table([['Floor plan', 30], ['Station', 34], ['Barcode', 18], ['Type', 30], ['Critical limits', 18], ['Last checked', 18]],
                 state.model.maps.flatMap(p => planPins(p).map(x => [p.name, x.name, x.barcode, x.type, x.zone || '', x.lastAt ? fmtDate(x.lastAt) : 'Never'])));
         }
         pdf.save(`${safeName(siteName(state.site))} - Audit pack - ${F.from || 'start'} to ${F.to || toDayStr(new Date())}`);
