@@ -1808,7 +1808,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r39';
+        const APP_VERSION = '2026.10.18-r40';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -2046,6 +2046,16 @@
         const videoUrls = new Set();       // device copies (blob: links) that are videos
         function isVideoBlob(b) { return !!(b && /^video\//i.test(b.type || '')); }
         function isVideoPath(p) { return VIDEO_PATH_RE.test(String(p || '').split('?')[0].split('#')[0]); }
+        // "1 photo", "1 video", "2 photos and 1 video": items are paths, slots { path }, or picked files { video }
+        function mediaCountText(items, verb) {
+            let v = 0, ph = 0;
+            (items || []).forEach(x => { const vid = typeof x === 'string' ? isVideoPath(x) : !!(x && (x.video || isVideoPath(x.path) || (x.blob && isVideoBlob(x.blob)))); if (vid) v++; else ph++; });
+            const parts = [];
+            if (ph) parts.push(`${ph} photo${ph === 1 ? '' : 's'}`);
+            if (v) parts.push(`${v} video${v === 1 ? '' : 's'}`);
+            return parts.join(' and ') + (verb && parts.length ? ' ' + verb : '');
+        }
+        const mediaIcon = items => (items || []).some(x => typeof x === 'string' ? isVideoPath(x) : x && (x.video || isVideoPath(x.path))) ? ((items || []).every(x => typeof x === 'string' ? isVideoPath(x) : x && (x.video || isVideoPath(x.path))) ? '🎥' : '📷🎥') : '📷';
         function isVideoUrl(u) { return !!u && (videoUrls.has(u) || isVideoPath(u)); }
         function mediaUrl(blob) { const u = URL.createObjectURL(blob); if (isVideoBlob(blob)) videoUrls.add(u); return u; }
         // A thumbnail for a photo or a video (videos show their first frame with a play mark)
@@ -3735,14 +3745,14 @@
             const grid = document.getElementById('photoPreviewGrid');
             const kept = (typeof keptPhotos !== 'undefined' ? keptPhotos : []).map((k, i) => `
                 <div class="thumb" title="Already saved">
-                    ${k.url ? mediaThumb(k.url, `viewFullImage(keptPhotos.map(x => x.url).filter(Boolean), 'Saved photo', 'Saved earlier this visit', '', ${i})`) : '<div class="w-full h-full flex items-center justify-center text-[10px] t-faint text-center p-1">📷 Saved photo</div>'}
+                    ${k.url ? mediaThumb(k.url, `viewFullImage(keptPhotos.map(x => x.url).filter(Boolean), 'Saved earlier', 'Saved earlier this visit', '', ${i})`) : `<div class="w-full h-full flex items-center justify-center text-[10px] t-faint text-center p-1">${isVideoPath(k.path) ? '🎥 Saved video' : '📷 Saved photo'}</div>`}
                     <span class="absolute bottom-1 left-1 text-[9px] font-black text-white bg-emerald-600 rounded px-1">SAVED</span>
-                    <button type="button" class="thumb-x" onclick="keptPhotos.splice(${i}, 1); renderPhotoPreviews();" title="Remove photo">✕</button>
+                    <button type="button" class="thumb-x" onclick="keptPhotos.splice(${i}, 1); renderPhotoPreviews();" title="Remove" aria-label="Remove">✕</button>
                 </div>`).join('');
             grid.innerHTML = kept + pendingPhotos.map((p, i) => `
                 <div class="thumb">
                     ${mediaThumb(p.url, `previewPendingPhoto(${i})`)}
-                    <button type="button" class="thumb-x" onclick="removePendingPhoto(${i})" title="Remove photo">✕</button>
+                    <button type="button" class="thumb-x" onclick="removePendingPhoto(${i})" title="Remove" aria-label="Remove">✕</button>
                 </div>`).join('');
         }
         function removePendingPhoto(i) {
@@ -3751,7 +3761,7 @@
             renderPhotoPreviews();
         }
         function previewPendingPhoto(i) {
-            viewFullImage(pendingPhotos.map(p => p.url), document.getElementById('recommendationNote').value, 'Photo preview', '', i);
+            viewFullImage(pendingPhotos.map(p => p.url), document.getElementById('recommendationNote').value, 'Preview (not saved yet)', '', i);
         }
         function clearPendingPhotos(revoke) {
             if (revoke) pendingPhotos.forEach(p => URL.revokeObjectURL(p.url));
@@ -3922,7 +3932,8 @@
 
         async function uploadQueuedPhoto(item, ph, index, total) {
             const blob = ph.blobKey ? await loadBlob(ph.blobKey) : null;
-            const which = total > 1 ? ` (photo ${index + 1} of ${total})` : '';
+            const kind = isVideoPath(ph.path) ? 'video' : 'photo';
+            const which = total > 1 ? ` (${index + 1} of ${total})` : '';
             if (!blob) {
                 // Never drop a photo silently. It may already be on the server from an earlier attempt.
                 if (await photoExistsOnServer(ph.path)) {
@@ -3932,7 +3943,7 @@
                 }
                 ph.missing = true;
                 await persistItem(item);
-                throw new Error(`A photo${which} is no longer stored on this device, so it can't be uploaded. Use "Send without missing photos" to keep the rest, or Discard the item and take the photos again.`);
+                throw new Error(`A ${kind}${which} is no longer stored on this device, so it can't be uploaded. Use "Send without missing photos" to keep the rest, or Discard the item and take it again.`);
             }
 
             const { error } = await _supabase.storage.from(PHOTO_BUCKET)
@@ -3950,7 +3961,7 @@
 
             // Confirm the photo really landed before the record goes up
             if (!(await photoExistsOnServer(ph.path))) {
-                throw new Error(`The photo upload${which} could not be confirmed on the server` + (lastPhotoCheckError ? ': ' + lastPhotoCheckError : '') + '. It will be retried.');
+                throw new Error(`The ${kind} upload${which} could not be confirmed on the server` + (lastPhotoCheckError ? ': ' + lastPhotoCheckError : '') + '. It will be retried.');
             }
             ph.uploaded = true;
             ph.missing = false;
@@ -4519,12 +4530,12 @@
             const done = phs.filter(p => p.uploaded).length;
             let photo = '';
             if (phs.length) {
-                const n = phs.length === 1 ? 'Photo' : `${phs.length} photos`;
+                const n = mediaCountText(phs), ic = mediaIcon(phs);
                 photo = done === phs.length
-                    ? `<div class="mt-0.5 font-semibold" style="color:#10b981;">📷 ${n} uploaded & confirmed ✓</div>`
-                    : `<div class="mt-0.5 font-semibold" style="color:#d97706;">📷 ${phs.length === 1 ? 'Photo' : done + ' of ' + phs.length + ' photos'} ${item.status === 'uploading' ? 'uploading…' : (phs.length === 1 ? 'not uploaded yet' : 'uploaded')}</div>`;
+                    ? `<div class="mt-0.5 font-semibold" style="color:#10b981;">${ic} ${n} uploaded & confirmed ✓</div>`
+                    : `<div class="mt-0.5 font-semibold" style="color:#d97706;">${ic} ${phs.length === 1 ? n.replace(/^1 /, '').replace(/^./, c => c.toUpperCase()) : done + ' of ' + n} ${item.status === 'uploading' ? 'uploading…' : (phs.length === 1 ? 'not uploaded yet' : 'uploaded')}</div>`;
             }
-            if (item.droppedPhotos) photo += `<div class="mt-0.5 t-faint">📷 ${item.droppedPhotos} photo${item.droppedPhotos === 1 ? '' : 's'} left out by request</div>`;
+            if (item.droppedPhotos) photo += `<div class="mt-0.5 t-faint">${item.droppedPhotos} photo${item.droppedPhotos === 1 ? '' : 's'} or video${item.droppedPhotos === 1 ? '' : 's'} left out by request</div>`;
             const actions = item.status === 'sent' || item.status === 'uploading' ? '' : `
                 <div class="flex flex-wrap gap-2 mt-2">
                     ${item.status === 'failed' ? `<button type="button" data-key="${esc(item.key)}" onclick="retryQueueItem(this.dataset.key)" class="btn btn-primary !px-3 !py-1.5">Retry</button>` : ''}
@@ -6555,11 +6566,11 @@
         }
 
         function photoErrorText(path) {
-            const e = signedErrors.get(path);
-            if (!e) return isOnline ? "The photo link couldn't be created (no reason given). Tap Sync Site and try again." : "This photo hasn't been saved on this device yet, so it can't be shown offline.";
-            if (/not.?found|does not exist|no such/i.test(e)) return 'The photo file is missing from storage - it never finished uploading. Add the photo to this station again.';
-            if (/not authori|permission|row-level|policy|denied|403/i.test(e)) return 'Storage refused access to this photo (' + e + '). Check the storage policies on the station-photos bucket.';
-            return 'Photo unavailable: ' + e;
+            const e = signedErrors.get(path), w = isVideoPath(path) ? 'video' : 'photo', W = w[0].toUpperCase() + w.slice(1);
+            if (!e) return isOnline ? `The ${w} link couldn't be created (no reason given). Tap Sync Site and try again.` : `This ${w} hasn't been saved on this device yet, so it can't be shown offline.`;
+            if (/not.?found|does not exist|no such/i.test(e)) return `The ${w} file is missing from storage - it never finished uploading. Add the ${w} again.`;
+            if (/not authori|permission|row-level|policy|denied|403/i.test(e)) return `Storage refused access to this ${w} (` + e + '). Check the storage policies on the station-photos bucket.';
+            return `${W} unavailable: ` + e;
         }
 
         const REC_UPDATE_ID = 'REC_UPDATE'; // service_logs rows that update a recommendation (status, notes, photos)
@@ -6920,7 +6931,7 @@
                     const changes = [];
                     if (before !== rec.status) changes.push(`Status changed from ${recStatusLabel(before)} to ${recStatusLabel(rec.status)}`);
                     if (p.note) changes.push('Comment added');
-                    if (nPhotos) changes.push(`${nPhotos} photo${nPhotos === 1 ? '' : 's'} added`);
+                    if (nPhotos) changes.push(mediaCountText(u._slots || [], 'added'));
                     if (!changes.length) changes.push('Updated');
                     u._changes = changes;
                     rec.updates.push({ note: p.note || '', status: rec.status, from: before, changes: changes, by: p.technician || '', at: p.servicedAt || u.created_at, photoCount: nPhotos });
@@ -7772,7 +7783,7 @@
         function recRowHtml(item, opts) {
             const dateStr = item.date ? new Date(item.date).toLocaleDateString(LOCALE, NZ_DATE) : '';
             const bits = [esc(dateStr)];
-            if (item.photoCount) bits.push(`📷 ${item.photoCount}`);
+            if (item.photoCount) bits.push(`${mediaIcon(item.allSlots)} ${item.photoCount}`);
             if (item.updates && item.updates.length) bits.push(`${item.updates.length} update${item.updates.length === 1 ? '' : 's'}`);
             const station = opts && opts.hideStation ? '' : `<div class="t-accent font-semibold text-[11px] mt-0.5 flex items-center gap-1.5">${typeDot(item.stationType, '.55rem')}${esc(item.station)}</div>`;
             return `
@@ -7805,7 +7816,7 @@
                     <div class="nf-meta">
                         <div class="flex items-center justify-between gap-1.5">${recNumberHtml(item, 'text-xs rec-no')}${item.status === 'complete' ? '<span class="chip chip-green !py-0">Complete</span>' : item.status === 'pending' ? '<span class="chip chip-amber !py-0">Pending</span>' : ''}</div>
                         <div class="flex items-center gap-1.5 t-accent font-semibold truncate mt-1">${typeDot(item.stationType, '.55rem')}<span class="truncate">${esc(item.station)}</span></div>
-                        <div class="flex flex-wrap items-center gap-1 mt-1">${recAgeChip(item)}<span class="t-faint text-[10px]">${esc(dateStr)}${item.photoCount > 1 ? ' · 📷 ' + item.photoCount : ''}</span></div>
+                        <div class="flex flex-wrap items-center gap-1 mt-1">${recAgeChip(item)}<span class="t-faint text-[10px]">${esc(dateStr)}${item.photoCount > 1 ? ' · ' + mediaIcon(item.allSlots) + ' ' + item.photoCount : ''}</span></div>
                     </div>
                 </button>`;
         }
@@ -8154,7 +8165,7 @@
             document.getElementById('recPhotoPreview').innerHTML = recPendingPhotos.map((p, i) => `
                 <div class="thumb">
                     ${mediaThumb(p.url, `viewFullImage(recPendingPhotos.map(x => x.url), 'New photo', 'Not saved yet', '', ${i})`)}
-                    <button type="button" class="thumb-x" onclick="recPendingPhotos.splice(${i}, 1); renderRecPendingPhotos();" title="Remove photo">✕</button>
+                    <button type="button" class="thumb-x" onclick="recPendingPhotos.splice(${i}, 1); renderRecPendingPhotos();" title="Remove" aria-label="Remove">✕</button>
                 </div>`).join('');
         }
 
@@ -8290,11 +8301,11 @@
             if (remote.length && !isOnline) {
                 const local = slots.filter(sl => sl.local);
                 box.innerHTML = local.length ? '' : '';
-                pn.textContent = `${remote.length} photo${remote.length === 1 ? '' : 's'} can only be viewed online.`;
+                pn.textContent = `${mediaCountText(remote)} can only be viewed online.`;
                 pn.classList.remove('hidden');
-                if (!local.length) { box.innerHTML = '<span class="text-xs t-faint italic">Connect to the internet to view the photos.</span>'; return; }
+                if (!local.length) { box.innerHTML = `<span class="text-xs t-faint italic">Connect to the internet to view the ${remote.some(isVideoPath) ? (remote.every(isVideoPath) ? 'videos' : 'photos and videos') : 'photos'}.</span>`; return; }
             } else if (remote.length) {
-                box.innerHTML = `<span class="text-xs t-muted"><span class="spinner" style="border-color:rgba(249,115,22,.3);border-top-color:#f97316;display:inline-block;vertical-align:middle;"></span> Loading ${remote.length} photo${remote.length === 1 ? '' : 's'}...</span>`;
+                box.innerHTML = `<span class="text-xs t-muted"><span class="spinner" style="border-color:rgba(249,115,22,.3);border-top-color:#f97316;display:inline-block;vertical-align:middle;"></span> Loading ${mediaCountText(remote)}...</span>`;
             }
             const links = remote.length && isOnline ? await withSyncBadge('photos', 'Loading photos...', () => getSignedUrls(remote)) : new Map();
             if (openRecId !== rec.id) return; // closed or switched meanwhile
@@ -8303,7 +8314,7 @@
             const idx = regImg(urls, rec.recommendation, (fmtRecNo(rec.recNo) ? fmtRecNo(rec.recNo) + ' · ' : '') + rec.station, missing.length ? photoErrorText(missing[0]) : '', []);
             box.innerHTML = urls.map((u, i) => `<div class="thumb">${mediaThumb(u, `openImgAt(${idx}, ${i})`)}</div>`).join('') || '';
             if (missing.length) {
-                pn.textContent = (slots.length > 1 ? `${missing.length} of ${slots.length} photos unavailable. ` : '') + photoErrorText(missing[0]);
+                pn.textContent = (slots.length > 1 ? `${missing.length} of ${slots.length} unavailable. ` : '') + photoErrorText(missing[0]);
                 pn.classList.remove('hidden');
             }
         }
@@ -8386,7 +8397,7 @@
             const seq = siteSyncSeq;
             try {
                 const paths = photosAwaitingLinks.slice();
-                await withSyncBadge('photos', `Loading ${paths.length} photo${paths.length === 1 ? '' : 's'}...`, () => getSignedUrls(paths));
+                await withSyncBadge('photos', `Loading ${mediaCountText(paths)}...`, () => getSignedUrls(paths));
                 if (seq !== siteSyncSeq || !selectedClient) return;
                 const cache = await getSiteCache(selectedClient.id);
                 await buildSiteState(selectedClient.id, cache ? cache.rows : [], new Set(scannedBarcodesThisVisit), null, { quick: true });
@@ -10636,7 +10647,7 @@
                 if (dev && dev.visitRef) payloadData.supersedes = dev.visitRef;
                 const newBlobs = pendingPhotos.map(p => p.blob);
                 const newRec = f.recTitle || f.recommendation || newBlobs.length;
-                const photoBit = newBlobs.length ? ` + ${newBlobs.length} photo${newBlobs.length === 1 ? '' : 's'}` : '';
+                const photoBit = newBlobs.length ? ` + ${mediaCountText(pendingPhotos)}` : '';
                 await queueLog(currentBarcode, payloadData, null, `Service record · ${locNameInput}`);
                 for (const x of hit) await queueSiteChange({ action: 'limit_breach', title: `Critical limit exceeded: ${x.limit.zone} · ${limitPest(x.limit)}`,
                     detail: `${x.total} this month, limit ${x.limit.max_per_month} · ${locNameInput} (${f.speciesCaught} ×${pestN(f.speciesCaught, f.pestCount)})` });
