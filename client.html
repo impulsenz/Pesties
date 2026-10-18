@@ -416,7 +416,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.18-p16';
+const PORTAL_VERSION = '2026.10.18-p17';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -579,6 +579,8 @@ function openSettings() {
             <div><label class="lbl" for="setPeriod">Reports period</label><select id="setPeriod" class="field" onchange="savePrefs({ period: this.value }); setPreset(this.value, true); if (state.site) renderTab(); toast('Saved.')">${[['30d', 'Last 30 days'], ['90d', 'Last 3 months'], ['12m', 'Last 12 months'], ['ytd', 'This year'], ['all', 'All records']].map(([k, l]) => `<option value="${k}" ${p.period === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div></div>`)}
         ${sec('Notifications (the bell)', `<div class="inset p-3 space-y-2 text-sm">${BELL_TYPES.map(([k, l]) => `<label class="flex items-center gap-2.5 cursor-pointer"><input type="checkbox" class="w-4 h-4 accent-orange-500" data-bell="${k}" ${p.bell[k] === false ? '' : 'checked'} onchange="setBellPref(this.dataset.bell, this.checked)">${l}</label>`).join('')}</div>
             <button type="button" class="btn btn-secondary" onclick="markAllBellSeen(); toast('All notifications marked as seen.')">Mark all notifications as seen</button>`)}
+        ${sec('Photos', `<div class="inset p-3 space-y-2"><label class="lbl" for="setPhoto">Photo size when uploading</label><select id="setPhoto" class="field" onchange="savePrefs({ photo: this.value }); toast('Saved.')">${PHOTO_SIZES.map(([k, l]) => `<option value="${k}" ${photoSize()[0] === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
+            <p class="text-[11px] t-faint">Your phone makes photos smaller before they're sent, so uploads are quicker and use less data. Videos and documents upload as they are.</p></div>`)}
         ${sec('App', `<div class="inset p-3 space-y-2"><p class="text-xs t-muted">Not seeing the latest changes? <b class="t-strong">Check for updates</b> clears what this portal has saved on this device, signs you out and loads the newest version. Your settings are kept.</p>
             <div class="flex flex-wrap gap-2"><button type="button" id="settingsUpdateBtn" class="btn btn-primary" onclick="checkForUpdates()">⟳ Check for updates</button><button type="button" class="btn btn-secondary" onclick="signOut()">Sign out</button></div></div>`)}`;
     openModal();
@@ -1815,8 +1817,14 @@ $('recPhotoInput').addEventListener('change', e => {
     e.target.value = '';
     renderDraft();
 });
-// Photos are made smaller before upload (phones take very large photos)
+// Photos are made smaller before upload (phones take very large photos); the size is chosen in Settings
+const PHOTO_SIZES = [['original', 'Original (no shrinking)', 0, 1], ['best', 'Best quality', 3000, .92], ['high', 'High', 2048, .85], ['balanced', 'Balanced (recommended)', 1800, .82], ['small', 'Small - saves data', 1280, .72], ['smallest', 'Smallest - poor signal', 960, .62]];
+function photoSize() { const k = portalPrefs().photo || 'balanced'; return PHOTO_SIZES.find(x => x[0] === k) || PHOTO_SIZES[3]; }
 function shrinkImage(file, maxSide) {
+    const ps = photoSize();
+    if (!ps[2] && /^image\/(jpeg|png|webp)$/i.test(file.type || '')) return Promise.resolve(file);
+    if (ps[2]) maxSide = ps[2];
+    const quality = ps[2] ? ps[3] : .85;
     return new Promise(resolve => {
         const img = new Image();
         img.onload = () => {
@@ -1824,7 +1832,7 @@ function shrinkImage(file, maxSide) {
             const c = document.createElement('canvas');
             c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
             c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-            c.toBlob(b => resolve(b || file), 'image/jpeg', .85);
+            c.toBlob(b => resolve(b || file), 'image/jpeg', quality);
         };
         img.onerror = () => resolve(file);
         img.src = URL.createObjectURL(file);
@@ -3159,4 +3167,4 @@ async function buildAuditPack() {
 init();
 </script>
 </body>
-</html>
+    </html>
