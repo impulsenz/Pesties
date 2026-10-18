@@ -192,6 +192,10 @@
         .rec-grid-lg { grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); }
         .row-breach td { background: rgba(239, 68, 68, .09); }
         #limitStationPanel svg { max-width: 760px; display: block; margin: 0 auto; }
+        tr.sight-new td { background: rgba(220, 38, 38, .08); }
+        tr.sight-done td { background: rgba(16, 185, 129, .08); }
+        .live-dot { display: inline-block; width: .5rem; height: .5rem; border-radius: 999px; background: #10b981; box-shadow: 0 0 0 0 rgba(16, 185, 129, .6); animation: livePulse 2s infinite; vertical-align: middle; }
+        @keyframes livePulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, .6); } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
         tr.area-start td { border-top: 2px solid var(--border); }
         tr.row-selected td { box-shadow: inset 0 2px 0 #f97316, inset 0 -2px 0 #f97316; }
         tr.row-selected td:first-child { box-shadow: inset 2px 2px 0 #f97316, inset 0 -2px 0 #f97316; }
@@ -329,7 +333,7 @@
                     <div><label class="lbl" for="fTo">To</label><input id="fTo" type="date" class="field !w-auto !py-2" onchange="setCustomDates()"></div>
                     <div data-f="type"><label class="lbl" for="fType">Station type</label><select id="fType" class="field !w-auto !py-2 max-w-[15rem]" onchange="setTypeFilter(this.value)"></select></div>
                     <div data-f="map"><label class="lbl" for="fMap">Floor plan</label><select id="fMap" class="field !w-auto !py-2 max-w-[13rem]" onchange="F.map = this.value; renderTab();"></select></div>
-                    <div data-f="zone"><label class="lbl" for="fZone">Critical limits</label><select id="fZone" class="field !w-auto !py-2 max-w-[13rem]" onchange="F.zone = this.value; renderTab();"></select></div>
+                    <div data-f="zone"><label class="lbl" for="fZone">Area</label><select id="fZone" class="field !w-auto !py-2 max-w-[13rem]" onchange="F.zone = this.value; renderTab();"></select></div>
                     <div data-f="station"><label class="lbl" for="fStation">Station</label><select id="fStation" class="field !w-auto !py-2 max-w-[15rem]" onchange="F.station = this.value; renderTab();"></select></div>
                     <div data-f="species"><label class="lbl" for="fSpecies">Pest</label><select id="fSpecies" class="field !w-auto !py-2 max-w-[13rem]" onchange="F.species = this.value; renderTab();"></select></div>
                     <div data-f="prep"><label class="lbl" for="fPrep">Preparation</label><select id="fPrep" class="field !w-auto !py-2 max-w-[15rem]" onchange="F.prep = this.value; renderTab();"></select></div>
@@ -412,7 +416,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.18-p12';
+const PORTAL_VERSION = '2026.10.18-p15';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -424,6 +428,8 @@ const ACTIVITY_SCORE = { None: 0, Low: 1, Medium: 2, High: 3, Caught: 2 };
 const FREQUENCIES = { weekly: { label: 'Weekly', days: 7 }, fortnightly: { label: 'Fortnightly', days: 14 }, monthly: { label: 'Monthly', days: 31 },
     '6weekly': { label: 'Every 6 weeks', days: 42 }, bimonthly: { label: 'Every 2 months', days: 61 }, quarterly: { label: 'Quarterly', days: 92 },
     '6monthly': { label: 'Every 6 months', days: 183 }, annually: { label: 'Annually', days: 366 }, oneoff: { label: 'One-off / On request' } };
+// Critical limits are switched off while they are rebuilt: no tab, filter, column, alert or notification.
+const LIMITS_ON = !!window.__limitsOn;
 const STATUS = { open: { label: 'Open', cls: 'chip-red' }, pending: { label: 'Pending', cls: 'chip-amber' }, complete: { label: 'Complete', cls: 'chip-green' } };
 const DOC_CATEGORIES = ['Service agreement', 'SDS', 'Insurance', 'Site map', 'Certificates', 'Reports', 'Other'];
 const OVERDUE_GRACE_DAYS = 7;
@@ -544,13 +550,14 @@ async function signInWithGoogle() {
     if (error) loginMessage('Sign-in failed: ' + esc(error.message), 'error');
 }
 async function signOut() {
+    stopLive();
     try { await sb.auth.signOut(); } catch (e) {}
     state.me = null; state.sites = []; state.site = null; state.data = null;
     history.replaceState(null, '', portalUrl());
     showLogin('You have signed out.');
 }
 const PREFS_KEY = () => 'pestis-portal-settings:' + ((state.me && state.me.email) || '');
-const BELL_TYPES = [['visit', 'New service reports'], ['rec', 'New recommendations'], ['lim', 'Critical limits exceeded'], ['sight', 'Pest sightings to review'], ['doc', 'Documents expiring']];
+const BELL_TYPES = [['visit', 'New service reports'], ['rec', 'New recommendations'], ...(LIMITS_ON ? [['lim', 'Critical limits exceeded']] : []), ['sight', 'Pest sightings to review'], ['doc', 'Documents expiring']];
 function portalPrefs() { let p = {}; try { p = JSON.parse(localStorage.getItem(PREFS_KEY()) || '{}') || {}; } catch (e) {} return Object.assign({ startTab: 'overview', period: '12m', bell: {} }, p); }
 function savePrefs(change) { const p = Object.assign(portalPrefs(), change); try { localStorage.setItem(PREFS_KEY(), JSON.stringify(p)); } catch (e) {} return p; }
 function startTab() { const t = portalPrefs().startTab; return TABS.some(x => x[0] === t) ? t : 'overview'; }
@@ -831,15 +838,15 @@ function renderPicker() {
 //  ONE SITE: load everything once, then each tab is worked out on this device
 // ===================================================================
 const TABS = [
-    ['overview', 'Overview'], ['recs', 'Recommendations'], ['sightings', 'Pest sightings'], ['reports', 'Reports'], ['limits', 'Critical limits'], ['stations', 'Station register'], ['chemicals', 'Preparations'],
+    ['overview', 'Overview'], ['recs', 'Recommendations'], ['sightings', 'Pest sightings'], ['reports', 'Reports'], ...(LIMITS_ON ? [['limits', 'Critical limits']] : []), ['stations', 'Station register'], ['chemicals', 'Preparations'],
     ['activity', 'Pest activity'], ['visits', 'Visits'], ['documents', 'Documents'], ['plans', 'Floor plans'], ['techs', 'Technicians']
 ];
 // which filters each report tab offers (hidden filters are not applied)
 const TAB_FILTERS = {
-    reports: ['type', 'map', 'zone', 'station', 'species', 'tech'],
-    stations: ['type', 'map', 'zone', 'q'],
+    reports: ['type', 'map', 'zone', 'station', 'species', 'tech'].filter(k => LIMITS_ON || k !== 'zone'),
+    stations: ['type', 'map', 'zone', 'q'].filter(k => LIMITS_ON || k !== 'zone'),
     chemicals: ['station', 'prep', 'batch', 'tech', 'map'],
-    activity: ['type', 'map', 'zone', 'station', 'species'],
+    activity: ['type', 'map', 'zone', 'station', 'species'].filter(k => LIMITS_ON || k !== 'zone'),
     visits: ['tech', 'q']
 };
 const FILTER_KEYS = ['type', 'map', 'zone', 'station', 'species', 'prep', 'batch', 'tech', 'q'];
@@ -889,6 +896,60 @@ async function fetchAll(table, cid, cols, orderCol) {
         from += PAGE;
     }
 }
+// ---------- Live updates (Supabase Realtime) ----------
+const LIVE_MAP = { service_logs: 'logs', stations: 'stations', site_maps: 'maps', visits: 'visits', recommendations: 'recs', recommendation_updates: 'updates',
+    site_documents: 'docs', site_document_folders: 'folders', pest_sightings: 'sightings', recommendation_views: 'views' };
+let live = { ch: null, site: null, state: 'off', timer: null, refetch: new Set() };
+function stopLive() { if (live.ch) { try { sb.removeChannel(live.ch); } catch (e) {} } live.ch = null; live.site = null; live.state = 'off'; }
+function startLive(site) {
+    stopLive();
+    if (!site || typeof sb.channel !== 'function') return;
+    const cid = String(site.id);
+    live.site = cid;
+    let ch = sb.channel('portal-site-' + cid);
+    Object.keys(LIVE_MAP).forEach(t => {
+        ch = ch.on('postgres_changes', { event: '*', schema: 'public', table: t, filter: `client_id=eq.${cid}` }, p => onLive(cid, t, p))
+               .on('postgres_changes', { event: 'DELETE', schema: 'public', table: t }, p => onLive(cid, t, p));   // deletes can't be filtered by site
+    });
+    live.ch = ch.subscribe(status => { live.state = status === 'SUBSCRIBED' ? 'live' : status === 'CLOSED' ? 'off' : 'connecting'; renderLiveBadge(); });
+}
+function renderLiveBadge() { const el = $('liveBadge'); if (el) el.classList.toggle('hidden', live.state !== 'live'); }
+function onLive(cid, table, p) {
+    if (!state.site || String(state.site.id) !== cid || !state.data) return;
+    const key = LIVE_MAP[table], type = p.eventType || p.type, row = p.new || {}, old = p.old || {};
+    const list = state.data[key] || (state.data[key] = []);
+    if (table === 'service_logs' || table === 'recommendation_views') {
+        // these rows have no simple id: take the new row, or fetch the list again for a change or delete
+        if (type === 'INSERT' && table === 'service_logs' && String(row.client_id) === cid) list.push({ barcode_id: row.barcode_id, payload: row.payload, created_at: row.created_at });
+        else if (type !== 'DELETE' || old.id) live.refetch.add(table);
+        else return;
+    } else if (type === 'DELETE') {
+        const i = list.findIndex(r => r.id === old.id);
+        if (i < 0) return;
+        list.splice(i, 1);
+    } else {
+        if (String(row.client_id) !== cid) return;
+        const i = list.findIndex(r => r.id === row.id);
+        if (i >= 0) list[i] = Object.assign({}, list[i], row); else list.push(row);
+    }
+    clearTimeout(live.timer);
+    live.timer = setTimeout(() => applyLive(cid), 500);
+}
+async function applyLive(cid) {
+    if (!state.site || String(state.site.id) !== cid) return;
+    for (const t of Array.from(live.refetch)) {
+        try { state.data[LIVE_MAP[t]] = await fetchAll(t, cid, t === 'service_logs' ? 'barcode_id, payload, created_at' : undefined, t === 'service_logs' ? 'created_at' : undefined); } catch (e) {}
+    }
+    live.refetch.clear();
+    if (!state.site || String(state.site.id) !== cid) return;
+    state.model = buildModel(state.site, state.data);
+    fillFilterOptions();
+    renderBell();
+    // don't redraw under someone's typing; it catches up on the next change or tab
+    const a = document.activeElement;
+    if (a && $('tabBody').contains(a) && /input|textarea|select/i.test(a.tagName)) { renderSiteHeader(); return; }
+    renderTab();
+}
 async function loadSiteData(site) {
     const cid = String(site.id);
     const step = (k, pr) => pr.then(v => { loadStep(k); return v; });
@@ -913,6 +974,7 @@ async function loadSiteData(site) {
     state.stationTypes = types || [];
     state.speciesList = species || [];
     state.data = { logs, stations, maps, visits, recs, updates, docs, folders, limits, views, sightings };
+    startLive(site);
     state.model = buildModel(site, state.data);
     state.links = new Map();
     fillFilterOptions();
@@ -1001,7 +1063,7 @@ function buildModel(site, d) {
 
     const maps = d.maps.slice().sort((a, b) => (a.sort || 0) - (b.sort || 0));
     const docs = d.docs.slice().sort((a, b) => String(a.title).localeCompare(String(b.title), undefined, { sensitivity: 'base' }));
-    const limits = (d.limits || []).map(l => ({ id: l.id, zone: String(l.zone || '').trim(), species: l.species || '*', max: Number(l.max_per_month) || 0, notes: l.notes || '', by: l.updated_by || '', at: l.updated_at }))
+    const limits = (LIMITS_ON ? (d.limits || []) : []).map(l => ({ id: l.id, zone: String(l.zone || '').trim(), species: l.species || '*', max: Number(l.max_per_month) || 0, notes: l.notes || '', by: l.updated_by || '', at: l.updated_at }))
         .sort((a, b) => a.zone.localeCompare(b.zone, undefined, { sensitivity: 'base' }) || a.species.localeCompare(b.species));
     const views = new Map();
     (d.views || []).forEach(v => { const l = views.get(v.rec_id) || []; l.push(v); views.set(v.rec_id, l); });
@@ -1045,7 +1107,8 @@ function renderSiteHeader() {
     $('siteCoverWrap').classList.toggle('hidden', !cover);
     if (cover) $('siteCover').src = cover;
     const lastVisit = m.visits[m.visits.length - 1];
-    $('siteMeta').textContent = [s.technician ? 'Your technician: ' + s.technician : '', lastVisit ? 'Last service ' + fmtDate(lastVisit.completed) : ''].filter(Boolean).join(' · ');
+    $('siteMeta').innerHTML = esc([s.technician ? 'Your technician: ' + s.technician : '', lastVisit ? 'Last service ' + fmtDate(lastVisit.completed) : ''].filter(Boolean).join(' · '))
+        + ` <span id="liveBadge" class="${live.state === 'live' ? '' : 'hidden'} ml-1 text-[11px] font-bold" style="color:#10b981;" title="Changes from Pesties show here straight away"><span class="live-dot"></span> Live</span>`;
     const openRecs = m.recs.filter(r => r.status !== 'complete').length;
     const toReview = (m.sightings || []).filter(x => x.status === 'actioned').length;
     $('siteTabs').innerHTML = TABS.map(([k, l]) => `<button type="button" class="nav-tab ${state.tab === k ? 'active' : ''}" onclick="setTab('${k}')">${l}${k === 'recs' && openRecs ? `<span class="count">${openRecs}</span>` : ''}${k === 'sightings' && toReview ? `<span class="count" title="Actioned by your technician, waiting for your review">${toReview}</span>` : ''}</button>`).join('');
@@ -1101,7 +1164,7 @@ function allStationTypes() {
 const sameType = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 // flying and crawling insect stations are the ones with critical limits
 function isInsectType(type) { const t = String(type || '').toLowerCase(); return STATION_COLORS.filter(c => c.key === 'flying' || c.key === 'crawling').some(c => c.test(t)) && !/rodent|rat|mouse|mice/.test(t); }
-function zoneFilterOn() { return isInsectType(F.type); }
+function zoneFilterOn() { return LIMITS_ON && isInsectType(F.type); }
 // the Station list (and critical limits areas) only offer what belongs to the station type picked
 function fillStationOptions() {
     const m = state.model;
@@ -1259,7 +1322,7 @@ function ovStationCards() {
     return list.map(x => `<button type="button" class="st-card" onclick="showStation('${esc(x.barcode)}')">
         <div class="st-card-media" ${x.photoPath ? `data-st-photo="${esc(x.photoPath)}"` : ''} style="${x.photoPath ? '' : `background:${stationColor(x.type)}22;`}">${x.photoPath ? '<span class="text-[11px] t-faint">Loading...</span>' : typeDot(x.type)}</div>
         <div class="p-2.5 space-y-0.5"><div class="font-bold t-strong text-sm truncate">${esc(x.name)}</div>
-            <div class="text-[11px] t-muted truncate">${esc(x.type || 'Station')}${x.zone ? ' · ' + esc(x.zone) : ''}</div>
+            <div class="text-[11px] t-muted truncate">${esc(x.type || 'Station')}${LIMITS_ON && x.zone ? ' · ' + esc(x.zone) : ''}</div>
             <div class="flex items-center gap-1.5 flex-wrap">${x.last ? activityChip(x.last.activity) : '<span class="chip chip-grey">Not checked</span>'}${x.overdue ? '<span class="chip chip-red">Overdue</span>' : ''}</div></div></button>`).join('');
 }
 async function fillStationCardPhotos(box) {
@@ -1284,8 +1347,8 @@ function showStationList() {
     openModal();
 }
 function stationTableHtml(list) {
-    return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Station</th><th>Type</th><th>Critical limits</th><th>Floor plan</th><th>Last checked</th></tr></thead><tbody>${list.map(x => `
-        <tr class="clickable" onclick="showStation('${esc(x.barcode)}')"><td>${stationCell(x)}</td><td class="t-muted">${esc(x.type || '-')}</td><td class="t-muted">${esc(x.zone || '-')}</td><td class="t-muted">${esc(mapName(x.mapId) || '-')}</td>
+    return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Station</th><th>Type</th>${LIMITS_ON ? '<th>Critical limits</th>' : ''}<th>Floor plan</th><th>Last checked</th></tr></thead><tbody>${list.map(x => `
+        <tr class="clickable" onclick="showStation('${esc(x.barcode)}')"><td>${stationCell(x)}</td><td class="t-muted">${esc(x.type || '-')}</td>${LIMITS_ON ? `<td class="t-muted">${esc(x.zone || '-')}</td>` : ''}<td class="t-muted">${esc(mapName(x.mapId) || '-')}</td>
         <td>${x.lastAt ? fmtDate(x.lastAt) : '<span class="t-faint">Never</span>'}${x.overdue ? ' <span class="chip chip-red !py-0">Overdue</span>' : ''}</td></tr>`).join('') || '<tr><td colspan="5" class="t-faint italic text-center p-5">No stations.</td></tr>'}</tbody></table></div>`;
 }
 function mapName(id) { const p = id && state.model.maps.find(x => x.id === id); return p ? p.name : ''; }
@@ -1829,11 +1892,11 @@ function showViewerItem() {
 // ---------- Reports: build a trend chart, a summary table or the raw records, for any part of the site ----------
 const REP = { style: 'trend', measure: 'count', group: 'species' };
 const MEASURES = { count: 'Pests caught / sighted', activity: 'Average activity level (0-3)', checks: 'Station checks', apps: 'Preparation applications' };
-const GROUPS = { species: 'Pest', station: 'Station', type: 'Station type', zone: 'Critical limits area', map: 'Floor plan', tech: 'Technician', month: 'Month', none: 'Whole site' };
+const GROUPS = Object.assign({ species: 'Pest', station: 'Station', type: 'Station type' }, LIMITS_ON ? { zone: 'Critical limits area' } : {}, { map: 'Floor plan', tech: 'Technician', month: 'Month', none: 'Whole site' });
 const REPORT_PRESETS = [
     ['📈 Pest trend by species', { style: 'trend', measure: 'count', group: 'species' }],
     ['🏷 Pests by station', { style: 'summary', measure: 'count', group: 'station' }],
-    ['🗺 Activity by zone', { style: 'trend', measure: 'activity', group: 'zone' }],
+    ...(LIMITS_ON ? [['🗺 Activity by zone', { style: 'trend', measure: 'activity', group: 'zone' }]] : []),
     ['🧭 Activity by station type', { style: 'summary', measure: 'activity', group: 'type' }],
     ['🗓 Monthly summary', { style: 'summary', measure: 'count', group: 'month' }],
     ['🧪 Preparations by station', { style: 'summary', measure: 'apps', group: 'station' }],
@@ -1897,12 +1960,12 @@ function renderReports() {
     } else {
         const rows = list.slice().reverse();
         out = `<p class="text-[11px] t-faint">${rows.length > 500 ? `Showing the latest 500 of ${rows.length} records. Download the Excel file for all of them.` : plural(rows.length, 'record')}</p>
-            <div class="tbl-wrap max-h-[70vh] overflow-y-auto scroll-thin"><table class="tbl"><thead><tr><th>Date</th><th>Station</th><th>Critical limits</th><th>Activity</th><th>Pest</th><th class="num">No.</th><th>Preparation</th><th>Batch</th><th>Technician</th><th>Notes</th></tr></thead><tbody>
-            ${rows.slice(0, 500).map(e => `<tr class="clickable" onclick="showStation('${esc(e.barcode)}')"><td>${fmtDateTime(e.at)}</td><td>${stationCell(e.station || e)}</td><td class="t-muted">${esc(e.zone || '-')}</td><td>${activityChip(e.activity)}</td><td>${esc(e.species || '-')}</td><td class="num">${e.count || ''}</td><td>${esc(e.prep || '-')}${e.prep && e.qty != null ? `<div class="t-faint text-[11px]">${fmtQty(e.qty, e.unit)}</div>` : ''}</td><td class="mono">${esc(e.batch || '')}</td><td class="t-muted">${esc(e.tech || '')}</td><td class="t-muted">${esc(e.notes || '')}</td></tr>`).join('') || '<tr><td colspan="10" class="t-faint italic text-center p-6">No records match these filters.</td></tr>'}</tbody></table></div>`;
+            <div class="tbl-wrap max-h-[70vh] overflow-y-auto scroll-thin"><table class="tbl"><thead><tr><th>Date</th><th>Station</th>${LIMITS_ON ? '<th>Critical limits</th>' : ''}<th>Activity</th><th>Pest</th><th class="num">No.</th><th>Preparation</th><th>Batch</th><th>Technician</th><th>Notes</th></tr></thead><tbody>
+            ${rows.slice(0, 500).map(e => `<tr class="clickable" onclick="showStation('${esc(e.barcode)}')"><td>${fmtDateTime(e.at)}</td><td>${stationCell(e.station || e)}</td>${LIMITS_ON ? `<td class="t-muted">${esc(e.zone || '-')}</td>` : ''}<td>${activityChip(e.activity)}</td><td>${esc(e.species || '-')}</td><td class="num">${e.count || ''}</td><td>${esc(e.prep || '-')}${e.prep && e.qty != null ? `<div class="t-faint text-[11px]">${fmtQty(e.qty, e.unit)}</div>` : ''}</td><td class="mono">${esc(e.batch || '')}</td><td class="t-muted">${esc(e.tech || '')}</td><td class="t-muted">${esc(e.notes || '')}</td></tr>`).join('') || '<tr><td colspan="10" class="t-faint italic text-center p-6">No records match these filters.</td></tr>'}</tbody></table></div>`;
     }
     $('tabBody').innerHTML = `
         <div class="card p-5 space-y-4">
-            <div><h3 class="font-black t-strong">Reports</h3><p class="text-xs t-muted">Pick a ready-made report or build your own. Use the filters above for the period, a station type, one station, a critical limits area, a floor plan or a pest. Download any report as an Excel spreadsheet or a PDF.</p></div>
+            <div><h3 class="font-black t-strong">Reports</h3><p class="text-xs t-muted">Pick a ready-made report or build your own. Use the filters above for the period, a station type, one station, a floor plan or a pest. Download any report as an Excel spreadsheet or a PDF.</p></div>
             <div class="flex flex-wrap gap-1.5">${REPORT_PRESETS.map((pr, i) => `<button type="button" class="tab-btn ${isPreset(pr) ? 'active' : ''}" onclick="Object.assign(REP, REPORT_PRESETS[${i}][1]); renderReports();">${pr[0]}</button>`).join('')}</div>
             <div class="flex flex-wrap items-end gap-3 inset p-3">
                 ${sel('repStyle', { trend: 'Trend chart', summary: 'Summary table', raw: 'Raw records' }, REP.style, 'Report style')}
@@ -1922,6 +1985,7 @@ function renderReports() {
 // The client reports a pest they saw; the technician actions it and signs it off; the client reviews it.
 const fmtSightNo = n => n != null ? 'PS-' + n : 'PS';
 const SIGHT_STATUS = { new: ['chip-red', 'Reported · with your technician'], actioned: ['chip-amber', 'Actioned · please review'], reviewed: ['chip-green', 'Reviewed · closed'] };
+const sightTint = x => x.status === 'new' ? 'border-color:#dc2626;background:rgba(220,38,38,.10);' : 'border-color:#10b981;background:rgba(16,185,129,.10);';
 const sightChip = st => { const s = SIGHT_STATUS[st] || SIGHT_STATUS.new; return `<span class="chip ${s[0]}">${s[1]}</span>`; };
 const EVIDENCE = ['Live pest', 'Dead pest', 'Droppings', 'Gnawing or damage', 'Nest or burrow', 'Smell or noise', 'Other'];
 const COMMON_PESTS = ['Rat', 'Mouse', 'Cockroach', 'Ant', 'House fly', 'Fruit fly', 'Wasp', 'Bee', 'Bird', 'Spider', 'Stored product insect', 'Moth', 'Silverfish', 'Flea', 'Bed bug', 'Possum'];
@@ -1946,13 +2010,13 @@ function renderSightings() {
             ${pests.size ? `<div class="flex flex-wrap gap-1.5 text-xs"><span class="t-faint">Last 12 months:</span>${Array.from(pests.entries()).sort((a, b) => b[1] - a[1]).map(([p, c]) => `<span class="chip chip-grey">${esc(p)} · ${c}</span>`).join('')}</div>` : ''}
         </div>
         <div class="card p-4 space-y-2 sm:hidden">
-            ${list.map(x => `<button type="button" class="row-item clickable w-full text-left p-3 space-y-1" data-sight="${esc(x.id)}" onclick="showSighting(this.dataset.sight)">
+            ${list.map(x => `<button type="button" class="row-item clickable w-full text-left p-3 space-y-1" data-sight="${esc(x.id)}" onclick="showSighting(this.dataset.sight)" style="${sightTint(x)}">
                 <div class="flex items-start justify-between gap-2"><span class="font-bold t-strong">${fmtSightNo(x.no)} · ${esc(x.pest)}${x.urgency === 'Urgent' ? ' <span class="chip chip-red !py-0">Urgent</span>' : ''}</span>${sightChip(x.status)}</div>
                 <div class="text-xs t-muted">${esc(x.location)} · ${fmtDateTime(x.seenAt)}${x.number != null ? ' · ' + x.number + ' seen' : ''}</div></button>`).join('') || emptyNote('No sightings reported yet.')}
         </div>
         <div class="card p-5 space-y-3 hidden sm:block">
             <div class="tbl-wrap"><table class="tbl"><thead><tr><th>No.</th><th>Seen</th><th>Pest</th><th>Where</th><th class="num">Number</th><th>What was seen</th><th>Reported by</th><th>Status</th></tr></thead><tbody>
-                ${list.map(x => `<tr class="clickable" data-sight="${esc(x.id)}" onclick="showSighting(this.dataset.sight)">
+                ${list.map(x => `<tr class="clickable ${x.status === 'new' ? 'sight-new' : 'sight-done'}" data-sight="${esc(x.id)}" onclick="showSighting(this.dataset.sight)">
                     <td class="mono font-bold whitespace-nowrap">${fmtSightNo(x.no)}${x.urgency === 'Urgent' ? ' <span class="chip chip-red !py-0">Urgent</span>' : ''}</td>
                     <td class="whitespace-nowrap">${fmtDateTime(x.seenAt)}</td><td class="font-bold t-strong">${esc(x.pest)}</td>
                     <td>${esc(x.location)}${x.station ? `<div class="t-faint text-[11px]">near ${esc(stationName(x.station))}</div>` : ''}</td>
@@ -1961,13 +2025,13 @@ function renderSightings() {
             </tbody></table></div>
         </div>`;
 }
-function stationName(barcode) { const s = state.model.stations.find(x => x.barcode === barcode); return s ? `${s.name} (${s.barcode})` : barcode; }
+function stationName(barcode) { const s = state.model.stations.find(x => x.barcode === barcode); return s ? s.name : barcode; }
 function nowLocal() { const d = new Date(Date.now() - new Date().getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); }
 function openSightingForm() {
     const m = state.model, me = state.me || {};
     sightDraft = { files: [] };
     const pests = sortText(COMMON_PESTS.concat(state.speciesList || [], m.entries.map(e => e.species), (m.sightings || []).map(x => x.pest)));
-    const places = sortText(m.stations.map(s => s.name).concat(m.maps.map(p => p.name), m.stations.map(s => s.zone)));
+    sightDraft.stations = sightStationOptions();
     $('modalEyebrow').textContent = 'Pest sighting register';
     $('modalTitle').textContent = 'Report a pest sighting';
     $('modalSub').textContent = siteName(state.site);
@@ -1975,16 +2039,26 @@ function openSightingForm() {
     $('modalBody').innerHTML = `<form id="sightForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3" onsubmit="event.preventDefault(); saveSighting();">
         <div><label class="lbl" for="sgPest">Pest seen <span style="color:#ef4444;">*</span></label><input id="sgPest" list="sgPests" required maxlength="80" class="field" placeholder="e.g. Rat, Cockroach, Fly"><datalist id="sgPests">${pests.map(x => `<option value="${esc(x)}">`).join('')}</datalist></div>
         <div><label class="lbl" for="sgEvidence">What was seen</label><select id="sgEvidence" class="field">${EVIDENCE.map(x => `<option>${x}</option>`).join('')}</select></div>
-        <div><label class="lbl" for="sgLocation">Where it was seen <span style="color:#ef4444;">*</span></label><input id="sgLocation" list="sgPlaces" required maxlength="120" class="field" placeholder="e.g. Behind the dock fridge"><datalist id="sgPlaces">${places.map(x => `<option value="${esc(x)}">`).join('')}</datalist></div>
-        <div><label class="lbl" for="sgStation">Nearest station (optional)</label><select id="sgStation" class="field"><option value="">Not sure / none nearby</option>${m.stations.map(s => `<option value="${esc(s.barcode)}">${esc(s.name)} (${esc(s.barcode)})</option>`).join('')}</select></div>
+        <div><label class="lbl" for="sgLocation">Where it was seen <span style="color:#ef4444;">*</span></label><input id="sgLocation" type="search" name="sg-where-${Date.now()}" required maxlength="120" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-form-type="other" class="field" placeholder="Type where, e.g. behind the dock fridge"></div>
+        <div><label class="lbl" for="sgStation">Nearest station (optional)</label><input id="sgStation" type="search" name="sg-station-${Date.now()}" list="sgStations" autocomplete="off" data-lpignore="true" data-form-type="other" class="field" placeholder="Type to search by station name"><datalist id="sgStations">${sightDraft.stations.map(o => `<option value="${esc(o.label)}">`).join('')}</datalist></div>
         <div><label class="lbl" for="sgSeenAt">When <span style="color:#ef4444;">*</span></label><input id="sgSeenAt" type="datetime-local" required class="field" value="${nowLocal()}" max="${nowLocal()}"></div>
         <div><label class="lbl" for="sgNumber">How many</label><input id="sgNumber" type="number" min="0" step="1" class="field" placeholder="e.g. 1"></div>
         <div><label class="lbl" for="sgReportedBy">Reported by <span style="color:#ef4444;">*</span></label><input id="sgReportedBy" required maxlength="80" class="field" value="${esc(me.name || '')}"></div>
         <div><label class="lbl" for="sgContact">Contact phone or email</label><input id="sgContact" maxlength="120" class="field" value="${esc(me.email || '')}"></div>
         <div class="sm:col-span-2"><span class="lbl">Urgency</span><div class="flex gap-4 text-sm"><label class="flex items-center gap-2"><input type="radio" name="sgUrgency" value="Routine" checked> Routine</label><label class="flex items-center gap-2"><input type="radio" name="sgUrgency" value="Urgent"> <span style="color:#dc2626;" class="font-bold">Urgent</span> <span class="t-faint text-xs">(food safety risk, an infestation, pests in a production area)</span></label></div></div>
         <div class="sm:col-span-2"><label class="lbl" for="sgDetails">Details</label><textarea id="sgDetails" rows="3" maxlength="2000" class="field" placeholder="What happened, anything already done (e.g. area cleaned, product removed)..."></textarea></div>
-        <div class="sm:col-span-2 flex flex-wrap items-center gap-2"><button type="button" class="btn btn-secondary" onclick="$('sightPhotoInput').click()">📷 Add photos</button><span class="text-[11px] t-faint">Photos help your technician find and identify the pest.</span>
-            <input type="file" id="sightPhotoInput" accept="image/*" multiple class="hidden" onchange="addSightPhotos(this)"></div>
+        <div class="sm:col-span-2 space-y-1.5"><span class="lbl">Photos and videos</span>
+            <div class="flex flex-wrap items-center gap-2">
+                <button type="button" class="btn btn-secondary" onclick="$('sightCameraInput').click()">📷 Take photo</button>
+                <button type="button" class="btn btn-secondary" onclick="$('sightVideoInput').click()">🎥 Record video</button>
+                <button type="button" class="btn btn-secondary" onclick="$('sightPhotoInput').click()">🖼 Photos from device</button>
+                <button type="button" class="btn btn-secondary" onclick="$('sightVideoFileInput').click()">🎞 Videos from device</button>
+            </div>
+            <span class="text-[11px] t-faint block">Take a photo or video now, or choose ones already saved on this device. Up to 10 files; videos up to ${VIDEO_MAX_MB} MB each.</span>
+            <input type="file" id="sightCameraInput" accept="image/*" capture="environment" class="hidden" onchange="addSightPhotos(this)">
+            <input type="file" id="sightVideoInput" accept="video/*" capture="environment" class="hidden" onchange="addSightPhotos(this)">
+            <input type="file" id="sightPhotoInput" accept="image/*" multiple class="hidden" onchange="addSightPhotos(this)">
+            <input type="file" id="sightVideoFileInput" accept="video/*" multiple class="hidden" onchange="addSightPhotos(this)"></div>
         <div id="sightPhotos" class="sm:col-span-2 flex flex-wrap gap-2"></div>
     </form>`;
     $('modalFoot').innerHTML = `<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button><button type="button" id="sightSaveBtn" class="btn btn-primary" onclick="saveSighting()">Report sighting</button>`;
@@ -1992,10 +2066,24 @@ function openSightingForm() {
     openModal();
     $('sgPest').focus();
 }
+// the client's stations by name (no barcodes), for the searchable "nearest station" box
+function sightStationOptions() {
+    const count = new Map();
+    state.model.stations.forEach(s => count.set(s.name, (count.get(s.name) || 0) + 1));
+    return state.model.stations.map(s => ({ barcode: s.barcode, label: count.get(s.name) > 1 ? `${s.name} · ${s.type || 'station'}${s.zone ? ' · ' + s.zone : ''}` : s.name }))
+        .sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true, sensitivity: 'base' }));
+}
 function addSightPhotos(input) {
-    Array.from(input.files || []).forEach(f => { if (/^image\//.test(f.type) && sightDraft && sightDraft.files.length < 10) sightDraft.files.push({ file: f, url: URL.createObjectURL(f) }); });
+    Array.from(input.files || []).forEach(f => {
+        if (!sightDraft) return;
+        const video = /^video\//.test(f.type) || isVideo(f.name);
+        if (!video && !/^image\//.test(f.type)) { alert(`"${f.name}" isn't a photo or video.`); return; }
+        if (video && f.size > VIDEO_MAX_MB * 1048576) { alert(`"${f.name}" is ${Math.round(f.size / 1048576)} MB. Videos can be up to ${VIDEO_MAX_MB} MB, so please trim it first.`); return; }
+        if (sightDraft.files.length >= 10) { alert('Up to 10 photos or videos per sighting.'); return; }
+        sightDraft.files.push({ file: f, url: URL.createObjectURL(f), video });
+    });
     input.value = '';
-    $('sightPhotos').innerHTML = sightDraft.files.map((f, i) => `<div class="thumb"><img src="${esc(f.url)}" alt=""><button type="button" class="thumb-x" onclick="sightDraft.files.splice(${i}, 1); addSightPhotos({ files: [] })" aria-label="Remove">✕</button></div>`).join('');
+    $('sightPhotos').innerHTML = sightDraft.files.map((f, i) => `<div class="thumb">${f.video ? `<video src="${esc(f.url)}" muted preload="metadata"></video><span class="play">▶</span>` : `<img src="${esc(f.url)}" alt="">`}<button type="button" class="thumb-x" onclick="sightDraft.files.splice(${i}, 1); addSightPhotos({ files: [] })" aria-label="Remove">✕</button></div>`).join('');
 }
 async function saveSighting() {
     const v = id => ($(id).value || '').trim();
@@ -2006,20 +2094,27 @@ async function saveSighting() {
     if (!who) { alert('Enter who is reporting it.'); $('sgReportedBy').focus(); return; }
     const seenAt = new Date(when);
     if (isNaN(seenAt) || seenAt.getTime() > Date.now() + 3600000) { alert('The time seen can\'t be in the future.'); return; }
+    const stName = v('sgStation').toLowerCase();
+    const stPick = stName ? (sightDraft.stations || []).find(o => o.label.toLowerCase() === stName) || (sightDraft.stations || []).find(o => o.label.toLowerCase().startsWith(stName)) : null;
+    if (stName && !stPick && !confirm(`"${v('sgStation')}" doesn't match a station on this site. Report the sighting without a nearest station?`)) { $('sgStation').focus(); return; }
     const btn = $('sightSaveBtn'); btn.disabled = true; btn.textContent = sightDraft.files.length ? 'Uploading...' : 'Saving...';
     try {
         const paths = [], stamp = Date.now();
         for (let i = 0; i < sightDraft.files.length; i++) {
-            const path = `${state.site.id}/CLIENT_sighting_${stamp}_${i + 1}.jpg`;
-            const { error } = await sb.storage.from(PHOTO_BUCKET).upload(path, await shrinkImage(sightDraft.files[i].file, 1800), { contentType: 'image/jpeg', upsert: false });
-            if (error) throw new Error('Photo upload failed: ' + error.message);
+            const f = sightDraft.files[i];
+            // photos are made smaller; videos go up as they are
+            const ext = f.video ? ((f.file.name.match(/\.(mp4|webm|mov|m4v|3gp)$/i) || [, (f.file.type.split('/')[1] || 'mp4')])[1]).toLowerCase().replace('quicktime', 'mov') : 'jpg';
+            const path = `${state.site.id}/CLIENT_sighting_${stamp}_${i + 1}.${ext}`;
+            btn.textContent = `Uploading ${i + 1} of ${sightDraft.files.length}...`;
+            const { error } = await sb.storage.from(PHOTO_BUCKET).upload(path, f.video ? f.file : await shrinkImage(f.file, 1800), { contentType: f.video ? (f.file.type || 'video/mp4') : 'image/jpeg', upsert: false });
+            if (error) throw new Error((f.video ? 'Video' : 'Photo') + ' upload failed: ' + error.message);
             paths.push(path);
         }
         const num = v('sgNumber');
         const { data, error } = await sb.rpc('portal_report_sighting', {
             p_client_id: String(state.site.id), p_pest: pest, p_location: location, p_seen_at: seenAt.toISOString(), p_number: num === '' ? null : Math.max(0, Math.round(Number(num))),
             p_evidence: v('sgEvidence') || null, p_urgency: (document.querySelector('input[name=sgUrgency]:checked') || {}).value || 'Routine', p_reported_by: who,
-            p_contact: v('sgContact') || null, p_details: v('sgDetails') || null, p_photos: paths, p_station: v('sgStation') || null });
+            p_contact: v('sgContact') || null, p_details: v('sgDetails') || null, p_photos: paths, p_station: stPick ? stPick.barcode : null });
         if (error) throw error;
         sightDraft.files.forEach(f => URL.revokeObjectURL(f.url)); sightDraft = null;
         await reloadSightings();
@@ -2241,12 +2336,12 @@ function renderStations() {
             </div>
             <div class="tbl-wrap max-h-[70vh] overflow-y-auto scroll-thin">
                 <table class="tbl">
-                    <thead><tr>${th('name', 'Station')}${th('type', 'Type')}<th>Critical limits</th><th>Floor plan</th>${th('last', 'Last checked')}${th('days', 'Days since', 'num')}<th>Last activity</th><th>Last preparation</th>${th('checks', 'Checks', 'num')}${th('caught', 'Pests caught', 'num')}</tr></thead>
+                    <thead><tr>${th('name', 'Station')}${th('type', 'Type')}${LIMITS_ON ? '<th>Critical limits</th>' : ''}<th>Floor plan</th>${th('last', 'Last checked')}${th('days', 'Days since', 'num')}<th>Last activity</th><th>Last preparation</th>${th('checks', 'Checks', 'num')}${th('caught', 'Pests caught', 'num')}</tr></thead>
                     <tbody>${rows.map(r => `
                         <tr class="clickable" onclick="showStation('${esc(r.s.barcode)}')">
                             <td>${stationCell(r.s)}</td>
                             <td class="t-muted">${esc(r.s.type || '-')}</td>
-                            <td class="t-muted">${esc(r.s.zone || '-')}</td>
+                            ${LIMITS_ON ? `<td class="t-muted">${esc(r.s.zone || '-')}</td>` : ''}
                             <td class="t-muted">${esc(mapName(r.s.mapId) || '-')}</td>
                             <td>${r.s.lastAt ? `${fmtDate(r.s.lastAt)}<div class="t-faint text-[11px]">${esc(r.s.last.tech || '')}</div>` : '<span class="t-faint">Never</span>'}</td>
                             <td class="num">${r.s.daysSince == null ? '-' : r.s.daysSince}${r.s.overdue ? ' <span class="chip chip-red !py-0 ml-1">Overdue</span>' : ''}</td>
@@ -2376,7 +2471,7 @@ function renderActivity() {
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">${['None', 'Low', 'Medium', 'High', 'Caught'].map(l => `
             <div class="card stat"><div class="v">${list.length ? Math.round(levels[l] / list.length * 100) : 0}%</div><div class="k">${l === 'None' ? 'No activity' : l === 'Caught' ? 'Insects caught' : l + ' activity'}</div><div class="s">${plural(levels[l], 'check')}</div></div>`).join('')}</div>
-        ${breachesSectionHtml()}
+        ${LIMITS_ON ? breachesSectionHtml() : ''}
         <div class="card p-5 space-y-3">
             <h3 class="font-black t-strong">By species</h3>
             <div class="tbl-wrap"><table class="tbl">
@@ -2784,10 +2879,17 @@ const EXPORTS = {
         rows: visitList().map(v => [fmtDate(v.completed), v.type, v.tech, v.start ? fmtTime(v.start) : '', fmtTime(v.end), new Set(v.entries.map(e => e.barcode)).size, v.recs.length, v.notes])
     })
 };
+// while critical limits are off, the column is left out of every download
+function stripLimitCols(t) {
+    if (LIMITS_ON || !t || !t.cols) return t;
+    const drop = t.cols.map((c, i) => /critical limit/i.test(c[0]) ? i : -1).filter(i => i >= 0);
+    if (!drop.length) return t;
+    return Object.assign({}, t, { cols: t.cols.filter((c, i) => !drop.includes(i)), rows: t.rows.map(r => r.filter((v, i) => !drop.includes(i))) });
+}
 function exportTab(kind) {
     const ex = EXPORTS[state.tab];
     if (!ex) return;
-    const t = ex();
+    const t = stripLimitCols(ex());
     if (kind === 'xlsx' || kind === 'csv') { xlsxDownload(fileBase(t.title), t.cols, t.rows, t.title); return; }
     const pdf = newPdf(t.title);
     if (t.chart) pdf.chart(t.chart, t.metric || activityMetric);
@@ -2957,7 +3059,7 @@ function openAuditPack() {
             <div><label class="lbl" for="apTo">To</label><input id="apTo" type="date" class="field" value="${F.to || ''}" onchange="$('apPreset').value = 'custom'"></div>
         </div>
         <div class="space-y-2 text-sm">${[['summary', 'Summary'], ['visits', 'Visit list'], ['stations', 'Station register (last checked, days since, overdue)'], ['chemicals', 'Preparations log (preparation, quantity, batch numbers)'],
-            ['activity', 'Pest activity trend by species'], ['limits', 'Critical limits, month by month'], ['recs', 'Recommendations register'], ['docs', 'Document register'], ['plans', 'Floor plans with station positions']].map(([k, l]) =>
+            ['activity', 'Pest activity trend by species'], ...(LIMITS_ON ? [['limits', 'Critical limits, month by month']] : []), ['recs', 'Recommendations register'], ['docs', 'Document register'], ['plans', 'Floor plans with station positions']].map(([k, l]) =>
             `<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="ap-part" value="${k}" checked> <span class="t-strong">${l}</span></label>`).join('')}</div>
         <p class="text-xs t-muted">Station type and search filters are not applied to the audit pack: it covers the whole site.</p>`;
     $('modalFoot').classList.remove('hidden');
@@ -3001,7 +3103,7 @@ async function buildAuditPack() {
         }
         const section = (key, title, fn) => { if (!parts.has(key)) return; pdf.newPage(title); fn(); };
         section('visits', 'Visits', () => { const t = EXPORTS.visits(); pdf.table(t.cols, t.rows); });
-        section('stations', 'Station register', () => { const t = EXPORTS.stations(); if (m.interval) pdf.para(`Stations should be checked at least every ${m.interval} days. "Overdue" means not checked for more than ${m.interval + OVERDUE_GRACE_DAYS} days.`); pdf.table(t.cols, t.rows); });
+        section('stations', 'Station register', () => { const t = stripLimitCols(EXPORTS.stations()); if (m.interval) pdf.para(`Stations should be checked at least every ${m.interval} days. "Overdue" means not checked for more than ${m.interval + OVERDUE_GRACE_DAYS} days.`); pdf.table(t.cols, t.rows); });
         section('chemicals', 'Preparations log', () => {
             const byPrep = new Map();
             entries.filter(e => e.prep).forEach(e => { const g = byPrep.get(e.prep) || { n: 0, q: new Map(), b: new Set() }; g.n++; if (e.qty != null) g.q.set(e.unit, (g.q.get(e.unit) || 0) + e.qty); if (e.batch) g.b.add(e.batch); byPrep.set(e.prep, g); });
@@ -3039,8 +3141,8 @@ async function buildAuditPack() {
         });
         if (plans.length) {
             pdf.newPage('Floor plan stations');
-            pdf.table([['Floor plan', 30], ['Station', 34], ['Barcode', 18], ['Type', 30], ['Critical limits', 18], ['Last checked', 18]],
-                state.model.maps.flatMap(p => planPins(p).map(x => [p.name, x.name, x.barcode, x.type, x.zone || '', x.lastAt ? fmtDate(x.lastAt) : 'Never'])));
+            { const t = stripLimitCols({ cols: [['Floor plan', 30], ['Station', 34], ['Barcode', 18], ['Type', 30], ['Critical limits', 18], ['Last checked', 18]],
+                rows: state.model.maps.flatMap(p => planPins(p).map(x => [p.name, x.name, x.barcode, x.type, x.zone || '', x.lastAt ? fmtDate(x.lastAt) : 'Never'])) }); pdf.table(t.cols, t.rows); }
         }
         pdf.save(`${safeName(siteName(state.site))} - Audit pack - ${F.from || 'start'} to ${F.to || toDayStr(new Date())}`);
         closeModal(true);
