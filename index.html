@@ -422,6 +422,76 @@
         .row-item.typed { border-left-width: 6px; }
 
         /* ================= FLOOR PLANS ================= */
+        .sm-inline, .lg-inline, .sm-flex { display: none; }
+        @media (min-width: 640px) { .sm-inline { display: inline; } .sm-flex { display: inline-flex; } }
+        @media (min-width: 1024px) { .lg-inline { display: inline; } }
+        /* floor plans: top bar with a tab per plan */
+        .map-top { background: var(--surface); border-bottom: 1px solid var(--border); padding: .5rem .6rem; display: flex; flex-direction: column; gap: .45rem; }
+        .map-top-row { display: flex; align-items: center; gap: .45rem; min-width: 0; }
+        .map-tools-row { flex-wrap: wrap; }
+        .map-tabs { display: flex; gap: .35rem; overflow-x: auto; flex: 1 1 auto; min-width: 0; padding: .1rem; scrollbar-width: thin; }
+        .map-tab { display: inline-flex; align-items: center; gap: .4rem; max-width: 15rem; flex-shrink: 0; padding: .45rem .75rem; border-radius: .75rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: .75rem; font-weight: 700; cursor: pointer; }
+        .map-tab:hover { border-color: #f97316; }
+        .map-tab.on { background: #f97316; border-color: #f97316; color: #fff; }
+        .map-tab-n { font-size: .65rem; font-weight: 800; padding: .05rem .4rem; border-radius: 999px; background: rgba(0, 0, 0, .1); }
+        .map-tab.on .map-tab-n { background: rgba(255, 255, 255, .25); }
+        @media (min-width: 900px) { .map-top { flex-direction: row; align-items: center; } .map-top > .map-top-row:first-child { flex: 1 1 auto; } .map-tools-row { flex: 0 0 auto; flex-wrap: nowrap; } .map-close { order: 9; } }
+        .map-how { display: flex; flex-direction: column; align-items: center; gap: .2rem; text-align: center; padding: .85rem .6rem; border-radius: .9rem; border: 2px solid var(--border); background: var(--surface2); cursor: pointer; font-size: .8rem; color: var(--text); }
+        .map-how span:last-child { font-size: .68rem; color: var(--muted); }
+        .map-how.on { border-color: #f97316; background: rgba(249, 115, 22, .08); }
+        /* floor plan editor */
+        .pe-top { display: flex; align-items: center; gap: .45rem; padding: .5rem .6rem; background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+        .pe-name { flex: 1 1 10rem; min-width: 8rem; max-width: 22rem; }
+        .pe-checks { display: none; align-items: center; gap: .8rem; padding: 0 .4rem; }
+        @media (min-width: 1100px) { .pe-checks { display: flex; } }
+        .pe-check { display: flex; align-items: center; gap: .4rem; font-size: .72rem; color: var(--muted); cursor: pointer; white-space: nowrap; }
+        .pe-check input { accent-color: #f97316; width: .95rem; height: .95rem; }
+        .pe-body { flex: 1 1 auto; min-height: 0; display: flex; position: relative; }
+        .pe-tools { display: flex; flex-direction: column; gap: .3rem; padding: .5rem .4rem; background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; width: 4.6rem; }
+        .pe-tool { display: flex; flex-direction: column; align-items: center; gap: .2rem; padding: .5rem .2rem; border-radius: .75rem; color: var(--muted); font-size: .62rem; font-weight: 800; cursor: pointer; border: 1px solid transparent; }
+        .pe-tool svg { width: 1.45rem; height: 1.45rem; }
+        .pe-tool:hover { background: var(--surface2); color: var(--text); }
+        .pe-tool.on { background: rgba(249, 115, 22, .12); color: #ea580c; border-color: rgba(249, 115, 22, .45); }
+        .pe-stage { flex: 1 1 auto; min-width: 0; position: relative; overflow: hidden; background: var(--surface2); touch-action: none; user-select: none; }
+        .pe-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+        .pe-page { filter: drop-shadow(0 4px 18px rgba(0, 0, 0, .18)); }
+        .pe-stage[data-tool="wall"] svg, .pe-stage[data-tool="room"] svg, .pe-stage[data-tool="stamp"] svg, .pe-stage[data-tool="text"] svg { cursor: crosshair; }
+        .pe-stage[data-tool="pan"] svg { cursor: grab; }
+        .pe-stage[data-tool="erase"] svg { cursor: not-allowed; }
+        .pe-stage[data-tool="select"] [data-node], .pe-stage[data-tool="select"] [data-item], .pe-stage[data-tool="select"] [data-wall], .pe-stage[data-tool="select"] [data-room] { cursor: move; }
+        .pe-hint { position: absolute; left: 50%; top: .6rem; transform: translateX(-50%); max-width: calc(100% - 1.5rem); padding: .4rem .8rem; border-radius: 999px; background: rgba(15, 23, 42, .82); color: #fff; font-size: .72rem; font-weight: 600; text-align: center; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, .2); }
+        .pe-finish { position: absolute; left: 50%; bottom: 1rem; transform: translateX(-50%); padding: .65rem 1.2rem; border-radius: 999px; background: #16a34a; color: #fff; font-weight: 800; font-size: .85rem; box-shadow: 0 10px 24px rgba(22, 163, 74, .35); cursor: pointer; }
+        .pe-toast { position: absolute; left: 50%; bottom: 4.2rem; transform: translateX(-50%); max-width: calc(100% - 2rem); padding: .55rem .9rem; border-radius: .8rem; background: #0f172a; color: #fff; font-size: .78rem; font-weight: 700; box-shadow: 0 10px 24px rgba(0, 0, 0, .3); }
+        .pe-draft { position: absolute; z-index: 4; left: 50%; top: 3rem; transform: translateX(-50%); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem; padding: .5rem .75rem; border-radius: .8rem; background: var(--surface); border: 1px solid #f97316; font-size: .75rem; box-shadow: 0 10px 24px rgba(0, 0, 0, .2); max-width: calc(100% - 1.5rem); }
+        .pe-welcome { position: absolute; z-index: 3; inset: 0; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(15, 23, 42, .25); }
+        .pe-welcome.hidden { display: none; }
+        .pe-start { display: flex; align-items: center; gap: .8rem; text-align: left; padding: .75rem .85rem; border-radius: .9rem; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; color: var(--text); }
+        .pe-start:hover { border-color: #f97316; background: rgba(249, 115, 22, .07); }
+        .pe-start b { display: block; font-size: .85rem; }
+        .pe-start span span { display: block; font-size: .72rem; color: var(--muted); margin-top: .1rem; }
+        .pe-start-i { flex-shrink: 0; width: 2.4rem; height: 2.4rem; border-radius: .7rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 900; color: #ea580c; background: rgba(249, 115, 22, .12); }
+        .pe-panel { width: 17.5rem; flex-shrink: 0; overflow-y: auto; padding: .9rem; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; gap: .7rem; font-size: .8rem; }
+        .pe-panel.hidden { display: none; }
+        .pe-x { width: 1.8rem; height: 1.8rem; border-radius: .5rem; color: var(--faint); font-weight: 800; }
+        .pe-x:hover { background: var(--surface2); color: var(--text); }
+        .pe-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .35rem .6rem; border-radius: .6rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: .72rem; font-weight: 700; cursor: pointer; }
+        .pe-chip.on { border-color: #f97316; background: rgba(249, 115, 22, .12); color: #ea580c; }
+        .pe-swatch { width: 1.7rem; height: 1.7rem; border-radius: .5rem; border: 2px solid var(--border); cursor: pointer; }
+        .pe-swatch.on { border-color: #f97316; box-shadow: 0 0 0 2px rgba(249, 115, 22, .35); }
+        .pe-objects { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
+        .pe-obj { display: flex; flex-direction: column; align-items: center; gap: .15rem; padding: .4rem .2rem; border-radius: .7rem; border: 1px solid var(--border); background: #ffffff; color: #0f172a; font-size: .6rem; font-weight: 700; cursor: pointer; text-align: center; line-height: 1.15; }
+        .pe-obj svg { width: 2.4rem; height: 2.4rem; }
+        .pe-obj.on { border-color: #f97316; box-shadow: 0 0 0 2px rgba(249, 115, 22, .35); }
+        /* phones and small tablets: tools along the bottom, the panel as a sheet above them */
+        @media (max-width: 767px) {
+            .pe-body { flex-direction: column-reverse; }
+            .pe-tools { flex-direction: row; width: auto; border-right: 0; border-top: 1px solid var(--border); overflow-x: auto; overflow-y: hidden; padding: .35rem; padding-bottom: max(.35rem, env(safe-area-inset-bottom)); justify-content: space-between; }
+            .pe-tool { flex: 1 1 0; min-width: 2.9rem; padding: .4rem .1rem; }
+            .pe-panel { position: absolute; left: 0; right: 0; bottom: 4.1rem; width: auto; max-height: 46%; border-left: 0; border-top: 1px solid var(--border); border-radius: 1rem 1rem 0 0; box-shadow: 0 -10px 30px rgba(0, 0, 0, .2); z-index: 5; padding-bottom: 1rem; }
+            .pe-finish { bottom: 1rem; }
+            .planEditor-panel-open .pe-finish { bottom: 48%; }
+            .pe-name { max-width: none; }
+        }
         .map-menu-item { display: block; width: 100%; text-align: left; padding: .5rem .6rem; border-radius: .5rem; font-weight: 700; color: var(--text); cursor: pointer; }
         .map-menu-item:hover { background: var(--surface3); }
         .map-pin { position: absolute; width: 0; height: 0; }
@@ -1708,28 +1778,34 @@
 
     <!-- ===================== FLOOR PLANS (maps with station pins) ===================== -->
     <div id="mapModal" class="hidden fixed inset-0 z-[58] flex flex-col" style="background: var(--bg);">
-        <div class="flex flex-wrap items-center gap-2 p-2.5 sm:p-3 border-b divider shrink-0" style="background: var(--surface);">
-            <span class="eyebrow t-accent hidden sm:inline">Floor Plans</span>
-            <select id="mapSelect" onchange="selectMap(this.value)" class="field !w-auto max-w-[14rem] !py-2 cursor-pointer" title="Location"></select>
-            <div class="relative">
-                <button type="button" onclick="toggleMapMenu()" class="btn btn-secondary !py-2 !px-3" title="Manage floor plans">⋯ Plan</button>
-                <div id="mapMenu" class="hidden absolute left-0 top-full mt-1 z-10 card p-1.5 w-52 text-xs">
-                    <button type="button" onclick="openMapEdit('new')" class="map-menu-item">+ Add floor plan</button>
-                    <button type="button" onclick="openMapEdit('rename')" class="map-menu-item">Rename this plan</button>
-                    <button type="button" onclick="openMapEdit('image')" class="map-menu-item">Replace plan image</button>
-                    <button type="button" onclick="exportMapImage()" class="map-menu-item">Download plan with pins</button>
-                    <button type="button" onclick="deleteCurrentMap()" class="map-menu-item" style="color:#ef4444;">Delete this plan</button>
+        <div class="map-top shrink-0">
+            <div class="map-top-row">
+                <span class="eyebrow t-accent hidden lg:inline shrink-0">Floor Plans</span>
+                <div id="mapTabs" class="map-tabs scroll-thin" role="tablist" aria-label="Floor plans"></div>
+                <select id="mapSelect" onchange="selectMap(this.value)" class="hidden" aria-hidden="true" tabindex="-1"></select>
+                <button type="button" onclick="openMapEdit('new')" class="btn btn-secondary !py-2 !px-3 shrink-0" title="Add a floor plan">＋<span class="sm-inline">&nbsp;New plan</span></button>
+                <button type="button" id="mapDrawBtn" onclick="peOpenForCurrent()" class="btn btn-primary !py-2 !px-3 shrink-0 hidden" title="Draw on this plan">✏️<span class="sm-inline" id="mapDrawLabel">&nbsp;Draw</span></button>
+                <div class="relative shrink-0">
+                    <button type="button" onclick="toggleMapMenu()" class="btn btn-secondary !py-2 !px-3" title="More for this plan" aria-label="More for this plan">⋯</button>
+                    <div id="mapMenu" class="hidden absolute right-0 top-full mt-1 z-10 card p-1.5 w-56 text-xs">
+                        <button type="button" onclick="openMapEdit('rename')" class="map-menu-item">Rename this plan</button>
+                        <button type="button" onclick="openMapEdit('image')" class="map-menu-item">Replace with a picture</button>
+                        <button type="button" onclick="exportMapImage()" class="map-menu-item">Download plan with pins</button>
+                        <button type="button" onclick="deleteCurrentMap()" class="map-menu-item" style="color:#ef4444;">Delete this plan</button>
+                    </div>
                 </div>
+                <button type="button" onclick="closeMapModal()" class="btn btn-primary !py-2 shrink-0 map-close">Close</button>
             </div>
-            <input type="text" id="mapSearch" oninput="renderMapPins()" placeholder="Find a station..." class="field !w-40 !py-2 !text-xs">
-            <label class="text-[11px] t-muted flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="mapShowLabels" onchange="renderMapPins()" class="accent-orange-500"> Names</label>
-            <label class="text-[11px] t-muted flex items-center gap-1.5 cursor-pointer" title="Drag pins to move them"><input type="checkbox" id="mapEditPins" onchange="mapEditToggled()" class="accent-orange-500"> Move pins</label>
-            <div class="flex items-center gap-1 ml-auto">
-                <button type="button" onclick="zoomMap(1 / 1.3)" class="icon-btn !w-9 !h-9 font-black" title="Zoom out">−</button>
-                <button type="button" onclick="fitMap()" class="icon-btn !w-9 !h-9 text-[10px] font-black" title="Fit to screen">FIT</button>
-                <button type="button" onclick="zoomMap(1.3)" class="icon-btn !w-9 !h-9 font-black" title="Zoom in">+</button>
-                <button type="button" onclick="toggleMapSidebar()" class="btn btn-secondary !py-2 !px-3 md:hidden">Stations</button>
-                <button type="button" onclick="closeMapModal()" class="btn btn-primary !py-2">Close</button>
+            <div class="map-top-row map-tools-row">
+                <input type="text" id="mapSearch" oninput="renderMapPins()" placeholder="Find a station..." class="field !w-40 !py-2 !text-xs">
+                <label class="text-[11px] t-muted flex items-center gap-1.5 cursor-pointer shrink-0"><input type="checkbox" id="mapShowLabels" onchange="renderMapPins()" class="accent-orange-500"> Names</label>
+                <label class="text-[11px] t-muted flex items-center gap-1.5 cursor-pointer shrink-0" title="Drag pins to move them"><input type="checkbox" id="mapEditPins" onchange="mapEditToggled()" class="accent-orange-500"> Move pins</label>
+                <div class="flex items-center gap-1 ml-auto shrink-0">
+                    <button type="button" onclick="zoomMap(1 / 1.3)" class="icon-btn !w-9 !h-9 font-black" title="Zoom out">−</button>
+                    <button type="button" onclick="fitMap()" class="icon-btn !w-9 !h-9 text-[10px] font-black" title="Fit to screen">FIT</button>
+                    <button type="button" onclick="zoomMap(1.3)" class="icon-btn !w-9 !h-9 font-black" title="Zoom in">+</button>
+                    <button type="button" onclick="toggleMapSidebar()" class="btn btn-secondary !py-2 !px-3 md:hidden">Stations</button>
+                </div>
             </div>
         </div>
         <div class="flex-1 flex min-h-0 relative">
@@ -1746,6 +1822,65 @@
         </div>
     </div>
 
+    <!-- ===================== FLOOR PLAN EDITOR (draw a plan) ===================== -->
+    <div id="planEditor" class="hidden fixed inset-0 flex flex-col" style="z-index:60; background: var(--bg);">
+        <div class="pe-top">
+            <button type="button" onclick="peClose()" class="btn btn-secondary !py-2 !px-3 shrink-0" title="Close without saving">✕<span class="sm-inline">&nbsp;Cancel</span></button>
+            <input type="text" id="peName" maxlength="60" placeholder="Plan name, e.g. Site External" class="field !py-2 !text-sm font-bold pe-name" oninput="if (pe) { pe.dirty = true; peSaveDraft(); }" list="mapNameSuggestions">
+            <div class="flex items-center gap-1 shrink-0">
+                <button type="button" id="peUndo" onclick="peUndo()" class="icon-btn !w-9 !h-9" title="Undo (Ctrl+Z)" aria-label="Undo"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3"/></svg></button>
+                <button type="button" id="peRedo" onclick="peRedo()" class="icon-btn !w-9 !h-9" title="Redo (Ctrl+Y)" aria-label="Redo"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3"/></svg></button>
+            </div>
+            <div class="pe-checks">
+                <label class="pe-check"><input type="checkbox" id="peGrid" checked onchange="peSet('grid', this.checked)"> Grid</label>
+                <label class="pe-check"><input type="checkbox" id="peSnap" checked onchange="peSet('snap', this.checked)"> Snap</label>
+                <label class="pe-check"><input type="checkbox" id="peSizes" checked onchange="peSet('sizes', this.checked)"> Measurements</label>
+                <label class="pe-check"><input type="checkbox" id="pePinsOn" checked onchange="peSet('pins', this.checked)"> Stations</label>
+            </div>
+            <div class="flex items-center gap-1 ml-auto shrink-0">
+                <button type="button" onclick="peZoom(1 / 1.25)" class="icon-btn !w-9 !h-9 font-black sm-flex" title="Zoom out (-)">−</button>
+                <button type="button" onclick="peFit()" class="icon-btn !w-9 !h-9 text-[10px] font-black" title="Fit to screen (0)">FIT</button>
+                <button type="button" onclick="peZoom(1.25)" class="icon-btn !w-9 !h-9 font-black sm-flex" title="Zoom in (+)">+</button>
+                <button type="button" onclick="pePanel('more')" class="icon-btn !w-9 !h-9" title="Photo underneath, scale and display options" aria-label="Options"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+            </div>
+            <button type="button" id="peSaveBtn" onclick="peSave()" class="btn btn-primary !py-2 shrink-0">Save plan</button>
+        </div>
+        <div class="pe-body">
+            <div id="peTools" class="pe-tools" role="toolbar" aria-label="Drawing tools"></div>
+            <div id="peStage" class="pe-stage" data-tool="select">
+                <svg id="peSvg" xmlns="http://www.w3.org/2000/svg">
+                    <defs><pattern id="peGridMinor" patternUnits="userSpaceOnUse" width="40" height="40"></pattern><pattern id="peGridMajor" patternUnits="userSpaceOnUse" width="200" height="200"></pattern></defs>
+                    <g id="peView">
+                        <rect id="pePage" x="0" y="0" width="100" height="100" fill="#ffffff" class="pe-page"/>
+                        <image id="peBg" x="0" y="0" preserveAspectRatio="none" style="display:none;"></image>
+                        <rect id="peGridRect" x="0" y="0" width="100" height="100" fill="url(#peGridMajor)" pointer-events="none"/>
+                        <g id="peContent"></g>
+                        <g id="pePins" pointer-events="none"></g>
+                        <g id="peOverlay"></g>
+                    </g>
+                </svg>
+                <div id="peDraft" class="pe-draft hidden"></div>
+                <div id="peHint" class="pe-hint"></div>
+                <button type="button" id="peFinish" class="pe-finish hidden" onclick="peFinishChain()">✓ Finish wall</button>
+                <div id="peToast" class="pe-toast hidden"></div>
+                <div id="peWelcome" class="pe-welcome hidden">
+                    <div class="card p-5 sm:p-6 max-w-md w-full space-y-4">
+                        <div><div class="eyebrow t-accent">New floor plan</div><h3 class="font-black text-lg t-strong mt-1">How would you like to start?</h3>
+                            <p class="text-xs t-muted mt-1">Everything snaps to a 1 metre grid. Undo is always one tap away, so feel free to try things.</p></div>
+                        <div class="grid gap-2">
+                            <button type="button" class="pe-start" onclick="peWelcomeGo('room')"><span class="pe-start-i">▭</span><span><b>Draw the building or a room</b><span>Drag from corner to corner. Add more rooms the same way.</span></span></button>
+                            <button type="button" class="pe-start" onclick="peWelcomeGo('wall')"><span class="pe-start-i">⟋</span><span><b>Draw walls corner by corner</b><span>For odd shapes, fences and outdoor areas.</span></span></button>
+                            <button type="button" class="pe-start" onclick="peWelcomeGo('photo')"><span class="pe-start-i">📷</span><span><b>Trace over a photo</b><span>Put a photo or old plan underneath and draw over it.</span></span></button>
+                        </div>
+                        <p class="text-[11px] t-faint">Then add doors, racking, bins and labels with <b>Objects</b> and <b>Text</b>. Station pins are placed after saving, the same as before.</p>
+                    </div>
+                </div>
+            </div>
+            <aside id="pePanel" class="pe-panel hidden"></aside>
+        </div>
+        <input type="file" id="peBgFile" accept="image/*" class="hidden">
+    </div>
+
     <!-- Add / rename / replace a floor plan -->
     <div id="mapEditDialog" class="hidden overlay fixed inset-0 z-[64] flex flex-col justify-center items-center p-4">
         <div class="card p-6 max-w-md w-full max-h-[90vh] overflow-y-auto scroll-thin space-y-4">
@@ -1754,6 +1889,23 @@
                 <label class="lbl">Location name</label>
                 <input type="text" id="mapEditName" list="mapNameSuggestions" placeholder="e.g. Site External" class="field">
                 <datalist id="mapNameSuggestions"><option value="Site External"></option><option value="Site Internal"></option><option value="Insect Monitoring"></option><option value="Warehouse"></option><option value="Office"></option></datalist>
+            </div>
+            <div id="mapEditHowRow" class="space-y-2">
+                <label class="lbl">How do you want to make it?</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" class="map-how on" data-how="draw" onclick="setMapHow('draw')"><span class="text-2xl">✏️</span><b>Draw it</b><span>Walls, rooms, doors and more</span></button>
+                    <button type="button" class="map-how" data-how="upload" onclick="setMapHow('upload')"><span class="text-2xl">📷</span><b>Upload a picture</b><span>A photo, screenshot or scan</span></button>
+                </div>
+            </div>
+            <div id="mapEditSizeRow" class="space-y-1.5">
+                <label class="lbl" for="mapEditSize">About how big is the area?</label>
+                <select id="mapEditSize" class="field">
+                    <option value="small">Small - up to 40 × 25 m (a shop, office or house)</option>
+                    <option value="medium" selected>Medium - up to 60 × 40 m (a café, small factory)</option>
+                    <option value="large">Large - up to 100 × 60 m (a warehouse)</option>
+                    <option value="xl">Very large - up to 160 × 100 m (a whole site)</option>
+                </select>
+                <p class="text-[11px] t-faint">This is just the page size; you don't have to fill it.</p>
             </div>
             <div id="mapEditImageRow" class="space-y-2">
                 <label class="lbl">Plan image (photo, screenshot or scan)</label>
@@ -1880,7 +2032,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r42';
+        const APP_VERSION = '2026.10.18-r43';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -4130,6 +4282,12 @@
                 // change the row if it's there, otherwise add it (an upsert would insist on every required column even for a change)
                 let { data, error } = await _supabase.from(table).update(row).eq('id', row.id).select('*');
                 if (!error && !(data && data.length)) ({ data, error } = await _supabase.from(table).insert([row]).select('*'));
+                if (error && table === 'site_maps' && 'drawing' in row && /drawing/i.test(error.message || '') && /column|schema cache/i.test(error.message || '')) {
+                    drawingColumnMissing = true;   // pestis_client_portal.sql not run yet: keep the picture, skip the drawing
+                    delete row.drawing;
+                    ({ data, error } = await _supabase.from(table).update(row).eq('id', row.id).select('*'));
+                    if (!error && !(data && data.length)) ({ data, error } = await _supabase.from(table).insert([row]).select('*'));
+                }
                 if (error) throw error;
                 const back = Object.assign({}, row, (data && data[0]) || {});
                 Object.keys(back).forEach(k => { if (back[k] === undefined) delete back[k]; });
@@ -4390,6 +4548,8 @@
             }
             const stamp = Date.now();
             const photos = (opts.blobs || []).map((blob, i) => ({ blob: blob, path: `${selectedClient.id}/${opts.prefix || table}_${stamp}_${i + 1}.${extFor(blob)}` }));
+            if (opts.rowPaths) opts.rowPaths(photos.map(ph => ph.path));
+            Object.keys(row).forEach(k => { if (row[k] === undefined) delete row[k]; });
             return enqueue({
                 kind: 'table_upsert', clientId: selectedClient.id, siteName: selectedClient.Name, label: label,
                 data: { table: table, row: Object.assign({ client_id: String(selectedClient.id) }, row), photoField: opts.photoField || null }
@@ -6726,7 +6886,8 @@
 
         // Turns saved rows (+ anything still in the upload queue) into the site dashboard state
         let photosAwaitingLinks = [];
-        let siteMaps = [];              // floor plans: [{ id, name, path, local, w, h }]
+        let siteMaps = [];              // floor plans: [{ id, name, path, local, w, h, drawing }]
+        let drawingColumnMissing = false;   // the database can't keep plan drawings yet (pestis_client_portal.sql)
         let sitePins = new Map();       // barcode -> { mapId, x, y, at, by }
         let siteEvents = [];            // activity log, newest first
         let currentVisitEntries = [];   // station records made since the last closed visit
@@ -6767,7 +6928,7 @@
             const t = name => effectiveTable(cache, name, clientId);
             const base = (barcode, at, payload, r, extra) => Object.assign({ barcode_id: barcode, created_at: at, payload: payload, _fromTable: true, _pending: !!r._pending, _blobKeys: r._blobKeys || undefined }, extra || {});
             t('site_maps').forEach(r => out.push(base('SITE_MAP', r.created_at || r.updated_at, {
-                clientRef: r.id, mapId: r.id, name: r.name, w: r.width, h: r.height, order: r.sort,
+                clientRef: r.id, mapId: r.id, name: r.name, w: r.width, h: r.height, order: r.sort, drawing: r.drawing || null,
                 photos: r.image_path ? [r.image_path] : [], servicedAt: r.created_at || r.updated_at
             }, r, { _noEvent: true })));
             t('stations').forEach(r => { if (r.map_id) out.push(base('MAP_PIN', r.updated_at || r.created_at, {
@@ -6932,6 +7093,7 @@
                         path: slot ? slot.path : prev.path || null,
                         local: slot ? slot.local : prev.local || null,
                         w: p.w || prev.w || 0, h: p.h || prev.h || 0,
+                        drawing: p.drawing !== undefined ? p.drawing : (prev.drawing || null),
                         order: p.order != null ? p.order : (prev.order != null ? prev.order : recTime(r)),
                         pending: !!r._pending
                     });
@@ -9328,6 +9490,7 @@
             document.getElementById('mapMenu').classList.add('hidden');
             hideMapPopover();
             selectMap(target);
+            if (!opts.add && opts.draw && siteMaps.length) peOpenForCurrent();
             if (opts.add || !siteMaps.length) openMapEdit('new');
         }
         function closeMapModal() {
@@ -9348,11 +9511,26 @@
                 ? siteMaps.map(m => `<option value="${esc(m.id)}">${esc(m.name)} (${pinsOn(m.id).filter(([, p]) => p.x != null).length})</option>`).join('')
                 : '<option value="">No floor plans yet</option>';
             sel.value = currentMapId || '';
+            renderMapTabs();
             renderMapHint();
             renderMapSidebar();
             loadMapImage(currentMap());
         }
 
+        // one tab per plan; the Draw button follows the plan that's open
+        function renderMapTabs() {
+            const el = document.getElementById('mapTabs');
+            if (!el) return;
+            el.innerHTML = siteMaps.length ? siteMaps.map(m => {
+                const n = pinsOn(m.id).filter(([, p]) => p.x != null).length;
+                return `<button type="button" role="tab" aria-selected="${m.id === currentMapId}" data-id="${esc(m.id)}" onclick="selectMap(this.dataset.id)" class="map-tab ${m.id === currentMapId ? 'on' : ''}" title="${esc(m.name)}${m.drawing ? ' (drawn)' : ''}">${m.drawing ? '<span aria-hidden="true">✏️</span>' : '<span aria-hidden="true">🗺️</span>'}<span class="truncate">${esc(m.name)}</span><span class="map-tab-n">${n}</span></button>`;
+            }).join('') : '<span class="text-xs t-faint px-1">No floor plans yet</span>';
+            const on = el.querySelector('.map-tab.on');
+            if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            const m = currentMap(), b = document.getElementById('mapDrawBtn');
+            b.classList.toggle('hidden', !m);
+            if (m) { document.getElementById('mapDrawLabel').innerHTML = m.drawing ? '&nbsp;Edit drawing' : '&nbsp;Draw on plan'; b.title = m.drawing ? 'Change the drawing' : 'Draw walls, rooms and labels on top of this plan'; }
+        }
         function showMapEmpty(html) {
             const el = document.getElementById('mapEmpty');
             el.innerHTML = html;
@@ -9367,8 +9545,8 @@
                 img.removeAttribute('src');
                 stage.style.visibility = 'hidden';
                 showMapEmpty(`<div class="text-4xl">🗺️</div><div class="font-black t-strong text-base">No floor plans for this site yet</div>
-                    <div class="text-xs t-muted max-w-sm">Add a plan for each location (for example Site External, Site Internal, Insect Monitoring), then drop each station onto it.</div>
-                    <button type="button" onclick="openMapEdit('new')" class="btn btn-primary">+ Add floor plan</button>`);
+                    <div class="text-xs t-muted max-w-sm">Make a plan for each area (for example Site External, Site Internal, Insect Monitoring), then drop each station onto it.</div>
+                    <div class="flex flex-wrap justify-center gap-2"><button type="button" onclick="openMapEdit('new'); setMapHow('draw')" class="btn btn-primary">✏️ Draw a floor plan</button><button type="button" onclick="openMapEdit('new'); setMapHow('upload')" class="btn btn-secondary">📷 Upload a picture</button></div>`);
                 return;
             }
             stage.style.visibility = 'hidden';
@@ -9505,6 +9683,7 @@
         function selectMapOptionsRefresh() {
             const sel = document.getElementById('mapSelect');
             Array.from(sel.options).forEach(o => { const m = siteMaps.find(x => x.id === o.value); if (m) o.textContent = `${m.name} (${pinsOn(m.id).filter(([, p]) => p.x != null).length})`; });
+            renderMapTabs();
         }
 
         function renderMapSidebar() {
@@ -9695,8 +9874,999 @@
             window.addEventListener('resize', () => { if (!document.getElementById('mapModal').classList.contains('hidden')) positionMapPopover(); });
         })();
 
+        // ===================================================================
+        //  FLOOR PLAN EDITOR: draw a plan from scratch, or draw on top of an uploaded picture.
+        //  The drawing is kept with the plan (site_maps.drawing) so it can be edited again, and the
+        //  plan is also saved as a picture, so pins, reports and the Client Portal work as before.
+        //  Plan coordinates are pixels on a fixed page (doc.w x doc.h); pins stay where they are.
+        // ===================================================================
+        const PE_SIZES = { small: [40, 25], medium: [60, 40], large: [100, 60], xl: [160, 100] };
+        const PE_WALLS = { wall: 'Wall', thin: 'Thin wall', fence: 'Fence', line: 'Line' };
+        const PE_ROOM_COLORS = ['#fde68a', '#bfdbfe', '#bbf7d0', '#fecaca', '#e9d5ff', '#fed7aa', '#e2e8f0'];
+        const PE_OBJECTS = [
+            { k: 'door', label: 'Door', w: .9, h: .9 }, { k: 'door2', label: 'Double door', w: 1.8, h: .9 },
+            { k: 'roller', label: 'Roller door', w: 3, h: .5 }, { k: 'window', label: 'Window', w: 1.2, h: .3 },
+            { k: 'stairs', label: 'Stairs', w: 1.2, h: 3 }, { k: 'exit', label: 'Exit', w: 1.4, h: .7 },
+            { k: 'bench', label: 'Bench', w: 2, h: .7 }, { k: 'rack', label: 'Racking', w: 4, h: 1 },
+            { k: 'fridge', label: 'Fridge', w: .9, h: .9 }, { k: 'sink', label: 'Sink', w: .7, h: .5 },
+            { k: 'toilet', label: 'Toilet', w: .5, h: .75 }, { k: 'bin', label: 'Bin', w: .9, h: .9 },
+            { k: 'post', label: 'Post', w: .4, h: .4 }, { k: 'drain', label: 'Drain', w: .6, h: .6 },
+            { k: 'tree', label: 'Tree / garden', w: 3, h: 3 }, { k: 'car', label: 'Car park', w: 2.5, h: 5 },
+            { k: 'north', label: 'North arrow', w: 1.6, h: 1.6 }
+        ];
+        const PE_WALL_MOUNT = new Set(['door', 'door2', 'roller', 'window']);
+        const PE_TOOLS = [
+            ['select', 'Select', 'V', '<path d="M5 3l14 8-6 1.5L10 19z"/>'],
+            ['pan', 'Move', 'H', '<path d="M8 12V6a1.5 1.5 0 013 0v5m0-6V4a1.5 1.5 0 013 0v7m0-5a1.5 1.5 0 013 0v7c0 4-2.5 7-6.5 7S6 18 5 16l-2-4a1.4 1.4 0 012.4-1.4L8 13"/>'],
+            ['wall', 'Wall', 'W', '<circle cx="5" cy="18" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="14" r="2"/><path d="M6.5 16.5L10.8 7.7M13.6 7.3l4 5.4"/>'],
+            ['room', 'Room', 'R', '<rect x="4" y="5" width="16" height="14" rx="1"/><path d="M4 12h7v7"/>'],
+            ['stamp', 'Objects', 'O', '<path d="M4 20V5a1 1 0 011-1h7v16"/><path d="M12 4a8 8 0 018 8h-8"/>'],
+            ['text', 'Text', 'T', '<path d="M5 6V4h14v2M12 4v16M9 20h6"/>'],
+            ['erase', 'Erase', 'E', '<path d="M8 20h12M5.5 13.5l7-7a2 2 0 012.8 0l3.2 3.2a2 2 0 010 2.8L12 19H8.5L5.5 16a1.8 1.8 0 010-2.5z"/>']
+        ];
+        let pe = null;   // the open editor
+
+        const peClone = o => JSON.parse(JSON.stringify(o));
+        const peDocJson = () => JSON.stringify(pe.doc);
+        const peNode = id => pe.doc.nodes.find(n => n.id === id);
+        const peM = px => px / pe.doc.ppm;   // pixels -> metres
+        const peFmtM = m => (Math.round(m * 10) / 10).toLocaleString(LOCALE, { maximumFractionDigits: 1 }) + ' m';
+        function peNewDoc(sizeKey) {
+            const [mw, mh] = PE_SIZES[sizeKey] || PE_SIZES.medium;
+            const ppm = Math.min(40, Math.floor(4000 / Math.max(mw, mh)));
+            return { v: 1, w: mw * ppm, h: mh * ppm, ppm, sizes: true, nodes: [], walls: [], rooms: [], items: [], bg: null };
+        }
+        const peDraftKey = mapId => `pestis-plan-draft-${selectedClient ? selectedClient.id : 'x'}-${mapId || 'new'}`;
+
+        // ---------- open / close ----------
+        async function peOpen(opts) {
+            const m = opts.map || null;
+            let doc;
+            if (m && m.drawing && m.drawing.nodes) doc = peClone(m.drawing);
+            else if (m) {
+                // drawing on top of an uploaded picture: the page is the picture
+                const w = (currentMapId === m.id && mapView.w) || m.w || 2400, h = (currentMapId === m.id && mapView.h) || m.h || 1600;
+                doc = { v: 1, w, h, ppm: Math.max(8, Math.round(Math.max(w, h) / 60)), sizes: false, nodes: [], walls: [], rooms: [], items: [], bg: { path: m.path, include: true, opacity: 1 } };
+            } else doc = peNewDoc(opts.size);
+            ['nodes', 'walls', 'rooms', 'items'].forEach(k => { if (!Array.isArray(doc[k])) doc[k] = []; });
+            pe = {
+                doc, mapId: m ? m.id : null, name: opts.name || (m ? m.name : ''), tool: 'select', wallKind: 'wall', straight: true, stampKind: 'door',
+                sel: null, chain: null, view: { z: 1, x: 0, y: 0 }, op: null, hover: null, pointers: new Map(), undo: [], redo: [], last: '',
+                dirty: false, bgUrl: null, bgBlob: null, show: { grid: true, snap: true, pins: true }, panel: 'tool', space: false, sizeKey: opts.size || null
+            };
+            pe.last = peDocJson();
+            document.getElementById('peName').value = pe.name;
+            document.getElementById('planEditor').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            ['peGrid', 'peSnap', 'pePinsOn'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = true; });
+            document.getElementById('peSizes').checked = !!doc.sizes;
+            peRenderTools();
+            peFit();
+            peRender();
+            const empty = !doc.nodes.length && !doc.items.length && !doc.bg;
+            document.getElementById('peWelcome').classList.toggle('hidden', !empty);
+            peSetTool(empty ? 'room' : 'select', true);
+            if (empty) { pe.panel = 'none'; peRenderPanel(); }   // the start card first; tool options after a choice
+            // an unsaved drawing from last time?
+            let draft = null;
+            try { draft = JSON.parse(localStorage.getItem(peDraftKey(pe.mapId)) || 'null'); } catch (e) {}
+            const banner = document.getElementById('peDraft');
+            if (draft && draft.doc && JSON.stringify(draft.doc) !== pe.last) {
+                banner.innerHTML = `<span>Unsaved drawing from ${esc(relTime(draft.savedAt))} found.</span><button type="button" class="btn btn-primary !py-1 !px-2.5 !text-[11px]" onclick="peRestoreDraft()">Restore it</button><button type="button" class="link-btn !text-[11px]" onclick="peDropDraft()">Discard</button>`;
+                banner.classList.remove('hidden');
+            } else banner.classList.add('hidden');
+            if (doc.bg && doc.bg.path) peLoadBg(doc.bg.path);
+        }
+        function peRestoreDraft() {
+            let draft = null;
+            try { draft = JSON.parse(localStorage.getItem(peDraftKey(pe.mapId)) || 'null'); } catch (e) {}
+            document.getElementById('peDraft').classList.add('hidden');
+            if (!draft || !draft.doc) return;
+            const bg = pe.doc.bg;
+            pe.doc = draft.doc;
+            if (pe.doc.bg && bg && pe.doc.bg.path === bg.path) pe.doc.bg = Object.assign({}, bg, pe.doc.bg);
+            if (draft.name && !document.getElementById('peName').value) document.getElementById('peName').value = draft.name;
+            document.getElementById('peWelcome').classList.add('hidden');
+            peCommit(); peFit(); peRender();
+        }
+        function peDropDraft() {
+            try { localStorage.removeItem(peDraftKey(pe.mapId)); } catch (e) {}
+            document.getElementById('peDraft').classList.add('hidden');
+        }
+        function peClose(force) {
+            if (!pe) return;
+            if (!force && pe.dirty) {
+                openConfirm({ title: 'Leave without saving?', message: 'Your changes to this floor plan are kept on this device as a draft, so you can restore them next time.', confirmLabel: 'Leave', cancelLabel: 'Keep drawing', onConfirm: () => peClose(true) });
+                return;
+            }
+            if (pe.bgUrl && pe.bgBlob) URL.revokeObjectURL(pe.bgUrl);
+            pe = null;
+            document.getElementById('planEditor').classList.add('hidden');
+            if (document.getElementById('mapModal').classList.contains('hidden')) document.body.style.overflow = '';
+        }
+        // the plan open in the viewer: draw on it / edit its drawing
+        function peOpenForCurrent() {
+            document.getElementById('mapMenu').classList.add('hidden');
+            const m = currentMap();
+            if (!m) { openMapEdit('new'); return; }
+            if (!m.drawing && !m.path) { alert('This plan is still uploading. Draw on it once it has reached the server.'); return; }
+            if (!m.drawing && !isOnline) { alert("You're offline. The plan picture is needed to draw on it - try again when you're back online."); return; }
+            peOpen({ map: m });
+        }
+
+        async function peLoadBg(path) {
+            if (!pe) return;
+            let url = mapImgUrl.get(path);
+            if (!url) { try { url = (await getSignedUrls([path])).get(path); } catch (e) {} }
+            if (!pe || !pe.doc.bg || pe.doc.bg.path !== path) return;
+            if (url) { mapImgUrl.set(path, url); pe.bgUrl = url; peRenderBg(); }
+            else peToast("The picture under this plan couldn't be loaded" + (isOnline ? '' : " (you're offline)"));
+        }
+
+        // ---------- tools ----------
+        function peRenderTools() {
+            document.getElementById('peTools').innerHTML = PE_TOOLS.map(([k, label, key, icon]) =>
+                `<button type="button" class="pe-tool" data-tool="${k}" onclick="peSetTool('${k}')" title="${label} (${key})" aria-label="${label}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${icon}</svg><span>${label}</span></button>`).join('');
+        }
+        function peSetTool(t, quiet) {
+            if (!pe) return;
+            if (pe.chain && t !== 'wall') peFinishChain();
+            pe.tool = t;
+            if (t !== 'select') pe.sel = null;
+            document.querySelectorAll('#peTools .pe-tool').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
+            document.getElementById('peStage').dataset.tool = t;
+            pe.panel = 'tool';
+            if (!quiet) document.getElementById('peWelcome').classList.add('hidden');
+            peRenderPanel(); peRenderOverlay(); peHint();
+        }
+        function peHint() {
+            if (!pe) return;
+            const st = PE_OBJECTS.find(o => o.k === pe.stampKind);
+            const t = {
+                select: pe.sel ? 'Drag to move it · drag the white dots to reshape · Delete to remove' : 'Tap something to select it · drag empty space to move around · pinch or scroll to zoom',
+                pan: 'Drag to move around · pinch or scroll to zoom',
+                wall: pe.chain ? 'Tap to add the next corner · tap the first corner to close it, or tap ✓ Finish' : 'Tap where the wall starts (it snaps to the grid and to other corners)',
+                room: 'Drag from one corner of the room to the opposite corner',
+                stamp: `Tap where the ${st ? st.label.toLowerCase() : 'object'} goes${st && PE_WALL_MOUNT.has(st.k) ? ' - it fits itself onto the nearest wall' : ''}`,
+                text: 'Tap where the label goes',
+                erase: 'Tap anything to remove it (Undo brings it back)'
+            }[pe.tool] || '';
+            document.getElementById('peHint').textContent = t;
+            document.getElementById('peFinish').classList.toggle('hidden', !(pe.tool === 'wall' && pe.chain));
+        }
+        function peSet(k, v) {
+            if (!pe) return;
+            if (k === 'sizes') { pe.doc.sizes = !!v; peCommit(); peRender(); return; }
+            pe.show[k] = !!v;
+            const box = document.getElementById({ grid: 'peGrid', snap: 'peSnap', pins: 'pePinsOn' }[k]);
+            if (box) box.checked = !!v;
+            peRender();
+        }
+
+        // ---------- history ----------
+        function peCommit() {
+            if (!pe) return;
+            const now = peDocJson();
+            if (now === pe.last) return;
+            pe.undo.push(pe.last);
+            if (pe.undo.length > 150) pe.undo.shift();
+            pe.redo = [];
+            pe.last = now;
+            pe.dirty = true;
+            peSaveDraft();
+            peUndoBtns();
+        }
+        function peUndo() {
+            if (!pe || !pe.undo.length) return;
+            if (pe.chain) pe.chain = null;
+            pe.redo.push(pe.last); pe.last = pe.undo.pop(); pe.doc = JSON.parse(pe.last); pe.sel = null; pe.dirty = true;
+            peSaveDraft(); peUndoBtns(); peRender(); peRenderPanel(); peHint();
+        }
+        function peRedo() {
+            if (!pe || !pe.redo.length) return;
+            pe.undo.push(pe.last); pe.last = pe.redo.pop(); pe.doc = JSON.parse(pe.last); pe.sel = null; pe.dirty = true;
+            peSaveDraft(); peUndoBtns(); peRender(); peRenderPanel();
+        }
+        function peUndoBtns() {
+            document.getElementById('peUndo').disabled = !pe || !pe.undo.length;
+            document.getElementById('peRedo').disabled = !pe || !pe.redo.length;
+        }
+        let peDraftTimer = null;
+        function peSaveDraft() {
+            clearTimeout(peDraftTimer);
+            peDraftTimer = setTimeout(() => {
+                if (!pe) return;
+                try { localStorage.setItem(peDraftKey(pe.mapId), JSON.stringify({ doc: pe.doc, name: document.getElementById('peName').value, savedAt: Date.now() })); } catch (e) {}
+            }, 400);
+        }
+
+        // ---------- view ----------
+        function peStageSize() { const s = document.getElementById('peStage'); return { w: s.clientWidth || 800, h: s.clientHeight || 600 }; }
+        function peFitZ() { const s = peStageSize(); return Math.min(s.w / pe.doc.w, s.h / pe.doc.h) * 0.92; }
+        function peFit() {
+            if (!pe) return;
+            const s = peStageSize(), z = peFitZ();
+            pe.view = { z, x: (s.w - pe.doc.w * z) / 2, y: (s.h - pe.doc.h * z) / 2 };
+            peApplyView();
+        }
+        function peZoom(f, cx, cy) {
+            if (!pe) return;
+            const s = peStageSize();
+            if (cx == null) { cx = s.w / 2; cy = s.h / 2; }
+            const fz = peFitZ(), nz = Math.min(Math.max(pe.view.z * f, fz * 0.3), fz * 25);
+            pe.view.x = cx - (cx - pe.view.x) * (nz / pe.view.z);
+            pe.view.y = cy - (cy - pe.view.y) * (nz / pe.view.z);
+            pe.view.z = nz;
+            peApplyView();
+        }
+        function peApplyView() {
+            const v = pe.view;
+            document.getElementById('peView').setAttribute('transform', `translate(${v.x} ${v.y}) scale(${v.z})`);
+            peRenderGrid();
+            peRenderOverlay();
+        }
+        function peToPlan(e) {
+            const r = document.getElementById('peSvg').getBoundingClientRect();
+            return { x: (e.clientX - r.left - pe.view.x) / pe.view.z, y: (e.clientY - r.top - pe.view.y) / pe.view.z };
+        }
+
+        // ---------- geometry helpers ----------
+        const peDist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+        function peProject(p, a, b) {
+            const dx = b.x - a.x, dy = b.y - a.y, L = dx * dx + dy * dy || 1;
+            const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / L));
+            return { x: a.x + t * dx, y: a.y + t * dy, t };
+        }
+        function peNodeNear(p, tolScreen, except) {
+            const tol = (tolScreen || 14) / pe.view.z;
+            let best = null, bd = tol;
+            pe.doc.nodes.forEach(n => { if (n.id === except) return; const d = peDist(n, p); if (d <= bd) { bd = d; best = n; } });
+            return best;
+        }
+        function peWallNear(p, tolPlan) {
+            let best = null, bd = tolPlan;
+            pe.doc.walls.forEach(w => {
+                const a = peNode(w.a), b = peNode(w.b);
+                if (!a || !b) return;
+                const q = peProject(p, a, b), d = peDist(q, p);
+                if (d <= bd) { bd = d; best = { wall: w, q, a, b }; }
+            });
+            return best;
+        }
+        function peSnap(p, from, except) {
+            const near = peNodeNear(p, 14, except);
+            if (near) return { x: near.x, y: near.y, node: near.id };
+            let x = p.x, y = p.y;
+            if (pe.show.snap) { const g = pe.doc.ppm / 2; x = Math.round(x / g) * g; y = Math.round(y / g) * g; }
+            if (from && pe.straight) {
+                const dx = x - from.x, dy = y - from.y, ax = Math.abs(dx), ay = Math.abs(dy);
+                if (ax > ay * 2.4) y = from.y;
+                else if (ay > ax * 2.4) x = from.x;
+                else { const d = (ax + ay) / 2; x = from.x + Math.sign(dx) * d; y = from.y + Math.sign(dy) * d; }
+            }
+            x = Math.min(Math.max(x, 0), pe.doc.w); y = Math.min(Math.max(y, 0), pe.doc.h);
+            return { x, y, node: null };
+        }
+        function peAddNode(x, y) { const n = { id: uid(), x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 }; pe.doc.nodes.push(n); return n; }
+        function peAddWall(a, b, kind) {
+            if (a === b || pe.doc.walls.some(w => (w.a === a && w.b === b) || (w.a === b && w.b === a))) return null;
+            const w = { id: uid(), a, b, kind: kind || pe.wallKind };
+            pe.doc.walls.push(w); return w;
+        }
+        // A point on a wall becomes a corner (the wall is split in two)
+        function peSplitWall(w, q) {
+            const n = peAddNode(q.x, q.y);
+            pe.doc.walls = pe.doc.walls.filter(x => x.id !== w.id);
+            pe.doc.walls.push({ id: uid(), a: w.a, b: n.id, kind: w.kind }, { id: uid(), a: n.id, b: w.b, kind: w.kind });
+            return n;
+        }
+        function pePointNode(p, from) {
+            // reuse a corner, or split a wall the point lands on, or add a new corner
+            const s = peSnap(p, from);
+            if (s.node) return peNode(s.node);
+            const hit = peWallNear(s, 10 / pe.view.z);
+            if (hit) return peSplitWall(hit.wall, hit.q);
+            return peAddNode(s.x, s.y);
+        }
+        function peDropOrphans() {
+            const used = new Set();
+            pe.doc.walls.forEach(w => { used.add(w.a); used.add(w.b); });
+            pe.doc.rooms.forEach(r => r.nodes.forEach(id => used.add(id)));
+            pe.doc.nodes = pe.doc.nodes.filter(n => used.has(n.id));
+        }
+        function peDeleteNode(id) {
+            pe.doc.walls = pe.doc.walls.filter(w => w.a !== id && w.b !== id);
+            pe.doc.rooms.forEach(r => { r.nodes = r.nodes.filter(x => x !== id); });
+            pe.doc.rooms = pe.doc.rooms.filter(r => r.nodes.length >= 3);
+            peDropOrphans();
+        }
+        function peDeleteRoom(id) {
+            const r = pe.doc.rooms.find(x => x.id === id);
+            if (!r) return;
+            const set = new Set(r.nodes), others = new Set();
+            pe.doc.rooms.filter(x => x.id !== id).forEach(x => x.nodes.forEach(n => others.add(n)));
+            // its own walls go with it (walls shared with another room stay)
+            pe.doc.walls = pe.doc.walls.filter(w => !(set.has(w.a) && set.has(w.b) && !(others.has(w.a) && others.has(w.b))));
+            pe.doc.rooms = pe.doc.rooms.filter(x => x.id !== id);
+            peDropOrphans();
+        }
+        function peDeleteSel() {
+            if (!pe || !pe.sel) return;
+            const { type, id } = pe.sel;
+            if (type === 'node') peDeleteNode(id);
+            else if (type === 'wall') { pe.doc.walls = pe.doc.walls.filter(w => w.id !== id); peDropOrphans(); }
+            else if (type === 'room') peDeleteRoom(id);
+            else if (type === 'item') pe.doc.items = pe.doc.items.filter(i => i.id !== id);
+            pe.sel = null;
+            peCommit(); peRender(); peRenderPanel(); peHint();
+        }
+        function peMergeNode(fromId, intoId) {
+            if (fromId === intoId) return;
+            pe.doc.walls.forEach(w => { if (w.a === fromId) w.a = intoId; if (w.b === fromId) w.b = intoId; });
+            pe.doc.walls = pe.doc.walls.filter((w, i, all) => w.a !== w.b && all.findIndex(x => (x.a === w.a && x.b === w.b) || (x.a === w.b && x.b === w.a)) === i);
+            pe.doc.rooms.forEach(r => { r.nodes = r.nodes.map(x => x === fromId ? intoId : x).filter((x, i, a) => a.indexOf(x) === i); });
+            pe.doc.nodes = pe.doc.nodes.filter(n => n.id !== fromId);
+        }
+        const peRoomPts = r => r.nodes.map(peNode).filter(Boolean);
+        function peRoomArea(r) {
+            const p = peRoomPts(r); let a = 0;
+            p.forEach((q, i) => { const n = p[(i + 1) % p.length]; a += q.x * n.y - n.x * q.y; });
+            return Math.abs(a / 2) / (pe.doc.ppm * pe.doc.ppm);
+        }
+        function peRoomCentre(r) { const p = peRoomPts(r); return { x: p.reduce((s, q) => s + q.x, 0) / (p.length || 1), y: p.reduce((s, q) => s + q.y, 0) / (p.length || 1) }; }
+
+        // ---------- drawing (one function draws the editor and the saved picture) ----------
+        function peWallStyle(kind, ppm) {
+            const th = Math.max(4, ppm * 0.2);
+            return kind === 'thin' ? { w: Math.max(2.5, th * 0.45), c: '#334155', dash: '' }
+                : kind === 'fence' ? { w: Math.max(2, ppm * 0.07), c: '#64748b', dash: `${ppm * 0.35} ${ppm * 0.2}` }
+                : kind === 'line' ? { w: Math.max(1.5, ppm * 0.04), c: '#94a3b8', dash: '' }
+                : { w: th, c: '#0f172a', dash: '' };
+        }
+        function peItemSvg(it, ppm, editing) {
+            const w = it.w, h = it.h, sw = Math.max(1.5, ppm * 0.05), th = Math.max(4, ppm * 0.2) + 2;
+            const S = `stroke="#0f172a" stroke-width="${sw}" fill="none"`;
+            const cut = `<rect x="${-w / 2}" y="${-th / 2}" width="${w}" height="${th}" fill="#ffffff"/>`;
+            const txt = (t, size, col, y) => `<text x="0" y="${y || 0}" font-size="${size}" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-weight="800" fill="${col || '#0f172a'}" text-anchor="middle" dominant-baseline="central">${esc(t)}</text>`;
+            let g = '';
+            switch (it.kind) {
+                case 'door': g = `${cut}<line x1="${-w / 2}" y1="0" x2="${-w / 2}" y2="${-w}" ${S}/><path d="M ${-w / 2} ${-w} A ${w} ${w} 0 0 1 ${w / 2} 0" ${S} stroke-dasharray="${sw * 2} ${sw * 2}"/>`; break;
+                case 'door2': g = `${cut}<line x1="${-w / 2}" y1="0" x2="${-w / 2}" y2="${-w / 2}" ${S}/><line x1="${w / 2}" y1="0" x2="${w / 2}" y2="${-w / 2}" ${S}/><path d="M ${-w / 2} ${-w / 2} A ${w / 2} ${w / 2} 0 0 1 0 0 A ${w / 2} ${w / 2} 0 0 1 ${w / 2} ${-w / 2}" ${S} stroke-dasharray="${sw * 2} ${sw * 2}"/>`; break;
+                case 'roller': g = `${cut}<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" ${S} stroke-dasharray="${sw * 3} ${sw * 2}"/>${txt('ROLLER DOOR', Math.min(h * 0.5, ppm * 0.28), '#475569')}`; break;
+                case 'window': g = `${cut}<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" stroke="#0f172a" stroke-width="${sw}" fill="#e0f2fe"/><line x1="${-w / 2}" y1="0" x2="${w / 2}" y2="0" stroke="#0369a1" stroke-width="${sw * 0.8}"/>`; break;
+                case 'stairs': { const n = Math.max(3, Math.round(h / (ppm * 0.3))); let l = ''; for (let i = 1; i < n; i++) { const y = -h / 2 + h * i / n; l += `<line x1="${-w / 2}" y1="${y}" x2="${w / 2}" y2="${y}" stroke="#0f172a" stroke-width="${sw * 0.7}"/>`; }
+                    g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" stroke="#0f172a" stroke-width="${sw}" fill="#f8fafc"/>${l}<path d="M 0 ${h * 0.4} L 0 ${-h * 0.4} M ${-w * 0.18} ${-h * 0.3} L 0 ${-h * 0.4} L ${w * 0.18} ${-h * 0.3}" stroke="#ea580c" stroke-width="${sw * 1.2}" fill="none"/>`; break; }
+                case 'exit': g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="${h * 0.15}" fill="#16a34a"/>${txt('EXIT', h * 0.5, '#ffffff')}`; break;
+                case 'bench': g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" stroke="#475569" stroke-width="${sw}" fill="#e2e8f0"/>`; break;
+                case 'rack': g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" stroke="#92400e" stroke-width="${sw}" fill="#fef3c7"/><path d="M ${-w / 2} ${-h / 2} L ${w / 2} ${h / 2} M ${-w / 2} ${h / 2} L ${w / 2} ${-h / 2}" stroke="#b45309" stroke-width="${sw * 0.6}"/>`; break;
+                case 'fridge': g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" stroke="#1d4ed8" stroke-width="${sw}" fill="#dbeafe"/>${txt('F', Math.min(w, h) * 0.55, '#1d4ed8')}`; break;
+                case 'sink': g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="${h * 0.15}" stroke="#0f172a" stroke-width="${sw}" fill="#f1f5f9"/><ellipse cx="0" cy="${h * 0.05}" rx="${w * 0.32}" ry="${h * 0.28}" stroke="#0f172a" stroke-width="${sw * 0.8}" fill="#ffffff"/>`; break;
+                case 'toilet': g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h * 0.28}" rx="${sw}" stroke="#0f172a" stroke-width="${sw}" fill="#f1f5f9"/><ellipse cx="0" cy="${h * 0.15}" rx="${w * 0.42}" ry="${h * 0.33}" stroke="#0f172a" stroke-width="${sw}" fill="#ffffff"/>`; break;
+                case 'bin': g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="${w * 0.12}" stroke="#047857" stroke-width="${sw}" fill="#d1fae5"/>${txt('BIN', Math.min(w, h) * 0.32, '#047857')}`; break;
+                case 'post': g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" fill="#334155"/>`; break;
+                case 'drain': g = `<circle r="${Math.min(w, h) / 2}" stroke="#0f172a" stroke-width="${sw}" fill="#e2e8f0"/><path d="M ${-w / 3} 0 L ${w / 3} 0 M 0 ${-h / 3} L 0 ${h / 3} M ${-w / 4.2} ${-h / 4.2} L ${w / 4.2} ${h / 4.2} M ${-w / 4.2} ${h / 4.2} L ${w / 4.2} ${-h / 4.2}" stroke="#0f172a" stroke-width="${sw * 0.7}"/>`; break;
+                case 'tree': g = `<ellipse rx="${w / 2}" ry="${h / 2}" fill="rgba(34,197,94,.3)" stroke="#15803d" stroke-width="${sw}"/><ellipse rx="${w / 5}" ry="${h / 5}" fill="rgba(21,128,61,.35)"/>`; break;
+                case 'car': g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" stroke="#475569" stroke-width="${sw}" fill="none" stroke-dasharray="${sw * 4} ${sw * 2}"/>${txt('P', Math.min(w, h) * 0.45, '#475569')}`; break;
+                case 'north': g = `<circle r="${w / 2}" stroke="#0f172a" stroke-width="${sw}" fill="#ffffff"/><path d="M 0 ${-w * 0.42} L ${w * 0.16} ${w * 0.2} L 0 ${w * 0.08} L ${-w * 0.16} ${w * 0.2} Z" fill="#0f172a"/>${txt('N', w * 0.24, '#dc2626', -w * 0.62)}`; break;
+                case 'text': g = txt(it.text || 'Label', it.size || ppm * 0.6, it.color || '#0f172a'); break;
+            }
+            const hit = it.kind === 'text' ? peTextBox(it) : { w: w, h: PE_WALL_MOUNT.has(it.kind) && it.kind.startsWith('door') ? (it.kind === 'door' ? w : w / 2) : h, y: it.kind === 'door' ? -w / 2 : it.kind === 'door2' ? -w / 4 : 0 };
+            const hitRect = editing ? `<rect class="pe-hit" x="${-hit.w / 2}" y="${(hit.y || 0) - hit.h / 2}" width="${hit.w}" height="${hit.h}" fill="transparent"/>` : '';
+            return `<g ${editing ? `data-item="${esc(it.id)}"` : ''} transform="translate(${it.x} ${it.y}) rotate(${it.rot || 0})">${g}${hitRect}</g>`;
+        }
+        function peTextBox(it) { const s = it.size || pe.doc.ppm * 0.6; return { w: Math.max(s, String(it.text || 'Label').length * s * 0.62), h: s * 1.3, y: 0 }; }
+        // everything drawn on the page (rooms, walls, objects, labels)
+        function peContentSvg(doc, editing) {
+            const ppm = doc.ppm, nodes = new Map(doc.nodes.map(n => [n.id, n]));
+            let out = '';
+            doc.rooms.forEach(r => {
+                const p = r.nodes.map(id => nodes.get(id)).filter(Boolean);
+                if (p.length < 3) return;
+                out += `<polygon ${editing ? `data-room="${esc(r.id)}"` : ''} points="${p.map(q => q.x + ',' + q.y).join(' ')}" fill="${esc(r.color || '#e2e8f0')}" fill-opacity=".55"/>`;
+            });
+            doc.walls.forEach(w => {
+                const a = nodes.get(w.a), b = nodes.get(w.b);
+                if (!a || !b) return;
+                const s = peWallStyle(w.kind, ppm);
+                out += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${s.c}" stroke-width="${s.w}" stroke-linecap="${s.dash ? 'butt' : 'round'}" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''}/>`;
+                if (editing) out += `<line data-wall="${esc(w.id)}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="transparent" stroke-width="${Math.max(s.w, 16 / (pe ? pe.view.z : 1))}"/>`;
+            });
+            doc.items.forEach(it => { out += peItemSvg(it, ppm, editing); });
+            const font = 'font-family="system-ui, -apple-system, Segoe UI, sans-serif"';
+            if (doc.sizes) doc.walls.forEach(w => {
+                const a = nodes.get(w.a), b = nodes.get(w.b);
+                if (!a || !b || w.kind === 'line') return;
+                const L = Math.hypot(b.x - a.x, b.y - a.y);
+                if (L < ppm * 0.8) return;
+                let ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+                if (ang > 90) ang -= 180; if (ang < -90) ang += 180;
+                const nx = -(b.y - a.y) / L, ny = (b.x - a.x) / L, off = peWallStyle(w.kind, ppm).w / 2 + ppm * 0.32;
+                const mx = (a.x + b.x) / 2 + nx * off, my = (a.y + b.y) / 2 + ny * off;
+                out += `<text x="${mx}" y="${my}" transform="rotate(${ang} ${mx} ${my})" font-size="${Math.max(9, ppm * 0.4)}" ${font} font-weight="600" fill="#64748b" text-anchor="middle" dominant-baseline="central" pointer-events="none">${peFmtM(L / ppm)}</text>`;
+            });
+            doc.rooms.forEach(r => {
+                const p = r.nodes.map(id => nodes.get(id)).filter(Boolean);
+                if (p.length < 3) return;
+                const c = { x: p.reduce((s, q) => s + q.x, 0) / p.length, y: p.reduce((s, q) => s + q.y, 0) / p.length };
+                let a = 0; p.forEach((q, i) => { const n = p[(i + 1) % p.length]; a += q.x * n.y - n.x * q.y; });
+                const area = Math.abs(a / 2) / (ppm * ppm), fs = Math.max(11, ppm * 0.5);
+                out += `<text x="${c.x}" y="${c.y - (doc.sizes ? fs * 0.35 : 0)}" font-size="${fs}" ${font} font-weight="800" fill="#0f172a" text-anchor="middle" dominant-baseline="central" pointer-events="none">${esc(r.name || '')}</text>`;
+                if (doc.sizes) out += `<text x="${c.x}" y="${c.y + fs * 0.7}" font-size="${fs * 0.62}" ${font} font-weight="600" fill="#475569" text-anchor="middle" dominant-baseline="central" pointer-events="none">${area.toLocaleString(LOCALE, { maximumFractionDigits: area < 10 ? 1 : 0 })} m²</text>`;
+            });
+            return out;
+        }
+        function peRender() {
+            if (!pe) return;
+            const d = pe.doc;
+            const page = document.getElementById('pePage');
+            page.setAttribute('width', d.w); page.setAttribute('height', d.h);
+            peRenderBg();
+            document.getElementById('peContent').innerHTML = peContentSvg(d, true);
+            // the site's station pins, faintly, so walls can be drawn around them
+            const pins = pe.mapId && pe.show.pins ? pinsOn(pe.mapId).filter(([, p]) => p.x != null) : [];
+            document.getElementById('pePins').innerHTML = pins.map(([b, p]) => {
+                const st = mapStations().find(x => x.barcode === b);
+                if (!st) return '';
+                const x = p.x * d.w, y = p.y * d.h, r = Math.max(5, d.ppm * 0.22);
+                return `<g opacity=".75"><circle cx="${x}" cy="${y}" r="${r}" fill="${stationColor(st.type).color}" stroke="#fff" stroke-width="${r * 0.3}"/><text x="${x}" y="${y + r * 2.2}" font-size="${r * 1.5}" font-family="system-ui, sans-serif" font-weight="700" fill="#334155" text-anchor="middle">${esc(st.name)}</text></g>`;
+            }).join('');
+            peRenderGrid();
+            peRenderOverlay();
+            peUndoBtns();
+        }
+        function peRenderBg() {
+            const img = document.getElementById('peBg');
+            const bg = pe && pe.doc.bg;
+            if (bg && pe.bgUrl) {
+                img.setAttribute('href', pe.bgUrl);
+                img.setAttribute('width', pe.doc.w); img.setAttribute('height', pe.doc.h);
+                img.setAttribute('opacity', bg.opacity == null ? 1 : bg.opacity);
+                img.style.display = '';
+            } else { img.removeAttribute('href'); img.style.display = 'none'; }
+        }
+        function peRenderGrid() {
+            if (!pe) return;
+            const g = document.getElementById('peGridRect'), d = pe.doc, z = pe.view.z;
+            g.style.display = pe.show.grid ? '' : 'none';
+            g.setAttribute('width', d.w); g.setAttribute('height', d.h);
+            const step = d.ppm * (d.ppm * z < 7 ? 5 : 1);   // too dense when zoomed out: one line every 5 m
+            const minor = document.getElementById('peGridMinor'), major = document.getElementById('peGridMajor');
+            minor.setAttribute('width', step); minor.setAttribute('height', step);
+            minor.innerHTML = `<path d="M ${step} 0 L 0 0 0 ${step}" fill="none" stroke="#cbd5e1" stroke-width="${1 / z}"/>`;
+            major.setAttribute('width', step * 5); major.setAttribute('height', step * 5);
+            major.innerHTML = `<rect width="${step * 5}" height="${step * 5}" fill="url(#peGridMinor)"/><path d="M ${step * 5} 0 L 0 0 0 ${step * 5}" fill="none" stroke="#94a3b8" stroke-width="${1.4 / z}"/>`;
+        }
+        // handles, selection and what's being drawn right now
+        function peRenderOverlay() {
+            if (!pe) return;
+            const z = pe.view.z, d = pe.doc, ov = document.getElementById('peOverlay');
+            let out = '';
+            const sel = pe.sel;
+            if (sel && sel.type === 'wall') {
+                const w = d.walls.find(x => x.id === sel.id), a = w && peNode(w.a), b = w && peNode(w.b);
+                if (a && b) out += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#f97316" stroke-opacity=".55" stroke-width="${peWallStyle(w.kind, d.ppm).w + 8 / z}" stroke-linecap="round" pointer-events="none"/>`;
+            }
+            if (sel && sel.type === 'room') {
+                const r = d.rooms.find(x => x.id === sel.id);
+                if (r) out += `<polygon points="${peRoomPts(r).map(q => q.x + ',' + q.y).join(' ')}" fill="rgba(249,115,22,.08)" stroke="#f97316" stroke-width="${2.5 / z}" stroke-dasharray="${8 / z} ${5 / z}" pointer-events="none"/>`;
+            }
+            if (sel && sel.type === 'item') {
+                const it = d.items.find(x => x.id === sel.id);
+                if (it) {
+                    const hb = it.kind === 'text' ? peTextBox(it) : { w: it.w, h: it.kind === 'door' ? it.w : it.kind === 'door2' ? it.w / 2 : it.h, y: it.kind === 'door' ? -it.w / 2 : it.kind === 'door2' ? -it.w / 4 : 0 };
+                    const pad = 6 / z;
+                    out += `<g transform="translate(${it.x} ${it.y}) rotate(${it.rot || 0})" pointer-events="none"><rect x="${-hb.w / 2 - pad}" y="${(hb.y || 0) - hb.h / 2 - pad}" width="${hb.w + pad * 2}" height="${hb.h + pad * 2}" fill="none" stroke="#f97316" stroke-width="${2 / z}" stroke-dasharray="${6 / z} ${4 / z}"/></g>`;
+                }
+            }
+            // corner dots (select and wall tools)
+            if (pe.tool === 'select' || pe.tool === 'wall' || pe.tool === 'erase') {
+                const r = 6 / z;
+                d.nodes.forEach(n => {
+                    const on = sel && sel.type === 'node' && sel.id === n.id;
+                    const hot = pe.hover && pe.hover.node === n.id;
+                    out += `<circle data-node="${esc(n.id)}" cx="${n.x}" cy="${n.y}" r="${(on || hot ? 1.5 : 1) * r}" fill="${on || hot ? '#f97316' : '#ffffff'}" stroke="${on || hot ? '#ffffff' : '#0f172a'}" stroke-width="${1.6 / z}" class="pe-node"/>`;
+                    out += `<circle data-node="${esc(n.id)}" cx="${n.x}" cy="${n.y}" r="${16 / z}" fill="transparent"/>`;
+                });
+            }
+            // the wall being drawn
+            if (pe.tool === 'wall' && pe.hover) {
+                const h = pe.hover, from = pe.chain ? peNode(pe.chain.last) : null;
+                if (from) {
+                    const L = peDist(from, h);
+                    const s = peWallStyle(pe.wallKind, d.ppm);
+                    out += `<line x1="${from.x}" y1="${from.y}" x2="${h.x}" y2="${h.y}" stroke="#f97316" stroke-width="${s.w}" stroke-linecap="round" stroke-opacity=".75" pointer-events="none"/>`;
+                    out += peTag((from.x + h.x) / 2, (from.y + h.y) / 2 - 16 / z, peFmtM(L / d.ppm));
+                }
+                out += `<circle cx="${h.x}" cy="${h.y}" r="${5 / z}" fill="#f97316" pointer-events="none"/>`;
+            }
+            // the room being drawn
+            if (pe.op && pe.op.type === 'room' && pe.op.b) {
+                const a = pe.op.a, b = pe.op.b, x = Math.min(a.x, b.x), y = Math.min(a.y, b.y), w = Math.abs(b.x - a.x), h = Math.abs(b.y - a.y);
+                out += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(249,115,22,.12)" stroke="#f97316" stroke-width="${peWallStyle(pe.wallKind, d.ppm).w}" pointer-events="none"/>`;
+                out += peTag(x + w / 2, y - 16 / z, `${peFmtM(w / d.ppm)} × ${peFmtM(h / d.ppm)}`);
+            }
+            ov.innerHTML = out;
+        }
+        function peTag(x, y, text) {
+            const z = pe.view.z, fs = 12 / z, w = (String(text).length * 6.6 + 14) / z, h = 20 / z;
+            return `<g pointer-events="none"><rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="#0f172a" fill-opacity=".85"/><text x="${x}" y="${y}" font-size="${fs}" font-family="system-ui, sans-serif" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">${esc(text)}</text></g>`;
+        }
+
+        // ---------- pointer: tap, drag, pinch ----------
+        function peHitOf(target) {
+            const el = target && target.closest ? target.closest('[data-node],[data-item],[data-wall],[data-room]') : null;
+            if (!el) return null;
+            if (el.dataset.node) return { type: 'node', id: el.dataset.node };
+            if (el.dataset.item) return { type: 'item', id: el.dataset.item };
+            if (el.dataset.wall) return { type: 'wall', id: el.dataset.wall };
+            if (el.dataset.room) return { type: 'room', id: el.dataset.room };
+            return null;
+        }
+        function peSelect(hit) {
+            pe.sel = hit;
+            peRenderOverlay(); peRenderPanel(); peHint();
+        }
+        (function bindPlanEditor() {
+            const svg = document.getElementById('peSvg');
+            if (!svg) return;
+            svg.addEventListener('pointerdown', e => {
+                if (!pe) return;
+                e.preventDefault();
+                try { svg.setPointerCapture(e.pointerId); } catch (x) {}
+                pe.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                if (pe.pointers.size === 2) {
+                    const [a, b] = Array.from(pe.pointers.values()), r = svg.getBoundingClientRect();
+                    pe.op = { type: 'pinch', d: Math.hypot(a.x - b.x, a.y - b.y), cx: (a.x + b.x) / 2 - r.left, cy: (a.y + b.y) / 2 - r.top, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, v: Object.assign({}, pe.view), before: pe.op && pe.op.before };
+                    return;
+                }
+                if (pe.pointers.size > 2) return;
+                const p = peToPlan(e), hit = peHitOf(e.target);
+                const base = { sx: e.clientX, sy: e.clientY, p, moved: false, v: Object.assign({}, pe.view), hit };
+                if (e.button === 1 || e.button === 2 || pe.space || pe.tool === 'pan') { pe.op = Object.assign(base, { type: 'pan' }); return; }
+                if (pe.tool === 'select') {
+                    if (hit && hit.type === 'node') { const n = peNode(hit.id); pe.op = Object.assign(base, { type: 'node', id: hit.id, o: { x: n.x, y: n.y } }); peSelect(hit); return; }
+                    if (hit && hit.type === 'item') { const it = pe.doc.items.find(i => i.id === hit.id); pe.op = Object.assign(base, { type: 'item', id: hit.id, o: { x: it.x, y: it.y } }); peSelect(hit); return; }
+                    if (hit && (hit.type === 'wall' || hit.type === 'room')) {
+                        const ids = hit.type === 'wall' ? (w => w ? [w.a, w.b] : [])(pe.doc.walls.find(w => w.id === hit.id)) : (pe.doc.rooms.find(r => r.id === hit.id) || { nodes: [] }).nodes;
+                        pe.op = Object.assign(base, { type: 'shape', o: ids.map(id => { const n = peNode(id); return n ? { id, x: n.x, y: n.y } : null; }).filter(Boolean) });
+                        peSelect(hit); return;
+                    }
+                    if (pe.sel) peSelect(null);
+                    pe.op = Object.assign(base, { type: 'pan' });
+                    return;
+                }
+                if (pe.tool === 'room') { pe.op = Object.assign(base, { type: 'room', a: peSnap(p) }); return; }
+                pe.op = Object.assign(base, { type: 'tap' });   // wall, stamp, text, erase: a tap acts, a drag pans
+            });
+            svg.addEventListener('pointermove', e => {
+                if (!pe) return;
+                if (pe.pointers.has(e.pointerId)) pe.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                const op = pe.op;
+                if (op && op.type === 'pinch') {
+                    if (pe.pointers.size < 2) return;
+                    const [a, b] = Array.from(pe.pointers.values()), fz = peFitZ();
+                    const nz = Math.min(Math.max(op.v.z * Math.hypot(a.x - b.x, a.y - b.y) / op.d, fz * 0.3), fz * 25);
+                    pe.view.z = nz;
+                    pe.view.x = op.cx - (op.cx - op.v.x) * (nz / op.v.z) + ((a.x + b.x) / 2 - op.mx);
+                    pe.view.y = op.cy - (op.cy - op.v.y) * (nz / op.v.z) + ((a.y + b.y) / 2 - op.my);
+                    peApplyView();
+                    return;
+                }
+                const p = peToPlan(e);
+                if (pe.tool === 'wall' && (!op || !op.moved)) {
+                    const from = pe.chain ? peNode(pe.chain.last) : null;
+                    pe.hover = peSnap(p, from); peRenderOverlay();
+                }
+                if (!op) return;
+                const dx = e.clientX - op.sx, dy = e.clientY - op.sy;
+                if (!op.moved && Math.hypot(dx, dy) > 5) op.moved = true;
+                if (!op.moved) return;
+                if (op.type === 'pan' || op.type === 'tap') { pe.view.x = op.v.x + dx; pe.view.y = op.v.y + dy; peApplyView(); return; }
+                if (op.type === 'node') {
+                    const n = peNode(op.id); if (!n) return;
+                    const s = peSnap({ x: op.o.x + dx / pe.view.z, y: op.o.y + dy / pe.view.z }, null, op.id);
+                    const tgt = peNodeNear(s, 14, op.id);
+                    n.x = tgt ? tgt.x : s.x; n.y = tgt ? tgt.y : s.y;
+                    pe.hover = tgt ? { node: tgt.id } : null;
+                    peRender(); return;
+                }
+                if (op.type === 'item') {
+                    const it = pe.doc.items.find(i => i.id === op.id); if (!it) return;
+                    let x = op.o.x + dx / pe.view.z, y = op.o.y + dy / pe.view.z;
+                    if (PE_WALL_MOUNT.has(it.kind)) { const w = peWallNear({ x, y }, pe.doc.ppm * 0.6); if (w) { x = w.q.x; y = w.q.y; it.rot = Math.round(Math.atan2(w.b.y - w.a.y, w.b.x - w.a.x) * 180 / Math.PI); } }
+                    else if (pe.show.snap) { const g = pe.doc.ppm / 4; x = Math.round(x / g) * g; y = Math.round(y / g) * g; }
+                    it.x = Math.round(x * 10) / 10; it.y = Math.round(y * 10) / 10;
+                    peRender(); return;
+                }
+                if (op.type === 'shape') {
+                    let ddx = dx / pe.view.z, ddy = dy / pe.view.z;
+                    if (pe.show.snap) { const g = pe.doc.ppm / 2; ddx = Math.round(ddx / g) * g; ddy = Math.round(ddy / g) * g; }
+                    op.o.forEach(o => { const n = peNode(o.id); if (n) { n.x = o.x + ddx; n.y = o.y + ddy; } });
+                    peRender(); return;
+                }
+                if (op.type === 'room') { op.b = peSnap(p); peRenderOverlay(); }
+            });
+            const end = e => {
+                if (!pe || !pe.pointers.has(e.pointerId)) return;
+                pe.pointers.delete(e.pointerId);
+                const op = pe.op;
+                if (op && op.type === 'pinch') { if (pe.pointers.size === 0) pe.op = null; return; }
+                pe.op = null;
+                if (!op) return;
+                const p = peToPlan(e);
+                if (op.type === 'node') {
+                    if (op.moved) { const n = peNode(op.id), tgt = n && peNodeNear(n, 14, op.id); if (tgt && peDist(tgt, n) < 0.5) peMergeNode(op.id, tgt.id), peSelect({ type: 'node', id: tgt.id }); pe.hover = null; peCommit(); peRender(); peRenderPanel(); }
+                    return;
+                }
+                if (op.type === 'item' || op.type === 'shape') { if (op.moved) { peCommit(); peRenderPanel(); } return; }
+                if (op.type === 'room') {
+                    const a = op.a, b = op.b || a;
+                    if (Math.abs(b.x - a.x) >= pe.doc.ppm * 0.5 && Math.abs(b.y - a.y) >= pe.doc.ppm * 0.5) peMakeRoom(a, b);
+                    peRenderOverlay();
+                    return;
+                }
+                if (op.type !== 'tap' || op.moved) return;
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                if (pe.tool === 'wall') peWallTap(p);
+                else if (pe.tool === 'stamp') pePlaceObject(p);
+                else if (pe.tool === 'text') pePlaceText(p);
+                else if (pe.tool === 'erase') peErase(op.hit);
+            };
+            svg.addEventListener('pointerup', end);
+            svg.addEventListener('pointercancel', e => { if (pe) { pe.pointers.delete(e.pointerId); pe.op = null; } });
+            svg.addEventListener('pointerleave', () => { if (pe && pe.tool === 'wall' && !pe.chain) { pe.hover = null; peRenderOverlay(); } });
+            svg.addEventListener('dblclick', e => { if (pe && pe.tool === 'wall' && pe.chain) { e.preventDefault(); peFinishChain(); } });
+            svg.addEventListener('contextmenu', e => { e.preventDefault(); if (pe && pe.tool === 'wall' && pe.chain) peFinishChain(); });
+            svg.addEventListener('wheel', e => {
+                if (!pe) return;
+                e.preventDefault();
+                const r = svg.getBoundingClientRect();
+                // mouse wheel or pinch on a trackpad zooms; two-finger scrolling on a trackpad moves around
+                if (e.ctrlKey || e.metaKey || e.deltaMode !== 0 || (e.deltaX === 0 && Math.abs(e.deltaY) >= 40)) peZoom(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - r.left, e.clientY - r.top);
+                else { pe.view.x -= e.deltaX; pe.view.y -= e.deltaY; peApplyView(); }
+            }, { passive: false });
+            window.addEventListener('resize', () => { if (pe) peApplyView(); });
+            document.addEventListener('keydown', e => {
+                if (!pe || document.getElementById('planEditor').classList.contains('hidden')) return;
+                if (!document.getElementById('confirmModal').classList.contains('hidden')) return;
+                const typing = /INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || '');
+                const k = e.key, mod = e.ctrlKey || e.metaKey;
+                if (k === 'Escape') { if (typing) { e.target.blur(); return; } if (pe.chain) peFinishChain(); else if (pe.sel) peSelect(null); else if (pe.tool !== 'select') peSetTool('select'); return; }
+                if (typing) return;
+                if (mod && (k === 'z' || k === 'Z')) { e.preventDefault(); e.shiftKey ? peRedo() : peUndo(); return; }
+                if (mod && (k === 'y' || k === 'Y')) { e.preventDefault(); peRedo(); return; }
+                if (mod && (k === 's' || k === 'S')) { e.preventDefault(); peSave(); return; }
+                if (mod && (k === 'd' || k === 'D')) { e.preventDefault(); peDuplicate(); return; }
+                if (k === 'Enter' && pe.chain) { peFinishChain(); return; }
+                if ((k === 'Delete' || k === 'Backspace') && pe.sel) { e.preventDefault(); peDeleteSel(); return; }
+                if (k === ' ') { e.preventDefault(); pe.space = true; return; }
+                if (k.startsWith('Arrow') && pe.sel) { e.preventDefault(); peNudge(k, e.shiftKey ? 10 : 1); return; }
+                if (k === '+' || k === '=') { peZoom(1.25); return; }
+                if (k === '-') { peZoom(1 / 1.25); return; }
+                if (k === '0') { peFit(); return; }
+                const tool = PE_TOOLS.find(t => t[2].toLowerCase() === k.toLowerCase());
+                if (tool && !mod) peSetTool(tool[0]);
+            });
+            document.addEventListener('keyup', e => { if (pe && e.key === ' ') pe.space = false; });
+        })();
+
+        // ---------- actions ----------
+        function peWallTap(p) {
+            const from = pe.chain ? peNode(pe.chain.last) : null;
+            const n = pePointNode(p, from);
+            if (!pe.chain) { pe.chain = { first: n.id, last: n.id, n: 0 }; }
+            else if (n.id !== pe.chain.last) {
+                peAddWall(pe.chain.last, n.id);
+                pe.chain.n++;
+                if (n.id === pe.chain.first && pe.chain.n >= 2) { pe.chain = null; peCommit(); peRender(); peHint(); return; }
+                pe.chain.last = n.id;
+            }
+            peCommit();
+            pe.hover = peSnap(p, peNode(pe.chain.last));
+            peRender(); peHint();
+        }
+        function peFinishChain() {
+            if (!pe || !pe.chain) return;
+            pe.chain = null;
+            peDropOrphans(); peCommit();
+            peRender(); peHint();
+        }
+        function peMakeRoom(a, b) {
+            const x1 = Math.min(a.x, b.x), y1 = Math.min(a.y, b.y), x2 = Math.max(a.x, b.x), y2 = Math.max(a.y, b.y);
+            const corner = (x, y) => { const near = peNodeNear({ x, y }, 6); return near || peAddNode(x, y); };
+            const ns = [corner(x1, y1), corner(x2, y1), corner(x2, y2), corner(x1, y2)];
+            ns.forEach((n, i) => peAddWall(n.id, ns[(i + 1) % 4].id));
+            const r = { id: uid(), nodes: ns.map(n => n.id), name: `Room ${pe.doc.rooms.length + 1}`, color: PE_ROOM_COLORS[pe.doc.rooms.length % PE_ROOM_COLORS.length] };
+            pe.doc.rooms.push(r);
+            peCommit();
+            pe.tool = 'select';
+            document.querySelectorAll('#peTools .pe-tool').forEach(btn => btn.classList.toggle('on', btn.dataset.tool === 'select'));
+            document.getElementById('peStage').dataset.tool = 'select';
+            pe.sel = { type: 'room', id: r.id };
+            peRender(); peRenderPanel(); peHint();
+            if (window.innerWidth >= 1024) setTimeout(() => { const f = document.getElementById('peRoomName'); if (f) { f.focus(); f.select(); } }, 30);
+        }
+        function pePlaceObject(p) {
+            const o = PE_OBJECTS.find(x => x.k === pe.stampKind);
+            if (!o) return;
+            const ppm = pe.doc.ppm;
+            const it = { id: uid(), kind: o.k, x: p.x, y: p.y, rot: 0, w: o.w * ppm, h: o.h * ppm };
+            if (PE_WALL_MOUNT.has(o.k)) {
+                const w = peWallNear(p, Math.max(ppm * 1.2, 24 / pe.view.z));
+                if (w) { it.x = w.q.x; it.y = w.q.y; it.rot = Math.round(Math.atan2(w.b.y - w.a.y, w.b.x - w.a.x) * 180 / Math.PI); }
+            } else if (pe.show.snap) { const g = ppm / 4; it.x = Math.round(p.x / g) * g; it.y = Math.round(p.y / g) * g; }
+            pe.doc.items.push(it);
+            peCommit();
+            peSetTool('select', true);
+            peSelect({ type: 'item', id: it.id });
+            peRender();
+        }
+        function pePlaceText(p) {
+            const it = { id: uid(), kind: 'text', x: p.x, y: p.y, rot: 0, w: 0, h: 0, text: 'Label', size: Math.round(pe.doc.ppm * 0.6) };
+            pe.doc.items.push(it);
+            peCommit();
+            peSetTool('select', true);
+            peSelect({ type: 'item', id: it.id });
+            peRender();
+            setTimeout(() => { const f = document.getElementById('peItemText'); if (f) { f.focus(); f.select(); } }, 30);
+        }
+        function peErase(hit) {
+            if (!hit) return;
+            pe.sel = hit;
+            peDeleteSel();
+        }
+        function peNudge(k, n) {
+            const s = pe.doc.ppm / 10 * n, dx = k === 'ArrowLeft' ? -s : k === 'ArrowRight' ? s : 0, dy = k === 'ArrowUp' ? -s : k === 'ArrowDown' ? s : 0;
+            const { type, id } = pe.sel;
+            const move = n => { if (n) { n.x += dx; n.y += dy; } };
+            if (type === 'node') move(peNode(id));
+            else if (type === 'item') move(pe.doc.items.find(i => i.id === id));
+            else if (type === 'wall') { const w = pe.doc.walls.find(x => x.id === id); if (w) { move(peNode(w.a)); move(peNode(w.b)); } }
+            else if (type === 'room') { const r = pe.doc.rooms.find(x => x.id === id); if (r) r.nodes.forEach(nid => move(peNode(nid))); }
+            peCommit(); peRender();
+        }
+        function peDuplicate() {
+            if (!pe || !pe.sel) return;
+            const off = pe.doc.ppm;
+            if (pe.sel.type === 'item') {
+                const it = pe.doc.items.find(i => i.id === pe.sel.id); if (!it) return;
+                const c = Object.assign(peClone(it), { id: uid(), x: it.x + off, y: it.y + off });
+                pe.doc.items.push(c); peCommit(); peSelect({ type: 'item', id: c.id }); peRender();
+            } else if (pe.sel.type === 'room') {
+                const r = pe.doc.rooms.find(x => x.id === pe.sel.id); if (!r) return;
+                const map = new Map(r.nodes.map(id => { const n = peNode(id); return [id, peAddNode(n.x + off, n.y + off).id]; }));
+                pe.doc.walls.filter(w => map.has(w.a) && map.has(w.b)).forEach(w => peAddWall(map.get(w.a), map.get(w.b), w.kind));
+                const c = { id: uid(), nodes: r.nodes.map(id => map.get(id)), name: r.name + ' copy', color: r.color };
+                pe.doc.rooms.push(c); peCommit(); peSelect({ type: 'room', id: c.id }); peRender();
+            }
+        }
+
+        // ---------- side panel: tool options or what's selected ----------
+        function pePanel(mode) { if (!pe) return; pe.panel = pe.panel === mode ? 'tool' : mode; peRenderPanel(); }
+        function peStartTool(t) { if (pe) { pe.panel = 'tool'; peSetTool(t); } }
+        function peRenderPanel() {
+            if (!pe) return;
+            const el = document.getElementById('pePanel');
+            const d = pe.doc, sel = pe.sel;
+            const btn = (on, js, label, extra) => `<button type="button" class="pe-chip ${on ? 'on' : ''}" onclick="${js}" ${extra || ''}>${label}</button>`;
+            const head = t => `<div class="flex items-center justify-between gap-2"><span class="eyebrow t-accent">${t}</span><button type="button" class="pe-x" onclick="peClosePanel()" aria-label="Close panel">✕</button></div>`;
+            let html = '';
+            if (pe.panel === 'more') {
+                const bg = d.bg;
+                html = `${head('Plan options')}
+                    <div class="space-y-2"><div class="lbl !mb-0">Photo underneath</div>
+                        <p class="text-[11px] t-faint">Trace over a photo, screenshot or old plan. ${bg ? '' : 'It sits under your drawing.'}</p>
+                        <div class="flex flex-wrap gap-2"><button type="button" class="btn btn-secondary !py-1.5 !px-3 !text-xs" onclick="document.getElementById('peBgFile').click()">${bg ? 'Change photo' : '📷 Choose photo'}</button>${bg ? '<button type="button" class="btn btn-outline-danger !py-1.5 !px-3 !text-xs" onclick="peRemoveBg()">Remove</button>' : ''}</div>
+                        ${bg ? `<label class="lbl !mb-0">Photo strength</label><input type="range" min="10" max="100" value="${Math.round((bg.opacity == null ? 1 : bg.opacity) * 100)}" oninput="peBgOpacity(this.value)" class="w-full accent-orange-500">
+                        <label class="pe-check"><input type="checkbox" ${bg.include ? 'checked' : ''} onchange="peBgInclude(this.checked)"> Keep the photo in the saved plan</label>` : ''}
+                    </div>
+                    <div class="space-y-1.5 border-t divider pt-3"><div class="lbl !mb-0">Scale</div>
+                        <div class="flex items-center gap-2 text-xs"><span>1 grid square = 1 m =</span><input type="number" min="4" max="200" step="1" value="${d.ppm}" onchange="peSetScale(this.value)" class="field !w-20 !py-1 !text-xs"><span>px</span></div>
+                        <p class="text-[11px] t-faint">Page: ${peFmtM(d.w / d.ppm)} × ${peFmtM(d.h / d.ppm)}. Change the scale if measurements on a photo look wrong.</p></div>
+                    <div class="space-y-1.5 border-t divider pt-3"><div class="lbl !mb-0">Show</div>
+                        <label class="pe-check"><input type="checkbox" ${pe.show.grid ? 'checked' : ''} onchange="peSet('grid', this.checked)"> Grid</label>
+                        <label class="pe-check"><input type="checkbox" ${pe.show.snap ? 'checked' : ''} onchange="peSet('snap', this.checked)"> Snap to grid and corners</label>
+                        <label class="pe-check"><input type="checkbox" ${d.sizes ? 'checked' : ''} onchange="document.getElementById('peSizes').checked = this.checked; peSet('sizes', this.checked)"> Measurements (also on the saved plan)</label>
+                        <label class="pe-check"><input type="checkbox" ${pe.show.pins ? 'checked' : ''} onchange="peSet('pins', this.checked)"> Station pins</label></div>
+                    <div class="border-t divider pt-3"><button type="button" class="btn btn-outline-danger !py-1.5 !px-3 !text-xs" onclick="peClearAll()">Clear the drawing</button></div>`;
+            } else if (sel) {
+                if (sel.type === 'wall') {
+                    const w = d.walls.find(x => x.id === sel.id), a = w && peNode(w.a), b = w && peNode(w.b);
+                    if (!w || !a || !b) { pe.sel = null; return peRenderPanel(); }
+                    html = `${head('Wall')}
+                        <div class="flex flex-wrap gap-1.5">${Object.entries(PE_WALLS).map(([k, l]) => btn(w.kind === k, `peWallKind('${k}')`, l)).join('')}</div>
+                        <label class="lbl !mb-0">Length (m)</label>
+                        <input type="number" id="peWallLen" min="0.1" step="0.1" value="${(Math.round(peM(peDist(a, b)) * 100) / 100)}" onchange="peSetWallLength(this.value)" class="field !py-1.5 !text-sm">
+                        <div class="grid grid-cols-2 gap-1.5"><button type="button" class="btn btn-secondary !py-1.5 !text-xs" onclick="peSplitSel()">+ Add a corner</button><button type="button" class="btn btn-outline-danger !py-1.5 !text-xs" onclick="peDeleteSel()">Delete wall</button></div>`;
+                } else if (sel.type === 'node') {
+                    const n = peNode(sel.id), links = d.walls.filter(w => w.a === sel.id || w.b === sel.id).length;
+                    if (!n) { pe.sel = null; return peRenderPanel(); }
+                    html = `${head('Corner')}<p class="text-xs t-muted">Joins ${links} wall${links === 1 ? '' : 's'}. Drag it to reshape; drop it on another corner to join them.</p>
+                        <button type="button" class="btn btn-outline-danger !py-1.5 !text-xs w-full" onclick="peDeleteSel()">Delete corner and its walls</button>`;
+                } else if (sel.type === 'room') {
+                    const r = d.rooms.find(x => x.id === sel.id);
+                    if (!r) { pe.sel = null; return peRenderPanel(); }
+                    html = `${head('Room')}
+                        <label class="lbl !mb-0" for="peRoomName">Name</label>
+                        <input type="text" id="peRoomName" maxlength="40" value="${esc(r.name || '')}" oninput="peRoomName(this.value)" onchange="peCommit()" class="field !py-1.5 !text-sm" placeholder="e.g. Kitchen">
+                        <div class="flex flex-wrap gap-1.5">${['Kitchen', 'Office', 'Storeroom', 'Warehouse', 'Toilets', 'Plant room', 'Loading dock'].map(s => `<button type="button" class="pe-chip" onclick="document.getElementById('peRoomName').value = '${s}'; peRoomName('${s}'); peCommit()">${s}</button>`).join('')}</div>
+                        <div class="lbl !mb-0">Colour</div>
+                        <div class="flex flex-wrap gap-1.5">${PE_ROOM_COLORS.map(c => `<button type="button" class="pe-swatch ${r.color === c ? 'on' : ''}" style="background:${c};" onclick="peRoomColor('${c}')" aria-label="Colour"></button>`).join('')}</div>
+                        <p class="text-xs t-muted">Floor area <b class="t-strong">${peRoomArea(r).toLocaleString(LOCALE, { maximumFractionDigits: 1 })} m²</b> · drag the room to move it, or its corners to reshape it.</p>
+                        <div class="grid grid-cols-2 gap-1.5"><button type="button" class="btn btn-secondary !py-1.5 !text-xs" onclick="peDuplicate()">Duplicate</button><button type="button" class="btn btn-outline-danger !py-1.5 !text-xs" onclick="peDeleteSel()">Delete room</button></div>`;
+                } else if (sel.type === 'item') {
+                    const it = d.items.find(x => x.id === sel.id);
+                    if (!it) { pe.sel = null; return peRenderPanel(); }
+                    const o = PE_OBJECTS.find(x => x.k === it.kind);
+                    const rot = `<div class="lbl !mb-0">Turn</div><div class="grid grid-cols-4 gap-1.5">${[[-90, '↺ 90°'], [-15, '↺ 15°'], [15, '↻ 15°'], [90, '↻ 90°']].map(([a, l]) => `<button type="button" class="pe-chip justify-center" onclick="peRotate(${a})">${l}</button>`).join('')}</div>`;
+                    html = it.kind === 'text'
+                        ? `${head('Label')}<label class="lbl !mb-0" for="peItemText">Text</label>
+                            <input type="text" id="peItemText" maxlength="60" value="${esc(it.text || '')}" oninput="peItemSet('text', this.value)" onchange="peCommit()" class="field !py-1.5 !text-sm">
+                            <div class="lbl !mb-0">Size</div><div class="flex flex-wrap gap-1.5">${[['S', 0.4], ['M', 0.6], ['L', 0.9], ['XL', 1.4]].map(([l, f]) => btn(Math.abs((it.size || 0) - Math.round(d.ppm * f)) < 1, `peItemSet('size', ${Math.round(d.ppm * f)}); peCommit(); peRenderPanel()`, l)).join('')}</div>
+                            <div class="lbl !mb-0">Colour</div><div class="flex flex-wrap gap-1.5">${['#0f172a', '#dc2626', '#ea580c', '#16a34a', '#2563eb'].map(c => `<button type="button" class="pe-swatch ${(it.color || '#0f172a') === c ? 'on' : ''}" style="background:${c};" onclick="peItemSet('color', '${c}'); peCommit(); peRenderPanel()" aria-label="Colour"></button>`).join('')}</div>
+                            ${rot}`
+                        : `${head(o ? o.label : 'Object')}
+                            <div class="grid grid-cols-2 gap-2"><div><label class="lbl !mb-0">Width (m)</label><input type="number" min="0.1" step="0.1" value="${Math.round(peM(it.w) * 100) / 100}" onchange="peItemSize('w', this.value)" class="field !py-1.5 !text-sm"></div>
+                            ${PE_WALL_MOUNT.has(it.kind) && it.kind !== 'roller' && it.kind !== 'window' ? '' : `<div><label class="lbl !mb-0">Length (m)</label><input type="number" min="0.1" step="0.1" value="${Math.round(peM(it.h) * 100) / 100}" onchange="peItemSize('h', this.value)" class="field !py-1.5 !text-sm"></div>`}</div>
+                            ${rot}
+                            ${it.kind === 'door' ? `<button type="button" class="pe-chip" onclick="peFlipDoor()">⇋ Flip the way it opens</button>` : ''}`;
+                    html += `<div class="grid grid-cols-2 gap-1.5"><button type="button" class="btn btn-secondary !py-1.5 !text-xs" onclick="peDuplicate()">Duplicate</button><button type="button" class="btn btn-outline-danger !py-1.5 !text-xs" onclick="peDeleteSel()">Delete</button></div>`;
+                }
+            } else if (pe.tool === 'wall' || pe.tool === 'room') {
+                html = `${head(pe.tool === 'wall' ? 'Walls' : 'Rooms')}
+                    <p class="text-[11px] t-faint">${pe.tool === 'wall' ? 'Tap corner by corner. Walls join up automatically, and tapping on an existing wall joins onto it.' : 'Drag across the page to draw a room. You can name it and change its colour afterwards.'}</p>
+                    <div class="lbl !mb-0">Draw as</div>
+                    <div class="flex flex-wrap gap-1.5">${Object.entries(PE_WALLS).map(([k, l]) => btn(pe.wallKind === k, `pe.wallKind = '${k}'; peRenderPanel()`, l)).join('')}</div>
+                    ${pe.tool === 'wall' ? `<label class="pe-check"><input type="checkbox" ${pe.straight ? 'checked' : ''} onchange="pe.straight = this.checked"> Straight lines (level, upright or 45°)</label>` : ''}`;
+            } else if (pe.tool === 'stamp') {
+                html = `${head('Objects')}<p class="text-[11px] t-faint">Pick one, then tap the plan. Doors and windows fit themselves onto a wall.</p>
+                    <div class="pe-objects">${PE_OBJECTS.map(o => `<button type="button" class="pe-obj ${pe.stampKind === o.k ? 'on' : ''}" onclick="pe.stampKind = '${o.k}'; peRenderPanel(); peHint()" title="${o.label}">
+                        <svg viewBox="-34 -34 68 68">${peItemSvg({ kind: o.k, w: o.w > o.h ? 50 : 50 * o.w / o.h, h: o.w > o.h ? 50 * o.h / o.w : 50, x: 0, y: o.k === 'door' ? 12 : o.k === 'door2' ? 6 : 0, rot: 0 }, 40, false)}</svg><span>${o.label}</span></button>`).join('')}</div>`;
+            }
+            if (pe.panel === 'none' && !sel) html = '';
+            el.innerHTML = html;
+            el.classList.toggle('hidden', !html);
+            document.getElementById('planEditor').classList.toggle('pe-has-panel', !!html);
+        }
+        function peClosePanel() { if (!pe) return; if (pe.panel === 'more') pe.panel = 'tool'; else if (pe.sel) pe.sel = null; else { pe.panel = 'none'; document.getElementById('pePanel').classList.add('hidden'); document.getElementById('planEditor').classList.remove('pe-has-panel'); return; } peRenderPanel(); peRenderOverlay(); peHint(); }
+        function peWallKind(k) { const w = pe.doc.walls.find(x => x.id === pe.sel.id); if (w) { w.kind = k; pe.wallKind = k; peCommit(); peRender(); peRenderPanel(); } }
+        function peSetWallLength(v) {
+            const L = parseFloat(v) * pe.doc.ppm, w = pe.doc.walls.find(x => x.id === pe.sel.id);
+            if (!w || !(L > 0)) return;
+            const a = peNode(w.a), b = peNode(w.b), cur = peDist(a, b) || 1;
+            b.x = a.x + (b.x - a.x) * L / cur; b.y = a.y + (b.y - a.y) * L / cur;
+            peCommit(); peRender();
+        }
+        function peSplitSel() {
+            const w = pe.doc.walls.find(x => x.id === pe.sel.id); if (!w) return;
+            const a = peNode(w.a), b = peNode(w.b), n = peSplitWall(w, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+            peCommit(); peSelect({ type: 'node', id: n.id }); peRender();
+        }
+        function peRoomName(v) { const r = pe.doc.rooms.find(x => x.id === pe.sel.id); if (r) { r.name = v; document.getElementById('peContent').innerHTML = peContentSvg(pe.doc, true); } }
+        function peRoomColor(c) { const r = pe.doc.rooms.find(x => x.id === pe.sel.id); if (r) { r.color = c; peCommit(); peRender(); peRenderPanel(); } }
+        function peItemSet(k, v) { const it = pe.doc.items.find(x => x.id === pe.sel.id); if (it) { it[k] = v; peRender(); } }
+        function peItemSize(k, v) { const it = pe.doc.items.find(x => x.id === pe.sel.id), m = parseFloat(v); if (it && m > 0) { it[k] = m * pe.doc.ppm; if (it.kind === 'door' || it.kind === 'door2') it.h = it.w; peCommit(); peRender(); } }
+        function peRotate(a) { const it = pe.doc.items.find(x => x.id === pe.sel.id); if (it) { it.rot = (((it.rot || 0) + a) % 360 + 360) % 360; peCommit(); peRender(); } }
+        function peFlipDoor() { const it = pe.doc.items.find(x => x.id === pe.sel.id); if (it) { it.rot = ((it.rot || 0) + 180) % 360; peCommit(); peRender(); } }
+        function peSetScale(v) {
+            const n = Math.round(parseFloat(v));
+            if (!(n >= 4 && n <= 200)) return;
+            pe.doc.ppm = n; peCommit(); peRender(); peRenderPanel();
+        }
+        function peClearAll() {
+            openConfirm({ title: 'Clear the drawing?', message: 'Every wall, room, object and label on this plan is removed. Undo brings it back.', confirmLabel: 'Clear it', cancelLabel: 'Keep it', onConfirm: () => {
+                if (!pe) return;
+                Object.assign(pe.doc, { nodes: [], walls: [], rooms: [], items: [] }); pe.sel = null; pe.chain = null;
+                peCommit(); peRender(); peRenderPanel();
+            } });
+        }
+        // photo underneath
+        document.getElementById('peBgFile').addEventListener('change', async e => {
+            const file = e.target.files[0];
+            e.target.value = '';
+            if (!file || !pe) return;
+            const blob = await compressImage(file, 3000, 0.85);
+            const url = URL.createObjectURL(blob);
+            const dims = await new Promise(res => { const i = new Image(); i.onload = () => res({ w: i.naturalWidth, h: i.naturalHeight }); i.onerror = () => res(null); i.src = url; });
+            if (!dims) { alert("That file couldn't be read as a picture."); return; }
+            if (pe.bgUrl && pe.bgBlob) URL.revokeObjectURL(pe.bgUrl);
+            pe.bgBlob = blob; pe.bgUrl = url;
+            // the photo is stretched to the page; a drawing that's still empty takes the photo's shape instead
+            const empty = !pe.doc.nodes.length && !pe.doc.items.length && !(pe.mapId && pinsOn(pe.mapId).length);
+            if (empty) { const k = Math.max(pe.doc.w, pe.doc.h) / Math.max(dims.w, dims.h); pe.doc.w = Math.round(dims.w * k); pe.doc.h = Math.round(dims.h * k); }
+            pe.doc.bg = { path: null, include: false, opacity: 0.6 };
+            document.getElementById('peWelcome').classList.add('hidden');
+            peCommit(); peFit(); peRender(); peRenderPanel();
+        });
+        function peRemoveBg() { pe.doc.bg = null; if (pe.bgUrl && pe.bgBlob) URL.revokeObjectURL(pe.bgUrl); pe.bgUrl = null; pe.bgBlob = null; peCommit(); peRender(); peRenderPanel(); }
+        function peBgOpacity(v) { if (pe.doc.bg) { pe.doc.bg.opacity = Math.round(v) / 100; peRenderBg(); pe.dirty = true; } }
+        function peBgInclude(on) { if (pe.doc.bg) { pe.doc.bg.include = !!on; peCommit(); } }
+        function peWelcomeGo(what) {
+            document.getElementById('peWelcome').classList.add('hidden');
+            if (what === 'photo') { pePanel('more'); document.getElementById('peBgFile').click(); }
+            else peSetTool(what);
+        }
+
+        let peToastTimer = null;
+        function peToast(msg) {
+            const el = document.getElementById('peToast');
+            el.textContent = msg; el.classList.remove('hidden');
+            clearTimeout(peToastTimer); peToastTimer = setTimeout(() => el.classList.add('hidden'), 3200);
+        }
+
+        // ---------- save: the drawing, and a picture of it ----------
+        async function peRenderPng() {
+            const d = pe.doc;
+            const c = document.createElement('canvas');
+            c.width = d.w; c.height = d.h;
+            const g = c.getContext('2d');
+            g.fillStyle = '#ffffff'; g.fillRect(0, 0, d.w, d.h);
+            if (d.bg && d.bg.include && pe.bgUrl) {
+                const img = await new Promise(res => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => res(null); i.src = pe.bgUrl; });
+                if (!img) throw new Error("the photo under the plan couldn't be loaded");
+                g.globalAlpha = d.bg.opacity == null ? 1 : d.bg.opacity; g.drawImage(img, 0, 0, d.w, d.h); g.globalAlpha = 1;
+            }
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${d.w}" height="${d.h}" viewBox="0 0 ${d.w} ${d.h}">${peContentSvg(d, false)}</svg>`;
+            const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+            try {
+                const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('the drawing could not be turned into a picture')); i.src = url; });
+                g.drawImage(img, 0, 0, d.w, d.h);
+            } finally { URL.revokeObjectURL(url); }
+            return await new Promise((res, rej) => { try { c.toBlob(b => b ? res(b) : rej(new Error('the picture could not be made')), 'image/png'); } catch (e) { rej(new Error("the photo under the plan can't be copied from this browser - untick 'Keep the photo in the saved plan' or upload it again")); } });
+        }
+        async function peSave() {
+            if (!pe || pe.saving) return;
+            if (pe.chain) peFinishChain();
+            const name = document.getElementById('peName').value.trim();
+            if (!name) { peToast('Give the plan a name first, e.g. Site External'); document.getElementById('peName').focus(); return; }
+            if (siteMaps.some(x => x.name.toLowerCase() === name.toLowerCase() && x.id !== pe.mapId)) { peToast(`There's already a plan called "${name}"`); document.getElementById('peName').focus(); return; }
+            const d = pe.doc;
+            if (!d.walls.length && !d.items.length && !d.rooms.length && !(d.bg && d.bg.include)) { peToast('Draw something first - start with the Room or Wall tool'); return; }
+            const btn = document.getElementById('peSaveBtn');
+            pe.saving = true; btn.disabled = true; btn.textContent = 'Saving...';
+            try {
+                const png = await peRenderPng();
+                const drawing = peClone(d);
+                if (drawing.bg && !drawing.bg.path && !pe.bgBlob) drawing.bg = null;   // a photo that never reached this device again
+                const blobs = [png];
+                if (pe.bgBlob) blobs.push(pe.bgBlob);
+                const isNew = !pe.mapId, id = pe.mapId || uid(), tech = technicianLabel(), at = new Date().toISOString();
+                const row = isNew
+                    ? { id, name, width: d.w, height: d.h, sort: siteMaps.length ? Math.max(...siteMaps.map(x => x.order || 0)) + 1 : 1, created_by: tech, drawing }
+                    : { id, name, width: d.w, height: d.h, drawing, updated_at: at };
+                const old = isNew ? null : currentMapById(id);
+                await queueTableRow('site_maps', row, `Floor plan ${isNew ? 'drawn' : 'updated'} · ${name}`, {
+                    blobs, photoField: 'image_path', prefix: 'SITE_MAP',
+                    rowPaths: paths => { if (pe.bgBlob && row.drawing.bg) row.drawing.bg.path = paths[1]; }
+                });
+                await queueSiteChange({ action: 'floor_plan', title: isNew ? `Floor plan "${name}" drawn` : old && old.name !== name ? `Floor plan "${old.name}" redrawn and renamed to "${name}"` : `Floor plan "${name}" redrawn` }, 'Floor plan · log');
+                try { localStorage.removeItem(peDraftKey(pe.mapId)); } catch (e) {}
+                pe.dirty = false;
+                peClose(true);
+                await refreshSiteStateFromCache();
+                if (document.getElementById('mapModal').classList.contains('hidden')) openMapModal({ mapId: id }); else selectMap(id);
+                if (drawingColumnMissing) setTimeout(() => alert('The plan was saved as a picture. To keep the drawing editable later, run pestis_client_portal.sql in the Supabase SQL editor.'), 300);
+            } catch (err) {
+                peToast('Could not save the plan: ' + (err.message || err));
+            } finally {
+                if (pe) { pe.saving = false; btn.disabled = false; btn.textContent = 'Save plan'; }
+                else { btn.disabled = false; btn.textContent = 'Save plan'; }
+            }
+        }
+        function currentMapById(id) { return siteMaps.find(m => m.id === id) || null; }
+
         // ---------- Add / rename / replace / delete plans ----------
-        let mapEditMode = null, mapEditBlob = null, mapEditDims = null;
+        let mapEditMode = null, mapEditBlob = null, mapEditDims = null, mapHow = 'draw';
+        function setMapHow(h) {
+            mapHow = h;
+            document.querySelectorAll('#mapEditHowRow .map-how').forEach(b => b.classList.toggle('on', b.dataset.how === h));
+            const isNew = mapEditMode === 'new';
+            document.getElementById('mapEditHowRow').classList.toggle('hidden', !isNew);
+            document.getElementById('mapEditSizeRow').classList.toggle('hidden', !isNew || h !== 'draw');
+            document.getElementById('mapEditImageRow').classList.toggle('hidden', mapEditMode === 'rename' || (isNew && h !== 'upload'));
+            document.getElementById('mapEditSaveBtn').textContent = isNew && h === 'draw' ? 'Start drawing' : 'Save';
+        }
         function openMapEdit(mode) {
             document.getElementById('mapMenu').classList.add('hidden');
             const m = currentMap();
@@ -9710,6 +10880,7 @@
             document.getElementById('mapEditPreview').classList.add('hidden');
             document.getElementById('mapEditPlaceholder').classList.remove('hidden');
             document.getElementById('mapEditDialog').classList.remove('hidden');
+            setMapHow('draw');
             if (mode !== 'image') setTimeout(() => document.getElementById('mapEditName').focus(), 50);
         }
         function closeMapEdit() { document.getElementById('mapEditDialog').classList.add('hidden'); mapEditMode = null; mapEditBlob = null; }
@@ -9721,6 +10892,7 @@
             const dims = await new Promise(res => { const i = new Image(); i.onload = () => res({ w: i.naturalWidth, h: i.naturalHeight }); i.onerror = () => res(null); i.src = url; });
             if (!dims) { alert("That file couldn't be read as an image. Use a photo, screenshot or scan of the plan (JPG or PNG)."); return; }
             mapEditBlob = blob; mapEditDims = dims;
+            if (mapEditMode === 'new' && mapHow !== 'upload') setMapHow('upload');
             const prev = document.getElementById('mapEditPreview');
             prev.src = url;
             prev.classList.remove('hidden');
@@ -9731,6 +10903,13 @@
             const m = currentMap();
             const name = document.getElementById('mapEditName').value.trim();
             if (mode !== 'image' && !name) { alert('Give the plan a location name, e.g. Site External.'); return; }
+            if (mode === 'new' && mapHow === 'draw' && !mapEditBlob) {
+                if (siteMaps.some(x => x.name.toLowerCase() === name.toLowerCase())) { alert(`There's already a plan called "${name}".`); return; }
+                const size = document.getElementById('mapEditSize').value;
+                closeMapEdit();
+                peOpen({ name, size });
+                return;
+            }
             if ((mode === 'new' || mode === 'image') && !mapEditBlob) { alert('Choose the plan image.'); return; }
             if (mode !== 'image' && siteMaps.some(x => x.name.toLowerCase() === name.toLowerCase() && (!m || x.id !== m.id || mode === 'new'))) { alert(`There's already a plan called "${name}".`); return; }
             const btn = document.getElementById('mapEditSaveBtn');
@@ -9749,7 +10928,7 @@
                     await queueSiteChange({ action: 'floor_plan', title: `Floor plan "${m.name}" renamed to "${name}"` }, 'Floor plan renamed · log');
                 } else {
                     id = m.id;
-                    await queueTableRow('site_maps', { id, width: mapEditDims.w, height: mapEditDims.h, updated_at: base.servicedAt }, `Floor plan image replaced · ${m.name}`, { blobs: [mapEditBlob], photoField: 'image_path', prefix: 'SITE_MAP' });
+                    await queueTableRow('site_maps', { id, width: mapEditDims.w, height: mapEditDims.h, updated_at: base.servicedAt, drawing: m.drawing ? null : undefined }, `Floor plan image replaced · ${m.name}`, { blobs: [mapEditBlob], photoField: 'image_path', prefix: 'SITE_MAP' });
                     await queueSiteChange({ action: 'floor_plan', title: `Floor plan "${m.name}" image replaced` }, 'Floor plan image replaced · log');
                 }
                 closeMapEdit();
