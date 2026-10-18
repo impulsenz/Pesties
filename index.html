@@ -132,6 +132,14 @@
         /* header controls share one height */
         .visit-act { width: 100%; justify-content: center; text-align: center; line-height: 1.2; padding-left: .5rem; padding-right: .5rem; white-space: normal; }
         .header-h { height: 2.5rem; border-radius: .8rem; box-sizing: border-box; }
+        /* phones: a compact header so "Service App" and the site name still fit (Admin is in the profile, day/night in Settings) */
+        @media (max-width: 639px) {
+            #appHeader .icon-btn, #appHeader .header-h { width: 2.2rem; height: 2.2rem; min-width: 2.2rem; }
+            #appHeader #syncStatusBadge { width: auto; padding: 0 .55rem; }
+            #appHeader button.header-h:last-child { width: auto; }
+            #appHeader #adminBtn, #appHeader #themeBtnHeader { display: none !important; }
+            #appHeader .logo-tile img { height: 2.4rem; }
+        }
         .sync-btn:hover { filter: brightness(1.05); }
         .station-photo-box { width: 5.5rem; height: 5.5rem; border-radius: .8rem; overflow: hidden; background: var(--surface3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0; }
         .station-photo-box img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
@@ -316,19 +324,23 @@
     <!-- ===================== APP HEADER ===================== -->
     <header id="appHeader" class="app-header hidden sticky top-0 z-40 w-full">
         <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 py-2.5 flex justify-between items-center gap-3">
-            <!-- Left: logo, then sync status (opens Sync Data) -->
-            <div class="flex items-center gap-2 sm:gap-3">
-                <button type="button" onclick="goHome()" class="logo-tile cursor-pointer" title="Back to all sites"><img src="images/pesties-logo.png" alt="Pesties - back to all sites" class="h-12 sm:h-14 w-auto rounded-lg"></button>
-                <button type="button" id="syncStatusBadge" onclick="openQueueModal()" class="chip chip-green sync-btn header-h transition-all duration-300" title="View upload queue">
-                    <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span id="syncText" class="hidden sm:inline">Online & Synced</span>
-                    <span id="queueCountBadge" class="queue-count hidden">0</span>
-                    <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h10"></path></svg>
-                </button>
+            <!-- Left: logo, "Service App" and the site that's open (like the Client Portal) -->
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <button type="button" onclick="goHome()" class="logo-tile cursor-pointer shrink-0" title="Back to all sites"><img src="images/pesties-logo.png" alt="Pesties - back to all sites" class="h-12 sm:h-14 w-auto rounded-lg"></button>
+                <div class="min-w-0">
+                    <div class="eyebrow t-accent">Service App</div>
+                    <div id="headerSite" class="text-sm font-black t-strong truncate">All sites</div>
+                </div>
             </div>
 
-            <!-- Right: notifications, settings, theme toggle, profile -->
-            <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Right: sync status (opens Sync Data), notifications, settings, theme toggle, profile -->
+            <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
+                <button type="button" id="syncStatusBadge" onclick="openQueueModal()" class="chip chip-green sync-btn header-h transition-all duration-300" title="View upload queue">
+                    <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="syncText" class="hidden md:inline">Online & Synced</span>
+                    <span id="queueCountBadge" class="queue-count hidden">0</span>
+                    <svg class="w-3.5 h-3.5 opacity-70 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h10"></path></svg>
+                </button>
                 <button type="button" id="notifBtn" onclick="openNotifModal()" class="icon-btn relative" title="Notifications">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                     <span id="notifCount" class="hidden absolute -top-1.5 -right-1.5 min-w-[1.2rem] h-[1.2rem] px-1 rounded-full text-[10px] font-black text-white flex items-center justify-center" style="background:#dc2626;">0</span>
@@ -346,7 +358,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 </button>
 
-                <button type="button" onclick="toggleTheme()" class="icon-btn" title="Toggle day / night mode">
+                <button type="button" id="themeBtnHeader" onclick="toggleTheme()" class="icon-btn" title="Toggle day / night mode">
                     <svg class="icon-sun w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414m12.728 0l-1.414-1.414M7.05 7.05L5.636 5.636M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     <svg class="icon-moon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                 </button>
@@ -866,6 +878,7 @@
                     <h3 class="font-black text-lg t-accent">Settings</h3>
                     <p class="text-[11px] t-faint">App version <span class="app-version font-mono"></span></p>
                     <button type="button" id="checkUpdatesBtn" onclick="checkForUpdates()" class="btn btn-secondary !py-2 !px-3 !text-xs mt-2">⟳ Check for updates</button>
+                    <button type="button" onclick="toggleTheme()" class="btn btn-secondary !py-2 !px-3 !text-xs mt-2 sm:hidden">◐ Day / night mode</button>
                 </div>
                 <button type="button" onclick="closeSettingsModal()" class="t-faint hover:opacity-70 text-xs font-semibold cursor-pointer shrink-0">✕ Close</button>
             </div>
@@ -1293,8 +1306,8 @@
                         <div id="completeServicesList" class="space-y-2"></div>
                     </div>
                     <div>
-                        <label class="lbl !font-bold">Overall Site Summary Notes</label>
-                        <textarea id="closingSiteNotes" rows="4" placeholder="Client was present. All exterior bait stations serviced successfully..." class="field"></textarea>
+                        <label class="lbl !font-bold" for="closingSiteNotes">Technician notes <span style="color:#ef4444;">*</span></label>
+                        <textarea id="closingSiteNotes" rows="4" required placeholder="Required. e.g. Client was present. All exterior bait stations serviced successfully..." class="field"></textarea>
                     </div>
                     <button type="button" class="btn btn-secondary w-full !py-3" onclick="setCloseTab('sign')">Next: customer review & sign →</button>
                 </div>
@@ -1693,13 +1706,13 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r31';
+        const APP_VERSION = '2026.10.18-r32';
         // after Check for updates, tidy the address bar
         try { if (/[?&]fresh=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "adminPage", "adminTabs", "adminTiles", "adminAttention", "adminWorkload", "adminDocsList", "adminDocSite", "adminActivityList", "adminExports", "adminSitesNoClient", "adminBtn", "profileAdminLink", "settingsAdminNote", "siteDocsList", "siteDocForm", "sitePortalAccess", "recType", "recTitle", "closeTabJob", "closePaneJob", "closePaneSign", "signBox", "reasonBox", "activityRow", "pestCountRow", "saveNextBtn", "stationDetailsTop", "stationDetailsBottom", "qtyRequired", "infoModal", "infoTitle", "infoBody", "infoFoot", "siteServicesManageBtn", "stationPhotoPreview", "stationPhotoToggle", "recPhotoToggle", "signOffReview", "signPad", "signName", "signReason", "signOffStatus", "signOffBtn", "staffProfileModal", "actionsModal", "actionsBtn", "actionsCount", "actionsList", "userFilterChips", "adminServicesList", "adminSvcSearch", "newClientServicesBtn", "siteDocsFolderBtn", "docFolder", "adminDocFolder", "siteLimitsBox", "siteLimitAddBtn", "stationZoneRow", "stationZone", "zoneOptions", "recModalSeen", "recModalNoteReq", "adminClientsList", "clientNewSites", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const REQUIRED_IDS = ["loginScreen", "headerSite", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "adminPage", "adminTabs", "adminTiles", "adminAttention", "adminWorkload", "adminDocsList", "adminDocSite", "adminActivityList", "adminExports", "adminSitesNoClient", "adminBtn", "profileAdminLink", "settingsAdminNote", "siteDocsList", "siteDocForm", "sitePortalAccess", "recType", "recTitle", "closeTabJob", "closePaneJob", "closePaneSign", "signBox", "reasonBox", "activityRow", "pestCountRow", "saveNextBtn", "stationDetailsTop", "stationDetailsBottom", "qtyRequired", "infoModal", "infoTitle", "infoBody", "infoFoot", "siteServicesManageBtn", "stationPhotoPreview", "stationPhotoToggle", "recPhotoToggle", "signOffReview", "signPad", "signName", "signReason", "signOffStatus", "signOffBtn", "staffProfileModal", "actionsModal", "actionsBtn", "actionsCount", "actionsList", "userFilterChips", "adminServicesList", "adminSvcSearch", "newClientServicesBtn", "siteDocsFolderBtn", "docFolder", "adminDocFolder", "siteLimitsBox", "siteLimitAddBtn", "stationZoneRow", "stationZone", "zoneOptions", "recModalSeen", "recModalNoteReq", "adminClientsList", "clientNewSites", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -6681,6 +6694,7 @@
             const client = clientsData.find(c => String(c.id) === String(clientId));
             if (!client) { alert('Site not found. Please refresh the page.'); return; }
             selectedClient = client;
+            setHeaderSite();
             isLoadingSite = true;
             const mySeq = ++siteSyncSeq;
             let prog = null;
@@ -6744,6 +6758,7 @@
                 if (prog) prog.hide();
                 endSync('download');
                 selectedClient = null;
+                setHeaderSite();
                 document.getElementById('siteSelectorSection').classList.remove('hidden');
                 alert('Error downloading site data: ' + friendlyError(err));
             } finally {
@@ -6888,10 +6903,12 @@
             const canEdit = isOnline && !splitTablesMissing && isAdmin();
             document.getElementById('siteLimitAddBtn').classList.toggle('hidden', !canEdit || limitEditing === 'new');
             const recs = sitePestRecords();
+            const editing = limitEditing && limitEditing !== 'new' ? siteLimits.find(x => x.id === limitEditing) : null;
+            const sorted = siteLimits.slice().sort((a, b) => String(a.zone).localeCompare(String(b.zone)) || (a.species === ANY_PEST ? -1 : b.species === ANY_PEST ? 1 : String(a.species).localeCompare(String(b.species))));
             const row = l => {
                 const x = limitTotal(l, null, null, recs), max = Number(l.max_per_month);
                 const over = x.total > max, near = !over && max > 0 && x.total >= max * 0.8;
-                if (limitEditing === l.id) return limitFormHtml(l);
+                if (editing && l.zone === editing.zone) return l.id === editing.id ? limitFormHtml(l) : '';   // the whole area is in the form
                 return `<div class="row-item p-2.5 space-y-1" ${over ? 'style="border-color:#dc2626;"' : ''}>
                     <div class="flex justify-between items-start gap-2"><div class="min-w-0"><div class="font-bold t-strong">${esc(l.zone)} · ${esc(limitPest(l))}</div>
                     <div class="t-faint text-[11px]">Limit ${esc(max)} a month · ${x.total} so far in ${esc(monthName(Date.now()))}${l.notes ? ' · ' + esc(l.notes) : ''}${l.updated_by ? ' · set by ' + esc(l.updated_by) : ''}</div></div>
@@ -6899,23 +6916,61 @@
                     ${canEdit ? `<div class="flex gap-3 text-[11px]"><button type="button" class="link-btn" data-id="${esc(l.id)}" onclick="editSiteLimit(this.dataset.id)">Edit</button><button type="button" class="font-bold" style="color:#ef4444;" data-id="${esc(l.id)}" onclick="deleteSiteLimit(this.dataset.id)">Remove</button></div>` : ''}
                 </div>`;
             };
-            box.innerHTML = (limitEditing === 'new' ? limitFormHtml(null) : '') + (siteLimits.map(row).join('') ||
+            box.innerHTML = (limitEditing === 'new' ? limitFormHtml(null) : '') + (sorted.map(row).join('') ||
                 (limitEditing ? '' : `<span class="t-faint italic">No critical limits yet.${isAdmin() ? ' Give insect stations a critical limits area, then set how many of a pest each area may have in a month.' : ' An admin (or the client) sets them.'}</span>`)) +
                 (!isAdmin() && siteLimits.length ? '<div class="t-faint text-[11px]">Only an admin can change critical limits.</div>' : '') +
                 (!isOnline && siteLimits.length ? '<div class="t-faint text-[11px]">Limits can be changed when you\'re online.</div>' : '');
         }
+        // one row of the limits form: a pest and its own monthly limit
+        function limitPestRowHtml(l, first) {
+            return `<div class="lim-row flex gap-2 items-center" data-id="${l && l.id ? esc(l.id) : ''}">
+                <input ${first ? 'id="limPest"' : ''} list="limPestList" maxlength="80" class="field !py-2 !text-xs lim-pest flex-1 min-w-0" aria-label="Pest" value="${esc(l && l.species !== ANY_PEST ? l.species : '')}" placeholder="Any pest">
+                <input ${first ? 'id="limMax"' : ''} type="number" min="0" step="1" class="field !py-2 !text-xs lim-max !w-24 shrink-0" aria-label="Most a month" value="${l ? esc(l.max_per_month) : ''}" placeholder="e.g. 5">
+                <button type="button" class="t-faint font-black text-base px-1.5 shrink-0" title="Remove this pest" aria-label="Remove this pest" onclick="removeLimitRow(this)">×</button>
+            </div>`;
+        }
         function limitFormHtml(l) {
             const zones = siteZones(), pests = optionLabels('species').filter(x => x !== NONE_SPECIES);
+            const area = l ? [l, ...siteLimits.filter(x => x.zone === l.zone && x.id !== l.id)] : [null];
             return `<form class="inset p-3 space-y-2" onsubmit="event.preventDefault(); saveSiteLimit();">
                 <div class="grid grid-cols-2 gap-2">
                     <div><label class="lbl" for="limZone">Critical limits area</label><input id="limZone" list="limZoneList" required maxlength="60" class="field !py-2 !text-xs" value="${esc(l ? l.zone : '')}" placeholder="e.g. Dispatch"><datalist id="limZoneList">${zones.map(z => `<option value="${esc(z)}"></option>`).join('')}</datalist></div>
-                    <div><label class="lbl" for="limPest">Pest</label><input id="limPest" list="limPestList" maxlength="80" class="field !py-2 !text-xs" value="${esc(l && l.species !== ANY_PEST ? l.species : '')}" placeholder="Any pest"><datalist id="limPestList">${pests.map(z => `<option value="${esc(z)}"></option>`).join('')}</datalist></div>
-                    <div><label class="lbl" for="limMax">Most a month</label><input id="limMax" type="number" min="0" step="1" required class="field !py-2 !text-xs" value="${l ? esc(l.max_per_month) : ''}"></div>
                     <div><label class="lbl" for="limNotes">Note</label><input id="limNotes" maxlength="200" class="field !py-2 !text-xs" value="${esc(l && l.notes ? l.notes : '')}"></div>
                 </div>
+                <div class="flex gap-2 text-[10px] font-bold uppercase tracking-wider t-faint"><span class="flex-1">Pest <span class="normal-case tracking-normal font-normal">(blank = any pest)</span></span><span class="w-24 shrink-0">Most a month</span><span class="w-6 shrink-0"></span></div>
+                <datalist id="limPestList">${pests.map(z => `<option value="${esc(z)}"></option>`).join('')}</datalist>
+                <div id="limRows" class="space-y-2">${area.map((x, i) => limitPestRowHtml(x, i === 0)).join('')}</div>
+                <button type="button" class="link-btn !text-[11px]" onclick="addLimitRow()">+ Add another pest</button>
                 ${zones.length ? '' : '<div class="t-faint text-[11px]">No areas yet: give insect stations a critical limits area in their station details.</div>'}
-                <div class="flex justify-end gap-2"><button type="button" class="btn btn-secondary !py-1.5" onclick="editSiteLimit(null)">Cancel</button><button type="submit" id="limSaveBtn" class="btn btn-primary !py-1.5">Save limit</button></div>
+                <div class="flex justify-end gap-2"><button type="button" class="btn btn-secondary !py-1.5" onclick="editSiteLimit(null)">Cancel</button><button type="submit" id="limSaveBtn" class="btn btn-primary !py-1.5">Save limits</button></div>
             </form>`;
+        }
+        function addLimitRow() {
+            const box = document.getElementById('limRows');
+            box.insertAdjacentHTML('beforeend', limitPestRowHtml(null, false));
+            box.lastElementChild.querySelector('.lim-pest').focus();
+        }
+        function removeLimitRow(btn) {
+            const box = document.getElementById('limRows');
+            if (box.children.length <= 1) { btn.closest('.lim-row').querySelectorAll('input').forEach(i => { i.value = ''; }); return; }
+            btn.closest('.lim-row').remove();
+        }
+        // the pests in the form: [{ id, species, max }], or an error message
+        function readLimitRows() {
+            const rows = [];
+            const seen = new Set();
+            for (const r of document.querySelectorAll('#limRows .lim-row')) {
+                const pest = r.querySelector('.lim-pest').value.trim(), maxRaw = r.querySelector('.lim-max').value.trim();
+                if (!pest && maxRaw === '' && document.querySelectorAll('#limRows .lim-row').length > 1) continue;   // an empty extra row
+                const species = !pest || /^any( pest)?$/i.test(pest) ? ANY_PEST : pest;
+                const max = parseFloat(maxRaw);
+                if (maxRaw === '' || isNaN(max) || max < 0) return { error: `Enter the most allowed a month for ${species === ANY_PEST ? 'Any pest' : species}.` };
+                const k = species === ANY_PEST ? '*' : pestKey(species);
+                if (seen.has(k)) return { error: `${species === ANY_PEST ? 'Any pest' : species} is listed twice.` };
+                seen.add(k);
+                rows.push({ id: r.dataset.id || null, species, max });
+            }
+            return rows.length ? { rows } : { error: 'Add at least one pest and its monthly limit.' };
         }
         function editSiteLimit(id) { if (id && !isAdmin()) return; limitEditing = id; renderSiteLimits(); const z = document.getElementById('limZone'); if (z && id === 'new') z.focus(); }
         async function reloadSiteLimits() {
@@ -6929,15 +6984,25 @@
         async function saveSiteLimit() {
             const c = selectedClient;
             if (!c) return;
-            const zone = document.getElementById('limZone').value.trim(), species = document.getElementById('limPest').value.trim() || ANY_PEST;
-            const max = parseFloat(document.getElementById('limMax').value), notes = document.getElementById('limNotes').value.trim();
-            if (!zone || isNaN(max) || max < 0) { alert('Enter the zone and the most allowed a month.'); return; }
+            const zone = document.getElementById('limZone').value.trim(), notes = document.getElementById('limNotes').value.trim();
+            if (!zone) { alert('Enter the critical limits area.'); return; }
+            const got = readLimitRows();
+            if (got.error) { alert(got.error); return; }
+            const ed = limitEditing !== 'new' ? siteLimits.find(x => x.id === limitEditing) : null;
+            const before = ed ? siteLimits.filter(x => x.zone === ed.zone) : [];
+            const keep = new Set(got.rows.map(r => r.id).filter(Boolean));
             const btn = document.getElementById('limSaveBtn');
             btn.disabled = true;
             try {
-                const { error } = await _supabase.rpc('portal_save_limit', { p_client_id: String(c.id), p_id: limitEditing === 'new' ? null : limitEditing, p_zone: zone, p_species: species, p_max: max, p_notes: notes || null });
-                if (error) throw error;
-                await queueSiteChange({ action: 'limit', title: `Critical limit ${limitEditing === 'new' ? 'added' : 'changed'}: ${zone} · ${species === ANY_PEST ? 'Any pest' : species}`, detail: `${max} a month` });
+                for (const l of before.filter(x => !keep.has(x.id))) {
+                    const { error } = await _supabase.rpc('portal_delete_limit', { p_id: l.id });
+                    if (error) throw error;
+                }
+                for (const r of got.rows) {
+                    const { error } = await _supabase.rpc('portal_save_limit', { p_client_id: String(c.id), p_id: r.id, p_zone: zone, p_species: r.species, p_max: r.max, p_notes: notes || null });
+                    if (error) throw error;
+                }
+                await queueSiteChange({ action: 'limit', title: `Critical limits ${ed ? 'changed' : 'added'}: ${zone}`, detail: got.rows.map(r => `${r.species === ANY_PEST ? 'Any pest' : r.species} ${r.max} a month`).join(' · ') });
                 limitEditing = null;
                 await reloadSiteLimits();
             } catch (e) {
@@ -7005,7 +7070,13 @@
                 src="https://maps.google.com/maps?q=${encodeURIComponent(q)}&z=16&hl=en&output=embed"></iframe>`;
         }
 
+        // the header shows which site is open, like the Client Portal
+        function setHeaderSite() {
+            const el = document.getElementById('headerSite');
+            if (el) el.textContent = selectedClient ? (selectedClient.Name || 'Site') : 'All sites';
+        }
         function refreshLandingHeader() {
+            setHeaderSite();
             const c = selectedClient;
             if (!c) return;
             document.getElementById('siteLandingTitle').textContent = c.Name;
@@ -7063,6 +7134,7 @@
             scannedBarcodesThisVisit = new Set();
             lastVisitCutoffRaw = null;
             selectedClient = null;
+            setHeaderSite();
             siteSyncSeq++;
             siteSyncInfo = { lastSyncAt: 0, syncing: false, error: null };
             recNumbersMissing = false;
@@ -9336,7 +9408,8 @@
             document.getElementById('batchRequired').classList.toggle('hidden', none);
             document.getElementById('qtyRequired').classList.toggle('hidden', none);
             batch.placeholder = none ? 'Not needed' : 'Required, e.g. 24-0815';
-            if (none) { if (userChanged) { qty.value = ''; batch.value = ''; } return; }
+            if (userChanged) batch.value = '';   // a different preparation: its batch number is typed in fresh
+            if (none) { if (userChanged) qty.value = ''; return; }
             if (userChanged) {
                 if (currentQtyUnit === 'each') { if (!qty.value || before !== 'each') qty.value = 1; }
                 else if (before !== currentQtyUnit) qty.value = '';
@@ -9392,7 +9465,6 @@
             currentQtyUnit = lastPrep.unit || prepUnit(lastPrep.prep);
             prepChanged(false);
             document.getElementById('qtyCount').value = lastPrep.qty || (currentQtyUnit === 'each' ? 1 : '');
-            document.getElementById('batchNumber').value = lastPrep.batch || '';
         }
         function setAutoRepeat(on) {
             saveJSON(AUTO_REPEAT_KEY, !!on);
@@ -9412,9 +9484,7 @@
             prepChanged(false);
             const qty = document.getElementById('qtyCount');
             if (!qty.value) qty.value = currentQtyUnit === 'each' ? 1 : '';
-            const batch = document.getElementById('batchNumber');
-            if (!batch.value) batch.value = loadJSON(GLUE_BATCH_KEY, '') || '';
-            return true;
+            return true;   // the batch number is always typed in by the technician
         }
 
         function resetServiceFields() {
@@ -10013,7 +10083,7 @@
                     }, newBlobs, `New recommendation${photoBit} · ${locNameInput}`);
                 }
                 if (usedPrep) rememberPrep(f);
-                if (usedPrep && /glue/i.test(f.prepUsed) && f.batch) saveJSON(GLUE_BATCH_KEY, f.batch);
+
 
                 clearPendingPhotos(false); // previews stay visible until the upload finishes
                 keptPhotos = [];
@@ -10277,8 +10347,17 @@
         const SIGN_REASONS = ['Not on site', 'In a meeting', 'Not available', 'Declined to sign', 'Left before the visit ended'];
         let signOff = null;          // set directly only by tests; the form below is the normal way in
         let signPadDrawn = false;
-        function setCloseTab(tab) {
+        function closingNotesMissing() {
+            const el = document.getElementById('closingSiteNotes');
+            if (el.value.trim()) return false;
+            setCloseTab('job', true);
+            alert('Add the technician notes before closing the visit.');
+            el.focus();
+            return true;
+        }
+        function setCloseTab(tab, skipCheck) {
             const sign = tab === 'sign';
+            if (sign && !skipCheck && !document.getElementById('closingSiteNotes').value.trim()) { closingNotesMissing(); return; }
             document.getElementById('closePaneJob').classList.toggle('hidden', sign);
             document.getElementById('closePaneSign').classList.toggle('hidden', !sign);
             document.getElementById('closeTabJob').classList.toggle('active', !sign);
@@ -10402,6 +10481,7 @@
         let closingVisit = false;
         async function finalizeAndSubmitVisit(download) {
             if (closingVisit) return; // stop a double tap saving the visit twice
+            if (closingNotesMissing()) return;
             const got = await collectSignOff();
             if (got.error) { alert(got.error); setCloseTab('sign'); return; }
             closingVisit = true;
@@ -10418,7 +10498,7 @@
             try {
                 await queueTableRow('visits', {
                     id: summaryRef,
-                    notes: f.siteNotes || 'Visit completed successfully.',
+                    notes: f.siteNotes,
                     technician: technicianLabel(),
                     visit_type: f.visitType,
                     started_at: (selectedClient && selectedClient.visit_started_at) || null,
