@@ -147,7 +147,7 @@
         .station-photo-empty { font-size: .65rem; text-align: center; color: var(--faint); line-height: 1.3; }
         .station-photo-new { position: absolute; bottom: .25rem; right: .25rem; background: #f97316; color: #fff; font-size: .55rem; font-weight: 900; padding: .05rem .35rem; border-radius: 999px; }
         /* site header */
-        .site-hero-band { position: relative; isolation: isolate; padding: .9rem 1rem 1.2rem; background: linear-gradient(135deg, rgba(249, 115, 22, .10), transparent 55%); }
+        .site-hero-band { position: relative; isolation: isolate; padding: 1rem; background: linear-gradient(135deg, rgba(249, 115, 22, .10), transparent 55%); }
         .sh-topline { display: flex; align-items: center; justify-content: space-between; gap: .75rem; font-size: 11px; margin-bottom: .8rem; }
         .sh-id { display: flex; align-items: flex-start; gap: .9rem; min-width: 0; }
         .sh-id > .min-w-0 { min-width: 0; flex: 1; }
@@ -155,7 +155,7 @@
         .sh-contact { margin-top: .75rem; }
         .sh-body { padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
         @media (min-width: 640px) {
-            .site-hero-band { padding: 1rem 1.75rem 1.5rem; }
+            .site-hero-band { padding: 1.5rem 1.75rem; }
             .sh-id { gap: 1.25rem; }
             .sh-title { font-size: 2rem; }
             .sh-body { padding: 1.25rem 1.75rem 1.75rem; }
@@ -163,9 +163,33 @@
         .site-hero-band::before { content: ''; position: absolute; inset: 0; z-index: -1; background-image: var(--hero-img, none); background-size: cover; background-position: center; filter: blur(30px) saturate(1.25); opacity: .16; transform: scale(1.25); }
         .sh-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; align-items: start; }
         @media (min-width: 1024px) { .sh-grid { grid-template-columns: minmax(0, 1fr) 15.5rem; gap: 1.75rem; align-items: center; } }
-        .sh-cover { flex-shrink: 0; width: 5.5rem; height: 5.5rem; border-radius: 1rem; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 8px 22px rgba(0, 0, 0, .16); }
-        @media (min-width: 640px) { .sh-cover { width: 9rem; height: 9rem; border-radius: 1.25rem; } }
-        @media (min-width: 1280px) { .sh-cover { width: 11.5rem; height: 11.5rem; border-radius: 1.4rem; } }
+        .sh-cover { flex-shrink: 0; width: 7rem; height: 7rem; border-radius: 1rem; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 8px 22px rgba(0, 0, 0, .16); }
+        @media (min-width: 640px) { .sh-cover { width: 10.5rem; height: 10.5rem; border-radius: 1.25rem; } }
+        @media (min-width: 1280px) { .sh-cover { width: 13rem; height: 13rem; border-radius: 1.4rem; } }
+        .sh-sync { display: flex; align-items: center; gap: .5rem; min-width: 0; margin-top: .35rem; font-size: 11px; color: var(--faint); }
+        /* header bottom box: stations by type + services | floor plans | location */
+        .sh-info { display: grid; gap: .75rem; grid-template-columns: minmax(0, 1fr); }
+        .sh-pair { padding: 1rem; display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+        .sh-pair-2 { border-top: 1px solid var(--border); padding-top: 1rem; }
+        @media (min-width: 640px) { .sh-pair { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 1.25rem; } .sh-pair-2 { border-top: 0; padding-top: 0; border-left: 1px solid var(--border); padding-left: 1.25rem; } }
+        @media (min-width: 768px) { .sh-info { gap: 1rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .sh-pair { grid-column: 1 / -1; } }
+        @media (min-width: 1280px) { .sh-info { grid-template-columns: minmax(0, 6fr) minmax(0, 3fr) minmax(0, 3fr); } .sh-pair { grid-column: auto; } }
+        .svc-mini-list { display: flex; flex-direction: column; gap: .35rem; max-height: 9.4rem; overflow-y: auto; }
+        .svc-mini { display: flex; align-items: center; gap: .5rem; width: 100%; text-align: left; padding: .4rem .55rem; border-radius: .6rem; background: var(--surface); border: 1px solid var(--border); font-size: .75rem; cursor: pointer; min-width: 0; }
+        .svc-mini:hover { border-color: #10b981; }
+        .svc-mini .chip { font-size: 9.5px; padding: .05rem .4rem; }
+        /* clickable numbers */
+        .kpi-click { cursor: pointer; transition: border-color .15s, transform .15s; }
+        .kpi-click:hover { border-color: #f97316; }
+        .kpi-click:active { transform: scale(.98); }
+        .kpi-click .kpi-k::after { content: ' ›'; opacity: .6; }
+        /* the boxes under the header: one column on phones, three across from laptop width */
+        .land-row { display: grid; gap: 1.5rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
+        @media (min-width: 1024px) { .land-row { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        .flash-ring { box-shadow: 0 0 0 3px rgba(249, 115, 22, .55) !important; transition: box-shadow .3s; }
+        /* scan screen view switch */
+        .scan-view-btn { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; height: 2.6rem; padding: 0 .7rem; border-radius: .8rem; border: 1px solid var(--border); background: var(--surface3); color: var(--text); font-size: .72rem; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+        @media (max-width: 420px) { .scan-view-btn .svb-t { display: none; } }
         .sh-mono { display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.6rem; letter-spacing: .02em; color: #fff; background: linear-gradient(135deg, #f97316, #c2410c); }
         @media (min-width: 640px) { .sh-mono { font-size: 2.6rem; } }
         @media (min-width: 1280px) { .sh-mono { font-size: 3.2rem; } }
@@ -554,10 +578,6 @@
             <!-- Site header: who, where, what's happening, and the actions; then the numbers, plans and map -->
             <div class="card site-hero overflow-hidden">
                 <div class="site-hero-band" id="siteHeroBand">
-                    <div class="sh-topline">
-                        <button type="button" onclick="backToSites()" class="link-btn !no-underline inline-flex items-center gap-1 font-bold">← All sites</button>
-                        <div class="flex items-center gap-2 t-faint min-w-0"><span class="site-sync-text truncate"></span><button type="button" onclick="backgroundSyncSite('manual')" class="site-sync-btn link-btn !text-[11px] shrink-0 disabled:opacity-50">Sync Site</button></div>
-                    </div>
                     <div class="sh-grid">
                         <div class="sh-id">
                             <div id="siteLandingImageWrap" class="hidden sh-cover cursor-pointer" onclick="viewFullImage(document.getElementById('siteLandingImage').src, selectedClient ? selectedClient.Address : '', selectedClient ? selectedClient.Name : '')">
@@ -567,6 +587,7 @@
                             <div class="min-w-0 flex-1">
                                 <h2 class="sh-title t-strong break-words" id="siteLandingTitle">Customer Site Overview</h2>
                                 <p class="text-xs sm:text-sm t-muted mt-1 flex items-start gap-1.5"><span aria-hidden="true">📍</span><span id="siteLandingAddress" class="break-words">Address information</span></p>
+                                <div class="sh-sync"><span class="site-sync-text truncate"></span><button type="button" onclick="backgroundSyncSite('manual')" class="site-sync-btn link-btn !text-[11px] shrink-0 disabled:opacity-50">Sync Site</button></div>
                                 <div id="visitStatusLine" class="hidden mt-2.5"></div>
                                 <!-- site contact, right under the name -->
                                 <div id="siteContactBox" class="sh-contact">
@@ -591,25 +612,34 @@
                 <div class="sh-body border-t divider">
                     <!-- the numbers at a glance -->
                     <div class="grid grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-3">
-                        <div class="kpi"><div class="kpi-k">Stations</div><div id="statStations" class="kpi-v t-strong">0</div><div class="kpi-s">on this site</div></div>
-                        <div class="kpi" title="Share of this site's stations scanned on the last completed visit"><div class="kpi-k">Scanned last visit</div><div id="statLastVisitPct" class="kpi-v" style="color:#10b981;">-</div><div id="statLastVisitNote" class="kpi-s"></div></div>
-                        <div class="kpi"><div class="kpi-k">Open issues</div><div id="statIssues" class="kpi-v t-accent">0</div><div class="kpi-s">recommendations not complete</div></div>
+                        <div class="kpi kpi-click" id="kpiStations" role="button" tabindex="0" onclick="kpiOpen('stations')" onkeydown="if (event.key === 'Enter') this.click()" title="Show the station list"><div class="kpi-k">Stations</div><div id="statStations" class="kpi-v t-strong">0</div><div class="kpi-s">on this site</div></div>
+                        <div class="kpi kpi-click" id="kpiLastVisit" role="button" tabindex="0" onclick="kpiOpen('lastVisit')" onkeydown="if (event.key === 'Enter') this.click()" title="Open the last visit's report"><div class="kpi-k">Scanned last visit</div><div id="statLastVisitPct" class="kpi-v" style="color:#10b981;">-</div><div id="statLastVisitNote" class="kpi-s"></div></div>
+                        <div class="kpi kpi-click" id="kpiIssues" role="button" tabindex="0" onclick="kpiOpen('issues')" onkeydown="if (event.key === 'Enter') this.click()" title="Show the open recommendations"><div class="kpi-k">Open issues</div><div id="statIssues" class="kpi-v t-accent">0</div><div class="kpi-s">recommendations not complete</div></div>
                         <div class="kpi"><div class="kpi-k">Next service</div><div id="statNextService" class="kpi-v kpi-v-sm t-strong">-</div><div id="statNextServiceNote" class="kpi-s"></div></div>
                     </div>
                     <!-- stations by type, floor plans and where the site is -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-3 sm:gap-4">
-                        <div class="inset p-4 xl:col-span-4">
-                            <div class="eyebrow flex items-center gap-2 mb-2.5" style="color:#16a34a;"><span class="w-2 h-2 rounded-full" style="background:#16a34a;"></span>Stations by type</div>
-                            <div id="stationTypeList" class="space-y-1.5 text-xs"></div>
+                    <div class="sh-info">
+                        <div class="inset sh-pair">
+                            <div class="min-w-0">
+                                <div class="eyebrow flex items-center gap-2 mb-2.5" style="color:#16a34a;"><span class="w-2 h-2 rounded-full" style="background:#16a34a;"></span>Stations by type</div>
+                                <div id="stationTypeList" class="space-y-1.5 text-xs"></div>
+                            </div>
+                            <div class="min-w-0 sh-pair-2">
+                                <div class="flex items-center justify-between gap-2 mb-2.5">
+                                    <span class="eyebrow flex items-center gap-2" style="color:#10b981;"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Services & Schedule</span>
+                                    <button type="button" id="siteServicesManageBtn" onclick="openServicesModal()" class="link-btn !no-underline hidden">Manage</button>
+                                </div>
+                                <div id="siteServicesList" class="svc-mini-list"></div>
+                            </div>
                         </div>
-                        <div class="inset p-4 space-y-3 xl:col-span-3">
+                        <div class="inset p-4 space-y-3 sh-plans">
                             <div class="flex items-center justify-between gap-2">
                                 <span class="eyebrow flex items-center gap-2" style="color:#0891b2;"><span class="w-2 h-2 rounded-full" style="background:#0891b2;"></span>Floor Plans</span>
                                 <button type="button" onclick="openMapModal()" class="link-btn !no-underline">Open</button>
                             </div>
                             <div id="siteMapsList" class="space-y-2 text-xs"></div>
                         </div>
-                        <div class="inset overflow-hidden flex flex-col md:col-span-2 xl:col-span-5" style="min-height:11rem;">
+                        <div class="inset overflow-hidden flex flex-col sh-loc" style="min-height:11rem;">
                             <div class="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
                                 <span class="eyebrow flex items-center gap-2" style="color:#16a34a;"><span class="w-2 h-2 rounded-full" style="background:#16a34a;"></span>Location</span>
                                 <a id="siteMapsLink" href="#" target="_blank" rel="noopener" class="link-btn !no-underline">Open in Google Maps ↗</a>
@@ -620,21 +650,50 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-12 gap-6">
-                <!-- Left column: stats, services, plans, contact, safety -->
-                <div class="lg:col-span-2 xl:col-span-3 grid gap-4 sm:grid-cols-3 xl:grid-cols-1 content-start">
-                    <!-- Contracted services & schedule -->
-                    <div class="card p-4 sm:p-5 space-y-3 sm:col-span-3 xl:col-span-1">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="eyebrow flex items-center gap-2" style="color:#10b981;"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Services & Schedule</span>
-                            <button type="button" id="siteServicesManageBtn" onclick="openServicesModal()" class="link-btn !no-underline hidden">Manage</button>
+            <!-- Row 1: pest sightings (first, so it's the top box on a phone), recommendations, stations -->
+            <div class="land-row">
+                    <!-- Pest sightings reported by the client in the Client Portal -->
+                    <div class="card p-5 sm:p-6 space-y-4 min-w-0" id="siteSightingsCard">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b divider pb-3">
+                            <h3 class="eyebrow flex items-center gap-2" style="color:#db2777;"><span class="w-2 h-2 rounded-full" style="background:#db2777;"></span>Pest sightings <span class="t-faint normal-case tracking-normal font-semibold">· reported by the client</span></h3>
+                            <span class="flex items-center gap-2"><span id="siteSightingsCount" class="text-[11px] t-faint"></span><span id="sightPhotoToggle"></span><button type="button" id="sightRefreshBtn" onclick="refreshSiteSightings(true)" class="link-btn !no-underline !text-[11px]" title="Check for new sightings">⟳</button></span>
                         </div>
-                        <div id="siteServicesList" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2"></div>
+                        <div id="sightFilters" class="flex flex-wrap gap-1.5 text-[11px]"></div>
+                        <div id="siteSightingsList" class="space-y-2 text-xs max-h-[32rem] overflow-y-auto scroll-thin pr-1"></div>
                     </div>
-                    <!-- (contract, technician and access notes are kept in Edit Site; not shown on this page) -->
-                    <div class="hidden" aria-hidden="true"><div id="siteContractChip"></div><p id="siteContractDates"></p><p id="siteContractNotes"></p><span id="siteAssignedTech"></span><p id="siteLandingNotes"></p></div>
+
+                    <!-- Recommendations -->
+                    <div class="card p-5 sm:p-6 space-y-4 min-w-0" id="siteRecsCard">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b divider pb-3">
+                            <h3 class="eyebrow flex items-center gap-2" style="color:#d97706;">
+                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                Recommendations
+                            </h3>
+                            <div class="flex flex-wrap items-center gap-1.5"><div id="recFilterTabs" class="flex flex-wrap gap-1.5"></div><span id="recPhotoToggle"></span></div>
+                        </div>
+                        <div id="recAgeChart" class="viz-root"></div>
+                        <div id="siteLandingRecsList" class="space-y-2.5 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1">
+                            <span class="t-faint italic">No active recommendations for this site.</span>
+                        </div>
+                    </div>
+
+                    <!-- Stations -->
+                    <div class="card p-5 sm:p-6 space-y-4 min-w-0" id="siteStationsCard">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b divider pb-3">
+                            <h3 class="eyebrow flex items-center gap-2" style="color:#16a34a;">
+                                <span class="w-2 h-2 rounded-full bg-green-600"></span>
+                                Stations
+                            </h3>
+                            <div class="flex flex-wrap items-center gap-2"><span id="stationPhotoToggle"></span><span id="stationTypeTabs"></span><input type="text" id="siteStationSearch" oninput="renderSiteStationList()" placeholder="Search stations..." class="field !w-40 !py-1.5 !text-xs"></div>
+                        </div>
+                        <div id="siteStationList" class="space-y-2 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1"></div>
+                    </div>
+            </div>
+
+            <!-- Row 2: documents, past visits and the activity log, evenly across -->
+            <div class="land-row">
                     <!-- Documents (shared with the client in the Client Portal) -->
-                    <div class="card p-5 space-y-3 sm:col-span-3 xl:col-span-1">
+                    <div class="card p-5 sm:p-6 space-y-3 min-w-0" id="siteDocsCard">
                         <div class="flex justify-between items-center gap-2">
                             <span class="eyebrow flex items-center gap-2" style="color:#0891b2;"><span class="w-2 h-2 rounded-full" style="background:#0891b2;"></span>Documents</span>
                             <span class="flex items-center gap-3"><button type="button" id="siteDocsFolderBtn" onclick="newDocFolder(selectedClient && selectedClient.id)" class="link-btn !no-underline hidden">+ Folder</button><button type="button" id="siteDocsAddBtn" onclick="toggleDocForm(true)" class="btn btn-primary !py-1 !px-2.5 !text-[11px] hidden">⬆ Upload</button></span>
@@ -651,55 +710,8 @@
                             </div>
                             <div class="flex justify-end gap-2"><button type="button" onclick="toggleDocForm(false)" class="btn btn-secondary !py-2">Cancel</button><button type="submit" id="docUploadBtn" class="btn btn-primary !py-2">Upload</button></div>
                         </form>
-                        <div id="siteDocsList" class="space-y-2 text-xs"></div>
+                        <div id="siteDocsList" class="space-y-2 text-xs max-h-[32rem] overflow-y-auto scroll-thin pr-1"></div>
                         <div id="sitePortalAccess" class="hidden"></div>
-                    </div>
-                    <!-- Critical limits (switched off while they are rebuilt) -->
-                    <div id="siteLimitsCard" class="card p-5 space-y-3 sm:col-span-3 xl:col-span-1 hidden">
-                        <div class="flex justify-between items-center gap-2">
-                            <span class="eyebrow flex items-center gap-2" style="color:#dc2626;"><span class="w-2 h-2 rounded-full" style="background:#dc2626;"></span>Critical limits</span>
-                            <button type="button" id="siteLimitAddBtn" onclick="editSiteLimit('new')" class="link-btn !no-underline">+ Add</button>
-                        </div>
-                        <div id="siteLimitsBox" class="space-y-2 text-xs"></div>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-2 xl:col-span-9 grid grid-cols-1 lg:grid-cols-2 gap-6 content-start">
-                    <!-- Pest sightings reported by the client in the Client Portal -->
-                    <div class="card p-5 sm:p-6 space-y-4 min-w-0" id="siteSightingsCard">
-                        <div class="flex flex-wrap items-center justify-between gap-2 border-b divider pb-3">
-                            <h3 class="eyebrow flex items-center gap-2" style="color:#db2777;"><span class="w-2 h-2 rounded-full" style="background:#db2777;"></span>Pest sightings <span class="t-faint normal-case tracking-normal font-semibold">· reported by the client</span></h3>
-                            <span class="flex items-center gap-2"><span id="siteSightingsCount" class="text-[11px] t-faint"></span><span id="sightPhotoToggle"></span><button type="button" id="sightRefreshBtn" onclick="refreshSiteSightings(true)" class="link-btn !no-underline !text-[11px]" title="Check for new sightings">⟳</button></span>
-                        </div>
-                        <div id="sightFilters" class="flex flex-wrap gap-1.5 text-[11px]"></div>
-                        <div id="siteSightingsList" class="space-y-2 text-xs max-h-[32rem] overflow-y-auto scroll-thin pr-1"></div>
-                    </div>
-
-                    <!-- Recommendations -->
-                    <div class="card p-5 sm:p-6 space-y-4 min-w-0">
-                        <div class="flex flex-wrap items-center justify-between gap-2 border-b divider pb-3">
-                            <h3 class="eyebrow flex items-center gap-2" style="color:#d97706;">
-                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                                Recommendations
-                            </h3>
-                            <div class="flex flex-wrap items-center gap-1.5"><div id="recFilterTabs" class="flex flex-wrap gap-1.5"></div><span id="recPhotoToggle"></span></div>
-                        </div>
-                        <div id="recAgeChart" class="viz-root"></div>
-                        <div id="siteLandingRecsList" class="space-y-2.5 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1">
-                            <span class="t-faint italic">No active recommendations for this site.</span>
-                        </div>
-                    </div>
-
-                    <!-- Stations -->
-                    <div class="card p-5 sm:p-6 space-y-4 min-w-0">
-                        <div class="flex flex-wrap items-center justify-between gap-2 border-b divider pb-3">
-                            <h3 class="eyebrow flex items-center gap-2" style="color:#16a34a;">
-                                <span class="w-2 h-2 rounded-full bg-green-600"></span>
-                                Stations
-                            </h3>
-                            <div class="flex flex-wrap items-center gap-2"><span id="stationPhotoToggle"></span><span id="stationTypeTabs"></span><input type="text" id="siteStationSearch" oninput="renderSiteStationList()" placeholder="Search stations..." class="field !w-40 !py-1.5 !text-xs"></div>
-                        </div>
-                        <div id="siteStationList" class="space-y-2 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1"></div>
                     </div>
 
                     <!-- Past visits -->
@@ -717,7 +729,7 @@
                     </div>
 
                     <!-- Activity log -->
-                    <div class="card p-5 sm:p-6 space-y-4 min-w-0 lg:col-span-2">
+                    <div class="card p-5 sm:p-6 space-y-4 min-w-0">
                         <div class="flex flex-wrap items-center justify-between gap-2 border-b divider pb-3">
                             <h3 class="eyebrow flex items-center gap-2" style="color:#7c3aed;">
                                 <span class="w-2 h-2 rounded-full" style="background:#7c3aed;"></span>
@@ -727,8 +739,17 @@
                         </div>
                         <div id="siteActivityLog" class="space-y-1.5 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1"></div>
                     </div>
-                </div>
             </div>
+            <!-- Critical limits (switched off while they are rebuilt) -->
+                    <div id="siteLimitsCard" class="card p-5 space-y-3 hidden">
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="eyebrow flex items-center gap-2" style="color:#dc2626;"><span class="w-2 h-2 rounded-full" style="background:#dc2626;"></span>Critical limits</span>
+                            <button type="button" id="siteLimitAddBtn" onclick="editSiteLimit('new')" class="link-btn !no-underline">+ Add</button>
+                        </div>
+                        <div id="siteLimitsBox" class="space-y-2 text-xs"></div>
+                    </div>
+            <!-- (contract, technician and access notes are kept in Edit Site; not shown on this page) -->
+                    <div class="hidden" aria-hidden="true"><div id="siteContractChip"></div><p id="siteContractDates"></p><p id="siteContractNotes"></p><span id="siteAssignedTech"></span><p id="siteLandingNotes"></p></div>
         </section>
 
         <!-- 3. ACTIVE SERVICE WORKSPACE -->
@@ -749,6 +770,7 @@
                     </button>
                     <div id="scanTypeTabs" class="scan-type-menu hidden" role="group" aria-label="Filter by station type"></div>
                 </div>
+                <button type="button" id="scanViewBtn" onclick="setScanView(scanView === 'list' ? 'cards' : 'list')" class="scan-view-btn" aria-pressed="false"></button>
             </div>
 
             <!-- Station lists: pending first, serviced underneath -->
@@ -1808,7 +1830,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r40';
+        const APP_VERSION = '2026.10.18-r41';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -5952,26 +5974,20 @@
             if (!el) return;
             const list = getServices(selectedClient).slice();
             if (list.length === 0) {
-                el.innerHTML = '<div class="t-faint italic text-xs sm:col-span-2 xl:col-span-4">No contracted services recorded yet. Use "Manage Services" to add what this site pays for and how often.</div>';
+                el.innerHTML = '<div class="t-faint italic text-xs">No contracted services recorded yet. Use Manage to add what this site pays for and how often.</div>';
                 return;
             }
             list.sort((a, b) => {
                 const da = dueInfo(a).days, db = dueInfo(b).days;
                 return (da === null ? 99999 : da) - (db === null ? 99999 : db);
             });
+            // one line each; tap for last done, next due and the note
             el.innerHTML = list.map(s => {
                 const d = dueInfo(s);
-                return `
-                    <div class="row-item clickable p-4 space-y-1.5 svc-row" data-id="${esc(s.id)}" onclick="showServiceDetails(this.dataset.id)" title="Tap for the details${s.notes ? ' and note' : ''}" role="button" tabindex="0" onkeydown="if (event.key === 'Enter') this.click()">
-                        <div class="flex justify-between items-start gap-2">
-                            <div class="font-bold t-strong text-sm break-words">${esc(s.type)}</div>
-                            <span class="chip ${d.cls} shrink-0">${esc(d.text)}</span>
-                        </div>
-                        <div class="text-xs t-muted">${esc(freqLabel(s.frequency))}</div>
-                        <div class="text-xs t-muted">Last done: <span class="t-strong font-semibold">${esc(fmtDay(s.lastDone))}</span></div>
-                        <div class="text-xs t-muted">Next service due: <span class="t-strong font-semibold">${esc(s.nextDue ? fmtDay(s.nextDue) : (s.frequency === 'oneoff' ? 'On request' : 'Not set'))}</span></div>
-                        ${s.notes ? '<div class="text-[11px] t-accent font-semibold">📝 Note - tap to read</div>' : ''}
-                    </div>`;
+                return `<button type="button" class="svc-mini svc-row" data-id="${esc(s.id)}" onclick="showServiceDetails(this.dataset.id)" title="${esc(s.type)} - ${esc(freqLabel(s.frequency))}. Tap for the details${s.notes ? ' and note' : ''}">
+                        <span class="min-w-0 flex-1 truncate"><span class="font-bold t-strong">${esc(s.type)}</span> <span class="t-faint">· ${esc(freqLabel(s.frequency))}</span>${s.notes ? ' <span aria-label="Has a note">📝</span>' : ''}</span>
+                        <span class="chip ${d.cls} shrink-0">${esc(d.text)}</span>
+                    </button>`;
             }).join('');
         }
         function showServiceDetails(id) {
@@ -6188,7 +6204,7 @@
         // ---------- Download progress (first time a site is opened on a device) ----------
         function fmtBytes(n) {
             if (!n || n < 1) return '0 KB';
-            if (n < 1024) return n + ' B';
+            if (n < 1024) return Math.round(n) + ' B';
             if (n < 1024 * 1024) return (n / 1024).toFixed(n < 10 * 1024 ? 1 : 0) + ' KB';
             return (n / 1024 / 1024).toFixed(n < 100 * 1024 * 1024 ? 1 : 0) + ' MB';
         }
@@ -7741,6 +7757,28 @@
             renderRecAgeChart();
         }
 
+        // header numbers: tap to open what's behind them (Next service isn't a link)
+        function flashBox(el) {
+            if (!el) return;
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            el.classList.add('flash-ring');
+            setTimeout(() => el.classList.remove('flash-ring'), 1400);
+        }
+        function kpiOpen(what) {
+            if (what === 'stations') {
+                stationTypeFilter = 'all';
+                const ss = document.getElementById('siteStationSearch'); if (ss) ss.value = '';
+                renderSiteStationList();
+                flashBox(document.getElementById('siteStationsCard'));
+            } else if (what === 'issues') {
+                setRecFilter('open');
+                flashBox(document.getElementById('siteRecsCard'));
+            } else if (what === 'lastVisit') {
+                const i = lastVisitStats ? sitePastVisits.indexOf(lastVisitStats.visit) : -1;
+                if (i >= 0) openVisitModal(i);
+                else openInfoModal('Scanned last visit', '<p class="text-sm t-muted">No completed visit on record for this site yet.</p>');
+            }
+        }
         let recFilter = 'open';
         function setRecFilter(v) { recFilter = v; renderLandingRecommendationsAndVisits(); }
 
@@ -7792,7 +7830,6 @@
                         ${recNumberHtml(item, 'text-sm rec-no')}
                         ${recStatusChip(item.status)}
                         ${recAgeChip(item)}
-                        ${item.thisVisit ? '<span class="chip chip-green shrink-0">This visit</span>' : ''}
                     </div>
                     ${station}
                     <div class="t-strong font-semibold break-words mt-1 line-clamp-2">${item.category ? `<span class="chip chip-blue !py-0 mr-1">${esc(item.category)}</span>` : ''}${esc(item.recommendation)}</div>
@@ -7810,12 +7847,10 @@
                     <div class="nf-hero" style="--tc:${col};">
                         <div class="nf-img" data-rec-hero="${esc(item.id)}">${(item.allSlots || []).length ? '' : `<span class="nf-ph">📋</span>`}</div>
                         <div class="nf-shade"></div>
-                        <div class="nf-top">${item.thisVisit ? '<span class="chip chip-green">This visit</span>' : ''}</div>
                         <div class="nf-title">${item.category ? `<span class="nf-cat">${esc(item.category)}</span>` : ''}<span class="line-clamp-2">${esc(item.recommendation)}</span></div>
                     </div>
                     <div class="nf-meta">
-                        <div class="flex items-center justify-between gap-1.5">${recNumberHtml(item, 'text-xs rec-no')}${item.status === 'complete' ? '<span class="chip chip-green !py-0">Complete</span>' : item.status === 'pending' ? '<span class="chip chip-amber !py-0">Pending</span>' : ''}</div>
-                        <div class="flex items-center gap-1.5 t-accent font-semibold truncate mt-1">${typeDot(item.stationType, '.55rem')}<span class="truncate">${esc(item.station)}</span></div>
+                        <div class="flex items-center gap-1.5 min-w-0">${recNumberHtml(item, 'text-xs rec-no shrink-0')}<span class="flex items-center gap-1 t-accent font-semibold min-w-0 flex-1" title="${esc(item.station)}">${typeDot(item.stationType, '.5rem')}<span class="truncate">${esc(item.station)}</span></span>${item.status === 'complete' ? '<span class="chip chip-green !py-0 shrink-0">Complete</span>' : item.status === 'pending' ? '<span class="chip chip-amber !py-0 shrink-0">Pending</span>' : ''}</div>
                         <div class="flex flex-wrap items-center gap-1 mt-1">${recAgeChip(item)}<span class="t-faint text-[10px]">${esc(dateStr)}${item.photoCount > 1 ? ' · ' + mediaIcon(item.allSlots) + ' ' + item.photoCount : ''}</span></div>
                     </div>
                 </button>`;
@@ -8253,9 +8288,9 @@
                 }));
             document.getElementById('recModalHistory').innerHTML = hist.join('');
 
-            // Adding to an open recommendation moves it to pending by default; any status can be chosen, including re-opening.
+            // The status starts as it is now (a new recommendation is Open); any status can be chosen.
             // Changing the status always needs a note saying what was done or why.
-            document.getElementById('recModalStatus').value = rec.status === 'complete' ? 'complete' : 'pending';
+            document.getElementById('recModalStatus').value = ['open', 'pending', 'complete'].includes(rec.status) ? rec.status : 'open';
             recModalStartStatus = document.getElementById('recModalStatus').value;
             document.getElementById('recModalNote').value = '';
             updateRecNoteReq();
@@ -9731,8 +9766,43 @@
         }
 
         // A station on the service screen: a poster card led by its location photo
-        function deviceRowHtml(d, isScanned) {
+        // Scan screen view: 'cards' (photo cards) or 'list' (the original rows); remembered on this device
+        let scanView = (() => { try { return localStorage.getItem('pestis-scan-view') === 'list' ? 'list' : 'cards'; } catch (e) { return 'cards'; } })();
+        function setScanView(v) {
+            scanView = v === 'list' ? 'list' : 'cards';
+            try { localStorage.setItem('pestis-scan-view', scanView); } catch (e) {}
+            filterStationsList();
+        }
+        function renderScanViewBtn() {
+            const b = document.getElementById('scanViewBtn');
+            if (!b) return;
+            const toList = scanView === 'cards';
+            b.innerHTML = toList
+                ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg><span class="svb-t">List</span>'
+                : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5h7v7H4zM13 5h7v7h-7zM4 14h7v6H4zM13 14h7v6h-7z"></path></svg><span class="svb-t">Cards</span>';
+            b.title = toList ? 'Show the stations as a list' : 'Show the stations as photo cards';
+            b.setAttribute('aria-pressed', String(scanView === 'list'));
+        }
+        // The original list row
+        function deviceListRowHtml(d, isScanned) {
             const openN = openRecCount(d);
+            const hasRecs = openN > 0 ? `<span class="t-accent text-xs font-semibold ml-1">[Open issues: ${openN}]</span>` : '';
+            const badge = isScanned
+                ? '<span class="chip chip-green shrink-0">Serviced ✓</span>'
+                : '<span class="chip chip-amber shrink-0">Unscanned</span>';
+            const col = stationColor(d.deviceType);
+            return `
+                <div data-barcode="${esc(d.barcode_id)}" data-scanned="${isScanned ? '1' : '0'}" onclick="openDeviceFromEl(this)" onkeydown="if (event.key === 'Enter') this.click()" role="button" tabindex="0" class="row-item typed clickable ws-row p-3.5 flex justify-between items-center gap-2" style="border-left-color:${col.color};">
+                    <div class="min-w-0">
+                        <div class="font-bold t-strong text-sm break-words flex items-center gap-2">${typeDot(d.deviceType, '.6rem')}<span>${esc(d.locationName)} ${hasRecs}</span></div>
+                        <div class="t-muted text-xs">${esc(d.deviceType)} • <span class="font-mono t-accent">${esc(d.barcode_id)}</span></div>
+                        <div class="t-faint text-[11px] mt-0.5">${esc(lastServicedText(d, isScanned))}</div>
+                    </div>
+                    ${badge}
+                </div>`;
+        }
+        function deviceRowHtml(d, isScanned) {
+            if (scanView === 'list') return deviceListRowHtml(d, isScanned);
             const col = stationColor(d.deviceType).color;
             const hasPhoto = !!(siteStations.get(d.barcode_id) || {}).photo_path;
             return `
@@ -9740,7 +9810,7 @@
                     <div class="nf-hero" style="--tc:${col};">
                         <div class="nf-img" data-st-photo="${esc(d.barcode_id)}">${hasPhoto ? '' : '<span class="nf-ph">📍</span>'}</div>
                         <div class="nf-shade"></div>
-                        <div class="nf-top">${isScanned ? '<span class="chip chip-green">Serviced ✓</span>' : '<span class="chip chip-amber">Unscanned</span>'}${openN ? `<span class="chip chip-orange">${openN} open</span>` : ''}</div>
+                        <div class="nf-top">${isScanned ? '<span class="chip chip-green">Serviced ✓</span>' : '<span class="chip chip-amber">Unscanned</span>'}</div>
                         <div class="nf-title flex items-center gap-1.5"><span class="nf-dot" style="background:${col};"></span><span class="line-clamp-2">${esc(d.locationName)}</span></div>
                     </div>
                     <div class="nf-meta">
@@ -9773,6 +9843,9 @@
             document.getElementById('unscannedCount').textContent = unscanned.length;
             document.getElementById('scannedCount').textContent = scanned.length;
 
+            const cards = scanView !== 'list';
+            [unscannedList, scannedList].forEach(l => { l.classList.toggle('ws-grid', cards); l.classList.toggle('space-y-2.5', !cards); });
+            renderScanViewBtn();
             unscannedList.innerHTML = unscanned.length === 0
                 ? '<span class="t-faint italic">No matching unscanned devices found.</span>'
                 : unscanned.map(d => deviceRowHtml(d, false)).join('');
@@ -9780,9 +9853,8 @@
             scannedList.innerHTML = scanned.length === 0
                 ? '<span class="t-faint italic">No matching scanned devices found.</span>'
                 : scanned.map(d => deviceRowHtml(d, true)).join('');
-            scannedList.classList.add('ws-grid');
             const shown = unscanned.concat(scanned).map(d => d.barcode_id);
-            if (shown.length) { fillStationThumbs(unscannedList, unscanned.map(d => d.barcode_id)); fillStationThumbs(scannedList, scanned.map(d => d.barcode_id)); }
+            if (cards && shown.length) { fillStationThumbs(unscannedList, unscanned.map(d => d.barcode_id)); fillStationThumbs(scannedList, scanned.map(d => d.barcode_id)); }
         }
 
         // ---------- Scanner beep ----------
