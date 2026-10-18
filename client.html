@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +10,7 @@
         tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { 50: '#fff7ed', 100: '#ffedd5', 400: '#fb923c', 500: '#f97316', 600: '#ea580c', 700: '#c2410c', 900: '#7c2d12', 950: '#431407' } } } } };
     </script>
     <script>
-        try { if (localStorage.getItem('pestis-theme') === 'light') document.documentElement.classList.remove('dark'); } catch (e) {}
+        try { if (localStorage.getItem('pestis-theme') === 'dark') document.documentElement.classList.add('dark'); } catch (e) {}
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -315,7 +315,7 @@
                     </div>
                     <div><label class="lbl" for="fFrom">From</label><input id="fFrom" type="date" class="field !w-auto !py-2" onchange="setCustomDates()"></div>
                     <div><label class="lbl" for="fTo">To</label><input id="fTo" type="date" class="field !w-auto !py-2" onchange="setCustomDates()"></div>
-                    <div data-f="type"><label class="lbl" for="fType">Station type</label><select id="fType" class="field !w-auto !py-2 max-w-[15rem]" onchange="F.type = this.value; renderTab();"></select></div>
+                    <div data-f="type"><label class="lbl" for="fType">Station type</label><select id="fType" class="field !w-auto !py-2 max-w-[15rem]" onchange="setTypeFilter(this.value)"></select></div>
                     <div data-f="map"><label class="lbl" for="fMap">Floor plan</label><select id="fMap" class="field !w-auto !py-2 max-w-[13rem]" onchange="F.map = this.value; renderTab();"></select></div>
                     <div data-f="zone"><label class="lbl" for="fZone">Critical limits</label><select id="fZone" class="field !w-auto !py-2 max-w-[13rem]" onchange="F.zone = this.value; renderTab();"></select></div>
                     <div data-f="station"><label class="lbl" for="fStation">Station</label><select id="fStation" class="field !w-auto !py-2 max-w-[15rem]" onchange="F.station = this.value; renderTab();"></select></div>
@@ -390,7 +390,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.18-p10';
+const PORTAL_VERSION = '2026.10.18-p11';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -566,6 +566,7 @@ function bellItems(includeSeen) {
     if (state.model) {
         breachesNow().forEach(x => items.push({ key: `lim:${x.limit.id}:${monthLabel(Date.now())}:${x.total}`, icon: '⚠', red: true, title: `${x.limit.zone} · ${limitPest(x.limit)} over its limit`, sub: `${x.total} recorded in ${monthLabel(Date.now())} (limit ${x.limit.max})`, go: `showBreach('${esc(x.limit.id)}')` }));
         state.model.visits.filter(v => v.completed > Date.now() - 14 * 86400000).slice().reverse().forEach(v => items.push({ key: 'visit:' + v.id, icon: '✅', title: `New service report: ${v.type}`, sub: `${fmtDate(v.completed)} · finished ${fmtTime(v.end || v.completed)}${v.tech ? ' · ' + v.tech : ''}${visitBreaches(v).length ? ' · ⚠ critical limit breach' : ''}`, red: visitBreaches(v).length > 0, go: `openVisit('${esc(v.id)}')` }));
+        (state.model.sightings || []).filter(x => x.status === 'actioned').forEach(x => items.push({ key: `sight:${x.id}:actioned`, icon: '🔎', title: `Pest sighting ${fmtSightNo(x.no)} actioned - please review`, sub: `${x.pest} · ${x.location}${x.actionedBy ? ' · ' + x.actionedBy : ''}`, go: `setTab('sightings'); showSighting('${esc(x.id)}')` }));
         const uid = state.me && state.me.uid;
         state.model.recs.filter(r => r.status !== 'complete' && r.raisedAt > Date.now() - 30 * 86400000 && uid && !r.views.some(v => v.viewer_key === uid))
             .forEach(r => items.push({ key: `rec:${r.id}`, icon: '🆕', title: `New recommendation ${fmtRecNo(r.no)}`, sub: `${r.station} · ${r.text}`, go: `openRec('${esc(r.id)}', 'overview')` }));
@@ -737,7 +738,7 @@ function renderPicker() {
 //  ONE SITE: load everything once, then each tab is worked out on this device
 // ===================================================================
 const TABS = [
-    ['overview', 'Overview'], ['recs', 'Recommendations'], ['reports', 'Reports'], ['limits', 'Critical limits'], ['stations', 'Station register'], ['chemicals', 'Preparations'],
+    ['overview', 'Overview'], ['recs', 'Recommendations'], ['sightings', 'Pest sightings'], ['reports', 'Reports'], ['limits', 'Critical limits'], ['stations', 'Station register'], ['chemicals', 'Preparations'],
     ['activity', 'Pest activity'], ['visits', 'Visits'], ['documents', 'Documents'], ['plans', 'Floor plans'], ['techs', 'Technicians']
 ];
 // which filters each report tab offers (hidden filters are not applied)
@@ -809,7 +810,15 @@ async function loadSiteData(site) {
         fetchAll('critical_limits', cid).catch(() => []),
         fetchAll('recommendation_views', cid).catch(() => [])
     ]);
-    state.data = { logs, stations, maps, visits, recs, updates, docs, folders, limits, views };
+    const [types, sightings, species] = await Promise.all([
+        sb.from('station_types').select('label').then(r => { if (r.error) throw r.error; return (r.data || []).map(x => x.label); })
+            .catch(() => sb.from('app_options').select('label, kind').eq('kind', 'station_type').then(r => (r.data || []).map(x => x.label)).catch(() => [])),
+        fetchAll('pest_sightings', cid).then(r => { state.sightingsMissing = false; return r; }).catch(() => { state.sightingsMissing = true; return []; }),
+        state.speciesList ? Promise.resolve(state.speciesList) : sb.from('species').select('label').then(r => (r.data || []).map(x => x.label)).catch(() => [])
+    ]);
+    state.stationTypes = types || [];
+    state.speciesList = species || [];
+    state.data = { logs, stations, maps, visits, recs, updates, docs, folders, limits, views, sightings };
     state.model = buildModel(site, state.data);
     state.links = new Map();
     fillFilterOptions();
@@ -907,7 +916,13 @@ function buildModel(site, d) {
     const extraFolders = Array.from(new Set((d.folders || []).map(f => f.name).concat(docs.map(docFolderOf).filter(Boolean)))).filter(f => !STANDARD_FOLDERS.includes(f))
         .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
     const folders = STANDARD_FOLDERS.concat(extraFolders);
-    return { entries, stations, visits, recs, maps, docs, folders, interval, limits, zones };
+    const sightings = (d.sightings || []).map(x => ({
+        id: x.id, no: x.sighting_no, pest: x.pest || '', location: x.location || '', station: x.station_barcode || '', seenAt: Date.parse(x.seen_at) || Date.parse(x.created_at),
+        number: x.number_seen, evidence: x.evidence || '', urgency: x.urgency || 'Routine', reportedBy: x.reported_by || '', contact: x.reporter_contact || '', details: x.details || '',
+        photos: Array.isArray(x.photos) ? x.photos : [], status: x.status || 'new', actionNotes: x.action_notes || '', actionedBy: x.actioned_by || '', actionedAt: Date.parse(x.actioned_at) || null,
+        reviewedBy: x.client_reviewed_by || '', reviewedAt: Date.parse(x.client_reviewed_at) || null, reviewNote: x.client_review_note || '', createdAt: Date.parse(x.created_at) || null
+    })).sort((a, b) => (b.seenAt || 0) - (a.seenAt || 0));
+    return { entries, stations, visits, recs, maps, docs, folders, interval, limits, zones, sightings };
 }
 
 // ---------- signed links for photos and documents ----------
@@ -938,7 +953,8 @@ function renderSiteHeader() {
     const lastVisit = m.visits[m.visits.length - 1];
     $('siteMeta').textContent = [s.technician ? 'Your technician: ' + s.technician : '', lastVisit ? 'Last service ' + fmtDate(lastVisit.completed) : ''].filter(Boolean).join(' · ');
     const openRecs = m.recs.filter(r => r.status !== 'complete').length;
-    $('siteTabs').innerHTML = TABS.map(([k, l]) => `<button type="button" class="nav-tab ${state.tab === k ? 'active' : ''}" onclick="setTab('${k}')">${l}${k === 'recs' && openRecs ? `<span class="count">${openRecs}</span>` : ''}</button>`).join('');
+    const toReview = (m.sightings || []).filter(x => x.status === 'actioned').length;
+    $('siteTabs').innerHTML = TABS.map(([k, l]) => `<button type="button" class="nav-tab ${state.tab === k ? 'active' : ''}" onclick="setTab('${k}')">${l}${k === 'recs' && openRecs ? `<span class="count">${openRecs}</span>` : ''}${k === 'sightings' && toReview ? `<span class="count" title="Actioned by your technician, waiting for your review">${toReview}</span>` : ''}</button>`).join('');
 }
 
 function renderTab() {
@@ -946,8 +962,8 @@ function renderTab() {
     renderSiteHeader();
     const shown = TAB_FILTERS[state.tab];
     $('filterBar').classList.toggle('hidden', !shown);
-    document.querySelectorAll('#filterBar [data-f]').forEach(el => el.classList.toggle('hidden', !shown || !shown.includes(el.dataset.f)));
-    const fn = { overview: renderOverview, recs: renderRecs, reports: renderReports, stations: renderStations, chemicals: renderChemicals, activity: renderActivity, visits: renderVisits, documents: renderDocuments, plans: renderPlans, techs: renderTechnicians, limits: renderLimitsTab }[state.tab];
+    document.querySelectorAll('#filterBar [data-f]').forEach(el => el.classList.toggle('hidden', !shown || !shown.includes(el.dataset.f) || (el.dataset.f === 'zone' && !zoneFilterOn())));
+    const fn = { overview: renderOverview, recs: renderRecs, reports: renderReports, stations: renderStations, chemicals: renderChemicals, activity: renderActivity, visits: renderVisits, documents: renderDocuments, plans: renderPlans, techs: renderTechnicians, limits: renderLimitsTab, sightings: renderSightings }[state.tab];
     fn();
 }
 
@@ -982,12 +998,40 @@ function rangeText() {
 }
 const sortText = a => Array.from(new Set(a.filter(Boolean))).sort((x, y) => String(x).localeCompare(String(y), undefined, { sensitivity: 'base', numeric: true }));
 const optionsHtml = (list, all) => `<option value="">${all}</option>` + list.map(v => Array.isArray(v) ? `<option value="${esc(v[0])}">${esc(v[1])}</option>` : `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+// station types: every type Pesties uses, plus any on this site's stations (same type spelled differently counts once)
+function allStationTypes() {
+    const seen = new Map();
+    (state.stationTypes || []).concat(state.model.stations.map(s => s.type)).forEach(t => { t = String(t || '').trim(); if (t && !seen.has(t.toLowerCase())) seen.set(t.toLowerCase(), t); });
+    return sortText(Array.from(seen.values()));
+}
+const sameType = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+// flying and crawling insect stations are the ones with critical limits
+function isInsectType(type) { const t = String(type || '').toLowerCase(); return STATION_COLORS.filter(c => c.key === 'flying' || c.key === 'crawling').some(c => c.test(t)) && !/rodent|rat|mouse|mice/.test(t); }
+function zoneFilterOn() { return isInsectType(F.type); }
+// the Station list (and critical limits areas) only offer what belongs to the station type picked
+function fillStationOptions() {
+    const m = state.model;
+    const sts = m.stations.filter(s => !F.type || sameType(s.type, F.type));
+    if (F.station && !sts.some(s => s.barcode === F.station)) F.station = '';
+    $('fStation').innerHTML = optionsHtml(sts.map(s => [s.barcode, `${s.name} (${s.barcode})`]), F.type ? `All ${F.type} stations` : 'All stations');
+    $('fStation').value = F.station;
+    const zones = sortText(sts.map(s => s.zone).concat(F.type ? [] : m.limits.map(l => l.zone)));
+    if (F.zone && !zones.some(z => zoneKey(z) === zoneKey(F.zone))) F.zone = '';
+    $('fZone').innerHTML = optionsHtml(zones, 'All areas');
+    $('fZone').value = F.zone;
+}
+function setTypeFilter(v) {
+    F.type = v;
+    if (!zoneFilterOn()) F.zone = '';
+    fillStationOptions();
+    renderTab();
+}
 function fillFilterOptions() {
     const m = state.model;
-    $('fType').innerHTML = optionsHtml(sortText(m.stations.map(s => s.type)), 'All types');
+    $('fType').innerHTML = optionsHtml(allStationTypes(), 'All types');
     $('fMap').innerHTML = optionsHtml(m.maps.map(p => [p.id, p.name]), 'All floor plans');
-    $('fZone').innerHTML = optionsHtml(m.zones, 'All areas');
-    $('fStation').innerHTML = optionsHtml(m.stations.map(s => [s.barcode, `${s.name} (${s.barcode})`]), 'All stations');
+    if (!zoneFilterOn()) F.zone = '';
+    fillStationOptions();
     $('fSpecies').innerHTML = optionsHtml(sortText(m.entries.map(e => e.species)), 'All pests');
     $('fPrep').innerHTML = optionsHtml(sortText(m.entries.map(e => e.prep)), 'All preparations');
     $('fTech').innerHTML = optionsHtml(sortText(m.entries.map(e => e.tech).concat(m.visits.map(v => v.tech))), 'All technicians');
@@ -996,7 +1040,7 @@ function fillFilterOptions() {
 // the filters the current tab shows, as an options object
 function filterOpts() {
     const o = { from: F.from, to: F.to };
-    (TAB_FILTERS[state.tab] || []).forEach(k => { o[k] = F[k]; });
+    (TAB_FILTERS[state.tab] || []).forEach(k => { if (k !== 'zone' || zoneFilterOn()) o[k] = F[k]; });
     return o;
 }
 function matchesSearch(...vals) {
@@ -1007,7 +1051,7 @@ const zoneKey = z => String(z || '').trim().toLowerCase().replace(/\s+/g, ' ');
 const pestKey = p => String(p || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/ies$/, 'y').replace(/([^s])s$/, '$1');
 function entriesFor(o) {
     const q = (o.q || '').trim().toLowerCase();
-    return state.model.entries.filter(e => inRange(e.at, o) && (!o.type || e.type === o.type) && (!o.map || e.mapId === o.map) && (!o.zone || zoneKey(e.zone) === zoneKey(o.zone))
+    return state.model.entries.filter(e => inRange(e.at, o) && (!o.type || sameType(e.type, o.type)) && (!o.map || e.mapId === o.map) && (!o.zone || zoneKey(e.zone) === zoneKey(o.zone))
         && (!o.station || e.barcode === o.station) && (!o.species || e.species === o.species) && (!o.prep || e.prep === o.prep) && (!o.batch || String(e.batch || '').toLowerCase().includes(String(o.batch).toLowerCase())) && (!o.tech || e.tech === o.tech)
         && (!q || [e.name, e.barcode, e.batch, e.prep, e.species, e.tech, e.notes, e.zone].some(v => String(v || '').toLowerCase().includes(q))));
 }
@@ -1017,7 +1061,7 @@ function filteredEntries() { return entriesFor(filterOpts()); }
 function typeDot(type) { return `<span class="type-dot" style="background:${stationColor(type)}" title="${esc(type)}"></span>`; }
 function statusChip(st) { const s = STATUS[st] || STATUS.open; return `<span class="chip ${s.cls}">${s.label}</span>`; }
 function activityChip(a) {
-    const cls = { None: 'chip-grey', Low: 'chip-blue', Medium: 'chip-amber', High: 'chip-red', Caught: 'chip-red' }[a] || 'chip-grey';
+    const cls = { None: 'chip-green', Low: 'chip-blue', Medium: 'chip-amber', High: 'chip-red', Caught: 'chip-red' }[a] || 'chip-grey';
     return `<span class="chip ${cls}">${a === 'None' || !a ? 'No activity' : esc(a)}</span>`;
 }
 function stationCell(s) { return `<div class="flex items-center gap-2">${typeDot(s.type)}<div class="min-w-0"><div class="font-bold t-strong">${esc(s.name)}</div><div class="t-faint mono text-[11px]">${esc(s.barcode)}</div></div></div>`; }
@@ -1780,6 +1824,168 @@ function renderReports() {
     }
 }
 
+// ---------- Pest sighting register ----------
+// The client reports a pest they saw; the technician actions it and signs it off; the client reviews it.
+const fmtSightNo = n => n != null ? 'PS-' + n : 'PS';
+const SIGHT_STATUS = { new: ['chip-red', 'Reported · with your technician'], actioned: ['chip-amber', 'Actioned · please review'], reviewed: ['chip-green', 'Reviewed · closed'] };
+const sightChip = st => { const s = SIGHT_STATUS[st] || SIGHT_STATUS.new; return `<span class="chip ${s[0]}">${s[1]}</span>`; };
+const EVIDENCE = ['Live pest', 'Dead pest', 'Droppings', 'Gnawing or damage', 'Nest or burrow', 'Smell or noise', 'Other'];
+const COMMON_PESTS = ['Rat', 'Mouse', 'Cockroach', 'Ant', 'House fly', 'Fruit fly', 'Wasp', 'Bee', 'Bird', 'Spider', 'Stored product insect', 'Moth', 'Silverfish', 'Flea', 'Bed bug', 'Possum'];
+let sightDraft = null;
+function renderSightings() {
+    const m = state.model, list = m.sightings || [];
+    const yearAgo = Date.now() - 365 * 86400000;
+    const n = st => list.filter(x => x.status === st).length;
+    const tile = (v, k, color) => `<div class="card stat"><div class="v" ${color ? `style="color:${color}"` : ''}>${v}</div><div class="k">${k}</div></div>`;
+    const pests = new Map(); list.filter(x => x.seenAt > yearAgo).forEach(x => pests.set(x.pest, (pests.get(x.pest) || 0) + 1));
+    $('tabBody').innerHTML = `
+        ${state.sightingsMissing ? `<div class="alert-box p-4 text-sm">The pest sighting register isn't switched on for this site yet. Please ask Pesties to update the portal.</div>` : ''}
+        <div class="card p-5 space-y-3">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div><h3 class="font-black t-strong">Pest sighting register</h3>
+                    <p class="text-xs t-muted max-w-3xl">Seen a pest, droppings or damage on site? Report it here. Your technician is notified straight away, actions it and signs it off, and you review what was done.</p></div>
+                <button type="button" class="btn btn-primary" onclick="openSightingForm()" ${state.sightingsMissing ? 'disabled' : ''}>+ Report a sighting</button>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                ${tile(n('new'), 'With your technician', n('new') ? '#dc2626' : '')}${tile(n('actioned'), 'Actioned · to review', n('actioned') ? '#d97706' : '')}${tile(n('reviewed'), 'Reviewed · closed', '#10b981')}${tile(list.filter(x => x.seenAt > yearAgo).length, 'Sightings · last 12 months')}
+            </div>
+            ${pests.size ? `<div class="flex flex-wrap gap-1.5 text-xs"><span class="t-faint">Last 12 months:</span>${Array.from(pests.entries()).sort((a, b) => b[1] - a[1]).map(([p, c]) => `<span class="chip chip-grey">${esc(p)} · ${c}</span>`).join('')}</div>` : ''}
+        </div>
+        <div class="card p-4 space-y-2 sm:hidden">
+            ${list.map(x => `<button type="button" class="row-item clickable w-full text-left p-3 space-y-1" data-sight="${esc(x.id)}" onclick="showSighting(this.dataset.sight)">
+                <div class="flex items-start justify-between gap-2"><span class="font-bold t-strong">${fmtSightNo(x.no)} · ${esc(x.pest)}${x.urgency === 'Urgent' ? ' <span class="chip chip-red !py-0">Urgent</span>' : ''}</span>${sightChip(x.status)}</div>
+                <div class="text-xs t-muted">${esc(x.location)} · ${fmtDateTime(x.seenAt)}${x.number != null ? ' · ' + x.number + ' seen' : ''}</div></button>`).join('') || emptyNote('No sightings reported yet.')}
+        </div>
+        <div class="card p-5 space-y-3 hidden sm:block">
+            <div class="tbl-wrap"><table class="tbl"><thead><tr><th>No.</th><th>Seen</th><th>Pest</th><th>Where</th><th class="num">Number</th><th>What was seen</th><th>Reported by</th><th>Status</th></tr></thead><tbody>
+                ${list.map(x => `<tr class="clickable" data-sight="${esc(x.id)}" onclick="showSighting(this.dataset.sight)">
+                    <td class="mono font-bold whitespace-nowrap">${fmtSightNo(x.no)}${x.urgency === 'Urgent' ? ' <span class="chip chip-red !py-0">Urgent</span>' : ''}</td>
+                    <td class="whitespace-nowrap">${fmtDateTime(x.seenAt)}</td><td class="font-bold t-strong">${esc(x.pest)}</td>
+                    <td>${esc(x.location)}${x.station ? `<div class="t-faint text-[11px]">near ${esc(stationName(x.station))}</div>` : ''}</td>
+                    <td class="num">${x.number != null ? x.number : '-'}</td><td>${esc(x.evidence || '-')}</td><td class="t-muted">${esc(x.reportedBy)}</td><td>${sightChip(x.status)}</td></tr>`).join('')
+                || '<tr><td colspan="8" class="t-faint italic text-center p-6">No sightings reported yet. Use "Report a sighting" when you see a pest or signs of one.</td></tr>'}
+            </tbody></table></div>
+        </div>`;
+}
+function stationName(barcode) { const s = state.model.stations.find(x => x.barcode === barcode); return s ? `${s.name} (${s.barcode})` : barcode; }
+function nowLocal() { const d = new Date(Date.now() - new Date().getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); }
+function openSightingForm() {
+    const m = state.model, me = state.me || {};
+    sightDraft = { files: [] };
+    const pests = sortText(COMMON_PESTS.concat(state.speciesList || [], m.entries.map(e => e.species), (m.sightings || []).map(x => x.pest)));
+    const places = sortText(m.stations.map(s => s.name).concat(m.maps.map(p => p.name), m.stations.map(s => s.zone)));
+    $('modalEyebrow').textContent = 'Pest sighting register';
+    $('modalTitle').textContent = 'Report a pest sighting';
+    $('modalSub').textContent = siteName(state.site);
+    $('modalNav').classList.add('hidden');
+    $('modalBody').innerHTML = `<form id="sightForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3" onsubmit="event.preventDefault(); saveSighting();">
+        <div><label class="lbl" for="sgPest">Pest seen <span style="color:#ef4444;">*</span></label><input id="sgPest" list="sgPests" required maxlength="80" class="field" placeholder="e.g. Rat, Cockroach, Fly"><datalist id="sgPests">${pests.map(x => `<option value="${esc(x)}">`).join('')}</datalist></div>
+        <div><label class="lbl" for="sgEvidence">What was seen</label><select id="sgEvidence" class="field">${EVIDENCE.map(x => `<option>${x}</option>`).join('')}</select></div>
+        <div><label class="lbl" for="sgLocation">Where it was seen <span style="color:#ef4444;">*</span></label><input id="sgLocation" list="sgPlaces" required maxlength="120" class="field" placeholder="e.g. Behind the dock fridge"><datalist id="sgPlaces">${places.map(x => `<option value="${esc(x)}">`).join('')}</datalist></div>
+        <div><label class="lbl" for="sgStation">Nearest station (optional)</label><select id="sgStation" class="field"><option value="">Not sure / none nearby</option>${m.stations.map(s => `<option value="${esc(s.barcode)}">${esc(s.name)} (${esc(s.barcode)})</option>`).join('')}</select></div>
+        <div><label class="lbl" for="sgSeenAt">When <span style="color:#ef4444;">*</span></label><input id="sgSeenAt" type="datetime-local" required class="field" value="${nowLocal()}" max="${nowLocal()}"></div>
+        <div><label class="lbl" for="sgNumber">How many</label><input id="sgNumber" type="number" min="0" step="1" class="field" placeholder="e.g. 1"></div>
+        <div><label class="lbl" for="sgReportedBy">Reported by <span style="color:#ef4444;">*</span></label><input id="sgReportedBy" required maxlength="80" class="field" value="${esc(me.name || '')}"></div>
+        <div><label class="lbl" for="sgContact">Contact phone or email</label><input id="sgContact" maxlength="120" class="field" value="${esc(me.email || '')}"></div>
+        <div class="sm:col-span-2"><span class="lbl">Urgency</span><div class="flex gap-4 text-sm"><label class="flex items-center gap-2"><input type="radio" name="sgUrgency" value="Routine" checked> Routine</label><label class="flex items-center gap-2"><input type="radio" name="sgUrgency" value="Urgent"> <span style="color:#dc2626;" class="font-bold">Urgent</span> <span class="t-faint text-xs">(food safety risk, an infestation, pests in a production area)</span></label></div></div>
+        <div class="sm:col-span-2"><label class="lbl" for="sgDetails">Details</label><textarea id="sgDetails" rows="3" maxlength="2000" class="field" placeholder="What happened, anything already done (e.g. area cleaned, product removed)..."></textarea></div>
+        <div class="sm:col-span-2 flex flex-wrap items-center gap-2"><button type="button" class="btn btn-secondary" onclick="$('sightPhotoInput').click()">📷 Add photos</button><span class="text-[11px] t-faint">Photos help your technician find and identify the pest.</span>
+            <input type="file" id="sightPhotoInput" accept="image/*" multiple class="hidden" onchange="addSightPhotos(this)"></div>
+        <div id="sightPhotos" class="sm:col-span-2 flex flex-wrap gap-2"></div>
+    </form>`;
+    $('modalFoot').innerHTML = `<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button><button type="button" id="sightSaveBtn" class="btn btn-primary" onclick="saveSighting()">Report sighting</button>`;
+    $('modalFoot').classList.remove('hidden');
+    openModal();
+    $('sgPest').focus();
+}
+function addSightPhotos(input) {
+    Array.from(input.files || []).forEach(f => { if (/^image\//.test(f.type) && sightDraft && sightDraft.files.length < 10) sightDraft.files.push({ file: f, url: URL.createObjectURL(f) }); });
+    input.value = '';
+    $('sightPhotos').innerHTML = sightDraft.files.map((f, i) => `<div class="thumb"><img src="${esc(f.url)}" alt=""><button type="button" class="thumb-x" onclick="sightDraft.files.splice(${i}, 1); addSightPhotos({ files: [] })" aria-label="Remove">✕</button></div>`).join('');
+}
+async function saveSighting() {
+    const v = id => ($(id).value || '').trim();
+    const pest = v('sgPest'), location = v('sgLocation'), who = v('sgReportedBy'), when = v('sgSeenAt');
+    if (!pest) { alert('Say which pest was seen.'); $('sgPest').focus(); return; }
+    if (!location) { alert('Say where it was seen.'); $('sgLocation').focus(); return; }
+    if (!when) { alert('Enter when it was seen.'); $('sgSeenAt').focus(); return; }
+    if (!who) { alert('Enter who is reporting it.'); $('sgReportedBy').focus(); return; }
+    const seenAt = new Date(when);
+    if (isNaN(seenAt) || seenAt.getTime() > Date.now() + 3600000) { alert('The time seen can\'t be in the future.'); return; }
+    const btn = $('sightSaveBtn'); btn.disabled = true; btn.textContent = sightDraft.files.length ? 'Uploading...' : 'Saving...';
+    try {
+        const paths = [], stamp = Date.now();
+        for (let i = 0; i < sightDraft.files.length; i++) {
+            const path = `${state.site.id}/CLIENT_sighting_${stamp}_${i + 1}.jpg`;
+            const { error } = await sb.storage.from(PHOTO_BUCKET).upload(path, await shrinkImage(sightDraft.files[i].file, 1800), { contentType: 'image/jpeg', upsert: false });
+            if (error) throw new Error('Photo upload failed: ' + error.message);
+            paths.push(path);
+        }
+        const num = v('sgNumber');
+        const { data, error } = await sb.rpc('portal_report_sighting', {
+            p_client_id: String(state.site.id), p_pest: pest, p_location: location, p_seen_at: seenAt.toISOString(), p_number: num === '' ? null : Math.max(0, Math.round(Number(num))),
+            p_evidence: v('sgEvidence') || null, p_urgency: (document.querySelector('input[name=sgUrgency]:checked') || {}).value || 'Routine', p_reported_by: who,
+            p_contact: v('sgContact') || null, p_details: v('sgDetails') || null, p_photos: paths, p_station: v('sgStation') || null });
+        if (error) throw error;
+        sightDraft.files.forEach(f => URL.revokeObjectURL(f.url)); sightDraft = null;
+        await reloadSightings();
+        closeModal(true);
+        setTab('sightings');
+        renderTab();
+        toast(`Sighting ${fmtSightNo(data && data.no)} reported. Your technician has been notified.`);
+    } catch (e) {
+        alert('Could not report the sighting: ' + (e.message || e));
+        btn.disabled = false; btn.textContent = 'Report sighting';
+    }
+}
+async function reloadSightings() {
+    state.data.sightings = await fetchAll('pest_sightings', String(state.site.id));
+    state.model = buildModel(state.site, state.data);
+    renderBell();
+}
+async function showSighting(id) {
+    const x = (state.model.sightings || []).find(s => s.id === id);
+    if (!x) return;
+    $('modalEyebrow').textContent = `${fmtSightNo(x.no)} · Pest sighting`;
+    $('modalTitle').textContent = `${x.pest} · ${x.location}`;
+    $('modalSub').innerHTML = `Seen ${fmtDateTime(x.seenAt)} · reported by ${esc(x.reportedBy)}`;
+    $('modalNav').classList.add('hidden');
+    $('modalFoot').classList.add('hidden');
+    openModal();
+    const links = x.photos.length ? await signPaths(x.photos) : [];
+    const fact = (k, v) => v ? `<div><div class="eyebrow t-faint">${k}</div><div class="t-strong">${v}</div></div>` : '';
+    $('modalBody').innerHTML = `
+        <div class="flex flex-wrap items-center gap-2">${sightChip(x.status)}${x.urgency === 'Urgent' ? '<span class="chip chip-red">Urgent</span>' : ''}</div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 inset p-3 text-sm">
+            ${fact('Pest', esc(x.pest))}${fact('What was seen', esc(x.evidence))}${fact('How many', x.number != null ? esc(x.number) : '')}
+            ${fact('Where', esc(x.location))}${fact('Nearest station', x.station ? esc(stationName(x.station)) : '')}${fact('Seen', fmtDateTime(x.seenAt))}
+            ${fact('Reported by', esc(x.reportedBy))}${fact('Contact', esc(x.contact))}${fact('Reported', x.createdAt ? fmtDateTime(x.createdAt) : '')}
+        </div>
+        ${x.details ? `<div class="inset p-3 whitespace-pre-line">${esc(x.details)}</div>` : ''}
+        ${x.photos.length ? `<div class="flex flex-wrap gap-2">${mediaThumbs(x.photos, links, fmtSightNo(x.no) + ' · ' + x.pest)}</div>` : ''}
+        <div class="space-y-2">
+            <div class="eyebrow t-accent">Technician action</div>
+            ${x.status === 'new' ? `<div class="row-item p-3 text-xs t-muted">Your technician has been notified and will action this sighting.</div>` : `
+            <div class="row-item p-3 space-y-1.5"><div class="whitespace-pre-line t-strong">${esc(x.actionNotes)}</div>
+                <div class="text-xs t-muted">✍ Signed off by <b class="t-strong">${esc(x.actionedBy || 'Technician')}</b>${x.actionedAt ? ' · ' + fmtDateTime(x.actionedAt) : ''}</div></div>`}
+        </div>
+        ${x.status === 'actioned' ? `<div class="inset p-4 space-y-2"><div class="eyebrow t-accent">Your review</div>
+            <textarea id="sightReviewNote" rows="2" class="field" placeholder="Optional comment, e.g. confirmed no more activity"></textarea>
+            <div class="flex justify-end"><button type="button" id="sightReviewBtn" class="btn btn-primary" data-id="${esc(x.id)}" onclick="reviewSighting(this.dataset.id)">✓ Mark as reviewed</button></div></div>` : ''}
+        ${x.status === 'reviewed' ? `<div class="row-item p-3 text-xs"><span class="chip chip-green">Reviewed</span> by <b class="t-strong">${esc(x.reviewedBy)}</b> · ${fmtDateTime(x.reviewedAt)}${x.reviewNote ? `<div class="t-strong mt-1 whitespace-pre-line">"${esc(x.reviewNote)}"</div>` : ''}</div>` : ''}`;
+}
+async function reviewSighting(id) {
+    const btn = $('sightReviewBtn'); btn.disabled = true;
+    try {
+        const { error } = await sb.rpc('portal_review_sighting', { p_id: id, p_note: ($('sightReviewNote').value || '').trim() || null });
+        if (error) throw error;
+        await reloadSightings();
+        renderTab();
+        showSighting(id);
+        toast('Thanks, the sighting is reviewed and closed.');
+    } catch (e) { alert('Could not save the review: ' + (e.message || e)); btn.disabled = false; }
+}
+
 // ---------- Critical limits card (Reports tab) ----------
 let limitEditing = null;   // limit id being edited, 'new', or null
 function limitsCardHtml() {
@@ -1791,7 +1997,8 @@ function limitsCardHtml() {
         const st = limitStatus(l, now), pct = l.max > 0 ? Math.min(100, Math.round(st.total / l.max * 100)) : (st.total ? 100 : 0);
         const chip = st.over ? '<span class="chip chip-red">Over limit</span>' : st.near ? '<span class="chip chip-amber">Close to limit</span>' : '<span class="chip chip-green">Within limit</span>';
         const firstOfArea = !i || sortedLimits[i - 1].zone !== l.zone;
-        return `<tr ${firstOfArea && i ? 'class="area-start"' : ''}><td class="font-bold">${firstOfArea ? esc(l.zone) : ''}</td><td>${esc(limitPest(l))}</td><td class="num">${l.max}</td><td class="num">${st.total}</td>
+        const noStations = firstOfArea && !m.stations.some(x => zoneKey(x.zone) === zoneKey(l.zone));
+        return `<tr ${firstOfArea && i ? 'class="area-start"' : ''}><td class="font-bold">${firstOfArea ? esc(l.zone) + (noStations ? '<div class="text-[10px] font-semibold" style="color:#d97706;" title="No station uses this area name, so nothing counts towards it. Edit it and pick one of the areas your stations use.">⚠ No stations in this area</div>' : '') : ''}</td><td>${esc(limitPest(l))}</td><td class="num">${l.max}</td><td class="num">${st.total}</td>
             <td class="w-36"><div class="limit-bar"><span style="width:${pct}%;background:${st.over ? '#dc2626' : st.near ? '#d97706' : '#10b981'};"></span></div></td><td>${chip}</td>
             <td class="whitespace-nowrap"><button type="button" class="link-btn" onclick="limitEditing = '${esc(l.id)}'; renderTab(); $('limZone').focus();">Edit</button> · <button type="button" class="link-btn" style="color:#ef4444;" onclick="deleteLimit('${esc(l.id)}')">Remove</button></td></tr>`;
     }).join('');
@@ -1864,7 +2071,13 @@ async function saveLimit() {
     const keep = new Set(got.rows.map(r => r.id).filter(Boolean));
     const btn = $('limSaveBtn'); btn.disabled = true;
     try {
-        for (const l of (ed ? state.model.limits.filter(x => x.zone === ed.zone && !keep.has(x.id)) : [])) {
+        // a new name for the area: its stations move with it, so there's one area, not an old and a new one
+        if (ed && ed.zone !== zone) {
+            const { error } = await sb.rpc('portal_rename_zone', { p_client_id: String(state.site.id), p_old: ed.zone, p_new: zone });
+            if (error) throw error;
+            state.model.limits.filter(x => zoneKey(x.zone) === zoneKey(ed.zone)).forEach(x => { x.zone = zone; });
+        }
+        for (const l of (ed ? state.model.limits.filter(x => (x.zone === ed.zone || x.zone === zone) && !keep.has(x.id)) : [])) {
             const { error } = await sb.rpc('portal_delete_limit', { p_id: l.id });
             if (error) throw error;
         }
@@ -1886,8 +2099,10 @@ async function deleteLimit(id) {
     await reloadLimits(); renderTab();
 }
 async function reloadLimits() {
-    state.data.limits = await fetchAll('critical_limits', String(state.site.id));
+    const cid = String(state.site.id);
+    [state.data.limits, state.data.stations] = await Promise.all([fetchAll('critical_limits', cid), fetchAll('stations', cid).catch(() => state.data.stations)]);
     state.model = buildModel(state.site, state.data);
+    fillFilterOptions();
     renderBell();
 }
 
@@ -1895,7 +2110,7 @@ async function reloadLimits() {
 let stationSort = { key: 'name', dir: 1 };
 function stationRows() {
     const m = state.model, o = filterOpts();
-    return m.stations.filter(x => (!o.type || x.type === o.type) && (!o.map || x.mapId === o.map) && (!o.zone || zoneKey(x.zone) === zoneKey(o.zone)) && matchesSearch(x.name, x.barcode, x.type, x.zone)).map(x => {
+    return m.stations.filter(x => (!o.type || sameType(x.type, o.type)) && (!o.map || x.mapId === o.map) && (!o.zone || zoneKey(x.zone) === zoneKey(o.zone)) && matchesSearch(x.name, x.barcode, x.type, x.zone)).map(x => {
         const inPeriod = x.entries.filter(e => inRange(e.at));
         const lastPrep = x.entries.slice().reverse().find(e => e.prep);
         return { s: x, checks: inPeriod.length, highest: inPeriod.reduce((a, e) => Math.max(a, ACTIVITY_SCORE[e.activity] || 0), 0), caught: inPeriod.reduce((a, e) => a + e.count, 0), lastPrep };
