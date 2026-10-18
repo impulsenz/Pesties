@@ -323,6 +323,22 @@
         .zoom-stage img { transform-origin: 0 0; will-change: transform; user-select: none; -webkit-user-drag: none; }
         .zoom-stage.zoomed img { cursor: grab; }
         .scan-type-tabs .tab-btn { flex-shrink: 0; white-space: nowrap; }
+        /* service screen: tighter spacing; search and the station-type drop-down on one line */
+        #appRoot:has(> #visitWorkspace:not(.hidden)) { padding-top: .6rem; }
+        #appRoot > #visitWorkspace:not(.hidden) { margin-top: 0 !important; }
+        .ws-stack > * + * { margin-top: .75rem; }
+        .ws-stack > .space-y-5 > * + * { margin-top: .75rem !important; }
+        .scan-bar { display: flex; align-items: center; gap: .5rem; padding: .6rem; }
+        @media (min-width: 640px) { .scan-bar { padding: .75rem; } }
+        .scan-type-btn { display: inline-flex; align-items: center; gap: .4rem; height: 2.6rem; max-width: 13rem; padding: 0 .75rem; border-radius: .8rem; border: 1px solid var(--border); background: var(--surface3); color: var(--text); font-size: .75rem; font-weight: 700; cursor: pointer; }
+        .scan-type-btn.on { border-color: #f97316; color: #ea580c; background: rgba(249, 115, 22, .1); }
+        @media (max-width: 420px) { .scan-type-btn { max-width: 8.5rem; } }
+        .scan-type-menu { position: absolute; right: 0; top: calc(100% + .4rem); z-index: 45; width: min(20rem, calc(100vw - 2rem)); max-height: 65vh; overflow-y: auto; padding: .5rem; border-radius: 1rem; border: 1px solid var(--border); background: var(--surface); box-shadow: 0 18px 40px rgba(0, 0, 0, .28); }
+        .scan-type-menu label { display: flex; align-items: center; gap: .55rem; padding: .5rem .55rem; border-radius: .6rem; font-size: .78rem; cursor: pointer; }
+        .scan-type-menu label:hover { background: var(--surface2); }
+        .scan-type-menu input { width: 1rem; height: 1rem; accent-color: #f97316; flex-shrink: 0; }
+        .scan-type-menu .stm-n { margin-left: auto; font-weight: 800; color: var(--muted); font-size: .72rem; }
+        .scan-type-menu .stm-none { opacity: .5; }
         .visit-link { cursor: pointer; text-decoration: underline; text-decoration-color: rgba(249,115,22,.45); text-underline-offset: 3px; background: none; border: 0; padding: 0; font: inherit; }
         .visit-link:hover { text-decoration-color: #f97316; }
         .rec-nav-btn { width: 2.4rem; height: 2.4rem; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 900; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
@@ -710,16 +726,23 @@
         </section>
 
         <!-- 3. ACTIVE SERVICE WORKSPACE -->
-        <section id="visitWorkspace" class="space-y-5 hidden pb-28 w-full max-w-6xl mx-auto">
+        <section id="visitWorkspace" class="ws-stack hidden pb-28 w-full max-w-6xl mx-auto">
             <!-- Station search (top of the service screen) -->
-            <div class="card p-4 sm:p-5 space-y-3">
-                <div class="relative">
+            <div class="card scan-bar">
+                <div class="relative flex-1 min-w-0">
                     <div class="absolute inset-y-0 left-3.5 flex items-center pointer-events-none t-faint">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    <input type="text" id="stationSearchInput" oninput="filterStationsList()" placeholder="Search stations by name, barcode ID, or type..." class="field !pl-10 !text-xs">
+                    <input type="text" id="stationSearchInput" oninput="filterStationsList()" placeholder="Search name, barcode or type..." class="field !pl-10 !text-xs">
                 </div>
-                <div id="scanTypeTabs" class="scan-type-tabs flex gap-1.5 overflow-x-auto scroll-thin pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0" role="group" aria-label="Filter by station type"></div>
+                <div class="relative shrink-0" id="scanTypeWrap">
+                    <button type="button" id="scanTypeBtn" onclick="toggleScanTypeMenu()" class="scan-type-btn" aria-haspopup="true" aria-expanded="false" title="Filter by station type">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18l-7 8.5V19l-4 2v-8.5L3 4z"></path></svg>
+                        <span id="scanTypeLabel" class="truncate">All types</span>
+                        <svg class="w-3.5 h-3.5 shrink-0 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div id="scanTypeTabs" class="scan-type-menu hidden" role="group" aria-label="Filter by station type"></div>
+                </div>
             </div>
 
             <!-- Station lists: pending first, serviced underneath -->
@@ -1779,7 +1802,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r37';
+        const APP_VERSION = '2026.10.18-r38';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -7524,7 +7547,7 @@
         function resetSiteState() {
             hideStationForm();
             ['mapModal', 'mapEditDialog', 'stationOverviewModal', 'visitModal', 'barcodeModal'].forEach(id => document.getElementById(id).classList.add('hidden'));
-            mapPlacing = null; mapFocus = null; currentMapId = null; ovBarcode = null; openVisitIndex = null; visitEditing = false; scanTypeFilter = 'all';
+            mapPlacing = null; mapFocus = null; currentMapId = null; ovBarcode = null; openVisitIndex = null; visitEditing = false; scanTypeFilter = new Set();
             siteMaps = []; sitePins = new Map(); siteEvents = []; currentVisitEntries = []; lastVisitStats = null; barcodeAliases = new Map(); siteLimits = []; limitEditing = null;
             stationTypeFilter = 'all'; activityFilter = 'all';
             const ss = document.getElementById('siteStationSearch');
@@ -9583,8 +9606,26 @@
         }
 
         // Station type filter on the scan page (applies to both lists, together with the search)
-        let scanTypeFilter = 'all';
-        function setScanTypeFilter(t) { scanTypeFilter = t; filterStationsList(); }
+        let scanTypeFilter = new Set();   // ticked station types; none ticked = every type
+        const scanTypeOn = t => !scanTypeFilter.size || scanTypeFilter.has(t);
+        // t: a type to tick/untick, or 'all' to clear the ticks
+        function setScanTypeFilter(t, on) {
+            if (t === 'all') scanTypeFilter = new Set();
+            else if (on === undefined ? !scanTypeFilter.has(t) : on) scanTypeFilter.add(t);
+            else scanTypeFilter.delete(t);
+            filterStationsList();
+        }
+        function toggleScanTypeMenu(open) {
+            const m = document.getElementById('scanTypeTabs'), b = document.getElementById('scanTypeBtn');
+            const show = open === undefined ? m.classList.contains('hidden') : open;
+            m.classList.toggle('hidden', !show);
+            b.setAttribute('aria-expanded', String(show));
+        }
+        document.addEventListener('click', e => {
+            const w = document.getElementById('scanTypeWrap');
+            if (!e.target.isConnected) return;   // the tick box just redrew itself
+            if (w && !w.contains(e.target)) { const m = document.getElementById('scanTypeTabs'); if (m && !m.classList.contains('hidden')) toggleScanTypeMenu(false); }
+        });
         function renderScanTypeTabs(matchesText) {
             const el = document.getElementById('scanTypeTabs');
             if (!el) return;
@@ -9593,15 +9634,20 @@
             // every type in the system, plus any older type still used on this site
             const types = optionLabels('station_type').slice();
             siteDevices.forEach(d => { if (!types.includes(d.deviceType)) types.push(d.deviceType); });
-            if (scanTypeFilter !== 'all' && !types.includes(scanTypeFilter)) scanTypeFilter = 'all';
+            Array.from(scanTypeFilter).forEach(t => { if (!types.includes(t)) scanTypeFilter.delete(t); });
             const total = Array.from(counts.values()).reduce((a, b) => a + b, 0);
             const onSite = new Set(siteDevices.map(d => d.deviceType));
             types.sort((a, b) => (onSite.has(b) ? 1 : 0) - (onSite.has(a) ? 1 : 0)); // this site's types first, then the rest in list order
-            el.innerHTML = [`<button type="button" data-t="all" onclick="setScanTypeFilter(this.dataset.t)" class="tab-btn ${scanTypeFilter === 'all' ? 'active' : ''}" aria-pressed="${scanTypeFilter === 'all'}">All ${total}</button>`]
-                .concat(types.map(t => {
+            el.innerHTML = `<label data-t="all"><input type="checkbox" ${scanTypeFilter.size ? '' : 'checked'} onchange="setScanTypeFilter('all')"><span class="font-bold t-strong">All station types</span><span class="stm-n">${total}</span></label>
+                <div class="border-t divider my-1"></div>`
+                + types.map(t => {
                     const n = counts.get(t) || 0;
-                    return `<button type="button" data-t="${esc(t)}" onclick="setScanTypeFilter(this.dataset.t)" class="tab-btn ${scanTypeFilter === t ? 'active' : ''} ${n || scanTypeFilter === t ? '' : 'opacity-50'} inline-flex items-center gap-1.5" aria-pressed="${scanTypeFilter === t}">${typeDot(t, '.55rem')}${esc(t)} ${n}</button>`;
-                })).join('');
+                    return `<label data-t="${esc(t)}" class="${n || scanTypeFilter.has(t) ? '' : 'stm-none'}"><input type="checkbox" ${scanTypeFilter.has(t) ? 'checked' : ''} data-t="${esc(t)}" onchange="setScanTypeFilter(this.dataset.t, this.checked)">${typeDot(t, '.55rem')}<span class="t-strong">${esc(t)}</span><span class="stm-n">${n}</span></label>`;
+                }).join('')
+                + (scanTypeFilter.size ? `<div class="border-t divider mt-1 pt-1.5 flex justify-between gap-2 px-1"><button type="button" class="link-btn !text-[11px]" onclick="setScanTypeFilter('all')">Clear</button><button type="button" class="link-btn !no-underline !text-[11px] font-bold" onclick="toggleScanTypeMenu(false)">Done</button></div>` : '');
+            const sel = Array.from(scanTypeFilter);
+            document.getElementById('scanTypeLabel').textContent = !sel.length ? 'All types' : sel.length === 1 ? sel[0] : `${sel.length} types`;
+            document.getElementById('scanTypeBtn').classList.toggle('on', sel.length > 0);
         }
 
         function lastServicedText(d, isScanned) {
@@ -9651,7 +9697,7 @@
 
             const matchesText = d => d.locationName.toLowerCase().includes(query) || d.barcode_id.toLowerCase().includes(query) || d.deviceType.toLowerCase().includes(query);
             renderScanTypeTabs(matchesText);
-            const matches = d => matchesText(d) && (scanTypeFilter === 'all' || d.deviceType === scanTypeFilter);
+            const matches = d => matchesText(d) && scanTypeOn(d.deviceType);
             const byName = (a, b) => a.locationName.localeCompare(b.locationName, LOCALE, { numeric: true });
 
             const unscanned = siteDevices.filter(d => !scannedBarcodesThisVisit.has(d.barcode_id) && matches(d)).sort(byName);
