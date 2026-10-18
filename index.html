@@ -737,7 +737,7 @@
                             <input type="file" id="stationPhotoGallery" accept="image/*" class="hidden" onchange="stationPhotoChosen(this)">
                         </div>
                         <div id="stationZoneRow" class="sm:col-span-2 hidden">
-                            <label class="lbl" for="stationZone">Zone <span class="t-faint font-normal normal-case tracking-normal">- for critical limits, e.g. Dispatch or Kitchen</span></label>
+                            <label class="lbl" for="stationZone">Critical limits <span class="t-faint font-normal normal-case tracking-normal">- the area this station counts towards, e.g. Dispatch or Kitchen</span></label>
                             <input type="text" id="stationZone" list="zoneOptions" maxlength="60" placeholder="e.g. Dispatch" autocomplete="off" class="field">
                             <datalist id="zoneOptions"></datalist>
                         </div>
@@ -1693,7 +1693,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r30';
+        const APP_VERSION = '2026.10.18-r31';
         // after Check for updates, tidy the address bar
         try { if (/[?&]fresh=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
         // New Zealand date style everywhere: day/month/year
@@ -2401,6 +2401,7 @@
                         ${roleBtn(x, 'technician', x.staff, 'Technician')}${roleBtn(x, 'admin', x.admin, 'Admin')}${roleBtn(x, 'client', x.clientOn, 'Client')}
                         ${x.profile && x.staff ? `<button type="button" class="link-btn !text-[11px] ml-1" data-id="${esc(x.profile.id)}" onclick="openStaffProfile(this.dataset.id)">Profile for clients</button>` : ''}
                         ${x.clientOn ? `<button type="button" class="link-btn !text-[11px] ml-1" onclick="setAdminTab('clients')">Client sites</button>` : ''}
+                        ${x.me ? '' : `<button type="button" class="font-bold !text-[11px] ml-auto" style="color:#ef4444;" data-email="${esc(x.email)}" onclick="deleteUser(this.dataset.email)">Delete user</button>`}
                     </div>
                 </div>`;
             }).join('') || '<span class="t-faint italic">Nobody here.</span>';
@@ -2437,6 +2438,27 @@
                 }
             }
             renderUsers();
+            saveRoleChanges(email, jobs);
+        }
+        // Delete someone: staff access, pre-approval and client login all go; their past work stays on record
+        async function deleteUser(email) {
+            const x = teamPeople().find(p => p.email === email);
+            if (!x || x.me) return;
+            if (!confirm(`Delete ${x.name} (${email})?\n\nThey lose all access to Pestis and the Client Portal. Visits, records and recommendations they made stay on record.`)) return;
+            const p = x.profile;
+            adminProfiles = adminProfiles.filter(u => u !== p);
+            adminAllowed = adminAllowed.filter(a => String(a.email).toLowerCase() !== email);
+            adminClients = adminClients.filter(c => c.email !== email);
+            adminClientAccess = adminClientAccess.filter(a => a.email !== email);
+            renderUsers();
+            const jobs = [() => _supabase.from('allowed_emails').delete().eq('email', (x.allowed && x.allowed.email) || email)];
+            if (x.clientOn) jobs.push(() => _supabase.from('client_users').delete().eq('email', email));
+            if (p) jobs.push(async () => {
+                // remove their profile; if the database won't allow that, switch off their access instead
+                const r = await _supabase.from('profiles').delete().eq('id', p.id).select('id');
+                if (r.error || !(r.data && r.data.length)) return _supabase.from('profiles').update({ approved: false, role: 'technician' }).eq('id', p.id);
+                return r;
+            });
             saveRoleChanges(email, jobs);
         }
         // changes go one after another in the background; a failure puts the list back as the database has it
@@ -2962,12 +2984,12 @@
                 if (!s.clients && clientAdminReadyOrUnknown()) add('client', 'No client login for the Client Portal', isAdmin() ? 'clients' : 'site');
                 if (all && !c.assigned_to) add('tech', 'No technician assigned', 'edit');
                 if (!String(c.Address || '').trim()) add('address', 'No address (the map and directions need one)', 'edit');
-                if (s.limits && s.insectNoZone) add('zone', `${s.insectNoZone} insect station${s.insectNoZone === 1 ? ' has' : 's have'} no zone (critical limits need one)`, 'site');
+                if (s.limits && s.insectNoZone) add('zone', `${s.insectNoZone} insect station${s.insectNoZone === 1 ? ' has' : 's have'} no critical limits area`, 'site');
             });
             return out;
         }
         const clientAdminReadyOrUnknown = () => siteSetup && siteSetup.clientsKnown;
-        const ACTION_KINDS = { plan: ['🗺', 'Floor plans'], pins: ['📍', 'Stations to place'], stations: ['▣', 'No stations'], services: ['📅', 'Services'], client: ['👥', 'Client Portal'], tech: ['🧭', 'Technician'], address: ['🏠', 'Address'], zone: ['🏷', 'Zones'] };
+        const ACTION_KINDS = { plan: ['🗺', 'Floor plans'], pins: ['📍', 'Stations to place'], stations: ['▣', 'No stations'], services: ['📅', 'Services'], client: ['👥', 'Client Portal'], tech: ['🧭', 'Technician'], address: ['🏠', 'Address'], zone: ['🏷', 'Critical limits'] };
         function renderActions() {
             const list = buildActions();
             const badge = document.getElementById('actionsCount');
@@ -6878,7 +6900,7 @@
                 </div>`;
             };
             box.innerHTML = (limitEditing === 'new' ? limitFormHtml(null) : '') + (siteLimits.map(row).join('') ||
-                (limitEditing ? '' : `<span class="t-faint italic">No critical limits yet.${isAdmin() ? ' Give insect stations a zone, then set how many of a pest each zone may have in a month.' : ' An admin (or the client) sets them.'}</span>`)) +
+                (limitEditing ? '' : `<span class="t-faint italic">No critical limits yet.${isAdmin() ? ' Give insect stations a critical limits area, then set how many of a pest each area may have in a month.' : ' An admin (or the client) sets them.'}</span>`)) +
                 (!isAdmin() && siteLimits.length ? '<div class="t-faint text-[11px]">Only an admin can change critical limits.</div>' : '') +
                 (!isOnline && siteLimits.length ? '<div class="t-faint text-[11px]">Limits can be changed when you\'re online.</div>' : '');
         }
@@ -6886,12 +6908,12 @@
             const zones = siteZones(), pests = optionLabels('species').filter(x => x !== NONE_SPECIES);
             return `<form class="inset p-3 space-y-2" onsubmit="event.preventDefault(); saveSiteLimit();">
                 <div class="grid grid-cols-2 gap-2">
-                    <div><label class="lbl" for="limZone">Zone</label><input id="limZone" list="limZoneList" required maxlength="60" class="field !py-2 !text-xs" value="${esc(l ? l.zone : '')}" placeholder="e.g. Dispatch"><datalist id="limZoneList">${zones.map(z => `<option value="${esc(z)}"></option>`).join('')}</datalist></div>
+                    <div><label class="lbl" for="limZone">Critical limits area</label><input id="limZone" list="limZoneList" required maxlength="60" class="field !py-2 !text-xs" value="${esc(l ? l.zone : '')}" placeholder="e.g. Dispatch"><datalist id="limZoneList">${zones.map(z => `<option value="${esc(z)}"></option>`).join('')}</datalist></div>
                     <div><label class="lbl" for="limPest">Pest</label><input id="limPest" list="limPestList" maxlength="80" class="field !py-2 !text-xs" value="${esc(l && l.species !== ANY_PEST ? l.species : '')}" placeholder="Any pest"><datalist id="limPestList">${pests.map(z => `<option value="${esc(z)}"></option>`).join('')}</datalist></div>
                     <div><label class="lbl" for="limMax">Most a month</label><input id="limMax" type="number" min="0" step="1" required class="field !py-2 !text-xs" value="${l ? esc(l.max_per_month) : ''}"></div>
                     <div><label class="lbl" for="limNotes">Note</label><input id="limNotes" maxlength="200" class="field !py-2 !text-xs" value="${esc(l && l.notes ? l.notes : '')}"></div>
                 </div>
-                ${zones.length ? '' : '<div class="t-faint text-[11px]">No zones yet: give insect stations a zone in their station details.</div>'}
+                ${zones.length ? '' : '<div class="t-faint text-[11px]">No areas yet: give insect stations a critical limits area in their station details.</div>'}
                 <div class="flex justify-end gap-2"><button type="button" class="btn btn-secondary !py-1.5" onclick="editSiteLimit(null)">Cancel</button><button type="submit" id="limSaveBtn" class="btn btn-primary !py-1.5">Save limit</button></div>
             </form>`;
         }
@@ -8289,7 +8311,7 @@
                 fact('Last serviced', last ? `${esc(fmtDateTimeLong(last.at).date)}<div class="t-faint font-normal text-[11px]">${esc(last.technician || '')}</div>` : '<span class="t-faint font-normal">Never</span>'),
                 fact('Last activity', last ? esc(last.activity) + (last.species && last.species !== NONE_SPECIES ? ` · ${esc(last.species)}` : '') : '-'),
                 fact('Open recommendations', String(openRecCount(d))),
-                fact('Zone', stationZoneOf(barcode) ? esc(stationZoneOf(barcode)) : '<span class="t-faint font-normal">None</span>')
+                fact('Critical limits', stationZoneOf(barcode) ? esc(stationZoneOf(barcode)) : '<span class="t-faint font-normal">None</span>')
             ];
             if (isToxicRodent(d.deviceType)) facts.push(`<div class="col-span-2">${fact('Bait last changed', esc(baitLastChangedText(d)))}</div>`);
             const hasPhoto = !!(siteStations.get(barcode) || {}).photo_path;
@@ -8991,7 +9013,7 @@
                 const n = pinsOn(m.id).filter(([b, p]) => p.x != null && siteDevices.some(d => d.barcode_id === b)).length;
                 return `<button type="button" data-id="${esc(m.id)}" onclick="openMapModal({ mapId: this.dataset.id })" class="row-item clickable w-full text-left p-2.5 flex justify-between items-center gap-2">
                     <span class="font-bold t-strong truncate">🗺️ ${esc(m.name)}</span><span class="t-muted shrink-0">${n} pin${n === 1 ? '' : 's'}${m.pending ? ' · uploading' : ''}</span></button>`;
-            }).join('') + `<div class="t-faint text-[11px]">${placed} of ${total} station${total === 1 ? '' : 's'} placed</div>`
+            }).join('')
                 : '<div class="t-faint italic">No floor plans yet.</div>') +
                 `<button type="button" onclick="openMapModal({ add: true })" class="btn btn-secondary w-full !py-2">+ Add floor plan</button>`;
         }
