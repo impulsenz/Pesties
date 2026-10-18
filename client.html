@@ -186,6 +186,7 @@
         .rec-grid-lg { grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); }
         .row-breach td { background: rgba(239, 68, 68, .09); }
         #limitStationPanel svg { max-width: 760px; display: block; margin: 0 auto; }
+        tr.area-start td { border-top: 2px solid var(--border); }
         tr.row-selected td { box-shadow: inset 0 2px 0 #f97316, inset 0 -2px 0 #f97316; }
         tr.row-selected td:first-child { box-shadow: inset 2px 2px 0 #f97316, inset 0 -2px 0 #f97316; }
         .zone-over { border-color: #ef4444 !important; }
@@ -389,7 +390,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.18-p9';
+const PORTAL_VERSION = '2026.10.18-p10';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -1287,10 +1288,8 @@ function limitStationsHtml() {
     rows.sort((a, b) => (b.zoneOver && b.now1 > 0) - (a.zoneOver && a.now1 > 0) || b.now1 - a.now1 || b.breachedMonths - a.breachedMonths);
     const breached = rows.filter(r => r.zoneOver && r.now1 > 0);
     const chg = r => r.change == null ? '<span class="chip chip-red">New</span>' : r.change === 0 ? '<span class="t-faint">-</span>' : `<span style="color:${r.change > 0 ? '#dc2626' : '#10b981'};font-weight:800;">${r.change > 0 ? '▲' : '▼'} ${Math.abs(r.change)}%</span>`;
-    const zones = m.limits.map(l => { const z = limitStatus(l, thisM); return `<button type="button" class="card p-3 text-left ${z.over ? 'zone-over' : ''}" onclick="showBreach('${esc(l.id)}')"><div class="eyebrow t-faint">${esc(l.zone)}</div><div class="font-black text-lg" ${z.over ? 'style="color:#dc2626;"' : ''}>${z.total} <span class="text-xs t-faint font-normal">/ ${l.max}</span></div><div class="text-[11px] t-muted">${esc(limitPest(l))} · ${z.over ? 'over the limit' : 'within the limit'}</div></button>`; }).join('');
     return `<div class="card p-5 space-y-4">
         <div><h3 class="font-black t-strong">Breaches by station · ${esc(monthLabel(thisM))}</h3><p class="text-xs t-muted">Every station in an area with a critical limit. Red rows are units adding to a breach right now. Tap a station to see its graph and history below.</p></div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">${zones}</div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
             <div class="inset p-2.5"><div class="eyebrow t-faint">Units in breach</div><div class="font-black text-lg" ${breached.length ? 'style="color:#dc2626;"' : ''}>${breached.length}</div></div>
             <div class="inset p-2.5"><div class="eyebrow t-faint">Caught this month</div><div class="font-black text-lg">${rows.reduce((n, r) => n + r.now1, 0)}</div></div>
@@ -1787,23 +1786,33 @@ function limitsCardHtml() {
     const m = state.model;
     const now = Date.now();
     const months = []; { const d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0); for (let i = 11; i >= 0; i--) months.push(new Date(d.getFullYear(), d.getMonth() - i, 1).getTime()); }
-    const rows = m.limits.map(l => {
+    const sortedLimits = m.limits.slice().sort((a, b) => String(a.zone).localeCompare(String(b.zone)) || (a.species === ANY_PEST ? -1 : b.species === ANY_PEST ? 1 : String(a.species).localeCompare(String(b.species))));
+    const rows = sortedLimits.map((l, i) => {
         const st = limitStatus(l, now), pct = l.max > 0 ? Math.min(100, Math.round(st.total / l.max * 100)) : (st.total ? 100 : 0);
         const chip = st.over ? '<span class="chip chip-red">Over limit</span>' : st.near ? '<span class="chip chip-amber">Close to limit</span>' : '<span class="chip chip-green">Within limit</span>';
-        return `<tr><td class="font-bold">${esc(l.zone)}</td><td>${esc(limitPest(l))}</td><td class="num">${l.max}</td><td class="num">${st.total}</td>
+        const firstOfArea = !i || sortedLimits[i - 1].zone !== l.zone;
+        return `<tr ${firstOfArea && i ? 'class="area-start"' : ''}><td class="font-bold">${firstOfArea ? esc(l.zone) : ''}</td><td>${esc(limitPest(l))}</td><td class="num">${l.max}</td><td class="num">${st.total}</td>
             <td class="w-36"><div class="limit-bar"><span style="width:${pct}%;background:${st.over ? '#dc2626' : st.near ? '#d97706' : '#10b981'};"></span></div></td><td>${chip}</td>
             <td class="whitespace-nowrap"><button type="button" class="link-btn" onclick="limitEditing = '${esc(l.id)}'; renderTab(); $('limZone').focus();">Edit</button> · <button type="button" class="link-btn" style="color:#ef4444;" onclick="deleteLimit('${esc(l.id)}')">Remove</button></td></tr>`;
     }).join('');
     const hist = m.limits.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Limit</th>${months.map(t => `<th class="num">${new Date(t).toLocaleString('en-NZ', { month: 'short' })} ${String(new Date(t).getFullYear()).slice(2)}</th>`).join('')}</tr></thead><tbody>
-        ${m.limits.map(l => `<tr><td class="whitespace-nowrap"><b>${esc(l.zone)}</b> · ${esc(limitPest(l))} <span class="t-faint">(${l.max})</span></td>${months.map(t => { const st = limitStatus(l, t); return `<td class="num" ${st.over ? 'style="background:rgba(239,68,68,.15);color:#dc2626;font-weight:800;"' : ''}>${st.total || ''}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>` : '';
+        ${sortedLimits.map(l => `<tr><td class="whitespace-nowrap"><b>${esc(l.zone)}</b> · ${esc(limitPest(l))} <span class="t-faint">(${l.max})</span></td>${months.map(t => { const st = limitStatus(l, t); return `<td class="num" ${st.over ? 'style="background:rgba(239,68,68,.15);color:#dc2626;font-weight:800;"' : ''}>${st.total || ''}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>` : '';
     const ed = limitEditing && limitEditing !== 'new' ? m.limits.find(l => l.id === limitEditing) : null;
     const species = sortText(m.entries.map(e => e.species));
-    const form = limitEditing ? `<form class="inset p-3 grid grid-cols-1 sm:grid-cols-5 gap-2 items-end" onsubmit="event.preventDefault(); saveLimit();">
-            <div><label class="lbl" for="limZone">Critical limits area</label><input id="limZone" list="limZones" required maxlength="60" class="field !py-2" value="${esc(ed ? ed.zone : '')}" placeholder="e.g. Dispatch"><datalist id="limZones">${m.zones.map(z => `<option value="${esc(z)}">`).join('')}</datalist></div>
-            <div><label class="lbl" for="limPest">Pest</label><input id="limPest" list="limPests" maxlength="80" class="field !py-2" value="${esc(ed ? (ed.species === ANY_PEST ? 'Any pest' : ed.species) : 'Any pest')}"><datalist id="limPests"><option value="Any pest">${species.map(x => `<option value="${esc(x)}">`).join('')}</datalist></div>
-            <div><label class="lbl" for="limMax">Most allowed per month</label><input id="limMax" type="number" min="0" step="1" required class="field !py-2" value="${ed ? ed.max : ''}"></div>
-            <div><label class="lbl" for="limNotes">Note (optional)</label><input id="limNotes" maxlength="200" class="field !py-2" value="${esc(ed ? ed.notes : '')}"></div>
-            <div class="flex gap-2"><button type="button" class="btn btn-secondary" onclick="limitEditing = null; renderTab();">Cancel</button><button type="submit" id="limSaveBtn" class="btn btn-primary">Save</button></div>
+    const area = ed ? [ed, ...m.limits.filter(x => x.zone === ed.zone && x.id !== ed.id)] : [null];
+    const form = limitEditing ? `<form class="inset p-4 space-y-3" onsubmit="event.preventDefault(); saveLimit();">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-3xl">
+                <div><label class="lbl" for="limZone">Critical limits area</label><input id="limZone" list="limZones" required maxlength="60" class="field !py-2" value="${esc(ed ? ed.zone : '')}" placeholder="e.g. Dispatch"><datalist id="limZones">${m.zones.map(z => `<option value="${esc(z)}">`).join('')}</datalist></div>
+                <div><label class="lbl" for="limNotes">Note (optional)</label><input id="limNotes" maxlength="200" class="field !py-2" value="${esc(ed ? ed.notes : '')}"></div>
+            </div>
+            <div class="max-w-3xl space-y-2">
+                <div class="flex gap-2 eyebrow t-faint"><span class="flex-1">Pest</span><span class="w-36 shrink-0">Most allowed per month</span><span class="w-7 shrink-0"></span></div>
+                <datalist id="limPests"><option value="Any pest">${species.map(x => `<option value="${esc(x)}">`).join('')}</datalist>
+                <div id="limRows" class="space-y-2">${area.map((x, i) => limitPestRowHtml(x, i === 0)).join('')}</div>
+                <button type="button" class="link-btn text-xs" onclick="addLimitRow()">+ Add another pest</button>
+                <p class="text-[11px] t-faint">Each pest has its own monthly limit in this area. "Any pest" counts every pest together.</p>
+            </div>
+            <div class="flex gap-2"><button type="button" class="btn btn-secondary" onclick="limitEditing = null; renderTab();">Cancel</button><button type="submit" id="limSaveBtn" class="btn btn-primary">Save limits</button></div>
         </form>` : '';
     return `<div class="card p-5 space-y-4" id="limitsCard">
         <div class="flex flex-wrap items-start justify-between gap-3">
@@ -1816,19 +1825,57 @@ function limitsCardHtml() {
             <div class="eyebrow t-faint">Last 12 months</div>${hist}` : emptyNote('No critical limits set yet.')}
     </div>`;
 }
+function limitPestRowHtml(l, first) {
+    return `<div class="lim-row flex gap-2 items-center" data-id="${l && l.id ? esc(l.id) : ''}">
+        <input ${first ? 'id="limPest"' : ''} list="limPests" maxlength="80" class="field !py-2 lim-pest flex-1 min-w-0" aria-label="Pest" value="${esc(l ? (l.species === ANY_PEST ? 'Any pest' : l.species) : (first ? 'Any pest' : ''))}" placeholder="e.g. House Fly">
+        <input ${first ? 'id="limMax"' : ''} type="number" min="0" step="1" class="field !py-2 lim-max !w-36 shrink-0" aria-label="Most allowed per month" value="${l ? l.max : ''}" placeholder="e.g. 5">
+        <button type="button" class="icon-btn !w-7 !h-7 shrink-0 t-faint" title="Remove this pest" aria-label="Remove this pest" onclick="removeLimitRow(this)">×</button>
+    </div>`;
+}
+function addLimitRow() {
+    $('limRows').insertAdjacentHTML('beforeend', limitPestRowHtml(null, false));
+    $('limRows').lastElementChild.querySelector('.lim-pest').focus();
+}
+function removeLimitRow(btn) {
+    if ($('limRows').children.length <= 1) { btn.closest('.lim-row').querySelectorAll('input').forEach(i => { i.value = ''; }); return; }
+    btn.closest('.lim-row').remove();
+}
+function readLimitRows() {
+    const all = [...document.querySelectorAll('#limRows .lim-row')], rows = [], seen = new Set();
+    for (const r of all) {
+        const pest = r.querySelector('.lim-pest').value.trim(), maxRaw = r.querySelector('.lim-max').value.trim();
+        if (!pest && maxRaw === '' && all.length > 1) continue;
+        const species = !pest || /^any( pest)?$/i.test(pest) ? ANY_PEST : pest;
+        const max = Number(maxRaw), label = species === ANY_PEST ? 'Any pest' : species;
+        if (maxRaw === '' || !(max >= 0)) return { error: `Enter the most allowed per month for ${label}.` };
+        const k = species === ANY_PEST ? '*' : pestKey(species);
+        if (seen.has(k)) return { error: `${label} is listed twice.` };
+        seen.add(k);
+        rows.push({ id: r.dataset.id || null, species, max });
+    }
+    return rows.length ? { rows } : { error: 'Add at least one pest and its monthly limit.' };
+}
 async function saveLimit() {
-    const zone = $('limZone').value.trim(), pestRaw = $('limPest').value.trim(), max = Number($('limMax').value);
-    if (!zone) { alert('Enter the zone.'); return; }
-    if (!(max >= 0)) { alert('Enter the most allowed per month.'); return; }
-    const species = !pestRaw || /^any( pest)?$/i.test(pestRaw) ? ANY_PEST : pestRaw;
+    const zone = $('limZone').value.trim(), notes = $('limNotes').value.trim() || null;
+    if (!zone) { alert('Enter the critical limits area.'); return; }
+    const got = readLimitRows();
+    if (got.error) { alert(got.error); return; }
+    const ed = limitEditing && limitEditing !== 'new' ? state.model.limits.find(l => l.id === limitEditing) : null;
+    const keep = new Set(got.rows.map(r => r.id).filter(Boolean));
     const btn = $('limSaveBtn'); btn.disabled = true;
     try {
-        const { error } = await sb.rpc('portal_save_limit', { p_client_id: String(state.site.id), p_id: limitEditing === 'new' ? null : limitEditing, p_zone: zone, p_species: species, p_max: max, p_notes: $('limNotes').value.trim() || null });
-        if (error) throw error;
+        for (const l of (ed ? state.model.limits.filter(x => x.zone === ed.zone && !keep.has(x.id)) : [])) {
+            const { error } = await sb.rpc('portal_delete_limit', { p_id: l.id });
+            if (error) throw error;
+        }
+        for (const r of got.rows) {
+            const { error } = await sb.rpc('portal_save_limit', { p_client_id: String(state.site.id), p_id: r.id, p_zone: zone, p_species: r.species, p_max: r.max, p_notes: notes });
+            if (error) throw error;
+        }
         await reloadLimits();
         limitEditing = null;
         renderTab();
-        toast('Critical limit saved.');
+        toast(got.rows.length > 1 ? 'Critical limits saved.' : 'Critical limit saved.');
     } catch (e) { alert('Could not save: ' + (e.message || e)); btn.disabled = false; }
 }
 async function deleteLimit(id) {
