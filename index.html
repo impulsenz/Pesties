@@ -169,11 +169,10 @@
         .sh-sync { display: flex; align-items: center; gap: .5rem; min-width: 0; margin-top: .35rem; font-size: 11px; color: var(--faint); }
         /* header bottom box: stations by type + services | floor plans | location */
         .sh-info { display: grid; gap: .75rem; grid-template-columns: minmax(0, 1fr); }
-        .sh-pair { padding: 1rem; display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+        .sh-pair { padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
         .sh-pair-2 { border-top: 1px solid var(--border); padding-top: 1rem; }
-        @media (min-width: 640px) { .sh-pair { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 1.25rem; } .sh-pair-2 { border-top: 0; padding-top: 0; border-left: 1px solid var(--border); padding-left: 1.25rem; } }
-        @media (min-width: 768px) { .sh-info { gap: 1rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .sh-pair { grid-column: 1 / -1; } }
-        @media (min-width: 1280px) { .sh-info { grid-template-columns: minmax(0, 6fr) minmax(0, 3fr) minmax(0, 3fr); } .sh-pair { grid-column: auto; } }
+        @media (min-width: 768px) { .sh-info { gap: 1rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .sh-loc { grid-column: 1 / -1; } }
+        @media (min-width: 1280px) { .sh-info { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr); } .sh-loc { grid-column: auto; } }
         .svc-mini-list { display: flex; flex-direction: column; gap: .35rem; max-height: 9.4rem; overflow-y: auto; }
         .svc-mini { display: flex; align-items: center; gap: .5rem; width: 100%; text-align: left; padding: .4rem .55rem; border-radius: .6rem; background: var(--surface); border: 1px solid var(--border); font-size: .75rem; cursor: pointer; min-width: 0; }
         .svc-mini:hover { border-color: #10b981; }
@@ -184,9 +183,42 @@
         .kpi-click:active { transform: scale(.98); }
         .kpi-click .kpi-k::after { content: ' ›'; opacity: .6; }
         /* the boxes under the header: one column on phones, three across from laptop width */
-        .land-row { display: grid; gap: 1.5rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
-        @media (min-width: 1024px) { .land-row { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-        .flash-ring { box-shadow: 0 0 0 3px rgba(249, 115, 22, .55) !important; transition: box-shadow .3s; }
+        /* the site boxes: fixed height with their own scroll bar; drag ⠿ to move, the corner to resize (saved per person) */
+        .land-board { display: grid; gap: 1.5rem; grid-template-columns: minmax(0, 1fr); align-items: start; grid-auto-flow: row dense; }
+        @media (min-width: 1024px) {
+            .land-board { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .land-card[data-span="2"] { grid-column: span 2; }
+            .land-card[data-span="3"] { grid-column: span 3; }
+        }
+        .land-card { position: relative; display: flex; flex-direction: column; min-width: 0; height: var(--lc-h, 40rem); padding: 1.25rem 1.25rem 1rem; }
+        @media (max-width: 1023px) { .land-card { height: var(--lc-hm, 34rem); padding: 1rem 1rem .85rem; } }
+        .lc-head { flex-shrink: 0; display: flex; flex-direction: column; gap: .6rem; padding-bottom: .75rem; margin-bottom: .75rem; border-bottom: 1px solid var(--border); }
+        .lc-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; min-height: 2rem; }
+        .lc-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: .3rem; }
+        .lc-move { display: inline-flex; align-items: center; justify-content: center; width: 1.6rem; height: 1.6rem; margin-left: -.35rem; border-radius: .45rem; color: var(--faint); font-size: 1rem; line-height: 1; cursor: grab; touch-action: none; user-select: none; flex-shrink: 0; }
+        .lc-move:hover, .lc-move:focus-visible { background: var(--surface2); color: var(--text); outline: none; }
+        .lc-resize { position: absolute; right: 3px; bottom: 3px; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none; border-radius: 0 0 .7rem 0; opacity: .55;
+            background: linear-gradient(135deg, transparent 0 55%, var(--faint) 55% 61%, transparent 61% 72%, var(--faint) 72% 78%, transparent 78%); }
+        .lc-resize:hover { opacity: 1; }
+        .land-card.lc-dragging { outline: 2px dashed #f97316; outline-offset: 3px; opacity: .85; }
+        .land-card.lc-resizing { outline: 2px solid rgba(249, 115, 22, .6); outline-offset: 3px; }
+        body.lc-busy, body.lc-busy * { user-select: none !important; }
+        body.lc-busy .lc-move { cursor: grabbing; }
+        .board-hint { display: flex; align-items: center; justify-content: flex-end; gap: .75rem; font-size: 11px; color: var(--faint); margin: -.75rem 0 -.75rem; }
+        /* open recommendations by age: small donut in the box's top corner */
+        .rec-mini { display: flex; align-items: center; gap: .55rem; margin-left: auto; }
+        .rec-mini-legend { display: flex; flex-direction: column; gap: .1rem; font-size: 10px; color: var(--muted); line-height: 1.25; }
+        .rec-mini-legend b { color: var(--text); font-weight: 800; margin-left: .2rem; }
+        .rec-mini-legend .sw { display: inline-block; width: .5rem; height: .5rem; border-radius: 2px; margin-right: .3rem; }
+        /* site sync progress (Sync Data window) */
+        .sbar { position: relative; height: 6px; border-radius: 999px; background: var(--surface3); overflow: hidden; }
+        .sbar > i { display: block; height: 100%; border-radius: inherit; background: #f97316; transition: width .25s ease; }
+        .sbar.done > i { background: #10b981; }
+        .sbar.fail > i { background: #dc2626; }
+        .sbar.ind > i { width: 35% !important; animation: sbarMove 1.1s ease-in-out infinite; }
+        @keyframes sbarMove { 0% { transform: translateX(-110%); } 100% { transform: translateX(310%); } }
+        .sync-item { display: grid; grid-template-columns: 1rem minmax(0, 1fr) auto; gap: .2rem .55rem; align-items: center; font-size: 11.5px; }
+        .sync-item .sbar { grid-column: 2 / -1; height: 4px; }
         /* scan screen view switch */
         .scan-view-btn { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; height: 2.6rem; padding: 0 .7rem; border-radius: .8rem; border: 1px solid var(--border); background: var(--surface3); color: var(--text); font-size: .72rem; font-weight: 700; cursor: pointer; flex-shrink: 0; }
         @media (max-width: 420px) { .scan-view-btn .svb-t { display: none; } }
@@ -250,7 +282,13 @@
         .ws-grid > :not(.nf-card) { grid-column: 1 / -1; }
         @media (min-width: 640px) { .ws-grid { grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr)); gap: .8rem; } }
         .ws-card .nf-hero { aspect-ratio: 4 / 3; }
-        .ws-card.ws-done { border-color: rgba(16, 185, 129, .55); }
+        /* scan cards: amber glow waiting to be scanned, green once serviced */
+        .ws-card { border-color: rgba(245, 158, 11, .75); box-shadow: 0 0 0 1px rgba(245, 158, 11, .35), 0 0 18px rgba(245, 158, 11, .32); }
+        .ws-card .nf-meta { background: rgba(245, 158, 11, .12); }
+        .ws-card.ws-done { border-color: rgba(16, 185, 129, .8); box-shadow: 0 0 0 1px rgba(16, 185, 129, .35), 0 0 18px rgba(16, 185, 129, .32); }
+        .ws-card.ws-done .nf-meta { background: rgba(16, 185, 129, .12); }
+        .ws-card:hover, .ws-card:focus-visible { box-shadow: 0 12px 28px rgba(0, 0, 0, .28), 0 0 18px rgba(245, 158, 11, .45); }
+        .ws-card.ws-done:hover, .ws-card.ws-done:focus-visible { box-shadow: 0 12px 28px rgba(0, 0, 0, .28), 0 0 18px rgba(16, 185, 129, .45); }
         .ws-card .nf-title { font-size: .82rem; }
         .sign-pad { width: 100%; height: 11rem; background: #fff; border-radius: .8rem; border: 2px dashed rgba(148,163,184,.7); touch-action: none; display: block; cursor: crosshair; }
         .sign-img { background: #fff; border-radius: .6rem; padding: .25rem; max-height: 6rem; }
@@ -587,7 +625,7 @@
                             <div class="min-w-0 flex-1">
                                 <h2 class="sh-title t-strong break-words" id="siteLandingTitle">Customer Site Overview</h2>
                                 <p class="text-xs sm:text-sm t-muted mt-1 flex items-start gap-1.5"><span aria-hidden="true">📍</span><span id="siteLandingAddress" class="break-words">Address information</span></p>
-                                <div class="sh-sync"><span class="site-sync-text truncate"></span><button type="button" onclick="backgroundSyncSite('manual')" class="site-sync-btn link-btn !text-[11px] shrink-0 disabled:opacity-50">Sync Site</button></div>
+                                <div class="sh-sync"><span class="site-sync-text truncate"></span><button type="button" onclick="syncSiteNow()" class="site-sync-btn link-btn !text-[11px] shrink-0 disabled:opacity-50">Sync Site</button></div>
                                 <div id="visitStatusLine" class="hidden mt-2.5"></div>
                                 <!-- site contact, right under the name -->
                                 <div id="siteContactBox" class="sh-contact">
@@ -650,54 +688,60 @@
                 </div>
             </div>
 
-            <!-- Row 1: pest sightings (first, so it's the top box on a phone), recommendations, stations -->
-            <div class="land-row">
-                    <!-- Pest sightings reported by the client in the Client Portal -->
-                    <div class="card p-5 sm:p-6 space-y-4 min-w-0" id="siteSightingsCard">
-                        <div class="flex flex-wrap items-center justify-between gap-2 border-b divider pb-3">
-                            <h3 class="eyebrow flex items-center gap-2" style="color:#db2777;"><span class="w-2 h-2 rounded-full" style="background:#db2777;"></span>Pest sightings <span class="t-faint normal-case tracking-normal font-semibold">· reported by the client</span></h3>
+            <div class="board-hint"><span class="hidden sm:inline">Drag ⠿ to move a box · drag its corner to resize</span><button type="button" class="link-btn !no-underline !text-[11px]" onclick="resetBoardLayout()">Reset layout</button></div>
+            <!-- The site boxes: pest sightings first (top box on a phone), then recommendations and stations.
+                 Each person can move and resize them; the layout is saved for them. -->
+            <div id="landBoard" class="land-board">
+                <!-- Pest sightings reported by the client in the Client Portal -->
+                <div class="card land-card" id="siteSightingsCard" data-box="sightings">
+                    <div class="lc-head">
+                        <div class="lc-bar">
+                            <h3 class="eyebrow flex items-center gap-2 min-w-0" style="color:#db2777;"><button type="button" class="lc-move" title="Drag to move this box (or use the arrow keys)" aria-label="Move box">⠿</button><span class="w-2 h-2 rounded-full shrink-0" style="background:#db2777;"></span>Pest sightings</h3>
                             <span class="flex items-center gap-2"><span id="siteSightingsCount" class="text-[11px] t-faint"></span><span id="sightPhotoToggle"></span><button type="button" id="sightRefreshBtn" onclick="refreshSiteSightings(true)" class="link-btn !no-underline !text-[11px]" title="Check for new sightings">⟳</button></span>
                         </div>
                         <div id="sightFilters" class="flex flex-wrap gap-1.5 text-[11px]"></div>
-                        <div id="siteSightingsList" class="space-y-2 text-xs max-h-[32rem] overflow-y-auto scroll-thin pr-1"></div>
                     </div>
+                    <div id="siteSightingsList" class="lc-scroll scroll-thin space-y-2 text-xs"></div>
+                    <span class="lc-resize" title="Drag to resize" aria-hidden="true"></span>
+                </div>
 
-                    <!-- Recommendations -->
-                    <div class="card p-5 sm:p-6 space-y-4 min-w-0" id="siteRecsCard">
-                        <div class="flex flex-wrap items-center justify-between gap-2 border-b divider pb-3">
-                            <h3 class="eyebrow flex items-center gap-2" style="color:#d97706;">
-                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                                Recommendations
-                            </h3>
-                            <div class="flex flex-wrap items-center gap-1.5"><div id="recFilterTabs" class="flex flex-wrap gap-1.5"></div><span id="recPhotoToggle"></span></div>
+                <!-- Recommendations -->
+                <div class="card land-card" id="siteRecsCard" data-box="recs">
+                    <div class="lc-head">
+                        <div class="lc-bar">
+                            <h3 class="eyebrow flex items-center gap-2 min-w-0" style="color:#d97706;"><button type="button" class="lc-move" title="Drag to move this box (or use the arrow keys)" aria-label="Move box">⠿</button><span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>Recommendations</h3>
+                            <div id="recAgeChart" class="viz-root"></div>
                         </div>
-                        <div id="recAgeChart" class="viz-root"></div>
-                        <div id="siteLandingRecsList" class="space-y-2.5 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1">
-                            <span class="t-faint italic">No active recommendations for this site.</span>
-                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5"><div id="recFilterTabs" class="flex flex-wrap gap-1.5"></div><span id="recPhotoToggle"></span></div>
                     </div>
-
-                    <!-- Stations -->
-                    <div class="card p-5 sm:p-6 space-y-4 min-w-0" id="siteStationsCard">
-                        <div class="flex flex-wrap items-center justify-between gap-2 border-b divider pb-3">
-                            <h3 class="eyebrow flex items-center gap-2" style="color:#16a34a;">
-                                <span class="w-2 h-2 rounded-full bg-green-600"></span>
-                                Stations
-                            </h3>
-                            <div class="flex flex-wrap items-center gap-2"><span id="stationPhotoToggle"></span><span id="stationTypeTabs"></span><input type="text" id="siteStationSearch" oninput="renderSiteStationList()" placeholder="Search stations..." class="field !w-40 !py-1.5 !text-xs"></div>
-                        </div>
-                        <div id="siteStationList" class="space-y-2 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1"></div>
+                    <div id="siteLandingRecsList" class="lc-scroll scroll-thin space-y-2.5 text-xs">
+                        <span class="t-faint italic">No active recommendations for this site.</span>
                     </div>
-            </div>
+                    <span class="lc-resize" title="Drag to resize" aria-hidden="true"></span>
+                </div>
 
-            <!-- Row 2: documents, past visits and the activity log, evenly across -->
-            <div class="land-row">
-                    <!-- Documents (shared with the client in the Client Portal) -->
-                    <div class="card p-5 sm:p-6 space-y-3 min-w-0" id="siteDocsCard">
-                        <div class="flex justify-between items-center gap-2">
-                            <span class="eyebrow flex items-center gap-2" style="color:#0891b2;"><span class="w-2 h-2 rounded-full" style="background:#0891b2;"></span>Documents</span>
+                <!-- Stations -->
+                <div class="card land-card" id="siteStationsCard" data-box="stations">
+                    <div class="lc-head">
+                        <div class="lc-bar">
+                            <h3 class="eyebrow flex items-center gap-2 min-w-0" style="color:#16a34a;"><button type="button" class="lc-move" title="Drag to move this box (or use the arrow keys)" aria-label="Move box">⠿</button><span class="w-2 h-2 rounded-full bg-green-600 shrink-0"></span>Stations</h3>
+                            <span id="stationPhotoToggle"></span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2"><span id="stationTypeTabs"></span><input type="text" id="siteStationSearch" oninput="renderSiteStationList()" placeholder="Search stations..." class="field !w-40 !py-1.5 !text-xs flex-1"></div>
+                    </div>
+                    <div id="siteStationList" class="lc-scroll scroll-thin space-y-2 text-xs"></div>
+                    <span class="lc-resize" title="Drag to resize" aria-hidden="true"></span>
+                </div>
+
+                <!-- Documents (shared with the client in the Client Portal) -->
+                <div class="card land-card" id="siteDocsCard" data-box="docs">
+                    <div class="lc-head">
+                        <div class="lc-bar">
+                            <h3 class="eyebrow flex items-center gap-2 min-w-0" style="color:#0891b2;"><button type="button" class="lc-move" title="Drag to move this box (or use the arrow keys)" aria-label="Move box">⠿</button><span class="w-2 h-2 rounded-full shrink-0" style="background:#0891b2;"></span>Documents</h3>
                             <span class="flex items-center gap-3"><button type="button" id="siteDocsFolderBtn" onclick="newDocFolder(selectedClient && selectedClient.id)" class="link-btn !no-underline hidden">+ Folder</button><button type="button" id="siteDocsAddBtn" onclick="toggleDocForm(true)" class="btn btn-primary !py-1 !px-2.5 !text-[11px] hidden">⬆ Upload</button></span>
                         </div>
+                    </div>
+                    <div class="lc-scroll scroll-thin space-y-3">
                         <form id="siteDocForm" class="hidden inset p-3 space-y-2" onsubmit="event.preventDefault(); uploadSiteDoc();">
                             <div class="grid grid-cols-2 gap-2">
                                 <div class="col-span-2"><label class="lbl" for="docFolder">Save to folder</label><select id="docFolder" class="field !py-2 !text-xs" onchange="if (this.value === '__new') newDocFolder(selectedClient && selectedClient.id, 'docFolder'); docSaveTo();"></select>
@@ -710,35 +754,39 @@
                             </div>
                             <div class="flex justify-end gap-2"><button type="button" onclick="toggleDocForm(false)" class="btn btn-secondary !py-2">Cancel</button><button type="submit" id="docUploadBtn" class="btn btn-primary !py-2">Upload</button></div>
                         </form>
-                        <div id="siteDocsList" class="space-y-2 text-xs max-h-[32rem] overflow-y-auto scroll-thin pr-1"></div>
+                        <div id="siteDocsList" class="space-y-2 text-xs"></div>
                         <div id="sitePortalAccess" class="hidden"></div>
                     </div>
+                    <span class="lc-resize" title="Drag to resize" aria-hidden="true"></span>
+                </div>
 
-                    <!-- Past visits -->
-                    <div class="card p-5 sm:p-6 space-y-4 min-w-0">
-                        <div class="flex items-center justify-between border-b divider pb-3">
-                            <h3 class="eyebrow flex items-center gap-2" style="color:#2563eb;">
-                                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                                Past Visits
-                            </h3>
+                <!-- Past visits -->
+                <div class="card land-card" id="siteVisitsCard" data-box="visits">
+                    <div class="lc-head">
+                        <div class="lc-bar">
+                            <h3 class="eyebrow flex items-center gap-2 min-w-0" style="color:#2563eb;"><button type="button" class="lc-move" title="Drag to move this box (or use the arrow keys)" aria-label="Move box">⠿</button><span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>Past Visits</h3>
                         </div>
+                    </div>
+                    <div class="lc-scroll scroll-thin space-y-3">
                         <div id="visitTypeChart" class="viz-root"></div>
-                        <div id="siteLandingVisitsList" class="space-y-2.5 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1">
+                        <div id="siteLandingVisitsList" class="space-y-2.5 text-xs">
                             <span class="t-faint italic">No previous visit records found.</span>
                         </div>
                     </div>
+                    <span class="lc-resize" title="Drag to resize" aria-hidden="true"></span>
+                </div>
 
-                    <!-- Activity log -->
-                    <div class="card p-5 sm:p-6 space-y-4 min-w-0">
-                        <div class="flex flex-wrap items-center justify-between gap-2 border-b divider pb-3">
-                            <h3 class="eyebrow flex items-center gap-2" style="color:#7c3aed;">
-                                <span class="w-2 h-2 rounded-full" style="background:#7c3aed;"></span>
-                                Site Activity Log
-                            </h3>
-                            <div id="activityLogTabs" class="flex flex-wrap gap-1.5"></div>
+                <!-- Activity log -->
+                <div class="card land-card" id="siteActivityCard" data-box="activity">
+                    <div class="lc-head">
+                        <div class="lc-bar">
+                            <h3 class="eyebrow flex items-center gap-2 min-w-0" style="color:#7c3aed;"><button type="button" class="lc-move" title="Drag to move this box (or use the arrow keys)" aria-label="Move box">⠿</button><span class="w-2 h-2 rounded-full shrink-0" style="background:#7c3aed;"></span>Site Activity Log</h3>
                         </div>
-                        <div id="siteActivityLog" class="space-y-1.5 max-h-[32rem] overflow-y-auto scroll-thin text-xs pr-1"></div>
+                        <div id="activityLogTabs" class="flex flex-wrap gap-1.5"></div>
                     </div>
+                    <div id="siteActivityLog" class="lc-scroll scroll-thin space-y-1.5 text-xs"></div>
+                    <span class="lc-resize" title="Drag to resize" aria-hidden="true"></span>
+                </div>
             </div>
             <!-- Critical limits (switched off while they are rebuilt) -->
                     <div id="siteLimitsCard" class="card p-5 space-y-3 hidden">
@@ -771,6 +819,7 @@
                     <div id="scanTypeTabs" class="scan-type-menu hidden" role="group" aria-label="Filter by station type"></div>
                 </div>
                 <button type="button" id="scanViewBtn" onclick="setScanView(scanView === 'list' ? 'cards' : 'list')" class="scan-view-btn" aria-pressed="false"></button>
+                <button type="button" id="wsCloseBtn" onclick="hideStationForm(); showSiteDashboard()" class="scan-view-btn" title="Back to the site overview (the visit stays open)"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg><span class="svb-t">Close</span></button>
             </div>
 
             <!-- Station lists: pending first, serviced underneath -->
@@ -1158,6 +1207,7 @@
                 <button type="button" onclick="clearSentQueue()" class="btn btn-secondary !py-2">Clear Finished Items</button>
                 <button type="button" id="exportUnsentBtn" onclick="exportUnsentData()" class="btn btn-secondary !py-2">⬇ Download Unsent Data</button>
             </div>
+            <div id="siteSyncPanel" class="hidden inset p-4 space-y-2.5"></div>
             <div id="syncTabs" class="flex flex-wrap gap-1.5"></div>
             <div id="queueList" class="space-y-2.5 text-xs"></div>
         </div>
@@ -1830,7 +1880,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r41';
+        const APP_VERSION = '2026.10.18-r42';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -4493,6 +4543,7 @@
             const modal = document.getElementById('queueModal');
             if (!modal || modal.classList.contains('hidden')) return;
 
+            drawSiteSyncPanel();
             const unsent = unsentItems();
             const failed = unsent.filter(i => i.status === 'failed').length;
             const sent = queueItems.length - unsent.length;
@@ -6158,7 +6209,9 @@
         }
 
         // A simple pop-up for reading details
-        function openInfoModal(title, bodyHtml, footHtml) {
+        function openInfoModal(title, bodyHtml, footHtml, opts) {
+            const card = document.querySelector('#infoModal > .card');
+            if (card && card.style) card.style.maxWidth = opts && opts.wide ? '40rem' : '';
             document.getElementById('infoTitle').textContent = title;
             document.getElementById('infoBody').innerHTML = bodyHtml;
             const f = document.getElementById('infoFoot');
@@ -6436,7 +6489,71 @@
             await Promise.all(Array.from({ length: Math.min(4, list.length) }, worker));
         }
 
-        async function fetchRowsPaged(clientId, since, prog) {
+        // ---------- Site sync progress: each part of the site with its own bar (shown in Sync Data) ----------
+        const SYNC_LABELS = { upload: 'Sending anything waiting on this device', details: 'Site details', records: 'Service records', recommendations: 'Recommendations',
+            stations: 'Stations', site_maps: 'Floor plans', visits: 'Visits', recommendation_updates: 'Recommendation updates', site_events: 'Activity log',
+            critical_limits: 'Critical limits', pest_sightings: 'Pest sightings', save: 'Saving to this device', screen: 'Updating the screen' };
+        let siteSyncTrack = null;   // { clientId, siteName, items: [{ key, label, state, pct, note }], running, startedAt, endedAt, error }
+        function sstStart(clientId, siteName, keys) {
+            siteSyncTrack = { clientId: String(clientId), siteName: siteName || '', running: true, startedAt: Date.now(), endedAt: 0, error: null,
+                items: keys.map(k => ({ key: k, label: SYNC_LABELS[k] || k, state: 'todo', pct: null, note: '' })) };
+            renderSiteSyncPanel();
+        }
+        function sst(key, state, note, pct) {
+            if (!siteSyncTrack || !siteSyncTrack.running) return;
+            const it = siteSyncTrack.items.find(i => i.key === key);
+            if (!it) return;
+            if (state) it.state = state;
+            if (note != null) it.note = note;
+            it.pct = state === 'done' ? 100 : pct != null ? pct : (state ? null : it.pct);
+            renderSiteSyncPanel();
+        }
+        function sstEnd(error) {
+            if (!siteSyncTrack || !siteSyncTrack.running) return;
+            siteSyncTrack.items.forEach(i => { if (i.state === 'active') i.state = error ? 'failed' : 'done'; if (i.state === 'todo') i.state = error ? 'todo' : 'skipped'; });
+            siteSyncTrack.running = false; siteSyncTrack.endedAt = Date.now(); siteSyncTrack.error = error || null;
+            renderSiteSyncPanel();
+        }
+        let sstFrame = false;
+        function renderSiteSyncPanel() {
+            if (sstFrame) return;
+            sstFrame = true;
+            setTimeout(() => { sstFrame = false; drawSiteSyncPanel(); }, 60);
+        }
+        function drawSiteSyncPanel() {
+            const el = document.getElementById('siteSyncPanel'), modal = document.getElementById('queueModal');
+            if (!el || !modal || modal.classList.contains('hidden')) return;
+            const t = siteSyncTrack;
+            if (!t || !selectedClient || String(selectedClient.id) !== t.clientId) {
+                el.classList.toggle('hidden', !selectedClient);
+                if (selectedClient) el.innerHTML = `<div class="flex items-center justify-between gap-2"><span class="eyebrow t-accent">Site sync · ${esc(selectedClient.Name || 'this site')}</span><button type="button" class="btn btn-primary !py-1.5 !px-3 !text-[11px]" onclick="backgroundSyncSite('manual')">⟳ Sync Site</button></div>
+                    <p class="text-[11px] t-faint">Tap Sync Site to download this site's latest records. Each part shows its progress here.</p>`;
+                return;
+            }
+            el.classList.remove('hidden');
+            const n = t.items.length || 1;
+            const overall = Math.round(t.items.reduce((a, i) => a + (i.state === 'done' || i.state === 'skipped' ? 1 : i.state === 'active' ? (i.pct || 0) / 100 * 0.9 + 0.05 : 0), 0) / n * 100);
+            const head = t.running ? `Syncing… ${overall}%` : t.error ? `Sync failed: ${esc(t.error)}` : `Up to date · ${esc(relTime(t.endedAt))}`;
+            const icon = st => st === 'done' ? '<span style="color:#10b981;">✓</span>' : st === 'failed' ? '<span style="color:#dc2626;">✕</span>' : st === 'skipped' ? '<span class="t-faint">–</span>'
+                : st === 'active' ? '<span class="inline-block w-2.5 h-2.5 rounded-full bg-brand-500 animate-pulse"></span>' : '<span class="inline-block w-2.5 h-2.5 rounded-full" style="border:1px solid var(--border);"></span>';
+            const bar = i => {
+                const cls = i.state === 'done' ? 'done' : i.state === 'failed' ? 'fail' : i.state === 'active' && i.pct == null ? 'ind' : '';
+                const w = i.state === 'done' || i.state === 'failed' ? 100 : i.state === 'active' ? (i.pct || 0) : 0;
+                return `<div class="sbar ${cls}"><i style="width:${w}%;"></i></div>`;
+            };
+            el.innerHTML = `<div class="flex items-center justify-between gap-2"><span class="eyebrow t-accent truncate">Site sync · ${esc(t.siteName || 'this site')}</span>
+                    ${t.running ? '' : `<button type="button" class="btn btn-secondary !py-1.5 !px-3 !text-[11px] shrink-0" onclick="backgroundSyncSite('manual')">⟳ Sync again</button>`}</div>
+                <div class="flex items-center justify-between gap-2 text-[11px]"><span class="${t.error ? '' : 't-muted'} font-semibold" ${t.error ? 'style="color:#dc2626;"' : ''}>${head}</span><span class="font-mono font-black t-strong">${t.running ? overall : t.error ? overall : 100}%</span></div>
+                <div class="sbar ${t.error ? 'fail' : t.running ? '' : 'done'}" style="height:8px;"><i style="width:${t.running || t.error ? overall : 100}%;"></i></div>
+                <div class="space-y-2 pt-1" id="siteSyncItems">${t.items.map(i => `<div class="sync-item ${i.state === 'todo' ? 't-faint' : i.state === 'active' ? 't-strong font-bold' : 't-muted'}" data-key="${esc(i.key)}">
+                    <span class="flex justify-center">${icon(i.state)}</span><span class="truncate">${esc(i.label)}</span><span class="text-[10.5px] t-faint">${esc(i.state === 'skipped' && !i.note ? 'not needed' : i.note || '')}</span>${bar(i)}</div>`).join('')}</div>`;
+        }
+        function syncSiteNow() {
+            openQueueModal();
+            backgroundSyncSite('manual');
+        }
+
+        async function fetchRowsPaged(clientId, since, prog, onPage) {
             if (prog) return fetchRowsWithProgress(clientId, since, prog);
             const out = [];
             for (let from = 0; ; from += PAGE_SIZE) {
@@ -6447,6 +6564,7 @@
                     20000, 'Downloading site data');
                 if (error) throw error;
                 out.push(...(data || []));
+                if (onPage) onPage(out.length);
                 if (!data || data.length < PAGE_SIZE) break;
             }
             return out;
@@ -6461,10 +6579,12 @@
             let changed = false;
             let added = 0;
 
+            sst('records', 'active', 'checking…');
             if (needFull) {
                 step(55, 'Downloading the full site...');
                 const before = cache ? serverRows(cache.rows).length : 0;
-                const rows = await fetchRowsPaged(clientId, null, prog);
+                const rows = await fetchRowsPaged(clientId, null, prog, n => sst('records', 'active', `${n.toLocaleString()} downloaded`));
+                sst('records', 'done', `${rows.length.toLocaleString()} records`);
                 changed = !cache || rows.length !== serverRows(cache.rows).length || latestCreatedAt(rows) !== latestCreatedAt(cache.rows);
                 added = Math.max(0, rows.length - before);
                 cache = { rows: rows, lastSyncAt: now, lastFullAt: now, recs: cache ? cache.recs : undefined, recsOk: cache ? cache.recsOk : undefined, tables: cache ? cache.tables : undefined };
@@ -6472,8 +6592,9 @@
                 let rows = cache.rows;
                 let lastFullAt = cache.lastFullAt || now;
                 step(50, 'Downloading new records...');
-                const fresh = await fetchRowsPaged(clientId, latestCreatedAt(rows));
+                const fresh = await fetchRowsPaged(clientId, latestCreatedAt(rows), null, n => sst('records', 'active', `${n.toLocaleString()} new`, 50));
                 added = fresh.length;
+                sst('records', 'active', fresh.length ? `${fresh.length} new` : 'no new records', 60);
                 step(72, fresh.length ? `${fresh.length} new record${fresh.length === 1 ? '' : 's'} downloaded` : 'No new records');
                 if (fresh.length) {
                     const freshRefs = new Set(fresh.map(r => r.payload && r.payload.clientRef).filter(Boolean));
@@ -6487,16 +6608,18 @@
                 step(85, 'Double-checking nothing was removed...');
                 if (typeof count === 'number' && count !== serverRows(rows).length) {
                     step(88, 'Refreshing the full site...');
-                    rows = await fetchRowsPaged(clientId, null);
+                    rows = await fetchRowsPaged(clientId, null, null, n => sst('records', 'active', `${n.toLocaleString()} of ${count.toLocaleString()}`, Math.min(99, Math.round(n / Math.max(count, 1) * 100))));
                     lastFullAt = now;
                     changed = true;
                 }
+                sst('records', 'done', `${serverRows(rows).length.toLocaleString()} records${added ? ` · ${added} new` : ''}`);
                 cache = { rows: rows, lastSyncAt: now, lastFullAt: lastFullAt, recs: cache.recs, recsOk: cache.recsOk, tables: cache.tables };
             }
 
             // Site records in their own tables (small lists, fetched whole on every sync)
-            const fetchTable = name => withTimeout(_supabase.from(name).select('*').eq('client_id', String(clientId)), 15000, 'Downloading ' + name)
-                .then(r => { if (r.error) throw r.error; return r.data || []; });
+            const fetchTable = name => (sst(name, 'active'), withTimeout(_supabase.from(name).select('*').eq('client_id', String(clientId)), 15000, 'Downloading ' + name)
+                .then(r => { if (r.error) throw r.error; const rows = r.data || []; sst(name, 'done', `${rows.length} item${rows.length === 1 ? '' : 's'}`); return rows; })
+                .catch(e => { sst(name, /does not exist|schema cache|could not find the table/i.test((e && e.message) || '') ? 'skipped' : 'failed', /does not exist|schema cache|could not find the table/i.test((e && e.message) || '') ? 'not set up' : 'failed'); throw e; }));
             const [recRes, ...tabRes] = await Promise.allSettled([fetchTable('recommendations')].concat(SITE_TABLES.map(fetchTable)));
             const missing = e => /does not exist|schema cache|could not find the table/i.test((e && e.message) || '');
             if (recRes.status === 'fulfilled') {
@@ -6518,7 +6641,9 @@
                 } else if (missing(r.reason)) { if (!OPTIONAL_SITE_TABLES.includes(name)) splitTablesMissing = true; }
                 else if (!isNetworkError(r.reason)) logAppError('Downloading ' + name, r.reason);
             });
+            sst('save', 'active');
             await saveSiteCache(clientId, cache);
+            sst('save', 'done');
             return { cache, changed, added };
         }
 
@@ -7266,22 +7391,29 @@
             renderSiteSyncInfo();
             beginSync('site', 'Syncing site...');
             if (ui) ui.start('Syncing site with the latest data...');
+            sstStart(clientId, selectedClient.Name, ['upload', 'details', 'records', 'recommendations'].concat(SITE_TABLES, ['save', 'screen']));
             try {
                 if (mode) {
                     step(8, 'Sending anything waiting on this device...');
+                    sst('upload', 'active', unsentItems().length ? `${unsentItems().length} waiting` : '');
                     await flushQueue();
-                }
+                    sst('upload', 'done', unsentItems().length ? `${unsentItems().length} still waiting` : 'nothing waiting');
+                } else sst('upload', 'skipped');
                 step(25, 'Checking site details...');
+                sst('details', 'active');
                 const detailsChanged = await refreshClientRecord(clientId).catch(() => false);
+                sst('details', 'done', detailsChanged ? 'updated' : 'no changes');
                 step(40, 'Checking for new records...');
                 const { cache, changed, added } = await syncSiteCache(clientId, mode === 'full' ? 'full' : 'auto', null, step);
                 if (mySeq !== siteSyncSeq) return;
                 siteSyncInfo.lastSyncAt = cache.lastSyncAt;
                 if (changed || mode) {
                     step(93, 'Updating the screen...');
+                    sst('screen', 'active');
                     await buildSiteState(clientId, cache.rows, new Set(scannedBarcodesThisVisit), null, { quick: true });
                     if (mySeq !== siteSyncSeq) return;
                     rerenderOpenSite();
+                    sst('screen', 'done');
                     prefetchPhotos(sitePhotoUrls());
                     fetchMissingPhotoLinks();
                 } else if (detailsChanged) {
@@ -7293,9 +7425,11 @@
                 const msg = isNetworkError(err) ? 'connection lost' : friendlyError(err);
                 if (mySeq === siteSyncSeq) siteSyncInfo.error = msg;
                 if (ui) ui.fail('Sync failed: ' + msg);
+                sstEnd(msg);
                 if (!isNetworkError(err) || mode) logDownload('Site sync', { siteName: selectedClient ? selectedClient.Name : '', error: msg });
                 logAppError('Site sync', err);
             } finally {
+                sstEnd();
                 endSync('site');
                 if (mySeq === siteSyncSeq) {
                     siteSyncInfo.syncing = false;
@@ -7757,22 +7891,31 @@
             renderRecAgeChart();
         }
 
-        // header numbers: tap to open what's behind them (Next service isn't a link)
-        function flashBox(el) {
-            if (!el) return;
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            el.classList.add('flash-ring');
-            setTimeout(() => el.classList.remove('flash-ring'), 1400);
+        // header numbers: tap to open what's behind them in a pop-up (Next service isn't a link)
+        function kpiStationsHtml(q) {
+            q = String(q || '').trim().toLowerCase();
+            const list = siteDevices.filter(d => !q || `${d.locationName} ${d.barcode_id} ${d.deviceType}`.toLowerCase().includes(q))
+                .sort((a, b) => a.locationName.localeCompare(b.locationName, LOCALE, { numeric: true }));
+            if (!list.length) return `<div class="t-faint italic text-xs p-2">${siteDevices.length ? 'No stations match.' : 'No stations recorded yet.'}</div>`;
+            return list.map(d => {
+                const last = lastServiceOf(d), lt = last ? fmtDateTimeLong(last.at) : null, openN = openRecCount(d);
+                return `<button type="button" data-barcode="${esc(d.barcode_id)}" onclick="closeInfoModal(); openStationOverview(this.dataset.barcode)" class="row-item typed clickable w-full text-left p-2.5 flex items-center gap-2" style="border-left-color:${stationColor(d.deviceType).color};">
+                    <span class="min-w-0 flex-1"><span class="block font-bold t-strong truncate">${esc(d.locationName)}${openN ? ` <span class="chip chip-orange !py-0 ml-1">${openN} open</span>` : ''}</span>
+                    <span class="block t-muted truncate">${esc(d.deviceType)} · <span class="font-mono t-accent">${esc(d.barcode_id)}</span></span>
+                    <span class="block t-faint text-[10.5px]">${lt ? `Last serviced ${esc(lt.date)}` : 'Not serviced yet'}</span></span><span class="t-faint shrink-0">›</span></button>`;
+            }).join('');
         }
         function kpiOpen(what) {
             if (what === 'stations') {
-                stationTypeFilter = 'all';
-                const ss = document.getElementById('siteStationSearch'); if (ss) ss.value = '';
-                renderSiteStationList();
-                flashBox(document.getElementById('siteStationsCard'));
+                openInfoModal(`Stations · ${siteDevices.length}`, `<input type="search" class="field !py-2 !text-xs mb-2.5" placeholder="Search name, barcode or type..." oninput="document.getElementById('kpiStationList').innerHTML = kpiStationsHtml(this.value)" aria-label="Search stations">
+                    <div id="kpiStationList" class="space-y-1.5 text-xs">${kpiStationsHtml('')}</div>`, '', { wide: true });
             } else if (what === 'issues') {
-                setRecFilter('open');
-                flashBox(document.getElementById('siteRecsCard'));
+                const open = allSiteRecs().filter(r => r.status !== 'complete').sort((a, b) => (recAgeDays(b) || 0) - (recAgeDays(a) || 0));
+                openInfoModal(`Open issues · ${open.length}`, open.length
+                    ? `<p class="text-[11px] t-faint mb-2">Recommendations not complete, oldest first. Tap one to open it.</p><div id="kpiIssueList" class="space-y-2 text-xs">${open.map(r => recRowHtml(r)).join('')}</div>`
+                    : '<p class="text-sm t-muted">No open recommendations on this site.</p>', '', { wide: true });
+                const box = document.getElementById('kpiIssueList');
+                if (box) box.addEventListener('click', e => { if (e.target.closest('[data-rec]')) closeInfoModal(); }, true);
             } else if (what === 'lastVisit') {
                 const i = lastVisitStats ? sitePastVisits.indexOf(lastVisitStats.visit) : -1;
                 if (i >= 0) openVisitModal(i);
@@ -7882,8 +8025,34 @@
                 { t: '90+ days', n: 0, color: 'var(--age-3)' }
             ];
             open.forEach(r => { const d = recAgeDays(r) || 0; buckets[d >= 90 ? 2 : d >= 30 ? 1 : 0].n++; });
-            const over30 = buckets[1].n + buckets[2].n;
-            el.innerHTML = donutHtml(buckets, open.length, 'open', 'Open recommendations by age', `<div class="t-faint pt-1">${over30} open 30+ days · ${buckets[2].n} open 90+ days</div>`);
+            // green under 30 days, amber 30-89 days, red 90+ days
+            buckets[0].color = '#10b981'; buckets[1].color = '#f59e0b'; buckets[2].color = '#dc2626';
+            buckets[0].s = '<30d'; buckets[1].s = '30-89d'; buckets[2].s = '90d+';
+            el.innerHTML = miniDonutHtml(buckets, open.length, 'Open recommendations by age');
+        }
+
+        // Small donut for a box's top corner: slices, the total in the middle, three short counts beside it
+        function miniDonutHtml(segsIn, total, label) {
+            const segs = segsIn.filter(x => x.n > 0);
+            const R = 27, r = 18, C = 30, gap = segs.length > 1 ? 0.06 : 0;
+            let a0 = -Math.PI / 2;
+            const p = (ang, rad) => [C + rad * Math.cos(ang), C + rad * Math.sin(ang)].map(v => v.toFixed(2)).join(' ');
+            const paths = segs.map(sg => {
+                const sweep = sg.n / total * Math.PI * 2, from = a0 + gap / 2, to = a0 + sweep - gap / 2;
+                a0 += sweep;
+                const large = to - from > Math.PI ? 1 : 0;
+                const d = segs.length === 1
+                    ? `M ${C} ${C - R} A ${R} ${R} 0 1 1 ${C - 0.01} ${C - R} L ${C - 0.01} ${C - r} A ${r} ${r} 0 1 0 ${C} ${C - r} Z`
+                    : `M ${p(from, R)} A ${R} ${R} 0 ${large} 1 ${p(to, R)} L ${p(to, r)} A ${r} ${r} 0 ${large} 0 ${p(from, r)} Z`;
+                return `<path d="${d}" fill="${sg.color}"><title>${esc(sg.t)}: ${sg.n}</title></path>`;
+            }).join('');
+            const tip = segsIn.map(sg => `${sg.t}: ${sg.n}`).join(' · ');
+            return `<div class="rec-mini" title="${esc(label)} - ${esc(tip)}">
+                <div class="rec-mini-legend">${segsIn.map(sg => `<div><span class="sw" style="background:${sg.color};"></span>${esc(sg.s || sg.t)}<b>${sg.n}</b></div>`).join('')}</div>
+                <div class="relative shrink-0" style="width:52px;height:52px;">
+                    <svg viewBox="0 0 60 60" width="52" height="52" role="img" aria-label="${esc(label)}: ${esc(tip)}">${paths}</svg>
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none text-sm font-black t-strong">${total}</div>
+                </div></div>`;
         }
 
         // Shared donut drawing (fixed slice colours, 2px gaps, centre total, legend with counts)
@@ -8073,11 +8242,10 @@
                         <div class="nf-hero" style="--tc:${col};">
                             <div class="nf-img" data-st-photo="${esc(d.barcode_id)}">${(siteStations.get(d.barcode_id) || {}).photo_path ? '' : `<span class="nf-ph">📍</span>`}</div>
                             <div class="nf-shade"></div>
-                            <div class="nf-top">${plan ? `<span class="chip chip-grey">📍 ${esc(plan)}</span>` : ''}</div>
                             <div class="nf-title flex items-center gap-1.5"><span class="nf-dot" style="background:${col};"></span><span class="line-clamp-2">${esc(d.locationName)}</span></div>
                         </div>
                         <div class="nf-meta">
-                            <div class="t-muted truncate">${esc(d.deviceType)} · <span class="font-mono t-accent">${esc(d.barcode_id)}</span></div>
+                            <div class="truncate"><span class="font-mono t-accent">${esc(d.barcode_id)}</span></div>
                             <div class="t-faint text-[10px] mt-0.5 truncate">${lt ? `Serviced ${esc(lt.date)} · ${esc(last.activity === 'Caught' ? 'insects caught' : last.activity === 'None' ? 'no activity' : last.activity + ' activity')}` : 'Not serviced yet'}</div>
                         </div>
                     </div>`;
@@ -9673,9 +9841,150 @@
                 `<button type="button" onclick="openMapModal({ add: true })" class="btn btn-secondary w-full !py-2">+ Add floor plan</button>`;
         }
 
+        // ---------- Site page boxes: move (⠿) and resize (corner), remembered for each person ----------
+        const BOARD_IDS = ['sightings', 'recs', 'stations', 'docs', 'visits', 'activity'];
+        const boardKey = () => 'pestis-board-' + (currentUser && currentUser.id ? currentUser.id : 'anon');
+        const isWideBoard = () => window.innerWidth >= 1024;
+        function boardPrefs() {
+            let local = null;
+            try { local = JSON.parse(localStorage.getItem(boardKey()) || 'null'); } catch (e) {}
+            const remote = currentProfile && currentProfile.ui_prefs && currentProfile.ui_prefs.siteBoard || null;
+            return [local, remote].filter(x => x && typeof x === 'object' && Array.isArray(x.order)).sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0))[0]
+                || { order: BOARD_IDS.slice(), boxes: {} };
+        }
+        const boardCards = () => { const b = document.getElementById('landBoard'); return b && b.children ? Array.from(b.children).filter(c => c.classList && c.classList.contains('land-card')) : []; };
+        function applyBoardLayout() {
+            const board = document.getElementById('landBoard');
+            if (!board) return;
+            initBoard();
+            const pr = boardPrefs();
+            const cards = new Map(boardCards().map(c => [c.dataset.box, c]));
+            const order = (pr.order || []).filter(id => cards.has(id));
+            cards.forEach((c, id) => { if (!order.includes(id)) order.push(id); });
+            order.forEach(id => board.appendChild(cards.get(id)));
+            cards.forEach((c, id) => {
+                const b = (pr.boxes || {})[id] || {};
+                c.dataset.span = String(Math.min(3, Math.max(1, parseInt(b.span) || 1)));
+                if (c.style && c.style.setProperty) {
+                    if (b.h) c.style.setProperty('--lc-h', b.h + 'px'); else c.style.removeProperty('--lc-h');
+                    if (b.hm) c.style.setProperty('--lc-hm', b.hm + 'px'); else c.style.removeProperty('--lc-hm');
+                }
+            });
+            equalizeLandHeads();
+        }
+        let boardSaveTimer = null;
+        function saveBoardLayout() {
+            const boxes = {};
+            boardCards().forEach(c => {
+                const h = parseInt(c.style.getPropertyValue('--lc-h')) || null, hm = parseInt(c.style.getPropertyValue('--lc-hm')) || null, span = parseInt(c.dataset.span) || 1;
+                if (h || hm || span > 1) boxes[c.dataset.box] = { span, h, hm };
+            });
+            const v = { order: boardCards().map(c => c.dataset.box), boxes, savedAt: Date.now() };
+            try { localStorage.setItem(boardKey(), JSON.stringify(v)); } catch (e) {}
+            if (currentProfile) currentProfile.ui_prefs = Object.assign({}, currentProfile.ui_prefs || {}, { siteBoard: v });
+            // also kept on the person's profile, so it follows them to other devices
+            clearTimeout(boardSaveTimer);
+            boardSaveTimer = setTimeout(() => {
+                if (!isOnline || !currentUser || typeof _supabase === 'undefined' || !_supabase || !_supabase.rpc) return;
+                Promise.resolve(_supabase.rpc('save_my_ui_prefs', { p_key: 'siteBoard', p_value: v }))
+                    .then(r => { if (r && r.error && !/could not find|does not exist|schema cache/i.test(r.error.message || '')) logAppError('Saving the screen layout', r.error); })
+                    .catch(() => {});
+            }, 800);
+        }
+        function resetBoardLayout() {
+            const board = document.getElementById('landBoard');
+            if (!board) return;
+            const cards = new Map(boardCards().map(c => [c.dataset.box, c]));
+            BOARD_IDS.forEach(id => { const c = cards.get(id); if (!c) return; board.appendChild(c); c.dataset.span = '1'; c.style.removeProperty('--lc-h'); c.style.removeProperty('--lc-hm'); });
+            saveBoardLayout();
+            equalizeLandHeads();
+        }
+        // Box headers in the same row get the same height, so the cards inside line up
+        let eqTimer = null;
+        function equalizeLandHeads() {
+            clearTimeout(eqTimer);
+            eqTimer = setTimeout(() => { try {
+                const cards = boardCards();
+                cards.forEach(c => { const h = c.querySelector('.lc-head'); if (h) h.style.minHeight = ''; });
+                if (!isWideBoard()) return;
+                const rows = new Map();
+                cards.forEach(c => { const top = Math.round(c.getBoundingClientRect().top); const k = Array.from(rows.keys()).find(t => Math.abs(t - top) < 4); const key = k == null ? top : k; if (!rows.has(key)) rows.set(key, []); rows.get(key).push(c); });
+                rows.forEach(list => {
+                    const heads = list.map(c => c.querySelector('.lc-head')).filter(Boolean);
+                    const max = Math.max(0, ...heads.map(h => h.getBoundingClientRect().height));
+                    if (heads.length > 1) heads.forEach(h => { h.style.minHeight = max + 'px'; });
+                });
+            } catch (e) {} }, 30);
+        }
+        function initBoard() {
+            const board = document.getElementById('landBoard');
+            if (!board || board._init) return;
+            board._init = true;
+            board.addEventListener('pointerdown', e => {
+                const mv = e.target.closest && e.target.closest('.lc-move'), rs = e.target.closest && e.target.closest('.lc-resize');
+                if (!mv && !rs) return;
+                const card = e.target.closest('.land-card');
+                if (!card || card.parentNode !== board) return;
+                e.preventDefault();
+                const el = mv || rs;
+                try { el.setPointerCapture(e.pointerId); } catch (x) {}
+                (mv ? boardMove : boardResize)(card, el, e);
+            });
+            board.addEventListener('keydown', e => {
+                const mv = e.target.closest && e.target.closest('.lc-move');
+                if (!mv) return;
+                const card = mv.closest('.land-card');
+                if ((e.key === 'ArrowLeft' || e.key === 'ArrowUp') && card.previousElementSibling) { board.insertBefore(card, card.previousElementSibling); }
+                else if ((e.key === 'ArrowRight' || e.key === 'ArrowDown') && card.nextElementSibling) { board.insertBefore(card.nextElementSibling, card); }
+                else return;
+                e.preventDefault(); mv.focus(); saveBoardLayout(); equalizeLandHeads();
+            });
+            window.addEventListener('resize', equalizeLandHeads);
+            if (typeof MutationObserver === 'function') new MutationObserver(() => equalizeLandHeads()).observe(board, { childList: true, subtree: true, characterData: true });
+        }
+        function boardMove(card, handle, e0) {
+            const board = card.parentNode;
+            card.classList.add('lc-dragging'); document.body.classList.add('lc-busy');
+            const move = e => {
+                if (e.clientY < 70) window.scrollBy(0, -18); else if (e.clientY > window.innerHeight - 70) window.scrollBy(0, 18);
+                const under = document.elementFromPoint(e.clientX, e.clientY);
+                const tgt = under && under.closest('.land-card');
+                if (!tgt || tgt === card || tgt.parentNode !== board) return;
+                const r = tgt.getBoundingClientRect();
+                const after = isWideBoard() ? e.clientX > r.left + r.width / 2 : e.clientY > r.top + r.height / 2;
+                const ref = after ? tgt.nextElementSibling : tgt;
+                if (ref !== card && ref !== card.nextElementSibling) board.insertBefore(card, ref);
+            };
+            const up = () => {
+                window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+                card.classList.remove('lc-dragging'); document.body.classList.remove('lc-busy');
+                saveBoardLayout(); equalizeLandHeads();
+            };
+            // listen on the window: moving the box in the page drops the pointer capture
+            window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+        }
+        function boardResize(card, handle, e0) {
+            const board = card.parentNode, wide = isWideBoard(), r0 = card.getBoundingClientRect();
+            const gap = parseFloat(getComputedStyle(board).columnGap) || 24, colW = (board.clientWidth - gap * 2) / 3;
+            card.classList.add('lc-resizing'); document.body.classList.add('lc-busy');
+            const move = e => {
+                const h = Math.round(Math.min(2400, Math.max(256, r0.height + e.clientY - e0.clientY)));
+                card.style.setProperty(wide ? '--lc-h' : '--lc-hm', h + 'px');
+                if (wide) card.dataset.span = String(Math.min(3, Math.max(1, Math.round((r0.width + e.clientX - e0.clientX + gap) / (colW + gap)))));
+            };
+            const up = () => {
+                window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+                card.classList.remove('lc-resizing'); document.body.classList.remove('lc-busy');
+                saveBoardLayout(); equalizeLandHeads();
+            };
+            // listen on the window: moving the box in the page drops the pointer capture
+            window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+        }
+
         function showSiteDashboard() {
             document.getElementById('visitWorkspace').classList.add('hidden');
             document.getElementById('siteLandingDashboard').classList.remove('hidden');
+            applyBoardLayout();
             updateStartServiceButton();
             renderLandingRecommendationsAndVisits();
             updateFab();
@@ -9810,8 +10119,7 @@
                     <div class="nf-hero" style="--tc:${col};">
                         <div class="nf-img" data-st-photo="${esc(d.barcode_id)}">${hasPhoto ? '' : '<span class="nf-ph">📍</span>'}</div>
                         <div class="nf-shade"></div>
-                        <div class="nf-top">${isScanned ? '<span class="chip chip-green">Serviced ✓</span>' : '<span class="chip chip-amber">Unscanned</span>'}</div>
-                        <div class="nf-title flex items-center gap-1.5"><span class="nf-dot" style="background:${col};"></span><span class="line-clamp-2">${esc(d.locationName)}</span></div>
+                                                <div class="nf-title flex items-center gap-1.5"><span class="nf-dot" style="background:${col};"></span><span class="line-clamp-2">${esc(d.locationName)}</span></div>
                     </div>
                     <div class="nf-meta">
                         <div class="t-muted truncate">${esc(d.deviceType)} · <span class="font-mono t-accent">${esc(d.barcode_id)}</span></div>
