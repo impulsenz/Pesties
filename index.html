@@ -146,10 +146,40 @@
         .station-photo-lg { width: 8rem; height: 8rem; }
         .station-photo-empty { font-size: .65rem; text-align: center; color: var(--faint); line-height: 1.3; }
         .station-photo-new { position: absolute; bottom: .25rem; right: .25rem; background: #f97316; color: #fff; font-size: .55rem; font-weight: 900; padding: .05rem .35rem; border-radius: 999px; }
-        /* top of the site page: name | site contact | actions on desktop; stacked on phones (name, actions, contact) */
+        /* site header */
+        .site-hero-band { position: relative; isolation: isolate; padding: .9rem 1rem 1.2rem; background: linear-gradient(135deg, rgba(249, 115, 22, .10), transparent 55%); }
+        .sh-topline { display: flex; align-items: center; justify-content: space-between; gap: .75rem; font-size: 11px; margin-bottom: .8rem; }
+        .sh-id { display: flex; align-items: flex-start; gap: .9rem; min-width: 0; }
+        .sh-id > .min-w-0 { min-width: 0; flex: 1; }
+        .sh-title { font-size: 1.45rem; font-weight: 900; line-height: 1.15; }
+        .sh-contact { margin-top: .75rem; }
+        .sh-body { padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+        @media (min-width: 640px) {
+            .site-hero-band { padding: 1rem 1.75rem 1.5rem; }
+            .sh-id { gap: 1.25rem; }
+            .sh-title { font-size: 2rem; }
+            .sh-body { padding: 1.25rem 1.75rem 1.75rem; }
+        }
+        .site-hero-band::before { content: ''; position: absolute; inset: 0; z-index: -1; background-image: var(--hero-img, none); background-size: cover; background-position: center; filter: blur(30px) saturate(1.25); opacity: .16; transform: scale(1.25); }
+        .sh-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; align-items: start; }
+        @media (min-width: 1024px) { .sh-grid { grid-template-columns: minmax(0, 1fr) 15.5rem; gap: 1.75rem; align-items: center; } }
+        .sh-cover { flex-shrink: 0; width: 3.75rem; height: 3.75rem; border-radius: 1rem; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 6px 18px rgba(0, 0, 0, .12); }
+        @media (min-width: 640px) { .sh-cover { width: 5.75rem; height: 5.75rem; border-radius: 1.2rem; } }
+        .sh-mono { display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.15rem; letter-spacing: .02em; color: #fff; background: linear-gradient(135deg, #f97316, #c2410c); }
+        @media (min-width: 640px) { .sh-mono { font-size: 1.7rem; } }
+        .sh-cover.hidden { display: none !important; }
+        .sh-contact { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .9rem; font-size: .78rem; padding: .5rem .75rem; border-radius: .8rem; background: var(--surface2); border: 1px solid var(--border); width: fit-content; max-width: 100%; }
+        .sh-contact .eyebrow { font-size: .58rem; }
+        .kpi { background: var(--surface2); border: 1px solid var(--border); border-radius: .9rem; padding: .7rem .85rem; min-width: 0; }
+        .kpi-k { font-size: .6rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+        .kpi-v { font-size: 1.6rem; font-weight: 900; line-height: 1.15; margin-top: .15rem; }
+        .kpi-v-sm { font-size: 1.05rem; line-height: 1.3; margin-top: .3rem; }
+        .kpi-s { font-size: 10.5px; color: var(--faint); margin-top: .1rem; line-height: 1.3; }
+        @media (min-width: 640px) { .kpi { padding: .85rem 1rem; } .kpi-v { font-size: 1.85rem; } .kpi-v-sm { font-size: 1.15rem; } }
+        /* (older layout classes, kept for the actions block) */
         .site-top { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; align-items: start; }
         .site-top .st-title { order: 1; } .site-top .st-actions { order: 2; } .site-top .st-contact { order: 3; }
-        .st-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+        .st-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; }
         .st-actions .st-start { grid-column: 1 / -1; }
         @media (min-width: 1024px) {
             .site-top { grid-template-columns: minmax(0, 1fr) 17rem; }
@@ -499,70 +529,71 @@
 
         <!-- 2. SITE LANDING DASHBOARD -->
         <section id="siteLandingDashboard" class="space-y-6 hidden">
-            <div class="card p-5 sm:p-7">
-                <div class="site-top">
-                    <div class="st-title flex items-start gap-4 min-w-0">
-                        <div id="siteLandingImageWrap" class="hidden shrink-0 w-24 sm:w-36 aspect-[4/3] rounded-xl overflow-hidden cursor-pointer" style="border:1px solid var(--border);" onclick="viewFullImage(document.getElementById('siteLandingImage').src, selectedClient ? selectedClient.Address : '', selectedClient ? selectedClient.Name : '')">
-                            <img id="siteLandingImage" class="w-full h-full object-cover" alt="">
-                        </div>
-                        <div class="min-w-0">
-                            <button type="button" onclick="backToSites()" class="link-btn !no-underline mb-2 inline-flex items-center gap-1">← All Sites</button>
-                            <div><span class="chip chip-orange">Active Site Dashboard</span></div>
-                            <h2 class="text-2xl sm:text-3xl font-black t-strong mt-2 break-words" id="siteLandingTitle">Customer Site Overview</h2>
-                            <p class="text-xs t-muted mt-1" id="siteLandingAddress">Address information</p>
-                            <div id="visitStatusLine" class="hidden mt-2"></div>
-                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] t-faint">
-                                <span class="site-sync-text"></span>
-                                <button type="button" onclick="backgroundSyncSite('manual')" class="site-sync-btn link-btn !text-[11px] disabled:opacity-50">Sync Site</button>
+            <!-- Site header: who, where, what's happening, and the actions; then the numbers, plans and map -->
+            <div class="card site-hero overflow-hidden">
+                <div class="site-hero-band" id="siteHeroBand">
+                    <div class="sh-topline">
+                        <button type="button" onclick="backToSites()" class="link-btn !no-underline inline-flex items-center gap-1 font-bold">← All sites</button>
+                        <div class="flex items-center gap-2 t-faint min-w-0"><span class="site-sync-text truncate"></span><button type="button" onclick="backgroundSyncSite('manual')" class="site-sync-btn link-btn !text-[11px] shrink-0 disabled:opacity-50">Sync Site</button></div>
+                    </div>
+                    <div class="sh-grid">
+                        <div class="sh-id">
+                            <div id="siteLandingImageWrap" class="hidden sh-cover cursor-pointer" onclick="viewFullImage(document.getElementById('siteLandingImage').src, selectedClient ? selectedClient.Address : '', selectedClient ? selectedClient.Name : '')">
+                                <img id="siteLandingImage" class="w-full h-full object-cover" alt="">
+                            </div>
+                            <div id="siteMonogram" class="sh-cover sh-mono" aria-hidden="true"></div>
+                            <div class="min-w-0 flex-1">
+                                <h2 class="sh-title t-strong break-words" id="siteLandingTitle">Customer Site Overview</h2>
+                                <p class="text-xs sm:text-sm t-muted mt-1 flex items-start gap-1.5"><span aria-hidden="true">📍</span><span id="siteLandingAddress" class="break-words">Address information</span></p>
+                                <div id="visitStatusLine" class="hidden mt-2.5"></div>
+                                <!-- site contact, right under the name -->
+                                <div id="siteContactBox" class="sh-contact">
+                                    <span class="eyebrow t-faint">Site contact</span>
+                                    <span id="siteLandingContact" class="font-bold t-strong break-words">Not specified</span>
+                                    <span id="siteLandingEmail" class="break-all">No email on file</span>
+                                    <button type="button" onclick="openEditSiteModal('editContact')" class="link-btn !no-underline !text-[11px]">Edit</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <!-- Site contact, beside the site name -->
-                    <div class="st-contact inset p-4 space-y-2 min-w-0" id="siteContactBox">
-                        <div class="flex justify-between items-center gap-2">
-                            <span class="eyebrow flex items-center gap-2" style="color:#0891b2;"><span class="w-2 h-2 rounded-full" style="background:#0891b2;"></span>Site contact</span>
-                            <button type="button" onclick="openEditSiteModal('editContact')" class="link-btn !no-underline !text-[11px]">Edit</button>
+                        <div class="st-actions">
+                            <button type="button" id="startServiceBtn" onclick="proceedToWorkSpace()" class="st-start btn btn-primary !px-6 !py-3.5 justify-center text-sm">
+                                <span id="startServiceLabel">Start Service</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                            <button type="button" onclick="openEditSiteModal()" class="btn btn-secondary !px-4 !py-2.5 justify-center">Edit Site</button>
+                            <button type="button" onclick="backToSites()" class="btn btn-secondary !px-4 !py-2.5 justify-center">Close</button>
                         </div>
-                        <div id="siteLandingContact" class="text-sm font-bold t-strong break-words">Not specified</div>
-                        <div id="siteLandingEmail" class="text-xs break-all">No email on file</div>
-                    </div>
-                    <div class="st-actions">
-                        <button type="button" id="startServiceBtn" onclick="proceedToWorkSpace()" class="st-start btn btn-primary !px-6 !py-3 justify-center">
-                            <span id="startServiceLabel">Start Service</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
-                        </button>
-                        <button type="button" onclick="openEditSiteModal()" class="btn btn-secondary !px-4 !py-2.5 justify-center">Edit Site</button>
-                        <button type="button" onclick="backToSites()" class="btn btn-secondary !px-4 !py-2.5 justify-center">Close</button>
                     </div>
                 </div>
 
-                <!-- At a glance: station numbers, floor plans and where the site is -->
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-4 mt-5 pt-5 border-t divider">
-                    <div class="inset p-4 xl:col-span-4">
-                        <div class="grid grid-cols-3 gap-3 text-center">
-                            <div><div id="statStations" class="text-2xl font-black t-strong">0</div><div class="eyebrow t-faint mt-0.5">Stations</div></div>
-                            <div title="Share of this site's stations scanned on the last completed visit"><div id="statLastVisitPct" class="text-2xl font-black" style="color:#10b981;">-</div><div class="eyebrow t-faint mt-0.5">Scanned last visit</div></div>
-                            <div><div id="statIssues" class="text-2xl font-black t-accent">0</div><div class="eyebrow t-faint mt-0.5">Issues</div></div>
-                        </div>
-                        <p id="statLastVisitNote" class="text-[11px] t-faint text-center mt-2"></p>
-                        <div class="border-t divider mt-3 pt-3">
-                            <div class="eyebrow t-faint mb-2">Stations by type</div>
+                <div class="sh-body border-t divider">
+                    <!-- the numbers at a glance -->
+                    <div class="grid grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-3">
+                        <div class="kpi"><div class="kpi-k">Stations</div><div id="statStations" class="kpi-v t-strong">0</div><div class="kpi-s">on this site</div></div>
+                        <div class="kpi" title="Share of this site's stations scanned on the last completed visit"><div class="kpi-k">Scanned last visit</div><div id="statLastVisitPct" class="kpi-v" style="color:#10b981;">-</div><div id="statLastVisitNote" class="kpi-s"></div></div>
+                        <div class="kpi"><div class="kpi-k">Open issues</div><div id="statIssues" class="kpi-v t-accent">0</div><div class="kpi-s">recommendations not complete</div></div>
+                        <div class="kpi"><div class="kpi-k">Next service</div><div id="statNextService" class="kpi-v kpi-v-sm t-strong">-</div><div id="statNextServiceNote" class="kpi-s"></div></div>
+                    </div>
+                    <!-- stations by type, floor plans and where the site is -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-3 sm:gap-4">
+                        <div class="inset p-4 xl:col-span-4">
+                            <div class="eyebrow flex items-center gap-2 mb-2.5" style="color:#16a34a;"><span class="w-2 h-2 rounded-full" style="background:#16a34a;"></span>Stations by type</div>
                             <div id="stationTypeList" class="space-y-1.5 text-xs"></div>
                         </div>
-                    </div>
-                    <div class="inset p-4 space-y-3 xl:col-span-3">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="eyebrow flex items-center gap-2" style="color:#0891b2;"><span class="w-2 h-2 rounded-full" style="background:#0891b2;"></span>Floor Plans</span>
-                            <button type="button" onclick="openMapModal()" class="link-btn !no-underline">Open</button>
+                        <div class="inset p-4 space-y-3 xl:col-span-3">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="eyebrow flex items-center gap-2" style="color:#0891b2;"><span class="w-2 h-2 rounded-full" style="background:#0891b2;"></span>Floor Plans</span>
+                                <button type="button" onclick="openMapModal()" class="link-btn !no-underline">Open</button>
+                            </div>
+                            <div id="siteMapsList" class="space-y-2 text-xs"></div>
                         </div>
-                        <div id="siteMapsList" class="space-y-2 text-xs"></div>
-                    </div>
-                    <div class="inset overflow-hidden flex flex-col md:col-span-2 xl:col-span-5 min-h-[12rem]">
-                        <div class="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
-                            <span class="eyebrow flex items-center gap-2" style="color:#16a34a;"><span class="w-2 h-2 rounded-full" style="background:#16a34a;"></span>Location</span>
-                            <a id="siteMapsLink" href="#" target="_blank" rel="noopener" class="link-btn !no-underline">Open in Google Maps ↗</a>
+                        <div class="inset overflow-hidden flex flex-col md:col-span-2 xl:col-span-5" style="min-height:11rem;">
+                            <div class="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
+                                <span class="eyebrow flex items-center gap-2" style="color:#16a34a;"><span class="w-2 h-2 rounded-full" style="background:#16a34a;"></span>Location</span>
+                                <a id="siteMapsLink" href="#" target="_blank" rel="noopener" class="link-btn !no-underline">Open in Google Maps ↗</a>
+                            </div>
+                            <div id="siteLocation" class="relative flex-1" style="min-height:8rem;"></div>
                         </div>
-                        <div id="siteLocation" class="relative flex-1 min-h-[9rem]"></div>
                     </div>
                 </div>
             </div>
@@ -1748,7 +1779,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r36';
+        const APP_VERSION = '2026.10.18-r37';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -1756,7 +1787,7 @@
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        const REQUIRED_IDS = ["loginScreen", "headerSite", "siteSightingsList", "siteSightingsCount", "sightFilters", "siteContactBox", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "adminPage", "adminTabs", "adminTiles", "adminAttention", "adminWorkload", "adminDocsList", "adminDocSite", "adminActivityList", "adminExports", "adminSitesNoClient", "adminBtn", "profileAdminLink", "settingsAdminNote", "siteDocsList", "siteDocForm", "sitePortalAccess", "recType", "recTitle", "closeTabJob", "closePaneJob", "closePaneSign", "signBox", "reasonBox", "activityRow", "pestCountRow", "saveNextBtn", "stationDetailsTop", "stationDetailsBottom", "qtyRequired", "infoModal", "infoTitle", "infoBody", "infoFoot", "siteServicesManageBtn", "stationPhotoPreview", "stationPhotoToggle", "recPhotoToggle", "signOffReview", "signPad", "signName", "signReason", "signOffStatus", "signOffBtn", "staffProfileModal", "actionsModal", "actionsBtn", "actionsCount", "actionsList", "userFilterChips", "adminServicesList", "adminSvcSearch", "newClientServicesBtn", "siteDocsFolderBtn", "docFolder", "adminDocFolder", "siteLimitsBox", "siteLimitAddBtn", "stationZoneRow", "stationZone", "zoneOptions", "recModalSeen", "recModalNoteReq", "adminClientsList", "clientNewSites", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const REQUIRED_IDS = ["loginScreen", "headerSite", "siteSightingsList", "siteSightingsCount", "sightFilters", "siteContactBox", "siteMonogram", "siteHeroBand", "statNextService", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "adminPage", "adminTabs", "adminTiles", "adminAttention", "adminWorkload", "adminDocsList", "adminDocSite", "adminActivityList", "adminExports", "adminSitesNoClient", "adminBtn", "profileAdminLink", "settingsAdminNote", "siteDocsList", "siteDocForm", "sitePortalAccess", "recType", "recTitle", "closeTabJob", "closePaneJob", "closePaneSign", "signBox", "reasonBox", "activityRow", "pestCountRow", "saveNextBtn", "stationDetailsTop", "stationDetailsBottom", "qtyRequired", "infoModal", "infoTitle", "infoBody", "infoFoot", "siteServicesManageBtn", "stationPhotoPreview", "stationPhotoToggle", "recPhotoToggle", "signOffReview", "signPad", "signName", "signReason", "signOffStatus", "signOffBtn", "staffProfileModal", "actionsModal", "actionsBtn", "actionsCount", "actionsList", "userFilterChips", "adminServicesList", "adminSvcSearch", "newClientServicesBtn", "siteDocsFolderBtn", "docFolder", "adminDocFolder", "siteLimitsBox", "siteLimitAddBtn", "stationZoneRow", "stationZone", "zoneOptions", "recModalSeen", "recModalNoteReq", "adminClientsList", "clientNewSites", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -4332,6 +4363,17 @@
             if (h < 48) return h + ' hour' + (h === 1 ? '' : 's');
             return Math.floor(h / 24) + ' days';
         }
+        // the next contracted service due on the site (shown in the header numbers)
+        function renderNextService(c) {
+            const el = document.getElementById('statNextService'), note = document.getElementById('statNextServiceNote');
+            if (!el) return;
+            const list = getServices(c).map(sv => ({ sv, d: dueInfo(sv) })).filter(x => x.d.days !== null).sort((a, b) => a.d.days - b.d.days);
+            if (!list.length) { el.textContent = getServices(c).length ? 'Not scheduled' : 'No services'; el.style.color = ''; note.textContent = getServices(c).length ? 'No due dates set' : 'Add them under Services'; return; }
+            const x = list[0];
+            el.textContent = x.d.days < 0 ? `Overdue ${-x.d.days}d` : x.d.days === 0 ? 'Due today' : x.d.days <= 7 ? `In ${x.d.days} day${x.d.days === 1 ? '' : 's'}` : fmtDay(x.sv.nextDue);
+            el.style.color = x.d.days < 0 ? '#dc2626' : x.d.days <= 7 ? '#d97706' : '';
+            note.textContent = x.sv.type + (list.length > 1 ? ` · +${list.length - 1} more` : '');
+        }
         function updateStartServiceButton() {
             const c = selectedClient;
             if (!c) return;
@@ -4342,7 +4384,7 @@
             if (!inProgress) { line.classList.add('hidden'); line.innerHTML = ''; return; }
             const when = v ? fmtDateTimeLong(v.at) : null;
             const who = v && v.by ? teamName(v.by) : '';
-            line.className = 'mt-2';
+            line.className = 'mt-2.5 flex flex-wrap items-center gap-1.5';
             line.innerHTML = v && v.stale
                 ? `<span class="chip chip-red">⚠ Visit open for ${esc(visitAgeText(v))}</span> <span class="text-[11px] t-muted">Started ${esc(when.date)} ${esc(when.time)}${who ? ' by ' + esc(who) : ''} - complete or cancel it.</span>`
                 : `<span class="chip chip-blue">● ${esc(c.visit_type || 'Visit')} in progress</span> <span class="text-[11px] t-muted">${when ? `Started ${esc(when.date)} ${esc(when.time)}${who ? ' by ' + esc(who) : ''}` : 'Records already saved this visit'}</span>`;
@@ -7454,6 +7496,12 @@
 
             const cover = coverUrl(c);
             const wrap = document.getElementById('siteLandingImageWrap');
+            const mono = document.getElementById('siteMonogram');
+            mono.textContent = String(c.Name || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
+            mono.classList.toggle('hidden', !!cover);
+            const band = document.getElementById('siteHeroBand');
+            if (band && band.style && band.style.setProperty) band.style.setProperty('--hero-img', cover ? `url("${String(cover).replace(/"/g, '%22')}")` : 'none');
+            renderNextService(c);
             if (cover) {
                 document.getElementById('siteLandingImage').src = cover;
                 wrap.classList.remove('hidden');
