@@ -184,13 +184,28 @@
         .kpi-click .kpi-k::after { content: ' ›'; opacity: .6; }
         /* the boxes under the header: one column on phones, three across from laptop width */
         /* the site boxes: fixed height with their own scroll bar; drag ⠿ to move, the corner to resize (saved per person) */
-        .land-board { display: grid; gap: 1.5rem; grid-template-columns: minmax(0, 1fr); align-items: start; grid-auto-flow: row dense; }
-        @media (min-width: 1024px) {
-            .land-board { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-            .land-card[data-span="2"] { grid-column: span 2; }
-            .land-card[data-span="3"] { grid-column: span 3; }
+        .land-board { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; }
+        .land-board > .land-card { flex: 0 0 auto; width: 100%; }
+        /* each box's width is its share of the row (any value, set by dragging its corner); three boxes fit a row by default */
+        @media (min-width: 1024px) { .land-board > .land-card { width: calc((100% + 1.5rem) * var(--lc-f, .3333) - 1.5rem); } }
+        .land-card { position: relative; display: flex; flex-direction: column; min-width: 0; height: var(--lc-h, 40rem); padding: 1.25rem 1.25rem 1rem; container-type: inline-size; }
+        /* narrow boxes: filters, tabs and text shrink to fit */
+        @container (max-width: 380px) {
+            .lc-bar { gap: .35rem; }
+            .lc-bar .eyebrow { font-size: .58rem; letter-spacing: .1em; }
+            .land-card .tab-btn { padding: .3rem .5rem; font-size: .66rem; }
+            .land-card select.field, .land-card input.field { font-size: .7rem !important; }
+            #sightFilters select { flex: 1 1 calc(50% - .4rem); max-width: none !important; width: auto !important; }
+            #siteStationSearch { width: 100% !important; flex: 1 1 100%; }
+            .land-card .rec-mini-legend { display: none; }
+            .land-card .nf-grid { grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); gap: .5rem; }
         }
-        .land-card { position: relative; display: flex; flex-direction: column; min-width: 0; height: var(--lc-h, 40rem); padding: 1.25rem 1.25rem 1rem; }
+        @container (max-width: 260px) {
+            .land-card .nf-grid { grid-template-columns: minmax(0, 1fr); }
+            #sightFilters select { flex: 1 1 100%; }
+            .land-card .lc-bar > span, .land-card .lc-bar > div:not(#recAgeChart) { flex-wrap: wrap; }
+        }
+        @container (min-width: 700px) { .land-card .nf-grid { grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); } }
         @media (max-width: 1023px) { .land-card { height: var(--lc-hm, 34rem); padding: 1rem 1rem .85rem; } }
         .lc-head { flex-shrink: 0; display: flex; flex-direction: column; gap: .6rem; padding-bottom: .75rem; margin-bottom: .75rem; border-bottom: 1px solid var(--border); }
         .lc-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; min-height: 2rem; }
@@ -425,6 +440,19 @@
         .sm-inline, .lg-inline, .sm-flex { display: none; }
         @media (min-width: 640px) { .sm-inline { display: inline; } .sm-flex { display: inline-flex; } }
         @media (min-width: 1024px) { .lg-inline { display: inline; } }
+        /* start / end day */
+        .day-card { display: flex; align-items: center; gap: .75rem; padding: .7rem .85rem; border-radius: 1rem; border: 1px solid var(--border); background: var(--surface); box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,.06)); }
+        .day-card.on { border-color: rgba(16, 185, 129, .5); background: linear-gradient(90deg, rgba(16, 185, 129, .08), transparent 60%), var(--surface); }
+        .day-card.old { border-color: rgba(217, 119, 6, .6); background: linear-gradient(90deg, rgba(217, 119, 6, .1), transparent 60%), var(--surface); }
+        .day-ico { width: 2.3rem; height: 2.3rem; flex-shrink: 0; border-radius: .75rem; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; background: rgba(249, 115, 22, .12); color: #ea580c; }
+        .day-card.on .day-ico { background: rgba(16, 185, 129, .14); color: #10b981; }
+        .day-card.old .day-ico { background: rgba(217, 119, 6, .14); color: #d97706; }
+        .day-sites { max-height: 45vh; overflow-y: auto; display: flex; flex-direction: column; gap: .35rem; }
+        .day-sites label { display: flex; align-items: center; gap: .6rem; padding: .5rem .6rem; border-radius: .7rem; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; font-size: .75rem; }
+        .day-sites label.hidden { display: none; }
+        .day-sites input { width: 1rem; height: 1rem; accent-color: #f97316; flex-shrink: 0; }
+        .kpi-unit { font-size: .7rem; font-weight: 700; color: var(--faint); }
+        .kpi-time { margin-top: .25rem; }
         /* floor plans: top bar with a tab per plan */
         .map-top { background: var(--surface); border-bottom: 1px solid var(--border); padding: .5rem .6rem; display: flex; flex-direction: column; gap: .45rem; }
         .map-top-row { display: flex; align-items: center; gap: .45rem; min-width: 0; }
@@ -615,6 +643,7 @@
         <section id="siteSelectorSection" class="space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 class="text-2xl lg:text-3xl font-black t-strong">Site Management</h2>
+                <div id="dayBar" class="day-bar order-last w-full"></div>
                 <button type="button" onclick="openAddClientModal()" class="btn btn-primary">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                     Register New Site
@@ -721,7 +750,7 @@
                     <!-- the numbers at a glance -->
                     <div class="grid grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-3">
                         <div class="kpi kpi-click" id="kpiStations" role="button" tabindex="0" onclick="kpiOpen('stations')" onkeydown="if (event.key === 'Enter') this.click()" title="Show the station list"><div class="kpi-k">Stations</div><div id="statStations" class="kpi-v t-strong">0</div><div class="kpi-s">on this site</div></div>
-                        <div class="kpi kpi-click" id="kpiLastVisit" role="button" tabindex="0" onclick="kpiOpen('lastVisit')" onkeydown="if (event.key === 'Enter') this.click()" title="Open the last visit's report"><div class="kpi-k">Scanned last visit</div><div id="statLastVisitPct" class="kpi-v" style="color:#10b981;">-</div><div id="statLastVisitNote" class="kpi-s"></div></div>
+                        <div class="kpi kpi-click" id="kpiLastVisit" role="button" tabindex="0" onclick="kpiOpen('lastVisit')" onkeydown="if (event.key === 'Enter') this.click()" title="Open the last visit's report"><div class="kpi-k">Last visit &amp; time on site</div><div class="flex items-baseline gap-1.5"><div id="statLastVisitPct" class="kpi-v" style="color:#10b981;">-</div><span class="kpi-unit">scanned</span></div><div id="statLastVisitNote" class="kpi-s"></div><div id="statAvgTime" class="kpi-s kpi-time"></div></div>
                         <div class="kpi kpi-click" id="kpiIssues" role="button" tabindex="0" onclick="kpiOpen('issues')" onkeydown="if (event.key === 'Enter') this.click()" title="Show the open recommendations"><div class="kpi-k">Open issues</div><div id="statIssues" class="kpi-v t-accent">0</div><div class="kpi-s">recommendations not complete</div></div>
                         <div class="kpi"><div class="kpi-k">Next service</div><div id="statNextService" class="kpi-v kpi-v-sm t-strong">-</div><div id="statNextServiceNote" class="kpi-s"></div></div>
                     </div>
@@ -1137,6 +1166,11 @@
                 </div>
             </div>
 
+            <div class="border-t divider pt-5 space-y-2">
+                <h4 class="eyebrow t-accent">Photos</h4>
+                <div id="photoSizeSetting" class="space-y-1.5"></div>
+            </div>
+
             <div id="settingsAdminNote" class="hidden border-t divider pt-5 flex flex-wrap items-center justify-between gap-3">
                 <p class="text-xs t-muted">Team settings, the station form lists, staff and client access are on the Admin page.</p>
                 <button type="button" onclick="closeSettingsModal(); openAdmin('overview')" class="btn btn-secondary">🛡 Open Admin</button>
@@ -1272,7 +1306,6 @@
                 <button type="button" onclick="closeQueueModal()" class="t-faint hover:opacity-70 text-xs font-semibold cursor-pointer shrink-0">✕ Close</button>
             </div>
             <div class="flex flex-wrap gap-2">
-                <button type="button" onclick="manualSyncNow()" class="btn btn-primary !py-2">Sync Now</button>
                 <button type="button" id="queueSyncSiteBtn" onclick="backgroundSyncSite('manual'); renderQueueModal();" class="btn btn-secondary !py-2 hidden" title="Download this site's latest records">⟳ Sync Site</button>
                 <button type="button" onclick="clearSentQueue()" class="btn btn-secondary !py-2">Clear Finished Items</button>
                 <button type="button" id="exportUnsentBtn" onclick="exportUnsentData()" class="btn btn-secondary !py-2">⬇ Download Unsent Data</button>
@@ -1822,6 +1855,17 @@
         </div>
     </div>
 
+    <!-- ===================== START / END DAY ===================== -->
+    <div id="dayModal" class="hidden overlay fixed inset-0 z-50 flex flex-col justify-center items-center p-4">
+        <div class="card p-5 sm:p-7 max-w-xl w-full max-h-[90vh] overflow-y-auto scroll-thin space-y-4">
+            <div class="flex justify-between items-start gap-3">
+                <div><div class="eyebrow t-accent" id="dayModalEyebrow">Your day</div><h3 class="font-black text-lg t-strong mt-1" id="dayModalTitle"></h3></div>
+                <button type="button" id="dayModalX" onclick="closeDayModal()" class="t-faint hover:opacity-70 text-xs font-semibold cursor-pointer shrink-0">✕ Close</button>
+            </div>
+            <div id="dayModalBody" class="space-y-3 text-sm"></div>
+        </div>
+    </div>
+
     <!-- ===================== FLOOR PLAN EDITOR (draw a plan) ===================== -->
     <div id="planEditor" class="hidden fixed inset-0 flex flex-col" style="z-index:60; background: var(--bg);">
         <div class="pe-top">
@@ -2032,7 +2076,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r43';
+        const APP_VERSION = '2026.10.18-r44';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -2245,7 +2289,33 @@
         }
 
         // Shrinks a photo before it is stored/uploaded (saves phone data and device storage)
-        async function compressImage(file, maxDim = 1600, quality = 0.82) {
+        // Photo size for uploads, chosen in Settings (the phone does the shrinking, before anything is sent)
+        const PHOTO_PRESETS = {
+            original: { label: 'Original (no shrinking)', dim: 0, q: 1, size: 'as taken, often 3-6 MB' },
+            best: { label: 'Best quality', dim: 3000, q: 0.92, size: 'about 1-1.5 MB' },
+            high: { label: 'High', dim: 2048, q: 0.85, size: 'about 500-700 KB' },
+            balanced: { label: 'Balanced (recommended)', dim: 1600, q: 0.8, size: 'about 250-400 KB' },
+            small: { label: 'Small - saves data', dim: 1280, q: 0.72, size: 'about 150-250 KB' },
+            smallest: { label: 'Smallest - poor signal', dim: 960, q: 0.62, size: 'about 80-120 KB' }
+        };
+        const PHOTO_PRESET_KEY = 'pestis-photo-size';
+        function photoPreset() { const k = loadJSON(PHOTO_PRESET_KEY, 'balanced'); return Object.assign({ key: PHOTO_PRESETS[k] ? k : 'balanced' }, PHOTO_PRESETS[k] || PHOTO_PRESETS.balanced); }
+        function setPhotoPreset(k) { if (PHOTO_PRESETS[k]) saveJSON(PHOTO_PRESET_KEY, k); renderPhotoSetting(); }
+        function renderPhotoSetting() {
+            const el = document.getElementById('photoSizeSetting');
+            if (!el) return;
+            const P = photoPreset();
+            el.innerHTML = `<div class="flex flex-wrap items-center gap-2 text-xs"><label for="photoSizeSelect" class="t-muted font-semibold">Photo size</label>
+                <select id="photoSizeSelect" class="field !w-auto !py-2 cursor-pointer" onchange="setPhotoPreset(this.value)">${Object.entries(PHOTO_PRESETS).map(([k, v]) => `<option value="${k}" ${k === P.key ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select>
+                <span class="t-faint">A typical phone photo uploads at ${esc(P.size)}${P.dim ? ` (longest side ${P.dim} px)` : ''}.</span></div>
+                <p class="text-[11px] t-faint">Used for recommendation, station, site and profile photos. Floor plan pictures keep extra detail. Videos and documents upload as they are. Saved on this device.</p>`;
+        }
+        // kind: 'photo' (default), 'plan' (floor plans: keep detail) or 'avatar' (small)
+        async function compressImage(file, maxDim = 1600, quality = 0.82, kind) {
+            const P = photoPreset();
+            if (kind === 'plan') { maxDim = Math.max(2400, P.dim || 4000); quality = Math.max(0.8, Math.min(0.92, P.q)); }
+            else if (kind === 'avatar') { maxDim = Math.min(maxDim, P.dim || maxDim); }
+            else { if (!P.dim && file && /^image\/(jpeg|png|webp)$/i.test(file.type || '')) return file; if (P.dim) { maxDim = P.dim; quality = P.q; } }
             try {
                 const url = URL.createObjectURL(file);
                 const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
@@ -3312,7 +3382,7 @@
             const f = input.files && input.files[0];
             input.value = '';
             if (!f) return;
-            spPhotoBlob = await compressImage(f, 800, 0.85);
+            spPhotoBlob = await compressImage(f, 800, 0.85, 'avatar');
             document.getElementById('spPhoto').innerHTML = `<img src="${URL.createObjectURL(spPhotoBlob)}" alt="">`;
         }
         async function saveStaffProfile() {
@@ -4299,6 +4369,15 @@
                     cache.tables[table] = list.filter(r => r.id !== back.id).concat([Object.assign({}, prev || {}, back)]);
                 });
                 scheduleSiteRefresh(item.clientId);
+                return;
+            }
+
+            if (item.kind === 'day_upsert') {
+                const row = Object.assign({}, item.data.row);
+                let { data, error } = await _supabase.from('staff_days').update(row).eq('id', row.id).select('id');
+                if (!error && !(data && data.length)) ({ error } = await _supabase.from('staff_days').insert([row]));
+                if (error && /staff_days/i.test(error.message || '') && /does not exist|schema cache|could not find/i.test(error.message || '')) throw new Error('The database has no day log yet. Run pestis_client_portal.sql in the Supabase SQL editor, then tap Retry.');
+                if (error) throw error;
                 return;
             }
 
@@ -5808,6 +5887,179 @@
         let cardErrors = [];
         const txt = v => (v == null ? '' : String(v)); // database values may not be text (e.g. a phone number column)
 
+        // ===================================================================
+        //  START / END DAY: logs the working day, downloads the day's sites at the start,
+        //  and at the end uploads everything and clears this device for tomorrow
+        //  (anything that couldn't be sent is kept).
+        // ===================================================================
+        const dayKey = () => 'pestis-day-' + (currentUser && currentUser.id ? currentUser.id : 'anon');
+        function currentDay() { const d = loadJSON(dayKey(), null); return d && d.startedAt ? d : null; }
+        function saveDay(d) { if (d) saveJSON(dayKey(), d); else { try { localStorage.removeItem(dayKey()); } catch (e) {} } renderDayBar(); }
+        function hoursText(ms) { const m = Math.max(0, Math.round(ms / 60000)); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`; }
+        function renderDayBar() {
+            const el = document.getElementById('dayBar');
+            if (!el) return;
+            const d = currentDay();
+            if (!d) {
+                el.innerHTML = `<div class="day-card"><span class="day-ico">☀</span><div class="min-w-0 flex-1"><div class="font-black t-strong text-sm">Start your day</div><div class="text-[11px] t-muted">Downloads your sites so they open straight away and work offline, and logs your start time.</div></div>
+                    <button type="button" class="btn btn-primary !py-2 shrink-0" onclick="openStartDay()">▶ Start day</button></div>`;
+                return;
+            }
+            const started = new Date(d.startedAt), old = toDayStr(started) !== todayStr();
+            el.innerHTML = `<div class="day-card on ${old ? 'old' : ''}"><span class="day-ico">${old ? '⚠' : '●'}</span><div class="min-w-0 flex-1">
+                    <div class="font-black t-strong text-sm">${old ? `Your day from ${esc(started.toLocaleDateString(LOCALE, { weekday: 'short', day: 'numeric', month: 'short' }))} is still open` : `Day started ${esc(started.toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' }))}`}</div>
+                    <div class="text-[11px] t-muted">${esc(hoursText(Date.now() - started))} · ${(d.sites || []).length} site${(d.sites || []).length === 1 ? '' : 's'} saved on this device${(d.opened || []).length ? ` · ${d.opened.length} visited` : ''}</div></div>
+                <div class="flex gap-2 shrink-0">${old ? '' : `<button type="button" class="btn btn-secondary !py-2 !px-3" onclick="openStartDay(true)" title="Download the sites again">⟳<span class="sm-inline">&nbsp;Sites</span></button>`}<button type="button" class="btn btn-primary !py-2" onclick="openEndDay()">■ End day</button></div></div>`;
+        }
+        function noteDaySite(id) { const d = currentDay(); if (d && !(d.opened || []).includes(String(id))) { d.opened = (d.opened || []).concat([String(id)]); saveDay(d); } }
+        function closeDayModal() { if (dayBusy) return; document.getElementById('dayModal').classList.add('hidden'); }
+        let dayBusy = false;
+        function daySiteDefaults() {
+            const mine = currentUser ? clientsData.filter(c => c.assigned_to === currentUser.id) : [];
+            if (mine.length) return new Set(mine.map(c => String(c.id)));
+            // nobody assigned: the sites with a service due this week (or overdue)
+            return new Set(clientsData.filter(c => getServices(c).some(sv => { const d = dueInfo(sv); return d.days !== null && d.days <= 7; })).map(c => String(c.id)));
+        }
+        function openStartDay(refresh) {
+            const d = currentDay();
+            const pick = refresh && d ? new Set(d.sites || []) : daySiteDefaults();
+            document.getElementById('dayModalTitle').textContent = refresh ? 'Download your sites again' : 'Start your day';
+            const sites = clientsData.slice().sort((a, b) => (pick.has(String(b.id)) - pick.has(String(a.id))) || String(a.Name).localeCompare(String(b.Name)));
+            document.getElementById('dayModalBody').innerHTML = `
+                <p class="text-xs t-muted">${refresh ? 'Downloads the latest for these sites.' : "Pick the sites you'll work on. They're downloaded now, so they open straight away and work without signal."}</p>
+                <input type="search" class="field !py-2 !text-xs" placeholder="Find a site..." oninput="const q = this.value.toLowerCase(); document.querySelectorAll('#daySites label').forEach(l => l.classList.toggle('hidden', !l.dataset.q.includes(q)))">
+                <div class="flex items-center justify-between text-[11px]"><span id="dayPickCount" class="t-muted"></span><span class="flex gap-3"><button type="button" class="link-btn !text-[11px]" onclick="document.querySelectorAll('#daySites input').forEach(i => i.checked = true); dayPickCount()">All</button><button type="button" class="link-btn !text-[11px]" onclick="document.querySelectorAll('#daySites input').forEach(i => i.checked = false); dayPickCount()">None</button></span></div>
+                <div id="daySites" class="day-sites scroll-thin">${sites.map(c => `<label data-q="${esc(String(c.Name + ' ' + (c.Address || '')).toLowerCase())}"><input type="checkbox" value="${esc(String(c.id))}" ${pick.has(String(c.id)) ? 'checked' : ''} onchange="dayPickCount()"><span class="min-w-0"><b class="t-strong block truncate">${esc(c.Name)}</b><span class="t-faint block truncate">${esc(c.Address || '')}</span></span>${c.assigned_to && currentUser && c.assigned_to === currentUser.id ? '<span class="chip chip-orange !py-0 shrink-0">Mine</span>' : ''}</label>`).join('') || '<div class="t-faint italic text-xs p-2">No sites yet.</div>'}</div>
+                ${isOnline ? '' : `<p class="text-xs font-semibold" style="color:#d97706;">You're offline: your start time is logged now and the sites download when you're back online.</p>`}
+                <div class="flex justify-end gap-2 pt-1"><button type="button" class="btn btn-secondary" onclick="closeDayModal()">Cancel</button><button type="button" id="dayGoBtn" class="btn btn-primary" onclick="startDay(${refresh ? 'true' : 'false'})">${refresh ? '⟳ Download' : '▶ Start day'}</button></div>`;
+            dayPickCount();
+            document.getElementById('dayModal').classList.remove('hidden');
+        }
+        function dayPickCount() {
+            const n = document.querySelectorAll('#daySites input:checked').length, el = document.getElementById('dayPickCount');
+            if (el) el.textContent = `${n} site${n === 1 ? '' : 's'} picked`;
+        }
+        function queueDayRow(row, label) {
+            return enqueue({ kind: 'day_upsert', lane: 'day', clientId: null, siteName: 'Your day', label, data: { row } });
+        }
+        function dayProgressHtml(items) {
+            const icon = st => st === 'done' ? '<span style="color:#10b981;">✓</span>' : st === 'failed' ? '<span style="color:#dc2626;">✕</span>' : st === 'skipped' ? '<span class="t-faint">–</span>'
+                : st === 'active' ? '<span class="inline-block w-2.5 h-2.5 rounded-full bg-brand-500 animate-pulse"></span>' : '<span class="inline-block w-2.5 h-2.5 rounded-full" style="border:1px solid var(--border);"></span>';
+            const done = items.filter(i => i.state !== 'todo' && i.state !== 'active').length, pct = Math.round((done + items.filter(i => i.state === 'active').length * 0.4) / (items.length || 1) * 100);
+            return `<div class="flex items-center justify-between text-[11px]"><span class="t-muted font-semibold" id="dayProgText">${done === items.length ? 'Done' : 'Working…'}</span><span class="font-mono font-black t-strong">${pct}%</span></div>
+                <div class="sbar ${done === items.length ? 'done' : ''}" style="height:8px;"><i style="width:${pct}%;"></i></div>
+                <div class="space-y-2 pt-1">${items.map(i => `<div class="sync-item ${i.state === 'todo' ? 't-faint' : i.state === 'active' ? 't-strong font-bold' : 't-muted'}"><span class="flex justify-center">${icon(i.state)}</span><span class="truncate">${esc(i.label)}</span><span class="text-[10.5px] t-faint">${esc(i.note || '')}</span><div class="sbar ${i.state === 'done' ? 'done' : i.state === 'failed' ? 'fail' : i.state === 'active' ? 'ind' : ''}"><i style="width:${i.state === 'done' || i.state === 'failed' ? 100 : 0}%;"></i></div></div>`).join('')}</div>`;
+        }
+        async function startDay(refresh) {
+            const ids = Array.from(document.querySelectorAll('#daySites input:checked')).map(i => i.value);
+            const now = new Date().toISOString();
+            let d = currentDay();
+            if (!refresh || !d) {
+                d = { id: uid(), startedAt: now, sites: ids, opened: [] };
+                saveDay(d);
+                await queueDayRow({ id: d.id, technician: technicianLabel(), started_at: now, sites: ids.map(id => { const c = siteById(id); return { id, name: c ? c.Name : id }; }) }, 'Day started');
+            } else { d.sites = Array.from(new Set((d.sites || []).concat(ids))); saveDay(d); }
+            const items = ids.map(id => ({ id, label: (siteById(id) || {}).Name || id, state: 'todo', note: '' }));
+            const body = document.getElementById('dayModalBody');
+            document.getElementById('dayModalTitle').textContent = refresh ? 'Downloading your sites' : 'Getting your day ready';
+            if (!items.length || !isOnline) {
+                body.innerHTML = `<p class="text-sm t-muted">${!items.length ? 'Day started. No sites were picked to download - sites still download when you open them.' : "Day started. You're offline, so the sites will download when you open them with signal."}</p>
+                    <div class="flex justify-end"><button type="button" class="btn btn-primary" onclick="closeDayModal()">OK</button></div>`;
+                return;
+            }
+            dayBusy = true;
+            const draw = () => { body.innerHTML = dayProgressHtml(items) + `<div class="flex justify-end pt-1"><button type="button" class="btn btn-primary" ${dayBusy ? 'disabled' : ''} onclick="closeDayModal()">${dayBusy ? 'Downloading…' : 'Done'}</button></div>`; };
+            draw();
+            let next = 0;
+            const worker = async () => {
+                while (next < items.length) {
+                    const it = items[next++];
+                    it.state = 'active'; draw();
+                    try {
+                        const cache = await getSiteCache(it.id);
+                        const res = await syncSiteCache(it.id, cache ? 'auto' : 'full');
+                        it.state = 'done';
+                        it.note = `${serverRows(res.cache.rows).length.toLocaleString()} records${res.added ? ` · ${res.added} new` : ''}`;
+                    } catch (e) {
+                        it.state = 'failed'; it.note = isNetworkError(e) ? 'no connection' : 'failed';
+                        logAppError('Start day download', e);
+                    }
+                    draw();
+                }
+            };
+            await Promise.all([worker(), worker()]);
+            dayBusy = false;
+            logDownload('Start of day download', { detail: `${items.filter(i => i.state === 'done').length} of ${items.length} sites`, collapse: true });
+            draw();
+            const t = document.getElementById('dayProgText');
+            if (t) t.textContent = items.some(i => i.state === 'failed') ? 'Done - some sites will download when you open them' : `All set · ${items.length} site${items.length === 1 ? '' : 's'} saved on this device`;
+            renderSiteCards();
+        }
+        function openEndDay() {
+            const d = currentDay();
+            if (!d) return;
+            const started = Date.parse(d.startedAt);
+            const today = queueItems.filter(i => Date.parse(i.createdAt) >= started);
+            const unsent = unsentItems(), failed = unsent.filter(i => i.status === 'failed').length;
+            const fact = (k, v) => `<div class="inset p-2.5"><div class="eyebrow t-faint">${k}</div><div class="t-strong font-bold mt-0.5">${v}</div></div>`;
+            document.getElementById('dayModalTitle').textContent = 'End your day';
+            document.getElementById('dayModalBody').innerHTML = `
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    ${fact('Started', esc(new Date(started).toLocaleString(LOCALE, { weekday: 'short', hour: 'numeric', minute: '2-digit' })))}
+                    ${fact('Time', esc(hoursText(Date.now() - started)))}
+                    ${fact('Sites visited', (d.opened || []).length)}
+                    ${fact('Records saved', today.filter(i => i.kind !== 'day_upsert').length)}
+                </div>
+                <p class="text-xs t-muted">Ending your day uploads anything still waiting, logs your finish time, then clears today's uploads list and the site data saved on this device, ready for tomorrow.${unsent.length ? ` <b class="t-strong">${unsent.length} item${unsent.length === 1 ? ' is' : 's are'} still waiting to upload${failed ? ` (${failed} with problems)` : ''}</b> - anything that can't be sent is kept.` : ''}</p>
+                ${isOnline ? '' : `<p class="text-xs font-semibold" style="color:#d97706;">You're offline: uploads wait on this device and nothing that hasn't been sent is cleared.</p>`}
+                <div class="flex justify-end gap-2 pt-1"><button type="button" class="btn btn-secondary" onclick="closeDayModal()">Not yet</button><button type="button" id="dayEndBtn" class="btn btn-primary" onclick="endDay()">■ End day</button></div>`;
+            document.getElementById('dayModal').classList.remove('hidden');
+        }
+        async function endDay() {
+            const d = currentDay();
+            if (!d) return;
+            const body = document.getElementById('dayModalBody');
+            const steps = [
+                { k: 'upload', label: 'Uploading anything waiting', state: 'todo' },
+                { k: 'log', label: 'Logging your finish time', state: 'todo' },
+                { k: 'sent', label: 'Clearing finished uploads', state: 'todo' },
+                { k: 'cache', label: 'Clearing site data saved on this device', state: 'todo' }
+            ];
+            const set = (k, st, note) => { const s2 = steps.find(x => x.k === k); s2.state = st; if (note != null) s2.note = note; body.innerHTML = dayProgressHtml(steps); };
+            dayBusy = true;
+            document.getElementById('dayModalTitle').textContent = 'Ending your day';
+            try {
+                set('upload', 'active');
+                if (isOnline) { await flushQueue(); await flushQueue(); }
+                const waiting = unsentItems().length;
+                set('upload', isOnline ? 'done' : 'skipped', waiting ? `${waiting} still waiting` : 'all sent');
+                set('log', 'active');
+                const now = new Date().toISOString(), started = Date.parse(d.startedAt);
+                const recs = queueItems.filter(i => Date.parse(i.createdAt) >= started && i.kind !== 'day_upsert').length;
+                await queueDayRow({ id: d.id, technician: technicianLabel(), started_at: d.startedAt, ended_at: now, sites: (d.sites || []).map(id => { const c = siteById(id); return { id, name: c ? c.Name : id }; }),
+                    summary: { minutes: Math.round((Date.parse(now) - started) / 60000), sites_visited: (d.opened || []).map(id => { const c = siteById(id); return c ? c.Name : id; }), records: recs } }, 'Day ended');
+                if (isOnline) await flushQueue();
+                set('log', 'done', esc(hoursText(Date.parse(now) - started)));
+                set('sent', 'active');
+                const before = queueItems.filter(i => i.status === 'sent').length;
+                await clearSentQueue();
+                set('sent', 'done', `${before} cleared`);
+                set('cache', 'active');
+                if (selectedClient) backToSites();
+                let n = 0;
+                try { for (const e of (await IDB.all('cache')) || []) if (String(e.key).startsWith('site_')) { await IDB.del('cache', e.key); n++; } } catch (e) { logAppError('End of day: clearing site data', e); }
+                signedCache = {}; saveJSON(SIGNED_CACHE_KEY, signedCache); mapImgUrl.clear();
+                set('cache', 'done', `${n} site${n === 1 ? '' : 's'} cleared`);
+                saveDay(null);
+                const left = unsentItems().length;
+                body.innerHTML += `<div class="inset p-3 text-xs mt-2">${left ? `<b class="t-strong">${left} item${left === 1 ? '' : 's'} couldn't be sent</b> and ${left === 1 ? 'is' : 'are'} kept on this device - see Sync Data. ` : ''}Day ended at ${esc(new Date().toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' }))}. See you tomorrow.</div>
+                    <div class="flex justify-end pt-2"><button type="button" class="btn btn-primary" onclick="dayBusy = false; closeDayModal()">Done</button></div>`;
+            } catch (e) {
+                logAppError('End of day', e);
+                body.innerHTML += `<p class="text-xs mt-2" style="color:#dc2626;">Something went wrong: ${esc(e.message || e)}. Your day is still open - try again.</p><div class="flex justify-end pt-2"><button type="button" class="btn btn-secondary" onclick="dayBusy = false; closeDayModal()">Close</button></div>`;
+            } finally { dayBusy = false; renderSiteCards(); }
+        }
+
         function renderSiteCards() {
             const grid = document.getElementById('siteCardsGrid');
             const q = txt(document.getElementById('siteSearchInput').value).trim().toLowerCase();
@@ -5815,6 +6067,7 @@
 
             safely('Site filter', () => { if (siteFilter === null) populateSiteFilter(); });
             safely('Renewals notice', () => renderRenewalNotice());
+            safely('Day bar', () => renderDayBar());
             safely('Notifications', () => renderNotifications());
             safely('Card size', () => applyCardSize());
             const nameCls = (CARD_SIZES[cardSize] || CARD_SIZES[1]).name;
@@ -8042,12 +8295,19 @@
                 pctEl.textContent = pct + '%';
                 pctEl.style.color = pct >= 100 ? '#10b981' : pct >= 80 ? '#d97706' : '#dc2626';
                 const d = fmtDateTimeLong(lastVisitStats.visit.date);
-                note.textContent = `${lastVisitStats.scanned} of ${lastVisitStats.total} stations scanned on the last visit (${d.date})`;
+                note.textContent = `${lastVisitStats.scanned} of ${lastVisitStats.total} stations · ${d.date}`;
             } else {
                 pctEl.textContent = '-';
                 pctEl.style.color = 'var(--faint)';
                 note.textContent = total ? 'No completed visit yet.' : '';
             }
+            // average time on site over the last 10 visits that have a sign-in and sign-out
+            const mins = sitePastVisits.slice(0, 10).map(v => {
+                const a = Date.parse(v.startedAt || ''), b = Date.parse(v.endedAt || v.date || '');
+                return isNaN(a) || isNaN(b) || b <= a || b - a > 16 * 3600000 ? null : (b - a) / 60000;
+            }).filter(x => x != null);
+            const at = document.getElementById('statAvgTime');
+            if (at) at.innerHTML = mins.length ? `⏱ Avg <b class="t-strong">${esc(hoursText(mins.reduce((s2, m) => s2 + m, 0) / mins.length * 60000))}</b> on site <span class="t-faint">(${mins.length} visit${mins.length === 1 ? '' : 's'})</span>` : (sitePastVisits.length ? '⏱ Time on site not recorded yet' : '');
             renderStationTypes();
             renderVisitTypeChart();
             renderRecAgeChart();
@@ -9095,7 +9355,7 @@
                     const pr = e.prep && e.prep !== NONE_PREP ? `${e.prep} · ${fmtQty(e.qty, e.unit) || '-'}${e.batch ? ' · batch ' + e.batch : ''}` : 'None';
                     return `
                         <div class="row-item typed p-3 space-y-1" style="border-left-color:${stationColor(e.type).color};">
-                            <div class="flex flex-wrap justify-between gap-2">${stationLink(e)}<span class="t-faint">${esc(fmtDateTimeLong(e.at).time)}${e.edited ? ' · corrected' : ''}</span></div>
+                            <div class="flex flex-wrap justify-between gap-2">${stationLink(e)}<span class="t-faint">${esc(fmtDateTimeLong(e.at).time)}${e.edited ? ' · corrected' : ''}${e.payload && e.payload.addedAfterVisit ? ` · <span class="chip chip-orange !py-0">added afterwards${e.payload.addedBy ? ' by ' + esc(e.payload.addedBy) : ''}</span>` : ''}</span></div>
                             <div class="t-muted"><b class="t-strong">Activity:</b> ${esc(activityLabel(e.activity))} · <b class="t-strong">Species:</b> ${esc(sp)} · <b class="t-strong">Preparation:</b> ${esc(pr)}</div>
                             ${e.notes ? `<div class="t-muted"><b class="t-strong">Notes:</b> ${esc(e.notes)}</div>` : ''}
                             ${e.recommendation ? `<div class="t-muted">${recLink(e)} ${esc(e.recommendation)}${e.photoCount ? ` · 📷 ${e.photoCount}` : ''}</div>` : ''}
@@ -9152,7 +9412,59 @@
                                 ${e.recommendation ? `<div class="col-span-2 sm:col-span-6"><label class="lbl">${esc(fmtRecNo(e.recNo) || 'Recommendation')}</label><textarea data-f="recommendation" rows="2" class="field">${esc(e.recommendation)}</textarea></div>` : ''}
                             </div>
                         </div>`).join('') || '<span class="t-faint italic">No station records on this visit.</span>'}
+                    <div id="vAddedList" class="space-y-3"></div>
+                </div>
+                <div class="inset p-4 space-y-2.5" id="vAddBox">
+                    <span class="eyebrow t-accent">Add a missed station</span>
+                    <p class="text-[11px] t-faint">Serviced on the day but not scanned? Add it to this visit. It's marked as added afterwards, with your name.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <select id="vAddSel" class="field flex-1 !py-2" style="min-width:12rem;">${visitMissingOptions(v)}</select>
+                        <button type="button" class="btn btn-primary !py-2" onclick="visitAddMissed(document.getElementById('vAddSel').value)">+ Add</button>
+                        <button type="button" class="btn btn-secondary !py-2" onclick="visitScanMissed()">📷 Scan it</button>
+                    </div>
                 </div>`;
+        }
+        // stations not on this visit yet, for "Add a missed station"
+        function visitMissingOptions(v) {
+            const have = new Set(v.entries.filter(e => !e.recOnly).map(e => e.barcode));
+            document.querySelectorAll('#vAddedList [data-new-bc]').forEach(el => have.add(el.dataset.newBc));
+            const list = siteDevices.filter(d => !have.has(d.barcode_id)).sort((a, b) => a.locationName.localeCompare(b.locationName, LOCALE, { numeric: true }));
+            return `<option value="">${list.length ? `Choose a station (${list.length} not on this visit)...` : 'Every station is already on this visit'}</option>` + list.map(d => `<option value="${esc(d.barcode_id)}">${esc(d.locationName)} · ${esc(d.deviceType)} · ${esc(d.barcode_id)}</option>`).join('');
+        }
+        function visitAddMissed(barcode) {
+            const v = sitePastVisits[openVisitIndex];
+            if (!v || !barcode) return;
+            barcode = barcodeAliases.get(barcode) || barcode;
+            const d = siteDevices.find(x => x.barcode_id === barcode);
+            if (!d) { alert(`"${barcode}" isn't a station on this site.`); return; }
+            if (v.entries.some(e => !e.recOnly && e.barcode === barcode) || document.querySelector(`#vAddedList [data-new-bc="${cssEsc(barcode)}"]`)) { alert(`${d.locationName} is already on this visit. Correct its record above.`); return; }
+            const preps = [NONE_PREP].concat(optionLabels('prep').filter(l => l !== NONE_PREP));
+            const species = [NONE_SPECIES].concat(optionLabels('species').filter(l => l !== NONE_SPECIES));
+            const signedOut = v.endedAt || v.date;
+            const at = new Date(Math.max(Date.parse(v.startedAt || signedOut) || 0, (Date.parse(signedOut) || Date.now()) - 5 * 60000)).toISOString();
+            const box = document.createElement('div');
+            box.className = 'row-item typed p-3 space-y-2 entry-grid';
+            box.dataset.newBc = barcode;
+            box.style.borderLeftColor = stationColor(d.deviceType).color;
+            box.innerHTML = `
+                <div class="flex flex-wrap justify-between items-center gap-2"><div class="font-bold t-strong">${esc(d.locationName)} <span class="t-faint font-normal">${esc(d.deviceType)} · <span class="font-mono">${esc(barcode)}</span></span> <span class="chip chip-orange">Missed station - new</span></div>
+                    <button type="button" class="link-btn !text-[11px]" onclick="this.closest('[data-new-bc]').remove(); document.getElementById('vAddSel').innerHTML = visitMissingOptions(sitePastVisits[openVisitIndex])">Remove</button></div>
+                <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
+                    <div class="sm:col-span-2"><label class="lbl">Serviced at</label><input type="datetime-local" data-f="at" class="field" value="${esc(toLocalInput(at))}"></div>
+                    <div class="sm:col-span-2"><label class="lbl">Activity</label><select data-f="activity" class="field">${ACTIVITY_LEVELS.map(a => `<option value="${a}" ${a === 'None' ? 'selected' : ''}>${activityLabel(a)}</option>`).join('')}</select></div>
+                    <div class="sm:col-span-2"><label class="lbl">Species</label><select data-f="species" class="field">${optionsHtml(species, NONE_SPECIES)}</select></div>
+                    <div><label class="lbl">Number</label><input type="number" data-f="count" min="0" step="1" class="field"></div>
+                    <div class="sm:col-span-3"><label class="lbl">Preparation</label><select data-f="prep" class="field" onchange="visitPrepChanged(this)">${optionsHtml(preps, NONE_PREP)}</select></div>
+                    <div><label class="lbl">Qty <span data-unit class="t-accent">each</span></label><input type="number" data-f="qty" min="0" step="any" class="field"></div>
+                    <div><label class="lbl">Batch</label><input type="text" data-f="batch" class="field"></div>
+                    <div class="col-span-2 sm:col-span-6"><label class="lbl">Notes</label><input type="text" data-f="notes" class="field" placeholder="e.g. Missed on the day - checked and serviced"></div>
+                </div>`;
+            document.getElementById('vAddedList').appendChild(box);
+            document.getElementById('vAddSel').innerHTML = visitMissingOptions(v);
+            box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        function visitScanMissed() {
+            startFullscreenCameraScanner(code => { if (code) visitAddMissed(String(code).trim()); }, 'Scan the missed station');
         }
 
         // "None" reads as "No Activity" on visit reports
@@ -9230,6 +9542,28 @@
                 ['pestCount', 'quantity', 'quantityUnit', 'batchNumber'].forEach(k => { if (payload[k] == null) delete payload[k]; });
                 if (!usedPrep) { delete payload.quantity; delete payload.quantityUnit; delete payload.batchNumber; }
                 jobs.push(() => queueLog(e.barcode, payload, null, `Service record corrected · ${e.name}`));
+            }
+
+            // Missed stations added to this visit (kept inside the visit's time, marked as added afterwards)
+            for (const box of document.querySelectorAll('#visitModalBody [data-new-bc]')) {
+                const bc = box.dataset.newBc, d = siteDevices.find(x => x.barcode_id === bc);
+                if (!d) continue;
+                const val = f => { const el = box.querySelector(`[data-f="${f}"]`); return el ? el.value.trim() : ''; };
+                const prep = val('prep') || NONE_PREP, usedPrep = prep !== NONE_PREP, sp = val('species') || NONE_SPECIES;
+                if (usedPrep && !(parseFloat(val('qty')) > 0)) { alert(`${d.locationName}: enter how much ${prep} was used.`); box.querySelector('[data-f="qty"]').focus(); return; }
+                if (usedPrep && !val('batch')) { alert(`${d.locationName}: enter the batch number for ${prep}.`); box.querySelector('[data-f="batch"]').focus(); return; }
+                let t = Date.parse(fromLocalInput(val('at')) || '') || v.to;
+                t = Math.min(Math.max(t, isFinite(v.from) ? v.from + 1000 : t), v.to - 1000);   // stays inside this visit
+                const payload = {
+                    locationName: d.locationName, deviceType: d.deviceType,
+                    activityLevel: sp === NONE_SPECIES ? 'None' : (val('activity') || 'None'), speciesCaught: sp,
+                    prepUsed: prep, notes: val('notes'), technician: v.technician || me,
+                    servicedAt: new Date(t).toISOString(), addedAfterVisit: true, addedBy: me, addedAt: now
+                };
+                if (sp !== NONE_SPECIES && val('count') !== '') payload.pestCount = parseFloat(val('count'));
+                if (usedPrep) { payload.quantity = parseFloat(val('qty')); payload.quantityUnit = box.dataset.unit || prepUnit(prep); payload.batchNumber = val('batch'); }
+                jobs.push(() => queueLog(bc, payload, null, `Missed station added to visit · ${d.locationName}`));
+                jobs.push(() => queueSiteChange({ action: 'visit_edit', title: `Missed station added to the ${fmtDateTimeLong(v.date).date} visit`, station: d.locationName }, 'Missed station · log'));
             }
 
             // Visit details
@@ -10766,7 +11100,7 @@
             const file = e.target.files[0];
             e.target.value = '';
             if (!file || !pe) return;
-            const blob = await compressImage(file, 3000, 0.85);
+            const blob = await compressImage(file, 3000, 0.85, 'plan');
             const url = URL.createObjectURL(blob);
             const dims = await new Promise(res => { const i = new Image(); i.onload = () => res({ w: i.naturalWidth, h: i.naturalHeight }); i.onerror = () => res(null); i.src = url; });
             if (!dims) { alert("That file couldn't be read as a picture."); return; }
@@ -10887,7 +11221,7 @@
         document.getElementById('mapEditFile').addEventListener('change', async e => {
             const file = e.target.files[0];
             if (!file) return;
-            const blob = await compressImage(file, 3000, 0.85);
+            const blob = await compressImage(file, 3000, 0.85, 'plan');
             const url = URL.createObjectURL(blob);
             const dims = await new Promise(res => { const i = new Image(); i.onload = () => res({ w: i.naturalWidth, h: i.naturalHeight }); i.onerror = () => res(null); i.src = url; });
             if (!dims) { alert("That file couldn't be read as an image. Use a photo, screenshot or scan of the plan (JPG or PNG)."); return; }
@@ -11043,8 +11377,9 @@
             order.forEach(id => board.appendChild(cards.get(id)));
             cards.forEach((c, id) => {
                 const b = (pr.boxes || {})[id] || {};
-                c.dataset.span = String(Math.min(3, Math.max(1, parseInt(b.span) || 1)));
+                const f = b.f ? Math.min(1, Math.max(0.2, Number(b.f))) : b.span > 1 ? (b.span >= 3 ? 1 : 0.6667) : null;
                 if (c.style && c.style.setProperty) {
+                    if (f) c.style.setProperty('--lc-f', f.toFixed(4)); else c.style.removeProperty('--lc-f');
                     if (b.h) c.style.setProperty('--lc-h', b.h + 'px'); else c.style.removeProperty('--lc-h');
                     if (b.hm) c.style.setProperty('--lc-hm', b.hm + 'px'); else c.style.removeProperty('--lc-hm');
                 }
@@ -11055,8 +11390,8 @@
         function saveBoardLayout() {
             const boxes = {};
             boardCards().forEach(c => {
-                const h = parseInt(c.style.getPropertyValue('--lc-h')) || null, hm = parseInt(c.style.getPropertyValue('--lc-hm')) || null, span = parseInt(c.dataset.span) || 1;
-                if (h || hm || span > 1) boxes[c.dataset.box] = { span, h, hm };
+                const h = parseInt(c.style.getPropertyValue('--lc-h')) || null, hm = parseInt(c.style.getPropertyValue('--lc-hm')) || null, f = parseFloat(c.style.getPropertyValue('--lc-f')) || null;
+                if (h || hm || f) boxes[c.dataset.box] = { f, h, hm };
             });
             const v = { order: boardCards().map(c => c.dataset.box), boxes, savedAt: Date.now() };
             try { localStorage.setItem(boardKey(), JSON.stringify(v)); } catch (e) {}
@@ -11074,7 +11409,7 @@
             const board = document.getElementById('landBoard');
             if (!board) return;
             const cards = new Map(boardCards().map(c => [c.dataset.box, c]));
-            BOARD_IDS.forEach(id => { const c = cards.get(id); if (!c) return; board.appendChild(c); c.dataset.span = '1'; c.style.removeProperty('--lc-h'); c.style.removeProperty('--lc-hm'); });
+            BOARD_IDS.forEach(id => { const c = cards.get(id); if (!c) return; board.appendChild(c); c.style.removeProperty('--lc-f'); c.style.removeProperty('--lc-h'); c.style.removeProperty('--lc-hm'); });
             saveBoardLayout();
             equalizeLandHeads();
         }
@@ -11144,12 +11479,18 @@
         }
         function boardResize(card, handle, e0) {
             const board = card.parentNode, wide = isWideBoard(), r0 = card.getBoundingClientRect();
-            const gap = parseFloat(getComputedStyle(board).columnGap) || 24, colW = (board.clientWidth - gap * 2) / 3;
+            const gap = parseFloat(getComputedStyle(board).columnGap) || 24, full = board.clientWidth + gap;
             card.classList.add('lc-resizing'); document.body.classList.add('lc-busy');
             const move = e => {
                 const h = Math.round(Math.min(2400, Math.max(256, r0.height + e.clientY - e0.clientY)));
                 card.style.setProperty(wide ? '--lc-h' : '--lc-hm', h + 'px');
-                if (wide) card.dataset.span = String(Math.min(3, Math.max(1, Math.round((r0.width + e.clientX - e0.clientX + gap) / (colW + gap)))));
+                if (wide) {
+                    // any width; it settles on exactly a third, half, two thirds or full when it's very close, so rows line up
+                    let f = (r0.width + e.clientX - e0.clientX + gap) / full;
+                    f = Math.min(1, Math.max(0.2, f));
+                    const near = [1 / 4, 1 / 3, 1 / 2, 2 / 3, 3 / 4, 1].find(x => Math.abs(x - f) < 0.008);
+                    card.style.setProperty('--lc-f', (near || f).toFixed(4));
+                }
             };
             const up = () => {
                 window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
@@ -11164,6 +11505,7 @@
             document.getElementById('visitWorkspace').classList.add('hidden');
             document.getElementById('siteLandingDashboard').classList.remove('hidden');
             applyBoardLayout();
+            if (selectedClient) noteDaySite(selectedClient.id);
             updateStartServiceButton();
             renderLandingRecommendationsAndVisits();
             updateFab();
@@ -11383,11 +11725,11 @@
             el.textContent = text || '';
             el.classList.toggle('hidden', !text);
         }
-        async function startFullscreenCameraScanner(capture) {
+        async function startFullscreenCameraScanner(capture, scanTitle) {
             scannerCapture = typeof capture === 'function' ? capture : null;
             primeAudio();
             const title = document.getElementById('scannerTitle');
-            title.textContent = scannerCapture ? 'Scan the new barcode' : '';
+            title.textContent = scannerCapture ? (scanTitle || 'Scan the new barcode') : '';
             title.classList.toggle('hidden', !scannerCapture);
             scannerMessage('');
             document.getElementById('fullscreenScannerModal').classList.remove('hidden');
@@ -12906,6 +13248,7 @@
         function openSettingsModal() {
             document.getElementById('notifDueSelect').value = notifDueMode;
             document.getElementById('settingsAdminNote').classList.toggle('hidden', !isAdmin());
+            renderPhotoSetting();
             renderDiagnostics();
             document.getElementById('settingsModal').classList.remove('hidden');
         }
