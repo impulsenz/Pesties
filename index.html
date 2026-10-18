@@ -145,6 +145,7 @@
         .role-toggle { font-size: .7rem; font-weight: 800; padding: .3rem .65rem; border-radius: 999px; border: 1.5px solid var(--border); color: var(--muted); background: transparent; cursor: pointer; }
         .role-toggle.on { background: rgba(249,115,22,.14); border-color: #f97316; color: #ea580c; }
         html.dark .role-toggle.on { color: #fb923c; }
+        #adminProfilesList .saving { opacity: .75; }
         .role-toggle:disabled { opacity: .55; cursor: not-allowed; }
         .limit-alert { border: 2px solid #dc2626; background: rgba(220,38,38,.08); border-radius: .9rem; padding: .85rem; }
         .limit-alert-head { font-weight: 900; color: #dc2626; text-transform: uppercase; letter-spacing: .04em; font-size: .8rem; }
@@ -811,7 +812,12 @@
                             <div id="recEditorHead" class="flex flex-wrap items-center gap-1.5 flex-1"></div>
                             <button type="button" id="recEditorCancel" onclick="closeRecEditor()" class="link-btn !no-underline !text-[11px]">Cancel</button>
                         </div>
-                        <textarea id="recommendationNote" rows="3" placeholder="e.g. Seal gap around pipes, repair damaged door seal..." class="field"></textarea>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div><label class="lbl" for="recType">Type</label><select id="recType" class="field cursor-pointer"></select></div>
+                            <div class="sm:col-span-2"><label class="lbl" for="recTitle">Title <span style="color:#ef4444;">*</span></label><input id="recTitle" type="text" maxlength="120" placeholder="e.g. Seal gap under the roller door" class="field"></div>
+                        </div>
+                        <div><label class="lbl" for="recommendationNote">Description</label>
+                        <textarea id="recommendationNote" rows="3" placeholder="What's wrong, where, and what needs doing (e.g. 15 mm gap, fit a brush strip)" class="field"></textarea></div>
                         <div class="rec-media-btns">
                             <button type="button" onclick="document.getElementById('issuePhotoCamera').click()" class="btn btn-secondary !py-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Take Photo</button>
                             <button type="button" onclick="openVideoRecorder('issue')" class="btn btn-secondary !py-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 10l4.55-2.28A1 1 0 0121 8.62v6.76a1 1 0 01-1.45.9L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>Record Video</button>
@@ -1264,32 +1270,55 @@
     </div>
 
     <!-- ===================== COMPLETE VISIT ===================== -->
-    <div id="completeVisitModal" class="hidden overlay fixed inset-0 z-50 flex flex-col justify-center items-center p-4">
-        <div class="card p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto scroll-thin space-y-5">
-            <h3 class="font-black text-lg t-accent">Complete & Close Site Visit</h3>
-            <p class="text-xs t-muted">Add overall site notes or general observations before submitting the visit.</p>
-            <div id="completeUnscannedNote" class="hidden"></div>
-            <div>
-                <label class="lbl !font-bold">Visit type</label>
-                <select id="closingVisitType" class="field cursor-pointer"></select>
-            </div>
-            <div id="completeServicesSection" class="hidden space-y-2">
-                <label class="lbl !font-bold">Services completed on this visit</label>
-                <p class="text-[11px] t-faint">Ticked services have their last-done date set to today and their next due date rolled forward.</p>
-                <div id="completeServicesList" class="space-y-2"></div>
-            </div>
-            <div>
-                <label class="lbl !font-bold">Overall Site Summary Notes</label>
-                <textarea id="closingSiteNotes" rows="4" placeholder="Client was present. All exterior bait stations serviced successfully..." class="field"></textarea>
-            </div>
-            <div class="inset p-3 space-y-2">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                    <label class="lbl !font-bold !mb-0">Customer sign-off</label>
-                    <button type="button" id="signOffBtn" onclick="openSignOff()" class="btn btn-primary !py-2">✍ Customer review & sign</button>
+    <div id="completeVisitModal" class="hidden overlay fixed inset-0 z-50 flex flex-col justify-center items-center p-0 sm:p-4">
+        <div class="card !p-0 max-w-3xl w-full h-full sm:h-auto sm:max-h-[94vh] flex flex-col overflow-hidden !rounded-none sm:!rounded-[1.25rem]">
+            <div class="p-4 sm:p-5 border-b divider shrink-0">
+                <h3 class="font-black text-lg t-accent">Complete & Close Site Visit</h3>
+                <div class="flex flex-wrap gap-1.5 mt-3" role="tablist">
+                    <button type="button" id="closeTabJob" role="tab" class="tab-btn active" onclick="setCloseTab('job')">1 · Visit details</button>
+                    <button type="button" id="signOffBtn" role="tab" class="tab-btn" onclick="setCloseTab('sign')">2 · Customer review & sign</button>
                 </div>
-                <div id="signOffStatus" class="text-xs"></div>
             </div>
-            <div class="flex flex-wrap justify-end gap-2 pt-2">
+            <div class="flex-1 overflow-y-auto scroll-thin p-4 sm:p-6">
+                <div id="closePaneJob" class="space-y-5">
+                    <p class="text-xs t-muted">Add overall site notes or general observations, then go to Customer review & sign.</p>
+                    <div id="completeUnscannedNote" class="hidden"></div>
+                    <div>
+                        <label class="lbl !font-bold">Visit type</label>
+                        <select id="closingVisitType" class="field cursor-pointer"></select>
+                    </div>
+                    <div id="completeServicesSection" class="hidden space-y-2">
+                        <label class="lbl !font-bold">Services completed on this visit</label>
+                        <p class="text-[11px] t-faint">Ticked services have their last-done date set to today and their next due date rolled forward.</p>
+                        <div id="completeServicesList" class="space-y-2"></div>
+                    </div>
+                    <div>
+                        <label class="lbl !font-bold">Overall Site Summary Notes</label>
+                        <textarea id="closingSiteNotes" rows="4" placeholder="Client was present. All exterior bait stations serviced successfully..." class="field"></textarea>
+                    </div>
+                    <button type="button" class="btn btn-secondary w-full !py-3" onclick="setCloseTab('sign')">Next: customer review & sign →</button>
+                </div>
+                <div id="closePaneSign" class="hidden space-y-5">
+                    <div><div class="eyebrow t-faint mb-2">Please review today's service</div><div id="signOffReview" class="space-y-3 text-xs"></div></div>
+                    <div id="signBox" class="inset p-4 space-y-3">
+                        <div class="eyebrow t-accent">Customer signs here</div>
+                        <div><label class="lbl" for="signName">Customer name</label><input id="signName" type="text" maxlength="80" autocomplete="off" placeholder="Customer's name" class="field" oninput="renderSignOffStatus()"></div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1"><span class="lbl !mb-0">Signature</span><button type="button" class="link-btn !text-xs" onclick="clearSignPad(); renderSignOffStatus()">Clear</button></div>
+                            <canvas id="signPad" class="sign-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas>
+                            <p class="text-[11px] t-faint mt-1">By signing, the customer confirms they have seen the work, notes and preparations above.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 text-[11px] t-faint font-bold"><span class="flex-1 border-t divider"></span>OR<span class="flex-1 border-t divider"></span></div>
+                    <div id="reasonBox" class="inset p-4 space-y-2">
+                        <div class="eyebrow" style="color:#d97706;">Can't get a signature?</div>
+                        <div id="signReasonChips" class="flex flex-wrap gap-1.5"></div>
+                        <input id="signReason" type="text" maxlength="200" placeholder="Why no signature, e.g. customer not on site" class="field !text-xs" oninput="reasonChanged()">
+                    </div>
+                    <div id="signOffStatus" class="text-xs"></div>
+                </div>
+            </div>
+            <div class="p-4 sm:p-5 border-t divider shrink-0 flex flex-wrap justify-end gap-2" style="padding-bottom: max(1rem, env(safe-area-inset-bottom));">
                 <button type="button" onclick="closeCompleteVisitModal()" class="btn btn-secondary">Cancel</button>
                 <button type="button" onclick="downloadCurrentVisitReport()" class="btn btn-secondary" title="Download a report of the visit so far without submitting it">Download</button>
                 <button type="button" onclick="finalizeAndSubmitVisit(false)" class="btn btn-blue">Submit</button>
@@ -1304,37 +1333,6 @@
             <div class="flex justify-between items-start gap-3 mb-3"><h3 id="infoTitle" class="font-black text-lg t-strong break-words"></h3><button type="button" onclick="closeInfoModal()" class="icon-btn shrink-0" title="Close" aria-label="Close">✕</button></div>
             <div id="infoBody"></div>
             <div id="infoFoot" class="flex flex-wrap items-center gap-2 pt-4 mt-4 border-t divider"></div>
-        </div>
-    </div>
-
-    <!-- ===================== CUSTOMER SIGN-OFF ===================== -->
-    <div id="signOffModal" class="hidden fixed inset-0 z-[64] overlay flex justify-center items-stretch sm:items-center sm:p-6">
-        <div class="w-full sm:max-w-3xl h-full sm:h-auto sm:max-h-[94vh] flex flex-col sm:rounded-[1.25rem] overflow-hidden" style="background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);" role="dialog" aria-modal="true" aria-labelledby="signOffTitle">
-            <div class="flex justify-between items-start gap-3 p-4 sm:p-5 border-b divider shrink-0">
-                <div class="min-w-0"><div class="eyebrow t-accent">Customer sign-off</div><h3 id="signOffTitle" class="font-black text-lg t-strong break-words"></h3><div id="signOffSub" class="text-[11px] t-faint"></div></div>
-                <button type="button" onclick="closeSignOff()" class="icon-btn shrink-0" title="Close" aria-label="Close">✕</button>
-            </div>
-            <div class="flex-1 overflow-y-auto scroll-thin p-4 sm:p-6 space-y-5">
-                <div><div class="eyebrow t-faint mb-2">Please review today's service</div><div id="signOffReview" class="space-y-3 text-xs"></div></div>
-                <div class="inset p-4 space-y-3">
-                    <div class="eyebrow t-accent">Sign here</div>
-                    <div><label class="lbl" for="signName">Customer name</label><input id="signName" type="text" maxlength="80" autocomplete="name" placeholder="e.g. Jane Smith" class="field"></div>
-                    <div>
-                        <div class="flex justify-between items-center mb-1"><span class="lbl !mb-0">Signature</span><button type="button" class="link-btn !text-xs" onclick="clearSignPad()">Clear</button></div>
-                        <canvas id="signPad" class="sign-pad" aria-label="Signature pad: sign with your finger or mouse"></canvas>
-                        <p class="text-[11px] t-faint mt-1">By signing, the customer confirms they have seen the work, notes and preparations above.</p>
-                    </div>
-                </div>
-                <div class="inset p-4 space-y-2">
-                    <div class="eyebrow" style="color:#d97706;">Can't get a signature?</div>
-                    <div id="signReasonChips" class="flex flex-wrap gap-1.5"></div>
-                    <input id="signReason" type="text" maxlength="200" placeholder="Why no signature, e.g. customer not on site" class="field !text-xs" oninput="renderSignReasonChips()">
-                </div>
-            </div>
-            <div class="p-4 sm:p-5 border-t divider shrink-0 flex gap-3" style="padding-bottom: max(1rem, env(safe-area-inset-bottom));">
-                <button type="button" onclick="closeSignOff()" class="btn btn-secondary">Back</button>
-                <button type="button" id="signOffDoneBtn" onclick="saveSignOff()" class="btn btn-primary flex-1 !py-3">Done</button>
-            </div>
         </div>
     </div>
 
@@ -1695,13 +1693,13 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r28';
+        const APP_VERSION = '2026.10.18-r29';
         // after Check for updates, tidy the address bar
         try { if (/[?&]fresh=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "adminPage", "adminTabs", "adminTiles", "adminAttention", "adminWorkload", "adminDocsList", "adminDocSite", "adminActivityList", "adminExports", "adminSitesNoClient", "adminBtn", "profileAdminLink", "settingsAdminNote", "siteDocsList", "siteDocForm", "sitePortalAccess", "activityRow", "pestCountRow", "saveNextBtn", "stationDetailsTop", "stationDetailsBottom", "qtyRequired", "infoModal", "infoTitle", "infoBody", "infoFoot", "siteServicesManageBtn", "stationPhotoPreview", "stationPhotoToggle", "recPhotoToggle", "signOffModal", "signOffReview", "signPad", "signName", "signReason", "signOffStatus", "signOffBtn", "staffProfileModal", "actionsModal", "actionsBtn", "actionsCount", "actionsList", "userFilterChips", "adminServicesList", "adminSvcSearch", "newClientServicesBtn", "siteDocsFolderBtn", "docFolder", "adminDocFolder", "siteLimitsBox", "siteLimitAddBtn", "stationZoneRow", "stationZone", "zoneOptions", "recModalSeen", "recModalNoteReq", "adminClientsList", "clientNewSites", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const REQUIRED_IDS = ["loginScreen", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "adminPage", "adminTabs", "adminTiles", "adminAttention", "adminWorkload", "adminDocsList", "adminDocSite", "adminActivityList", "adminExports", "adminSitesNoClient", "adminBtn", "profileAdminLink", "settingsAdminNote", "siteDocsList", "siteDocForm", "sitePortalAccess", "recType", "recTitle", "closeTabJob", "closePaneJob", "closePaneSign", "signBox", "reasonBox", "activityRow", "pestCountRow", "saveNextBtn", "stationDetailsTop", "stationDetailsBottom", "qtyRequired", "infoModal", "infoTitle", "infoBody", "infoFoot", "siteServicesManageBtn", "stationPhotoPreview", "stationPhotoToggle", "recPhotoToggle", "signOffReview", "signPad", "signName", "signReason", "signOffStatus", "signOffBtn", "staffProfileModal", "actionsModal", "actionsBtn", "actionsCount", "actionsList", "userFilterChips", "adminServicesList", "adminSvcSearch", "newClientServicesBtn", "siteDocsFolderBtn", "docFolder", "adminDocFolder", "siteLimitsBox", "siteLimitAddBtn", "stationZoneRow", "stationZone", "zoneOptions", "recModalSeen", "recModalNoteReq", "adminClientsList", "clientNewSites", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "teamSettingsBox", "optionsAdminNote", "newPrepUnit", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -2412,32 +2410,53 @@
             const x = teamPeople().find(p => p.email === email);
             if (!x) return;
             const p = x.profile;
-            const fail = e => { alert('Could not change: ' + (e.message || e)); loadAdminPanel(); };
+            const jobs = [];   // the database changes, sent in the background
             if (kind === 'client') {
                 if (x.clientOn) {
-                    if (!confirm(`Remove ${x.name}'s Client Portal login?`)) return;
-                    const { error } = await _supabase.from('client_users').delete().eq('email', email);
-                    if (error) return fail(error);
+                    adminClients = adminClients.filter(c => c.email !== email);
+                    adminClientAccess = adminClientAccess.filter(a => a.email !== email);
+                    jobs.push(() => _supabase.from('client_users').delete().eq('email', email));
                 } else {
-                    const { error } = await _supabase.from('client_users').insert({ email, full_name: p && p.full_name ? p.full_name : null, active: true, added_by: technicianLabel() });
-                    if (error) return fail(portalMissing(error) ? new Error(PORTAL_SQL_NOTE) : error);
-                    alert(`${x.name} is now a client too. Choose the sites they can see under Client portal.`);
+                    const row = { email, full_name: p && p.full_name ? p.full_name : null, active: true, added_by: technicianLabel() };
+                    adminClients = adminClients.concat([row]);
+                    jobs.push(() => _supabase.from('client_users').insert(row));
                 }
-                return loadAdminPanel();
+            } else {
+                if (x.me) return;
+                let approved, role;
+                if (kind === 'technician') { approved = !x.staff; role = x.staff ? 'technician' : (x.admin ? 'admin' : 'technician'); }
+                else { approved = true; role = x.admin ? 'technician' : 'admin'; }
+                if (p) { Object.assign(p, { approved, role }); jobs.push(() => _supabase.from('profiles').update({ approved, role }).eq('id', p.id)); }
+                if (approved) {
+                    const al = { email: (x.allowed && x.allowed.email) || email, role };
+                    adminAllowed = adminAllowed.filter(a => String(a.email).toLowerCase() !== email).concat([al]);
+                    jobs.push(() => _supabase.from('allowed_emails').upsert(al));
+                } else if (x.allowed) {
+                    adminAllowed = adminAllowed.filter(a => String(a.email).toLowerCase() !== email);
+                    jobs.push(() => _supabase.from('allowed_emails').delete().eq('email', x.allowed.email));
+                }
             }
-            if (x.me) return;
-            if (kind === 'technician' && x.staff) {
-                if (!confirm(`Remove ${x.name}'s staff access? ${x.admin ? 'They will stop being an admin too.' : ''}`)) return;
-                if (p) { const { error } = await _supabase.from('profiles').update({ approved: false, role: 'technician' }).eq('id', p.id); if (error) return fail(error); }
-                if (x.allowed) await _supabase.from('allowed_emails').delete().eq('email', x.allowed.email);
-                return loadAdminPanel();
-            }
-            const role = kind === 'admin' ? (x.admin ? 'technician' : 'admin') : (x.admin ? 'admin' : 'technician');
-            if (kind === 'admin' && !confirm(x.admin ? `Make ${x.name} a technician? They will lose admin access.` : `Make ${x.name} an admin? Admins can manage staff, client logins, services, limits, lists, settings and documents.`)) return;
-            if (p) { const { error } = await _supabase.from('profiles').update({ approved: true, role }).eq('id', p.id); if (error) return fail(error); }
-            const { error } = await _supabase.from('allowed_emails').upsert({ email: (x.allowed && x.allowed.email) || email, role });
-            if (error && !p) return fail(error);
-            loadAdminPanel();
+            renderUsers();
+            saveRoleChanges(email, jobs);
+        }
+        // changes go one after another in the background; a failure puts the list back as the database has it
+        let roleSaveChain = Promise.resolve();
+        function saveRoleChanges(email, jobs) {
+            const row = document.querySelector(`#adminProfilesList [data-user="${cssEsc(email)}"]`);
+            if (row) row.classList.add('saving');
+            roleSaveChain = roleSaveChain.then(async () => {
+                for (const job of jobs) {
+                    const { error } = await job();
+                    if (error) throw error;
+                }
+            }).then(() => {
+                const r = document.querySelector(`#adminProfilesList [data-user="${cssEsc(email)}"]`);
+                if (r) r.classList.remove('saving');
+            }).catch(e => {
+                alert('Could not save that change for ' + email + ': ' + ((e && e.message) || e) + '\nThe list has been refreshed.');
+                roleSaveChain = Promise.resolve();
+                loadAdminPanel();
+            });
         }
         async function setUserRole(i, role) {
             const u = adminProfiles[i];
@@ -3768,15 +3787,19 @@
             if (item.kind === 'insert_rec') {
                 await uploadAllPhotos(item);
                 const row = Object.assign({}, item.data.rec, { photos: itemPhotos(item).map(p => p.path).concat(item.data.rec.photos || []).filter((v, i, a) => a.indexOf(v) === i) });
-                const { data, error } = await _supabase.from('recommendations').upsert([row], { onConflict: 'id' }).select('*');
-                if (error) throw error;
-                const back = (data && data[0]) || row;
-                if (back.rec_no != null) item.data.rec.rec_no = back.rec_no;
-                const cache = await getSiteCache(item.clientId);
-                if (cache) {
-                    cache.recs = (cache.recs || []).filter(r => r.id !== back.id).concat([back]);
-                    await saveSiteCache(item.clientId, cache);
+                let { data, error } = await _supabase.from('recommendations').upsert([row], { onConflict: 'id' }).select('*');
+                if (error && /category|details/i.test(error.message || '')) {
+                    const slim = Object.assign({}, row); delete slim.category; delete slim.details;
+                    if (row.category || row.details) slim.text = `${row.category ? '[' + row.category + '] ' : ''}${row.text}${row.details ? ' - ' + row.details : ''}`;
+                    ({ data, error } = await _supabase.from('recommendations').upsert([slim], { onConflict: 'id' }).select('*'));
                 }
+                if (error) throw error;
+                const back = Object.assign({}, row, (data && data[0]) || {});
+                if (back.rec_no != null) item.data.rec.rec_no = back.rec_no;
+                await withSiteCache(item.clientId, cache => {
+                    if (!cache) return false;
+                    cache.recs = (cache.recs || []).filter(r => r.id !== back.id).concat([back]);
+                });
                 scheduleSiteRefresh(item.clientId);
                 return;
             }
@@ -6216,7 +6239,7 @@
                 created_at: r.created_at || r.raised_at,
                 payload: {
                     recOnly: true, recRef: r.id, clientRef: r.id, recNo: r.rec_no != null ? r.rec_no : undefined,
-                    recommendation: r.text || 'Issue photo attached', locationName: r.station_name || undefined, deviceType: r.station_type || undefined,
+                    recommendation: r.text || 'Issue photo attached', recCategory: r.category || '', recDetails: r.details || '', locationName: r.station_name || undefined, deviceType: r.station_type || undefined,
                     photos: Array.isArray(r.photos) ? r.photos : [], photo: Array.isArray(r.photos) ? r.photos[0] : null,
                     technician: r.raised_by || '', servicedAt: r.raised_at
                 },
@@ -6444,6 +6467,7 @@
                         stationType: existing.deviceType,
                         barcode: row.barcode_id,
                         recommendation: recText || 'Issue photo attached',
+                        category: payload.recCategory || '', details: payload.recDetails || '',
                         photos: photos,
                         photoSlots: slotUrls,
                         allSlots: slots.map(sl => ({ path: sl.path, local: sl.local || null })),
@@ -7185,7 +7209,8 @@
                         <span class="link-btn !no-underline ml-auto">Open ▸</span>
                     </div>
                     ${station}
-                    <div class="t-muted break-words mt-1 line-clamp-2">${esc(item.recommendation)}</div>
+                    <div class="t-strong font-semibold break-words mt-1 line-clamp-2">${item.category ? `<span class="chip chip-blue !py-0 mr-1">${esc(item.category)}</span>` : ''}${esc(item.recommendation)}</div>
+                    ${item.details ? `<div class="t-muted break-words line-clamp-2">${esc(item.details)}</div>` : ''}
                     <div class="t-faint text-[11px] mt-0.5">${bits.join(' · ')}</div>
                     ${opts && opts.photos ? `<div class="rec-thumbs flex flex-wrap gap-1.5 mt-2" data-rec-thumbs="${esc(item.id)}"></div>` : ''}
                 </button>`;
@@ -7569,7 +7594,8 @@
             const ageHtml = recAgeChip(rec);
             age.outerHTML = ageHtml ? ageHtml.replace('<span class="chip', '<span id="recModalAge" class="chip') : '<span id="recModalAge" class="chip hidden"></span>';
             document.getElementById('recModalStation').textContent = rec.station + ' · ' + rec.barcode;
-            document.getElementById('recModalTitle').textContent = rec.recommendation;
+            document.getElementById('recModalTitle').innerHTML = (rec.category ? `<span class="chip chip-blue !py-0 mr-1.5 align-middle">${esc(rec.category)}</span>` : '') + esc(rec.recommendation)
+                + (rec.details ? `<div class="text-sm t-muted font-normal mt-1 whitespace-pre-line">${esc(rec.details)}</div>` : '');
             document.getElementById('recModalStatusChip').outerHTML = `<span id="recModalStatusChip" class="chip ${(REC_STATUS[rec.status] || REC_STATUS.open).cls}">${(REC_STATUS[rec.status] || REC_STATUS.open).label}</span>`;
             const dt = fmtDateTimeLong(rec.date);
             document.getElementById('recModalMeta').textContent = `Logged ${dt.date} ${dt.time}${rec.technician ? ' by ' + rec.technician : ''}`;
@@ -7915,7 +7941,7 @@
                     doc.text(`${fmtRecNo(item.recNo) || 'Recommendation'}  -  ${item.station}  -  ${stLabel}${item.status !== 'complete' && age != null ? ' (open ' + age + ' days)' : ''}${raised.has(item.id) ? '  -  raised this visit' : ''}`, 14, y);
                     y += 5;
                     doc.setFont('helvetica', 'normal');
-                    const splitRec = doc.splitTextToSize(item.recommendation, 182);
+                    const splitRec = doc.splitTextToSize(`${item.category ? '[' + item.category + '] ' : ''}${item.recommendation}${item.details ? ' - ' + item.details : ''}`, 182);
                     doc.text(splitRec, 14, y);
                     y += (splitRec.length * 5) + 2;
                     for (const u of (item.updates || []).filter(u => u.note)) {
@@ -9252,6 +9278,8 @@
                 batch: document.getElementById('batchNumber').value.trim(),
                 notes: document.getElementById('serviceNotes').value.trim(),
                 recommendation: document.getElementById('recommendationNote').value.trim(),
+                recTitle: document.getElementById('recTitle').value.trim(),
+                recType: document.getElementById('recType').value || '',
                 name: document.getElementById('newLocName').value.trim(),
                 type: document.getElementById('newDeviceType').value,
                 zone: document.getElementById('stationZone').value.trim(),
@@ -9379,6 +9407,8 @@
             currentQtyUnit = 'each';
             document.getElementById('serviceNotes').value = '';
             document.getElementById('recommendationNote').value = '';
+            document.getElementById('recTitle').value = '';
+            fillRecTypes();
             keptPhotos = [];
             clearPendingPhotos(true);
         }
@@ -9609,19 +9639,28 @@
         // ---------- Recommendations at this station: this visit's (editable) + the others (photos stream in) ----------
         let stationRecsShowAll = false;
         let recEditorOpen = false;
-        function openRecEditor() {
+        const REC_TYPES = ['Proofing', 'Housekeeping', 'Hygiene', 'Storage', 'Structural / maintenance', 'Pest activity', 'Other'];
+        function fillRecTypes(pick) {
+            const sel = document.getElementById('recType');
+            if (!(sel.options && sel.options.length)) sel.innerHTML = REC_TYPES.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+            sel.value = REC_TYPES.includes(pick) ? pick : 'Proofing';
+        }
+        function openRecEditor(prefill) {
             recEditorOpen = true;
+            fillRecTypes(prefill && prefill.type);
+            if (prefill && prefill.title && !document.getElementById('recTitle').value) document.getElementById('recTitle').value = prefill.title;
             renderRecEditor();
-            setTimeout(() => document.getElementById('recommendationNote').focus(), 30);
+            setTimeout(() => { const t = document.getElementById('recTitle'); (t.value ? document.getElementById('recommendationNote') : t).focus(); t.closest('#recEditor').scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 30);
         }
         function closeRecEditor() {
             document.getElementById('recommendationNote').value = '';
+            document.getElementById('recTitle').value = '';
             clearPendingPhotos(true);
             recEditorOpen = false;
             renderRecEditor();
         }
         function renderRecEditor() {
-            const open = recEditorOpen || !!document.getElementById('recommendationNote').value.trim() || pendingPhotos.length > 0;
+            const open = recEditorOpen || !!document.getElementById('recommendationNote').value.trim() || !!document.getElementById('recTitle').value.trim() || pendingPhotos.length > 0;
             document.getElementById('recEditor').classList.toggle('hidden', !open);
             document.getElementById('recSaveHint').classList.toggle('hidden', !open);
             document.getElementById('addRecBtn').classList.toggle('hidden', open);
@@ -9884,6 +9923,17 @@
                 return false;
             }
 
+            // High rodent activity, or insects over a critical limit: suggest a recommendation
+            const hasRec = !!(f.recTitle || f.recommendation || pendingPhotos.length);
+            const rodentHigh = f.activityLevel === 'High' && isRodentSpecies(f.speciesCaught);
+            if (!hasRec && (rodentHigh || hit.length)) {
+                const why = rodentHigh ? `High rodent activity (${f.speciesCaught}, 75-100% of bait eaten).` : `${hit[0].limit.zone} is over its critical limit for ${limitPest(hit[0].limit).toLowerCase()}.`;
+                if (confirm(`${why}\n\nAdd a recommendation for the customer?\nOK to add one, Cancel to save without.`)) {
+                    openRecEditor({ type: 'Pest activity', title: rodentHigh ? `High ${f.speciesCaught.toLowerCase()} activity - find and treat the source` : `${limitPest(hit[0].limit)} over the critical limit in ${hit[0].limit.zone}` });
+                    return false;
+                }
+            }
+
             savingStation = true;
             const btn = document.getElementById('saveServiceBtn');
             btn.disabled = true;
@@ -9914,7 +9964,7 @@
                 // Saved already this visit? This entry replaces that one
                 if (dev && dev.visitRef) payloadData.supersedes = dev.visitRef;
                 const newBlobs = pendingPhotos.map(p => p.blob);
-                const newRec = f.recommendation || newBlobs.length;
+                const newRec = f.recTitle || f.recommendation || newBlobs.length;
                 const photoBit = newBlobs.length ? ` + ${newBlobs.length} photo${newBlobs.length === 1 ? '' : 's'}` : '';
                 await queueLog(currentBarcode, payloadData, null, `Service record · ${locNameInput}`);
                 for (const x of hit) await queueSiteChange({ action: 'limit_breach', title: `Critical limit exceeded: ${x.limit.zone} · ${limitPest(x.limit)}`,
@@ -9935,7 +9985,9 @@
                     await queueRecommendation(currentBarcode, {
                         station_name: locNameInput,
                         station_type: devType,
-                        text: f.recommendation || 'Issue photo attached',
+                        text: f.recTitle || f.recommendation || 'Issue photo attached',
+                        details: f.recTitle ? (f.recommendation || null) : null,
+                        category: f.recType || null,
                         raised_at: new Date(Date.now() + 1).toISOString()
                     }, newBlobs, `New recommendation${photoBit} · ${locNameInput}`);
                 }
@@ -10138,7 +10190,8 @@
                 note.innerHTML = '';
             }
             document.getElementById('closingSiteNotes').value = '';
-            renderSignOffStatus();
+            resetSignOffForm();
+            setCloseTab('job');
             const vt = document.getElementById('closingVisitType');
             vt.innerHTML = VISIT_TYPES.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
             vt.value = (selectedClient && selectedClient.visit_type) || 'Routine Service';
@@ -10187,28 +10240,53 @@
                 visitType: f.visitType,
                 entries: currentVisitEntries.slice(),
                 recUpdates: [],
-                signedBy: signOff && signOff.blob ? signOff.name : '', signedAt: signOff && signOff.at, noSignatureReason: signOff && !signOff.blob ? signOff.reason : '',
-                signatureLocalUrl: signOff && signOff.url
+                signedBy: '', signedAt: null, noSignatureReason: '', signatureLocalUrl: null
             };
+            const got = await collectSignOff();
+            if (got.so) Object.assign(v, { signedBy: got.so.blob ? got.so.name : '', signedAt: got.so.at, noSignatureReason: got.so.blob ? '' : got.so.reason, signatureLocalUrl: got.so.url });
             try { await generatePDFReport(v); }
             catch (err) { logAppError('PDF report', err); alert('The report could not be created: ' + (err.message || err)); }
         }
 
 
         // ===================================================================
-        //  CUSTOMER SIGN-OFF: the customer reviews the notes and preparations, then signs
-        //  (or the technician records why there's no signature)
+        //  CUSTOMER SIGN-OFF (tab 2 of closing the job): the customer reviews the notes and
+        //  preparations, then signs - OR the technician records why there's no signature (never both)
         // ===================================================================
         const SIGN_REASONS = ['Not on site', 'In a meeting', 'Not available', 'Declined to sign', 'Left before the visit ended'];
-        let signOff = null;          // { name, blob, url, reason, at }
+        let signOff = null;          // set directly only by tests; the form below is the normal way in
         let signPadDrawn = false;
+        function setCloseTab(tab) {
+            const sign = tab === 'sign';
+            document.getElementById('closePaneJob').classList.toggle('hidden', sign);
+            document.getElementById('closePaneSign').classList.toggle('hidden', !sign);
+            document.getElementById('closeTabJob').classList.toggle('active', !sign);
+            document.getElementById('signOffBtn').classList.toggle('active', sign);
+            if (sign) {
+                document.getElementById('signOffReview').innerHTML = signOffReviewHtml();
+                if (!document.getElementById('signPad')._sized) setupSignPad();
+                renderSignReasonChips();
+                renderSignOffStatus();
+            }
+        }
+        function resetSignOffForm() {
+            signOff = null;
+            document.getElementById('signName').value = '';      // left blank for the customer
+            document.getElementById('signReason').value = '';
+            const cv = document.getElementById('signPad'); cv._sized = false;
+            signPadDrawn = false;
+            try { cv.getContext('2d').clearRect(0, 0, cv.width, cv.height); } catch (e) {}
+            renderSignReasonChips();
+        }
         function renderSignOffStatus() {
             const el = document.getElementById('signOffStatus');
             if (!el) return;
-            if (signOff && signOff.blob) el.innerHTML = `<div class="flex items-center gap-3"><img src="${signOff.url}" class="sign-img" alt="Customer signature" style="max-height:3rem;"><span class="t-strong font-bold">✓ Signed by ${esc(signOff.name)}</span></div>`;
-            else if (signOff && signOff.reason) el.innerHTML = `<span class="font-bold" style="color:#d97706;">No signature: ${esc(signOff.reason)}</span>`;
-            else el.innerHTML = '<span class="t-faint">Not signed yet. Show the customer the visit summary and ask them to sign, or record why they can\'t.</span>';
-            document.getElementById('signOffBtn').textContent = signOff ? '✍ Change sign-off' : '✍ Customer review & sign';
+            const reason = document.getElementById('signReason').value.trim(), name = document.getElementById('signName').value.trim();
+            document.getElementById('signBox').classList.toggle('opacity-50', !!reason);
+            document.getElementById('reasonBox').classList.toggle('opacity-50', signPadDrawn);
+            if (signPadDrawn) el.innerHTML = name ? `<span class="font-bold" style="color:#10b981;">✓ Signed by ${esc(name)}</span>` : '<span class="font-bold" style="color:#d97706;">Add the customer\'s name next to their signature.</span>';
+            else if (reason) el.innerHTML = `<span class="font-bold" style="color:#d97706;">No signature: ${esc(reason)}</span>`;
+            else el.innerHTML = '<span class="t-faint">Ask the customer to sign, or say why they can\'t.</span>';
         }
         function signOffReviewHtml() {
             const f = closingFormValues();
@@ -10218,43 +10296,36 @@
             const recs = currentVisitEntries.filter(e => e.recommendation);
             const box = (title, inner) => `<div class="row-item p-3 space-y-1.5"><div class="eyebrow t-faint">${title}</div>${inner}</div>`;
             return [
-                box('Visit', `<div class="t-strong font-bold">${esc(f.visitType)} · ${esc(technicianLabel())}</div>${f.doneTypes.length ? `<div class="t-muted">Services done: ${esc(f.doneTypes.join(', '))}</div>` : ''}`),
-                box('Technician notes', `<div class="t-strong whitespace-pre-line break-words">${f.siteNotes ? esc(f.siteNotes) : '<span class="t-faint italic">No overall notes yet - add them in the Complete box.</span>'}</div>`),
+                box('Visit', `<div class="t-strong font-bold">${esc(f.visitType)} · ${esc(technicianLabel())} · ${esc(new Date().toLocaleDateString(LOCALE, NZ_DATE))}</div>${f.doneTypes.length ? `<div class="t-muted">Services done: ${esc(f.doneTypes.join(', '))}</div>` : ''}`),
+                box('Technician notes', `<div class="t-strong whitespace-pre-line break-words">${f.siteNotes ? esc(f.siteNotes) : '<span class="t-faint italic">No overall notes yet - add them on the Visit details tab.</span>'}</div>`),
                 box(`Preparations used (${preps.size})`, preps.size ? Array.from(preps.values()).map(p => `<div><b class="t-strong">${esc(p.name)}</b> <span class="t-muted">· ${esc(fmtQty(p.qty, p.unit) || '-')} across ${p.n} station${p.n === 1 ? '' : 's'}${p.batches.size ? ' · batch ' + esc(Array.from(p.batches).join(', ')) : ''}</span></div>`).join('') : '<span class="t-faint italic">None.</span>'),
-                box(`Stations serviced (${new Set(entries.map(e => e.barcode)).size} of ${siteDevices.length})`, entries.length ? `<div class="space-y-2">${entries.map(e => {
+                box(`Stations scanned (${new Set(entries.map(e => e.barcode)).size} of ${siteDevices.length})`, entries.length ? `<div class="space-y-2">${entries.map(e => {
                     const sp = e.species && e.species !== NONE_SPECIES ? `${e.species}${e.count ? ' ×' + e.count : ''}` : 'None';
                     const pr = e.prep && e.prep !== NONE_PREP ? `${e.prep} · ${fmtQty(e.qty, e.unit) || '-'}${e.batch ? ' · batch ' + e.batch : ''}` : 'None';
                     return `<div class="border-l-4 pl-2" style="border-color:${stationColor(e.type).color};"><div class="font-bold t-strong">${esc(e.name)} <span class="t-faint font-normal">${esc(e.type)}</span></div>
-                        <div class="t-muted">Activity ${esc(activityLabel(e.activity))} · Pests ${esc(sp)} · Preparation ${esc(pr)}</div>${e.notes ? `<div class="t-strong">Notes: ${esc(e.notes)}</div>` : ''}</div>`;
+                        <div class="t-muted">Pests ${esc(sp)} · Activity ${esc(activityLabel(e.activity))} · Preparation ${esc(pr)}</div>${e.notes ? `<div class="t-strong">Notes: ${esc(e.notes)}</div>` : ''}</div>`;
                 }).join('')}</div>` : '<span class="t-faint italic">No stations recorded.</span>'),
                 recs.length ? box(`Recommendations (${recs.length})`, recs.map(e => `<div><b class="t-accent">${esc(fmtRecNo(e.recNo) || 'New')}</b> <span class="t-strong">${esc(e.recommendation)}</span> <span class="t-faint">· ${esc(e.name)}</span></div>`).join('')) : ''
             ].join('');
         }
-        function openSignOff() {
-            const c = selectedClient;
-            document.getElementById('signOffTitle').textContent = c ? c.Name : 'Visit';
-            document.getElementById('signOffSub').textContent = new Date().toLocaleDateString(LOCALE, NZ_DATE) + ' · ' + technicianLabel();
-            document.getElementById('signOffReview').innerHTML = signOffReviewHtml();
-            document.getElementById('signName').value = (signOff && signOff.name) || (c && c.Contact) || '';
-            document.getElementById('signReason').value = (signOff && !signOff.blob && signOff.reason) || '';
-            document.getElementById('signOffModal').classList.remove('hidden');
-            setupSignPad();
-            if (signOff && signOff.blob) {
-                const img = new Image();
-                img.onload = () => { const cv = document.getElementById('signPad'), r = cv.getBoundingClientRect(); cv.getContext('2d').drawImage(img, 0, 0, r.width, r.height); signPadDrawn = true; };
-                img.src = signOff.url;
-            }
-            renderSignReasonChips();
-        }
-        function closeSignOff() { document.getElementById('signOffModal').classList.add('hidden'); }
+        // kept so older shortcuts still work: open the job close at the sign-off tab
+        function openSignOff() { document.getElementById('completeVisitModal').classList.remove('hidden'); setCloseTab('sign'); }
         function renderSignReasonChips() {
             const v = document.getElementById('signReason').value.trim();
-            document.getElementById('signReasonChips').innerHTML = SIGN_REASONS.map(r => `<button type="button" class="chip ${v === r ? 'chip-orange' : 'chip-grey'} cursor-pointer" aria-pressed="${v === r}" data-r="${esc(r)}" onclick="document.getElementById('signReason').value = this.dataset.r; renderSignReasonChips()">${esc(r)}</button>`).join('');
+            document.getElementById('signReasonChips').innerHTML = SIGN_REASONS.map(r => `<button type="button" class="chip ${v === r ? 'chip-orange' : 'chip-grey'} cursor-pointer" aria-pressed="${v === r}" data-r="${esc(r)}" onclick="document.getElementById('signReason').value = this.dataset.r; reasonChanged()">${esc(r)}</button>`).join('');
+        }
+        // one or the other: a reason clears the signature, and signing clears the reason
+        function reasonChanged() {
+            if (document.getElementById('signReason').value.trim() && signPadDrawn) clearSignPad();
+            renderSignReasonChips();
+            renderSignOffStatus();
         }
         function setupSignPad() {
             const cv = document.getElementById('signPad');
             const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+            if (!r.width) return;
             cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr));
+            cv._sized = true;
             const ctx = cv.getContext('2d');
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#0c1733';
@@ -10263,32 +10334,36 @@
             cv._wired = true;
             let drawing = false, last = null;
             const pt = e => { const b = cv.getBoundingClientRect(); return { x: e.clientX - b.left, y: e.clientY - b.top }; };
-            cv.addEventListener('pointerdown', e => { drawing = true; last = pt(e); try { cv.setPointerCapture(e.pointerId); } catch (x) {} e.preventDefault(); });
+            cv.addEventListener('pointerdown', e => {
+                drawing = true; last = pt(e); try { cv.setPointerCapture(e.pointerId); } catch (x) {} e.preventDefault();
+                const reason = document.getElementById('signReason');
+                if (reason.value) { reason.value = ''; renderSignReasonChips(); }
+            });
             cv.addEventListener('pointermove', e => {
                 if (!drawing) return;
                 const p = pt(e), c2 = cv.getContext('2d');
                 c2.beginPath(); c2.moveTo(last.x, last.y); c2.lineTo(p.x, p.y); c2.stroke();
-                last = p; signPadDrawn = true; e.preventDefault();
+                last = p;
+                if (!signPadDrawn) { signPadDrawn = true; renderSignOffStatus(); }
+                e.preventDefault();
             });
-            const end = () => { drawing = false; };
+            const end = () => { if (drawing) renderSignOffStatus(); drawing = false; };
             cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end); cv.addEventListener('pointerleave', end);
         }
         function clearSignPad() { const cv = document.getElementById('signPad'); cv.getContext('2d').clearRect(0, 0, cv.width, cv.height); signPadDrawn = false; }
-        async function saveSignOff() {
+        // what the form says: { name, blob, url, reason, at } - or an error to show
+        async function collectSignOff() {
+            if (signOff) return { so: signOff };
             const name = document.getElementById('signName').value.trim(), reason = document.getElementById('signReason').value.trim();
             if (signPadDrawn) {
-                if (!name) { alert("Add the customer's name next to their signature."); document.getElementById('signName').focus(); return; }
+                if (!name) return { error: "Add the customer's name next to their signature." };
                 const blob = await new Promise(res => document.getElementById('signPad').toBlob(res, 'image/png'));
-                if (signOff && signOff.url) URL.revokeObjectURL(signOff.url);
-                signOff = { name, blob, url: URL.createObjectURL(blob), reason: '', at: new Date().toISOString() };
-            } else if (reason) {
-                if (signOff && signOff.url) URL.revokeObjectURL(signOff.url);
-                signOff = { name: '', blob: null, url: null, reason, at: new Date().toISOString() };
-            } else { alert('Ask the customer to sign, or say why there is no signature.'); return; }
-            closeSignOff();
-            renderSignOffStatus();
+                return { so: { name, blob, url: URL.createObjectURL(blob), reason: '', at: new Date().toISOString() } };
+            }
+            if (reason) return { so: { name: '', blob: null, url: null, reason, at: new Date().toISOString() } };
+            return { error: 'Get the customer to review and sign the visit, or record why they can\'t sign.' };
         }
-        function resetSignOff() { if (signOff && signOff.url) URL.revokeObjectURL(signOff.url); signOff = null; }
+        function resetSignOff() { signOff = null; }
         // a visit's signature as a picture: on this device, or from storage
         async function visitSignatureUrl(v) {
             if (!v) return null;
@@ -10306,10 +10381,11 @@
         let closingVisit = false;
         async function finalizeAndSubmitVisit(download) {
             if (closingVisit) return; // stop a double tap saving the visit twice
-            if (!signOff) { alert('Get the customer to review and sign the visit, or record why they can\'t sign.'); openSignOff(); return; }
+            const got = await collectSignOff();
+            if (got.error) { alert(got.error); setCloseTab('sign'); return; }
             closingVisit = true;
             const f = closingFormValues();
-            const so = signOff;
+            const so = got.so;
             const summaryRef = uid();
 
             // The box closes straight away so it's clear the visit has gone
