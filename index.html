@@ -148,6 +148,26 @@
         .station-photo-new { position: absolute; bottom: .25rem; right: .25rem; background: #f97316; color: #fff; font-size: .55rem; font-weight: 900; padding: .05rem .35rem; border-radius: 999px; }
         .station-thumb { width: 3.25rem; height: 3.25rem; border-radius: .6rem; overflow: hidden; background: var(--surface3); display: flex; align-items: center; justify-content: center; font-size: 1rem; opacity: .9; }
         .station-thumb img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+        /* poster cards (Recommendations and Stations boxes): the photo leads */
+        .nf-grid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); gap: .75rem; align-content: start; padding: .2rem; }
+        .nf-grid > * { margin: 0 !important; }
+        .nf-grid > :not(.nf-card) { grid-column: 1 / -1; }
+        .nf-card { display: block; width: 100%; text-align: left; border-radius: .9rem; overflow: hidden; background: var(--surface2); border: 1px solid var(--border); cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s; }
+        .nf-card:hover, .nf-card:focus-visible { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 28px rgba(0, 0, 0, .28); border-color: var(--accent, #f97316); outline: none; }
+        .nf-card.nf-done { opacity: .75; }
+        .nf-hero { position: relative; aspect-ratio: 16 / 10; background: radial-gradient(120% 90% at 30% 20%, color-mix(in srgb, var(--tc, #f97316) 45%, transparent), transparent 70%), var(--surface3); overflow: hidden; }
+        .nf-img { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .nf-img img, .nf-img video { width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
+        .nf-card:hover .nf-img img, .nf-card:hover .nf-img video { transform: scale(1.06); }
+        .nf-ph { font-size: 2rem; opacity: .55; }
+        .nf-play { position: absolute; width: 2.2rem; height: 2.2rem; border-radius: 999px; background: rgba(0, 0, 0, .55); color: #fff; display: flex; align-items: center; justify-content: center; font-size: .8rem; }
+        .nf-shade { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0, 0, 0, .85) 0%, rgba(0, 0, 0, .35) 45%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, .35) 100%); pointer-events: none; }
+        .nf-top { position: absolute; top: .4rem; left: .4rem; right: .4rem; display: flex; flex-wrap: wrap; gap: .25rem; }
+        .nf-top .chip { font-size: 9.5px; padding: .1rem .4rem; backdrop-filter: blur(4px); }
+        .nf-title { position: absolute; left: .55rem; right: .55rem; bottom: .45rem; color: #fff; font-weight: 800; font-size: .78rem; line-height: 1.2; text-shadow: 0 1px 3px rgba(0, 0, 0, .6); }
+        .nf-cat { display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #fdba74; margin-bottom: .1rem; }
+        .nf-dot { width: .55rem; height: .55rem; border-radius: 999px; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255, 255, 255, .7); }
+        .nf-meta { padding: .5rem .6rem .55rem; font-size: 11px; }
         .sign-pad { width: 100%; height: 11rem; background: #fff; border-radius: .8rem; border: 2px dashed rgba(148,163,184,.7); touch-action: none; display: block; cursor: crosshair; }
         .sign-img { background: #fff; border-radius: .6rem; padding: .25rem; max-height: 6rem; }
         .role-toggle { font-size: .7rem; font-weight: 800; padding: .3rem .65rem; border-radius: 999px; border: 1.5px solid var(--border); color: var(--muted); background: transparent; cursor: pointer; }
@@ -568,7 +588,7 @@
                             <div class="flex justify-end gap-2"><button type="button" onclick="toggleDocForm(false)" class="btn btn-secondary !py-2">Cancel</button><button type="submit" id="docUploadBtn" class="btn btn-primary !py-2">Upload</button></div>
                         </form>
                         <div id="siteDocsList" class="space-y-2 text-xs"></div>
-                        <div id="sitePortalAccess" class="text-[11px] t-faint border-t divider pt-2"></div>
+                        <div id="sitePortalAccess" class="hidden"></div>
                     </div>
                     <!-- Critical limits (also set by the client in the Client Portal) -->
                     <div class="card p-5 space-y-3 sm:col-span-3 xl:col-span-1">
@@ -597,12 +617,12 @@
                     </div>
 
                     <!-- Pest sightings reported by the client in the Client Portal -->
-                    <div class="card p-5 sm:p-6 space-y-4 min-w-0 lg:col-span-2" id="siteSightingsCard">
+                    <div class="card p-5 sm:p-6 space-y-4 min-w-0" id="siteSightingsCard">
                         <div class="flex flex-wrap items-center justify-between gap-2 border-b divider pb-3">
                             <h3 class="eyebrow flex items-center gap-2" style="color:#db2777;"><span class="w-2 h-2 rounded-full" style="background:#db2777;"></span>Pest sightings <span class="t-faint normal-case tracking-normal font-semibold">· reported by the client</span></h3>
                             <span id="siteSightingsCount" class="text-[11px] t-faint"></span>
                         </div>
-                        <div id="siteSightingsList" class="space-y-2 text-xs max-h-[26rem] overflow-y-auto scroll-thin pr-1"></div>
+                        <div id="siteSightingsList" class="space-y-2 text-xs max-h-[32rem] overflow-y-auto scroll-thin pr-1"></div>
                     </div>
 
                     <!-- Stations -->
@@ -633,7 +653,7 @@
                     </div>
 
                     <!-- Activity log -->
-                    <div class="card p-5 sm:p-6 space-y-4 min-w-0">
+                    <div class="card p-5 sm:p-6 space-y-4 min-w-0 lg:col-span-2">
                         <div class="flex flex-wrap items-center justify-between gap-2 border-b divider pb-3">
                             <h3 class="eyebrow flex items-center gap-2" style="color:#7c3aed;">
                                 <span class="w-2 h-2 rounded-full" style="background:#7c3aed;"></span>
@@ -837,7 +857,7 @@
                             <div><label class="lbl" for="recType">Type</label><select id="recType" class="field cursor-pointer"></select></div>
                             <div class="sm:col-span-2"><label class="lbl" for="recTitle">Title <span style="color:#ef4444;">*</span></label><input id="recTitle" type="text" maxlength="120" placeholder="e.g. Seal gap under the roller door" class="field"></div>
                         </div>
-                        <div><label class="lbl" for="recommendationNote">Description</label>
+                        <div><label class="lbl" for="recommendationNote">Description <span style="color:#ef4444;">*</span></label>
                         <textarea id="recommendationNote" rows="3" placeholder="What's wrong, where, and what needs doing (e.g. 15 mm gap, fit a brush strip)" class="field"></textarea></div>
                         <div class="rec-media-btns">
                             <button type="button" onclick="document.getElementById('issuePhotoCamera').click()" class="btn btn-secondary !py-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Take Photo</button>
@@ -848,6 +868,7 @@
                         <input type="file" id="issueVideoCapture" accept="video/*" capture="environment" class="hidden">
                         <input type="file" id="issuePhotoGallery" accept="image/*,video/*" multiple class="hidden">
                         <div id="photoPreviewGrid" class="flex flex-wrap gap-2"></div>
+                        <p class="text-[11px] t-faint">A title, a description and at least one photo or video <span style="color:#ef4444;">*</span> are needed for every recommendation.</p>
                     </div>
                     <button type="button" id="addRecBtn" onclick="openRecEditor()" class="btn btn-secondary w-full !py-2.5">+ Add a recommendation</button>
                     <p id="recSaveHint" class="hidden text-[11px] t-faint">Saved when you save the station below. It then appears in the list with its number.</p>
@@ -1040,6 +1061,7 @@
             </div>
             <div class="flex flex-wrap gap-2">
                 <button type="button" onclick="manualSyncNow()" class="btn btn-primary !py-2">Sync Now</button>
+                <button type="button" id="queueSyncSiteBtn" onclick="backgroundSyncSite('manual'); renderQueueModal();" class="btn btn-secondary !py-2 hidden" title="Download this site's latest records">⟳ Sync Site</button>
                 <button type="button" onclick="clearSentQueue()" class="btn btn-secondary !py-2">Clear Finished Items</button>
                 <button type="button" id="exportUnsentBtn" onclick="exportUnsentData()" class="btn btn-secondary !py-2">⬇ Download Unsent Data</button>
             </div>
@@ -1253,7 +1275,7 @@
             </section>
 
             <section data-admin-tab="exports" class="hidden card p-5 sm:p-6 space-y-4">
-                <div><span class="eyebrow" style="color:#16a34a;">Exports</span><p class="text-xs t-muted mt-1">Spreadsheets (CSV, opens in Excel) of team-wide information.</p></div>
+                <div><span class="eyebrow" style="color:#16a34a;">Exports</span><p class="text-xs t-muted mt-1">Excel spreadsheets of team-wide information.</p></div>
                 <div id="adminExports" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
             </section>
         </div>
@@ -1715,7 +1737,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r33';
+        const APP_VERSION = '2026.10.18-r34';
         // after Check for updates, tidy the address bar
         try { if (/[?&]fresh=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
         // New Zealand date style everywhere: day/month/year
@@ -2749,6 +2771,21 @@
             } catch (e) { siteDocsError = portalMissing(e) ? 'missing' : (e.message || String(e)); }
             if (siteDocsFor === id) renderSiteDocs();
         }
+        // set, change or clear a document's expiry date (the client and the team are reminded before it runs out)
+        async function setDocExpiry(id) {
+            const d = siteDocs.find(x => x.id === id);
+            if (!d || !isAdminUser()) return;
+            if (!isOnline) { alert('Expiry dates can be changed when you\'re online.'); return; }
+            const v = prompt(`Expiry date for "${d.title}" (YYYY-MM-DD).\nLeave empty for no expiry.`, d.expires_on || '');
+            if (v === null) return;
+            const val = v.trim();
+            if (val && !/^\d{4}-\d{2}-\d{2}$/.test(val) || (val && isNaN(Date.parse(val + 'T00:00:00')))) { alert('Enter the date as YYYY-MM-DD, for example 2027-06-30.'); return; }
+            const { error } = await _supabase.from('site_documents').update({ expires_on: val || null }).eq('id', id);
+            if (error) { alert('Could not change the expiry date: ' + error.message); return; }
+            d.expires_on = val || null;
+            renderSiteDocs();
+            loadBellExtras().then(renderNotifications).catch(() => {});
+        }
         function docExpiryChip(d) {
             if (!d.expires_on) return '';
             const days = Math.round((Date.parse(d.expires_on + 'T00:00:00') - Date.parse(toDayStr(new Date()) + 'T00:00:00')) / 86400000);
@@ -2774,14 +2811,24 @@
                         ${d.expires_on ? `<div class="mt-1">${docExpiryChip(d)}</div>` : ''}
                     </button>
                     ${admin ? `<div class="flex items-center gap-2 shrink-0">${siteDocFolders.length ? `<select data-id="${esc(d.id)}" onchange="moveSiteDoc(this.dataset.id, this.value)" class="field !w-auto !py-0.5 !px-1 !text-[10px]" title="Move to a folder" aria-label="Folder"><option value="">No folder</option>${siteDocFolders.map(f => `<option value="${esc(f)}" ${docFolderOf(d) === f ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select>` : ''}
+                        <button type="button" data-id="${esc(d.id)}" onclick="setDocExpiry(this.dataset.id)" class="t-faint hover:opacity-70" title="${d.expires_on ? 'Change' : 'Set'} the expiry date" aria-label="Expiry date">📅</button>
                         <button type="button" data-id="${esc(d.id)}" onclick="deleteSiteDoc(this.dataset.id)" class="t-faint hover:opacity-70 font-bold" title="Remove document" aria-label="Remove document">✕</button></div>` : ''}
                 </div>`;
+                // floor plans appear in the Maps folder automatically (they open on the floor plan)
+                const mapRows = siteMaps.map(m => `
+                <div class="row-item p-2.5 flex items-start justify-between gap-2">
+                    <button type="button" data-id="${esc(m.id)}" onclick="openMapModal({ mapId: this.dataset.id })" class="text-left min-w-0 flex-1">
+                        <div class="font-bold t-strong break-words">🗺️ ${esc(m.name)}</div>
+                        <div class="t-faint text-[11px]">Floor plan · added automatically from Floor Plans${m.pending ? ' · uploading' : ''}</div>
+                    </button></div>`);
                 const folders = siteDocFolders.map(f => {
+                    const isMaps = /^maps?$/i.test(f);
                     const inside = siteDocs.filter(d => docFolderOf(d) === f), open = openDocFolders.has(f);
+                    const extra = isMaps ? mapRows : [];
                     return `<div class="space-y-1.5"><div class="row-item p-2 flex items-center justify-between gap-2">
-                        <button type="button" data-folder="${esc(f)}" onclick="toggleDocFolder(this.dataset.folder)" class="text-left flex-1 min-w-0 font-bold t-strong flex items-center gap-2"><span>${open ? '📂' : '📁'}</span><span class="truncate">${esc(f)}</span><span class="t-faint font-normal text-[11px] shrink-0">${inside.length} file${inside.length === 1 ? '' : 's'}</span></button>
+                        <button type="button" data-folder="${esc(f)}" onclick="toggleDocFolder(this.dataset.folder)" class="text-left flex-1 min-w-0 font-bold t-strong flex items-center gap-2"><span>${open ? '📂' : '📁'}</span><span class="truncate">${esc(f)}</span><span class="t-faint font-normal text-[11px] shrink-0">${inside.length + extra.length} file${inside.length + extra.length === 1 ? '' : 's'}</span></button>
                         ${admin && !isStandardFolder(f) ? `<button type="button" data-folder="${esc(f)}" onclick="deleteDocFolder(this.dataset.folder)" class="t-faint hover:opacity-70 font-bold" title="Remove folder" aria-label="Remove folder">✕</button>` : ''}</div>
-                        ${open ? `<div class="pl-4 space-y-1.5 border-l-2 divider ml-2">${inside.map(docRow).join('') || '<span class="t-faint italic">Empty folder.</span>'}</div>` : ''}</div>`;
+                        ${open ? `<div class="pl-4 space-y-1.5 border-l-2 divider ml-2">${(extra.join('') + inside.map(docRow).join('')) || '<span class="t-faint italic">Empty folder.</span>'}</div>` : ''}</div>`;
                 }).join('');
                 const loose = siteDocs.filter(d => !docFolderOf(d) || !siteDocFolders.includes(docFolderOf(d))).map(docRow).join('');
                 box.innerHTML = (folders + loose) || `<span class="t-faint italic">No documents yet.${admin ? ' Add SDSs, insurance, agreements or maps for the client to see.' : ''}</span>`;
@@ -2792,7 +2839,7 @@
         let sitePickUsers = [], sitePickOpen = false;
         function renderSitePortalAccess() {
             const el = document.getElementById('sitePortalAccess');
-            if (!el) return;
+            if (!el || el.classList.contains('hidden')) return;   // not shown on the site page (client logins are managed in Admin)
             if (siteDocsError) { el.textContent = ''; return; }
             const manage = isAdminUser() && isOnline ? ` <button type="button" class="link-btn !text-[11px]" onclick="openSitePortalPicker()">${sitePortalUsers.length ? 'Change' : 'Choose'}</button>` : '';
             el.innerHTML = (sitePortalUsers.length
@@ -3343,48 +3390,101 @@
         function openAdminActivity(cid, rec) { goToSite(cid, rec ? () => { if (findRec(rec)) openRecModal(rec); } : null); }
 
         // ---------- Exports ----------
-        function csvDownload(name, header, rows) {
-            const cell = v => { const s = v == null ? '' : String(v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-            const blob = new Blob(['﻿' + [header].concat(rows).map(r => r.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+        // ---------- Excel (.xlsx) downloads: a small built-in writer, no extra library ----------
+        const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        const CRC_TABLE = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+        function crc32(bytes) { let c = 0xFFFFFFFF; for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+        // a .zip with the files stored as they are (an .xlsx is a zip of XML files)
+        function zipStored(files) {
+            const enc = new TextEncoder(), parts = [], central = [];
+            const d = new Date(), time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+            let offset = 0;
+            files.forEach(f => {
+                const name = enc.encode(f.name), data = typeof f.data === 'string' ? enc.encode(f.data) : f.data, crc = crc32(data);
+                const h = new DataView(new ArrayBuffer(30));
+                h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true); h.setUint16(10, time, true); h.setUint16(12, date, true);
+                h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
+                parts.push(new Uint8Array(h.buffer), name, data);
+                const c = new DataView(new ArrayBuffer(46));
+                c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true); c.setUint16(12, time, true); c.setUint16(14, date, true);
+                c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true); c.setUint16(28, name.length, true); c.setUint32(42, offset, true);
+                central.push(new Uint8Array(c.buffer), name);
+                offset += 30 + name.length + data.length;
+            });
+            const cdSize = central.reduce((n, p) => n + p.length, 0);
+            const e = new DataView(new ArrayBuffer(22));
+            e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, cdSize, true); e.setUint32(16, offset, true);
+            return new Blob(parts.concat(central, [new Uint8Array(e.buffer)]), { type: XLSX_MIME });
+        }
+        // one sheet: a bold orange header row (kept in view when scrolling), then the rows; numbers stay numbers
+        function xlsxBlob(sheetName, header, rows, widths) {
+            const x = v => String(v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+            const colName = i => { let s = ''; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
+            const cell = (v, r, c, st) => {
+                if (v == null || v === '') return '';
+                const ref = colName(c) + r, s = st ? ` s="${st}"` : '';
+                if (typeof v === 'number' && isFinite(v)) return `<c r="${ref}"${s}><v>${v}</v></c>`;
+                return `<c r="${ref}" t="inlineStr"${s}><is><t xml:space="preserve">${x(v)}</t></is></c>`;
+            };
+            const all = [header].concat(rows);
+            const data = all.map((r, i) => `<row r="${i + 1}">${r.map((v, c) => cell(v, i + 1, c, i === 0 ? 1 : 0)).join('')}</row>`).join('');
+            const cols = header.map((h, i) => `<col min="${i + 1}" max="${i + 1}" width="${Math.max(10, Math.min(80, Math.round((widths && widths[i]) || Math.max(12, String(h).length + 4))))}" customWidth="1"/>`).join('');
+            const NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main', RNS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+            const PKG = 'http://schemas.openxmlformats.org/package/2006/relationships';
+            const name = x(String(sheetName || 'Sheet1').replace(/[\[\]:*?\/\\]/g, ' ').slice(0, 31) || 'Sheet1');
+            const head = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+            return zipStored([
+                { name: '[Content_Types].xml', data: `${head}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>` },
+                { name: '_rels/.rels', data: `${head}<Relationships xmlns="${PKG}"><Relationship Id="rId1" Type="${RNS}/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+                { name: 'xl/workbook.xml', data: `${head}<workbook xmlns="${NS}" xmlns:r="${RNS}"><sheets><sheet name="${name}" sheetId="1" r:id="rId1"/></sheets></workbook>` },
+                { name: 'xl/_rels/workbook.xml.rels', data: `${head}<Relationships xmlns="${PKG}"><Relationship Id="rId1" Type="${RNS}/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="${RNS}/styles" Target="styles.xml"/></Relationships>` },
+                { name: 'xl/styles.xml', data: `${head}<styleSheet xmlns="${NS}"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFEA580C"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>` },
+                { name: 'xl/worksheets/sheet1.xml', data: `${head}<worksheet xmlns="${NS}"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${cols}</cols><sheetData>${data}</sheetData></worksheet>` }
+            ]);
+        }
+
+        function xlsxDownload(name, header, rows) {
+            const widths = header.map((h, i) => Math.min(60, Math.max(String(h).length + 2, ...rows.slice(0, 300).map(r => String(r[i] == null ? '' : r[i]).length + 2))));
+            const blob = xlsxBlob(name, header, rows, widths);
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob); a.download = `${name} - ${toDayStr(new Date())}.csv`;
+            a.href = URL.createObjectURL(blob); a.download = `${name} - ${toDayStr(new Date())}.xlsx`;
             document.body.appendChild(a); a.click(); a.remove();
             setTimeout(() => URL.revokeObjectURL(a.href), 4000);
         }
         const ADMIN_EXPORTS = {
             sites: ['Sites register', 'Every site with contact, contract, technician, services and client logins.', () => {
                 const logins = id => adminClientAccess.filter(a => String(a.client_id) === String(id)).map(a => a.email).join('; ');
-                csvDownload('Pestis sites', ['Site', 'Address', 'Contact', 'Email', 'Contract start', 'Contract end', 'Assigned technician', 'Services', 'Next due', 'Client logins'],
+                xlsxDownload('Pestis sites', ['Site', 'Address', 'Contact', 'Email', 'Contract start', 'Contract end', 'Assigned technician', 'Services', 'Next due', 'Client logins'],
                     clientsData.map(c => { const sv = getServices(c); const next = sv.map(x => x.nextDue).filter(Boolean).sort()[0];
                         return [c.Name, c.Address, c.Contact, c.Email, c.contract_start || '', c.contract_end || '', c.assigned_to ? teamName(c.assigned_to) : '', sv.map(x => `${x.type} (${freqLabel(x.frequency)})`).join('; '), next ? fmtDay(next) : '', logins(c.id)]; }));
             }],
             recs: ['Outstanding recommendations', 'Every open or pending recommendation across all sites.', () => {
-                csvDownload('Pestis outstanding recommendations', ['Number', 'Site', 'Station', 'Barcode', 'Recommendation', 'Status', 'Raised', 'Raised by', 'Days open'],
+                xlsxDownload('Pestis outstanding recommendations', ['Number', 'Site', 'Station', 'Barcode', 'Recommendation', 'Status', 'Raised', 'Raised by', 'Days open'],
                     adminData.recs.slice().sort((a, b) => (a.raised_at > b.raised_at ? 1 : -1)).map(r => [fmtRecNo(r.rec_no), siteById(r.client_id) ? siteById(r.client_id).Name : r.client_id, r.station_name, r.station_barcode, r.text, r.status,
                         fmtDay(String(r.raised_at || '').slice(0, 10)), r.raised_by, Math.floor((Date.now() - Date.parse(r.raised_at)) / 86400000)]));
             }],
             services: ['Service schedule', 'Every contracted service with when it was last done and next due.', () => {
                 const rows = [];
                 clientsData.forEach(c => getServices(c).forEach(sv => { const d = dueInfo(sv); rows.push([c.Name, sv.type, freqLabel(sv.frequency), sv.lastDone ? fmtDay(sv.lastDone) : '', sv.nextDue ? fmtDay(sv.nextDue) : '', d.text, c.assigned_to ? teamName(c.assigned_to) : '']); }));
-                csvDownload('Pestis service schedule', ['Site', 'Service', 'Frequency', 'Last done', 'Next due', 'Status', 'Technician'], rows);
+                xlsxDownload('Pestis service schedule', ['Site', 'Service', 'Frequency', 'Last done', 'Next due', 'Status', 'Technician'], rows);
             }],
             documents: ['Documents register', 'Every site document with type and expiry.', () => {
-                csvDownload('Pestis documents', ['Site', 'Document', 'Type', 'File', 'Added', 'Added by', 'Expires'],
+                xlsxDownload('Pestis documents', ['Site', 'Document', 'Type', 'File', 'Added', 'Added by', 'Expires'],
                     adminData.docs.map(d => [siteById(d.client_id) ? siteById(d.client_id).Name : d.client_id, d.title, d.category, d.file_name, fmtDay(String(d.created_at || '').slice(0, 10)), d.uploaded_by, d.expires_on ? fmtDay(d.expires_on) : '']));
             }],
             clients: ['Client logins', 'Who can sign in to the Client Portal and which sites they see.', () => {
-                csvDownload('Pestis client logins', ['Name', 'Company', 'Email', 'Status', 'Sites', 'Last signed in'],
+                xlsxDownload('Pestis client logins', ['Name', 'Company', 'Email', 'Status', 'Sites', 'Last signed in'],
                     adminClients.map(u => [u.full_name, u.company, u.email, u.active ? 'Active' : 'Paused', clientSitesOf(u.email).map(siteLabel).join('; '), u.last_seen_at ? fmtDay(String(u.last_seen_at).slice(0, 10)) : 'Never']));
             }],
             staff: ['Staff', 'Everyone with a staff account, their role and sites assigned.', () => {
-                csvDownload('Pestis staff', ['Name', 'Email', 'Role', 'Approved', 'Sites assigned'],
+                xlsxDownload('Pestis staff', ['Name', 'Email', 'Role', 'Approved', 'Sites assigned'],
                     adminProfiles.map(u => [u.full_name, u.email, u.role, u.approved ? 'Yes' : 'Waiting', clientsData.filter(c => c.assigned_to === u.id).length]));
             }]
         };
         function renderAdminExports() {
             document.getElementById('adminExports').innerHTML = Object.entries(ADMIN_EXPORTS).map(([k, [title, desc]]) => `
                 <div class="row-item p-4 flex items-center justify-between gap-3"><div class="min-w-0"><div class="font-bold t-strong">${title}</div><div class="t-muted text-xs">${desc}</div></div>
-                <button type="button" onclick="ADMIN_EXPORTS['${k}'][2]()" class="btn btn-secondary shrink-0">⬇ CSV</button></div>`).join('');
+                <button type="button" onclick="ADMIN_EXPORTS['${k}'][2]()" class="btn btn-secondary shrink-0">⬇ Excel</button></div>`).join('');
         }
 
         // ===================================================================
@@ -4207,6 +4307,7 @@
             await queueClientUpdate(c, { visit_started_at: new Date().toISOString(), visit_started_by: currentUser ? currentUser.id : null, visit_type: type || 'Routine Service' }, `Visit started (${type || 'Routine Service'})`, null, 'visit');
             renderSiteCards();
             renderNotifications();
+            if (c === selectedClient) updateStartServiceButton();   // Continue Service, visit in progress
         }
         async function markVisitClosed(c, label) {
             if (!c || (!c.visit_started_at && !c.visit_started_by && !c.visit_type)) return;
@@ -4249,6 +4350,8 @@
         // ---------- Queue viewer ----------
         function openQueueModal() {
             document.getElementById('queueModal').classList.remove('hidden');
+            const sb = document.getElementById('queueSyncSiteBtn');
+            if (sb) { sb.classList.toggle('hidden', !selectedClient); sb.disabled = !isOnline; sb.textContent = selectedClient ? `⟳ Sync Site · ${selectedClient.Name || 'this site'}` : '⟳ Sync Site'; }
             renderQueueModal();
         }
         function closeQueueModal() {
@@ -7007,7 +7110,14 @@
                     ${canEdit ? `<div class="flex gap-3 text-[11px]"><button type="button" class="link-btn" data-id="${esc(l.id)}" onclick="editSiteLimit(this.dataset.id)">Edit</button><button type="button" class="font-bold" style="color:#ef4444;" data-id="${esc(l.id)}" onclick="deleteSiteLimit(this.dataset.id)">Remove</button></div>` : ''}
                 </div>`;
             };
-            box.innerHTML = (limitEditing === 'new' ? limitFormHtml(null) : '') + (sorted.map(row).join('') ||
+            // areas with limits but no stations (e.g. renamed before stations followed): link them to the stations' area
+            const stationAreas = new Map(); siteStations.forEach(st => { const z = String(st.zone || '').trim(); if (z) stationAreas.set(zoneKey(z), z); });
+            const limitAreas = new Map(); siteLimits.forEach(l => limitAreas.set(zoneKey(l.zone), l.zone));
+            const unlinkedStations = Array.from(stationAreas.entries()).filter(([k]) => !limitAreas.has(k)).map(([, z]) => z);
+            const orphans = Array.from(limitAreas.entries()).filter(([k]) => !stationAreas.has(k)).map(([, z]) => z);
+            const linkHtml = canEdit && orphans.length ? orphans.map(z => `<div class="inset p-2.5 space-y-1.5" style="border-color:#d97706;"><div class="font-bold" style="color:#d97706;">⚠ No stations are in "${esc(z)}"</div>
+                ${unlinkedStations.length ? `<div class="flex flex-wrap items-center gap-1.5"><span class="t-muted">Its stations are in:</span><select class="field !w-auto !py-1 !text-[11px]" data-area="${esc(z)}" onchange="if (this.value) linkLimitArea(this.value, this.dataset.area)"><option value="">Pick their area...</option>${unlinkedStations.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('')}</select></div>` : '<div class="t-faint">Give its stations this area in their station details.</div>'}</div>`).join('') : '';
+            box.innerHTML = linkHtml + (limitEditing === 'new' ? limitFormHtml(null) : '') + (sorted.map(row).join('') ||
                 (limitEditing ? '' : `<span class="t-faint italic">No critical limits yet.${isAdmin() ? ' Give insect stations a critical limits area, then set how many of a pest each area may have in a month.' : ' An admin (or the client) sets them.'}</span>`)) +
                 (!isAdmin() && siteLimits.length ? '<div class="t-faint text-[11px]">Only an admin can change critical limits.</div>' : '') +
                 (!isOnline && siteLimits.length ? '<div class="t-faint text-[11px]">Limits can be changed when you\'re online.</div>' : '');
@@ -7062,6 +7172,16 @@
                 rows.push({ id: r.dataset.id || null, species, max });
             }
             return rows.length ? { rows } : { error: 'Add at least one pest and its monthly limit.' };
+        }
+        // stations in one area name, limits in another: move the stations into the limits' area (one area again)
+        async function linkLimitArea(stationArea, limitArea) {
+            const c = selectedClient;
+            if (!c || !confirm(`Move the stations in "${stationArea}" into "${limitArea}"?\n\nThey then count towards ${limitArea}'s critical limits, here and in the Client Portal.`)) { renderSiteLimits(); return; }
+            const { error } = await _supabase.rpc('portal_rename_zone', { p_client_id: String(c.id), p_old: stationArea, p_new: limitArea });
+            if (error) { alert('Could not link the area: ' + (portalMissing(error) ? PORTAL_SQL_NOTE : error.message)); renderSiteLimits(); return; }
+            await withSiteCache(c.id, cache => { if (!cache || !cache.tables) return false; (cache.tables.stations || []).forEach(r => { if (zoneKey(r.zone) === zoneKey(stationArea)) r.zone = limitArea; }); });
+            await queueSiteChange({ action: 'limit', title: `Critical limits area linked: ${stationArea} → ${limitArea}`, detail: '' });
+            await reloadSiteLimits();
         }
         function editSiteLimit(id) { if (id && !isAdmin()) return; limitEditing = id; renderSiteLimits(); const z = document.getElementById('limZone'); if (z && id === 'new') z.focus(); }
         async function reloadSiteLimits() {
@@ -7411,6 +7531,39 @@
                 </button>`;
         }
 
+        // A recommendation as a poster card: its photo first, the title over it
+        function recCardHtml(item) {
+            const dateStr = item.date ? new Date(item.date).toLocaleDateString(LOCALE, NZ_DATE) : '';
+            const col = stationColor(item.stationType).color;
+            return `
+                <button type="button" data-rec="${esc(item.id)}" onclick="openRecModal(this.dataset.rec, this)" class="nf-card ${item.status === 'complete' ? 'nf-done' : ''}">
+                    <div class="nf-hero" style="--tc:${col};">
+                        <div class="nf-img" data-rec-hero="${esc(item.id)}">${(item.allSlots || []).length ? '' : `<span class="nf-ph">📋</span>`}</div>
+                        <div class="nf-shade"></div>
+                        <div class="nf-top">${recNumberHtml(item)}${recStatusChip(item.status)}${item.thisVisit ? '<span class="chip chip-green">This visit</span>' : ''}</div>
+                        <div class="nf-title">${item.category ? `<span class="nf-cat">${esc(item.category)}</span>` : ''}<span class="line-clamp-2">${esc(item.recommendation)}</span></div>
+                    </div>
+                    <div class="nf-meta">
+                        <div class="flex items-center gap-1.5 t-accent font-semibold truncate">${typeDot(item.stationType, '.55rem')}<span class="truncate">${esc(item.station)}</span></div>
+                        <div class="flex flex-wrap items-center gap-1 mt-1">${recAgeChip(item)}<span class="t-faint text-[10px]">${esc(dateStr)}${item.photoCount > 1 ? ' · 📷 ' + item.photoCount : ''}</span></div>
+                    </div>
+                </button>`;
+        }
+        async function streamRecHeroes(container, recs) {
+            const withPhotos = recs.filter(r => (r.allSlots || []).length);
+            if (!withPhotos.length) return;
+            const remote = withPhotos.map(r => r.allSlots[0]).filter(sl => !sl.local).map(sl => sl.path);
+            const fill = links => withPhotos.forEach(r => {
+                const box = container.querySelector(`[data-rec-hero="${cssEsc(r.id)}"]`);
+                if (!box) return;
+                const sl = r.allSlots[0], u = sl.local || (links && links.get(sl.path));
+                box.innerHTML = u ? (isVideoUrl(u) || sl.video ? `<video src="${esc(u)}#t=0.1" muted playsinline preload="metadata"></video><span class="nf-play">▶</span>` : `<img src="${esc(u)}" alt="" loading="lazy">`)
+                    : `<span class="nf-ph" title="${isOnline ? 'Photo unavailable' : 'Shows when online'}">📷</span>`;
+            });
+            if (!remote.length || !isOnline) { fill(null); return; }
+            try { fill(await withSyncBadge('photos', 'Loading photos...', () => getSignedUrls(remote))); } catch (e) { fill(null); }
+        }
+
         // Donut: open recommendations by how long they've been open (ordinal blue ramp)
         function renderRecAgeChart() {
             const el = document.getElementById('recAgeChart');
@@ -7475,10 +7628,11 @@
             const shown = recFilter === 'all' ? allRecs : allRecs.filter(r => (r.status === 'new' ? 'open' : r.status) === recFilter);
             const emptyText = { open: 'No open recommendations.', pending: 'Nothing pending.', complete: 'No completed recommendations yet.', all: 'No recommendations on record for this site.' };
             document.getElementById('recPhotoToggle').innerHTML = photoToggleHtml(showRecPhotos, 'setRecPhotos', 'recommendation photos');
+            recsContainer.classList.toggle('nf-grid', showRecPhotos && shown.length > 0);
             recsContainer.innerHTML = shown.length
-                ? recNumbersNotice() + shown.map(r => recRowHtml(r, showRecPhotos ? { photos: true } : null)).join('')
+                ? recNumbersNotice() + shown.map(r => showRecPhotos ? recCardHtml(r) : recRowHtml(r)).join('')
                 : `<span class="t-faint italic">${emptyText[recFilter]}</span>`;
-            if (showRecPhotos && shown.length) streamRecThumbs(recsContainer, shown);
+            if (showRecPhotos && shown.length) streamRecHeroes(recsContainer, shown);
 
             if (sitePastVisits.length === 0) {
                 visitsContainer.innerHTML = '<span class="t-faint italic">No past visit history recorded yet.</span>';
@@ -7576,7 +7730,7 @@
 
         // ---------- your choice: photos in the Stations and Recommendations boxes ----------
         const STATION_PHOTOS_KEY = 'pestis-show-station-photos', REC_PHOTOS_KEY = 'pestis-show-rec-photos';
-        let showStationPhotos = !!loadJSON(STATION_PHOTOS_KEY, false), showRecPhotos = !!loadJSON(REC_PHOTOS_KEY, false);
+        let showStationPhotos = !!loadJSON(STATION_PHOTOS_KEY, true), showRecPhotos = !!loadJSON(REC_PHOTOS_KEY, true);
         function setStationPhotos(on) { showStationPhotos = !!on; saveJSON(STATION_PHOTOS_KEY, showStationPhotos); renderSiteStationList(); }
         function setRecPhotos(on) { showRecPhotos = !!on; saveJSON(REC_PHOTOS_KEY, showRecPhotos); renderLandingRecommendationsAndVisits(); }
         const photoToggleHtml = (on, fn, label) => `<button type="button" class="tab-btn photo-toggle ${on ? 'active' : ''}" aria-pressed="${on}" onclick="${fn}(${!on})" title="${on ? 'Hide' : 'Show'} ${label}">📷 ${on ? 'Photos on' : 'Photos off'}</button>`;
@@ -7603,7 +7757,29 @@
                 .filter(d => !q || d.locationName.toLowerCase().includes(q) || d.barcode_id.toLowerCase().includes(q))
                 .sort((a, b) => a.locationName.localeCompare(b.locationName, LOCALE, { numeric: true }));
             document.getElementById('stationPhotoToggle').innerHTML = photoToggleHtml(showStationPhotos, 'setStationPhotos', 'station photos');
+            el.classList.toggle('nf-grid', showStationPhotos && list.length > 0);
             if (!list.length) { el.innerHTML = `<span class="t-faint italic">${siteDevices.length ? 'No stations match.' : 'No stations recorded yet.'}</span>`; return; }
+            if (showStationPhotos) {
+                el.innerHTML = list.map(d => {
+                    const last = lastServiceOf(d), lt = last ? fmtDateTimeLong(last.at) : null, openN = openRecCount(d), col = stationColor(d.deviceType).color;
+                    const pin = sitePins.get(d.barcode_id), plan = pin && pin.mapId ? (siteMaps.find(m => m.id === pin.mapId) || {}).name : '';
+                    return `
+                    <div data-barcode="${esc(d.barcode_id)}" onclick="openStationOverview(this.dataset.barcode)" onkeydown="if (event.key === 'Enter') this.click()" role="button" tabindex="0" class="nf-card">
+                        <div class="nf-hero" style="--tc:${col};">
+                            <div class="nf-img" data-st-photo="${esc(d.barcode_id)}">${(siteStations.get(d.barcode_id) || {}).photo_path ? '' : `<span class="nf-ph">📍</span>`}</div>
+                            <div class="nf-shade"></div>
+                            <div class="nf-top">${openN ? `<span class="chip chip-orange">${openN} open</span>` : ''}${plan ? `<span class="chip chip-grey">📍 ${esc(plan)}</span>` : ''}</div>
+                            <div class="nf-title flex items-center gap-1.5"><span class="nf-dot" style="background:${col};"></span><span class="line-clamp-2">${esc(d.locationName)}</span></div>
+                        </div>
+                        <div class="nf-meta">
+                            <div class="t-muted truncate">${esc(d.deviceType)} · <span class="font-mono t-accent">${esc(d.barcode_id)}</span></div>
+                            <div class="t-faint text-[10px] mt-0.5 truncate">${lt ? `Serviced ${esc(lt.date)} · ${esc(last.activity === 'Caught' ? 'insects caught' : last.activity === 'None' ? 'no activity' : last.activity + ' activity')}` : 'Not serviced yet'}</div>
+                        </div>
+                    </div>`;
+                }).join('');
+                fillStationThumbs(el, list.map(d => d.barcode_id));
+                return;
+            }
             el.innerHTML = list.map(d => {
                 const last = lastServiceOf(d);
                 const lt = last ? fmtDateTimeLong(last.at) : null;
@@ -7632,6 +7808,7 @@
                 if (!box) return;
                 const u = urls.get(bc), d = siteDevices.find(x => x.barcode_id === bc);
                 if (!u) { box.innerHTML = `<span title="${isOnline ? 'Photo unavailable' : 'Shows when online'}">📷</span>`; return; }
+                if (box.classList.contains('nf-img')) { box.innerHTML = `<img src="${u}" alt="" loading="lazy">`; return; }   // poster card: tapping opens the station
                 const idx = regImg([u], 'Where to find this station', d ? d.locationName : bc, '', []);
                 box.innerHTML = `<img src="${u}" alt="" onclick="event.stopPropagation(); openImgAt(${idx}, 0)">`;
             });
@@ -9183,11 +9360,11 @@
             if (!el) return;
             const total = siteDevices.length;
             const placed = siteDevices.filter(d => { const p = sitePins.get(d.barcode_id); return p && p.mapId && p.x != null; }).length;
-            el.innerHTML = (siteMaps.length ? siteMaps.map(m => {
+            el.innerHTML = (siteMaps.length ? '<div class="maps-scroll space-y-2 overflow-y-auto scroll-thin pr-1" style="max-height:11.6rem;">' + siteMaps.map(m => {
                 const n = pinsOn(m.id).filter(([b, p]) => p.x != null && siteDevices.some(d => d.barcode_id === b)).length;
                 return `<button type="button" data-id="${esc(m.id)}" onclick="openMapModal({ mapId: this.dataset.id })" class="row-item clickable w-full text-left p-2.5 flex justify-between items-center gap-2">
                     <span class="font-bold t-strong truncate">🗺️ ${esc(m.name)}</span><span class="t-muted shrink-0">${n} pin${n === 1 ? '' : 's'}${m.pending ? ' · uploading' : ''}</span></button>`;
-            }).join('')
+            }).join('') + '</div>'
                 : '<div class="t-faint italic">No floor plans yet.</div>') +
                 `<button type="button" onclick="openMapModal({ add: true })" class="btn btn-secondary w-full !py-2">+ Add floor plan</button>`;
         }
@@ -9195,6 +9372,7 @@
         function showSiteDashboard() {
             document.getElementById('visitWorkspace').classList.add('hidden');
             document.getElementById('siteLandingDashboard').classList.remove('hidden');
+            updateStartServiceButton();
             renderLandingRecommendationsAndVisits();
             updateFab();
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -9217,7 +9395,6 @@
             renderDeviceLists();
             window.scrollTo({ top: 0, behavior: 'smooth' });
             if (!continuing) markVisitStarted(selectedClient, type).catch(e => logAppError('Marking visit started', e));
-            if (isOnline) backgroundSyncSite('start'); // pick up anything recorded elsewhere before servicing
             return true;
         }
         function inWorkspace() { return !document.getElementById('visitWorkspace').classList.contains('hidden'); }
@@ -10123,6 +10300,21 @@
                 const why = rodentHigh ? `High rodent activity (${f.speciesCaught}, 75-100% of bait eaten).` : `${hit[0].limit.zone} is over its critical limit for ${limitPest(hit[0].limit).toLowerCase()}.`;
                 if (confirm(`${why}\n\nAdd a recommendation for the customer?\nOK to add one, Cancel to save without.`)) {
                     openRecEditor({ type: 'Pest activity', title: rodentHigh ? `High ${f.speciesCaught.toLowerCase()} activity - find and treat the source` : `${limitPest(hit[0].limit)} over the critical limit in ${hit[0].limit.zone}` });
+                    return false;
+                }
+            }
+
+            // a recommendation needs all three: title, description, and a photo or video
+            const recStarted = !!(f.recTitle || f.recommendation || pendingPhotos.length);
+            if (recStarted) {
+                const missing = [];
+                if (!f.recTitle) missing.push('a title');
+                if (!f.recommendation) missing.push('a description');
+                if (!pendingPhotos.length) missing.push('at least one photo or video');
+                if (missing.length) {
+                    alert(`The recommendation needs ${missing.join(', ').replace(/, ([^,]*)$/, ' and $1')}.`);
+                    if (!f.recTitle) document.getElementById('recTitle').focus();
+                    else if (!f.recommendation) document.getElementById('recommendationNote').focus();
                     return false;
                 }
             }
