@@ -165,8 +165,17 @@
         .tech-contact:hover { outline: 2px solid #f97316; }
         .breach-box { border-width: 2px; }
         .breach-row.clickable { cursor: pointer; }
+        .station-link { font-weight: 800; text-decoration: underline; text-underline-offset: 2px; color: inherit; }
+        .station-link:hover { color: #dc2626; }
+        .st-card { border-radius: 1rem; overflow: hidden; border: 1px solid var(--border); background: var(--surface); text-align: left; transition: transform .15s, border-color .15s; display: flex; flex-direction: column; }
+        .st-card:hover, .st-card:focus-visible { transform: translateY(-2px); border-color: #f97316; outline: none; }
+        .st-card-media { aspect-ratio: 4 / 3; background: var(--surface3); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; position: relative; }
+        .st-card-media img { width: 100%; height: 100%; object-fit: cover; }
         .breach-row.clickable:hover, .breach-row.clickable:focus-visible { outline: 2px solid #dc2626; }
         .breach-row { background: var(--surface); color: var(--text); border-radius: .6rem; padding: .55rem .7rem; }
+        .rec-grid-lg { grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); }
+        .row-breach td { background: rgba(239, 68, 68, .09); }
+        .zone-over { border-color: #ef4444 !important; }
         .alert-box { border: 1px solid #fca5a5; background: #fee2e2; color: #991b1b; border-radius: .9rem; }
         html.dark .alert-box { border-color: rgba(239, 68, 68, .45); background: rgba(239, 68, 68, .12); color: #fca5a5; }
         .limit-bar { height: .45rem; border-radius: 999px; background: var(--surface3); overflow: hidden; }
@@ -367,7 +376,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.18-p6';
+const PORTAL_VERSION = '2026.10.18-p7';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -513,7 +522,7 @@ document.addEventListener('click', e => {
 //            critical limits exceeded and new recommendations you haven't opened yet ----------
 let allSiteDocs = [];
 async function loadAllDocs() {
-    try { const { data } = await sb.from('site_documents').select('id, client_id, title, category, expires_on'); allSiteDocs = data || []; } catch (e) { allSiteDocs = []; }
+    try { const { data } = await sb.from('site_documents').select('id, client_id, title, category, expires_on'); const mine = new Set(state.sites.map(x => String(x.id))); allSiteDocs = (data || []).filter(d => mine.has(String(d.client_id))); } catch (e) { allSiteDocs = []; }   // only the sites this login was given
     renderBell();
 }
 // what this person has marked as seen (kept on this device)
@@ -850,6 +859,7 @@ function buildModel(site, d) {
     entries.forEach(e => {
         while (vi < visits.length && e.at > visits[vi].completed + 5 * 60000) vi++;
         if (vi < visits.length) visits[vi].entries.push(e);
+        else e.pending = true;      // the technician hasn't closed the job yet
     });
     visits.forEach(v => { if (!v.start && v.entries.length) v.start = v.entries[0].at; });
 
@@ -862,7 +872,7 @@ function buildModel(site, d) {
         const s = st.get(r.station_barcode);
         return {
             id: r.id, no: r.rec_no, barcode: r.station_barcode || '', station: (s && s.name) || r.station_name || r.station_barcode || 'Site', type: (s && s.type) || r.station_type || '',
-            text: r.text || '', photos: Array.isArray(r.photos) ? r.photos : [], status: r.status || 'open',
+            text: r.text || '', category: r.category || '', details: r.details || '', photos: Array.isArray(r.photos) ? r.photos : [], status: r.status || 'open',
             raisedAt: Date.parse(r.raised_at || r.created_at), raisedBy: r.raised_by || '', completedAt: Date.parse(r.completed_at) || null, updates: ups,
             lastChange: ups.length ? ups[ups.length - 1].at : Date.parse(r.raised_at || r.created_at)
         };
@@ -914,7 +924,7 @@ function renderSiteHeader() {
     const lastVisit = m.visits[m.visits.length - 1];
     $('siteMeta').textContent = [s.technician ? 'Your technician: ' + s.technician : '', lastVisit ? 'Last service ' + fmtDate(lastVisit.completed) : ''].filter(Boolean).join(' · ');
     const openRecs = m.recs.filter(r => r.status !== 'complete').length;
-    $('siteTabs').innerHTML = TABS.map(([k, l]) => `<button type="button" class="nav-tab ${state.tab === k ? 'active' : ''}" onclick="setTab('${k}')">${l}${k === 'recs' && openRecs ? `<span class="count">${openRecs}</span>` : ''}${k === 'documents' && m.docs.length ? `<span class="count" style="background:var(--surface3);color:var(--muted);">${m.docs.length}</span>` : ''}</button>`).join('');
+    $('siteTabs').innerHTML = TABS.map(([k, l]) => `<button type="button" class="nav-tab ${state.tab === k ? 'active' : ''}" onclick="setTab('${k}')">${l}${k === 'recs' && openRecs ? `<span class="count">${openRecs}</span>` : ''}</button>`).join('');
 }
 
 function renderTab() {
@@ -1022,7 +1032,7 @@ function renderOverview() {
     const soonDocs = m.docs.filter(d => d.expires_on && dayStart(d.expires_on) < Date.now() + DOC_WARN_DAYS * 86400000);
     const breaches = breachesNow();
     $('tabBody').innerHTML = `
-        ${breaches.length ? limitAlertHtml(breaches, `Critical limits exceeded in ${monthLabel(Date.now())}`) : ''}
+        ${activeBreachesHtml()}
         <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
             ${tile(m.stations.length, 'Stations', overdue ? `<span style="color:#ef4444" class="font-bold">${overdue} not checked recently</span>` : 'All checked on schedule', 'showStationList()')}
             ${tile(lastVisit ? fmtDate(lastVisit.completed) : '-', 'Last service', lastVisit ? `<span class="t-strong font-semibold">Finished ${fmtTime(lastVisit.end || lastVisit.completed)}</span><br>${esc(lastVisit.type)}${lastVisit.tech ? ' · ' + esc(lastVisit.tech) : ''}` : 'No visits yet', lastVisit ? `openVisit('${esc(lastVisit.id)}')` : '')}
@@ -1032,7 +1042,7 @@ function renderOverview() {
         </div>
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
             <div class="xl:col-span-2 space-y-5">
-                ${sectionCard('Outstanding recommendations', '#f97316', openRecs.length ? `<div id="ovRecs" class="rec-grid">${openRecs.slice(0, 6).map(r => recCardHtml(r, 'overview')).join('')}</div>` + (openRecs.length > 6 ? `<button type="button" class="link-btn" onclick="setTab('recs')">See all ${openRecs.length}</button>` : '') : emptyNote('No outstanding recommendations. 🎉'), `<button type="button" class="link-btn !no-underline" onclick="setTab('recs')">All recommendations</button>`)}
+                ${sectionCard('Outstanding recommendations', '#f97316', openRecs.length ? `<div id="ovRecs" class="rec-grid rec-grid-lg">${openRecs.slice(0, 6).map(r => recCardHtml(r, 'overview')).join('')}</div>` + (openRecs.length > 6 ? `<button type="button" class="link-btn" onclick="setTab('recs')">See all ${openRecs.length}</button>` : '') : emptyNote('No outstanding recommendations. 🎉'), `<button type="button" class="link-btn !no-underline" onclick="setTab('recs')">All recommendations</button>`)}
                 ${sectionCard('Pest activity', '#2a78d6', `
                     <div class="flex flex-wrap gap-2">
                         <select class="field !w-auto !py-1.5 !text-xs" aria-label="Period" onchange="OV.months = Number(this.value); renderOverviewChart();">${[[3, 'Last 3 months'], [6, 'Last 6 months'], [12, 'Last 12 months'], [24, 'Last 2 years'], [0, 'All records']].map(([v, l]) => `<option value="${v}" ${OV.months === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
@@ -1041,6 +1051,7 @@ function renderOverview() {
                         ${m.maps.length ? `<select class="field !w-auto !py-1.5 !text-xs max-w-[11rem]" aria-label="Floor plan" onchange="OV.map = this.value; renderOverviewChart();">${optionsHtml(m.maps.map(p => [p.id, p.name]), 'All floor plans').replace(`value="${esc(OV.map)}"`, `value="${esc(OV.map)}" selected`)}</select>` : ''}
                     </div>
                     <div id="overviewChart"></div>`, `<button type="button" class="link-btn !no-underline" onclick="setTab('reports')">More reports</button>`)}
+                ${m.stations.length ? sectionCard('Your stations', '#16a34a', `<div id="ovStations" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">${ovStationCards()}</div>`, `<button type="button" class="link-btn !no-underline" onclick="showStationList()">All ${m.stations.length}</button>`) : ''}
             </div>
             <div class="space-y-5">
                 ${s.Address ? sectionCard('Location', '#16a34a', `<div class="rounded-xl overflow-hidden" style="border:1px solid var(--border);"><iframe title="Map of ${esc(s.Address)}" class="w-full h-56 block" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=${encodeURIComponent(s.Address)}&z=16&hl=en&output=embed"></iframe></div>`, `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.Address)}" target="_blank" rel="noopener" class="link-btn !no-underline">Open in Google Maps ↗</a>`) : ''}
@@ -1055,7 +1066,56 @@ function renderOverview() {
             </div>
         </div>`;
     if ($('ovRecs')) fillRecMedia($('ovRecs'));
+    if ($('ovStations')) fillStationCardPhotos($('ovStations'));
     renderOverviewChart();
+}
+// a station's last 12 months: pests per month, the trend, and any critical limit for its zone
+function stationTrendHtml(st) {
+    const now = new Date();
+    const months = []; for (let i = 11; i >= 0; i--) months.push(new Date(now.getFullYear(), now.getMonth() - i, 1).getTime());
+    const inM = (t, i) => t >= months[i] && (i === 11 || t < months[i + 1]);
+    const vals = months.map((_, i) => st.entries.filter(e => !e.pending && inM(e.at, i)).reduce((n, e) => n + e.count, 0));
+    const checks = months.map((_, i) => st.entries.filter(e => inM(e.at, i)).length);
+    if (!st.entries.length) return '';
+    const lim = state.model.limits.filter(l => zoneKey(l.zone) === zoneKey(st.zone))[0];
+    const cur = vals[11], prev = vals[10], avg3 = Math.round((vals[8] + vals[9] + vals[10]) / 3);
+    const zoneOver = months.map(t => !!lim && limitStatus(lim, t).over);
+    const pct = (a, b) => b ? Math.round((a - b) / b * 100) : (a ? null : 0);
+    const arrow = v => v == null ? '<span style="color:#dc2626;font-weight:800;">new</span>' : v === 0 ? 'no change' : `<span style="color:${v > 0 ? '#dc2626' : '#10b981'};font-weight:800;">${v > 0 ? '▲' : '▼'} ${Math.abs(v)}%</span>`;
+    const max = Math.max(1, ...vals, lim ? lim.max : 0) * 1.1;
+    const W = 340, H = 120, pl = 26, pb = 18, bw = (W - pl) / 12;
+    const y = v => 8 + (H - pb - 8) * (1 - v / max);
+    const svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Pests caught or sighted at ${esc(st.name)} each month">
+        <line x1="${pl}" x2="${W}" y1="${y(0)}" y2="${y(0)}" stroke="var(--border)"/>
+        ${vals.map((v, i) => `<rect x="${(pl + i * bw + 2).toFixed(1)}" y="${y(v).toFixed(1)}" width="${(bw - 4).toFixed(1)}" height="${(y(0) - y(v)).toFixed(1)}" rx="2" fill="${zoneOver[i] && v ? '#dc2626' : '#2a78d6'}"><title>${monthLabel(months[i])}: ${v} (${checks[i]} check${checks[i] === 1 ? '' : 's'})${zoneOver[i] && v ? ' - zone over its limit' : ''}</title></rect>
+            ${i % 3 === 0 ? `<text x="${(pl + i * bw + bw / 2).toFixed(1)}" y="${H - 4}" text-anchor="middle" font-size="9" fill="var(--faint)">${new Date(months[i]).toLocaleString('en-NZ', { month: 'short' })}</text>` : ''}`).join('')}
+        ${lim ? `<line x1="${pl}" x2="${W}" y1="${y(lim.max)}" y2="${y(lim.max)}" stroke="#dc2626" stroke-dasharray="4 3"/><text x="${pl - 3}" y="${y(lim.max) + 3}" text-anchor="end" font-size="9" fill="#dc2626">${lim.max}</text>` : ''}
+        <text x="${pl - 3}" y="${y(0) + 3}" text-anchor="end" font-size="9" fill="var(--faint)">0</text></svg>`;
+    return `<div class="inset p-3 space-y-2">
+        <div class="flex flex-wrap items-baseline justify-between gap-2"><span class="eyebrow t-faint">Pests per month · last 12 months</span>${lim ? `<span class="text-[11px]" style="color:#dc2626;">red: months ${esc(lim.zone)} went over its limit · dashed line: the zone's limit (${lim.max} a month)</span>` : ''}</div>
+        ${svg}
+        <div class="grid grid-cols-3 gap-2 text-xs">
+            <div><div class="t-faint">This month</div><div class="font-black text-base t-strong">${cur}</div></div>
+            <div><div class="t-faint">vs last month (${prev})</div><div>${arrow(pct(cur, prev))}</div></div>
+            <div><div class="t-faint">vs 3-month average (${avg3})</div><div>${arrow(pct(cur, avg3))}</div></div>
+        </div></div>`;
+}
+// station cards: the ones with a photo or recent activity first
+function ovStationCards() {
+    const m = state.model;
+    const score = x => (x.photoPath ? 2 : 0) + (x.last && x.last.species ? 1 : 0);
+    const list = m.stations.slice().sort((a, b) => score(b) - score(a) || (b.lastAt || 0) - (a.lastAt || 0)).slice(0, 8);
+    return list.map(x => `<button type="button" class="st-card" onclick="showStation('${esc(x.barcode)}')">
+        <div class="st-card-media" ${x.photoPath ? `data-st-photo="${esc(x.photoPath)}"` : ''} style="${x.photoPath ? '' : `background:${stationColor(x.type)}22;`}">${x.photoPath ? '<span class="text-[11px] t-faint">Loading...</span>' : typeDot(x.type)}</div>
+        <div class="p-2.5 space-y-0.5"><div class="font-bold t-strong text-sm truncate">${esc(x.name)}</div>
+            <div class="text-[11px] t-muted truncate">${esc(x.type || 'Station')}${x.zone ? ' · ' + esc(x.zone) : ''}</div>
+            <div class="flex items-center gap-1.5 flex-wrap">${x.last ? activityChip(x.last.activity) : '<span class="chip chip-grey">Not checked</span>'}${x.overdue ? '<span class="chip chip-red">Overdue</span>' : ''}</div></div></button>`).join('');
+}
+async function fillStationCardPhotos(box) {
+    const els = Array.from(box.querySelectorAll('[data-st-photo]'));
+    if (!els.length) return;
+    const urls = await signPaths(els.map(el => el.dataset.stPhoto));
+    els.forEach((el, i) => { el.innerHTML = urls[i] ? `<img src="${urls[i]}" alt="">` : typeDot(''); });
 }
 function renderOverviewChart() {
     const o = { from: OV.months ? toDayStr(new Date(Date.now() - OV.months * 30.44 * 86400000)) : null, to: toDayStr(new Date()), species: OV.species, station: OV.station, map: OV.map };
@@ -1104,7 +1164,7 @@ function monthBounds(t) { const d = new Date(t); return [new Date(d.getFullYear(
 function monthLabel(t) { return new Date(t).toLocaleString('en-NZ', { month: 'long', year: 'numeric' }); }
 function limitStatus(l, t, upTo) {
     const [a, b] = monthBounds(t == null ? Date.now() : t);
-    const es = state.model.entries.filter(e => e.at >= a && e.at < b && (upTo == null || e.at <= upTo) && e.species && zoneKey(e.zone) === zoneKey(l.zone) && (l.species === ANY_PEST || pestKey(e.species) === pestKey(l.species)));
+    const es = state.model.entries.filter(e => !e.pending && e.at >= a && e.at < b && (upTo == null || e.at <= upTo) && e.species && zoneKey(e.zone) === zoneKey(l.zone) && (l.species === ANY_PEST || pestKey(e.species) === pestKey(l.species)));
     const total = es.reduce((n, e) => n + e.count, 0);
     return { limit: l, total, entries: es, over: total > l.max, near: total <= l.max && l.max > 0 && total >= l.max * 0.8, month: a };
 }
@@ -1170,7 +1230,76 @@ function showBreach(limitId, month) {
     openModal();
 }
 function renderLimitsTab() {
-    $('tabBody').innerHTML = limitsCardHtml() + breachesSectionHtml();
+    $('tabBody').innerHTML = limitsCardHtml() + limitStationsHtml() + breachesSectionHtml();
+}
+// every station in a zone with a limit: this month, last month, change, share of the zone, months it was part of a breach
+function limitStationsHtml() {
+    const m = state.model;
+    if (!m.limits.length) return '';
+    const now = new Date(), thisM = new Date(now.getFullYear(), now.getMonth(), 1).getTime(), lastM = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+    const months12 = []; for (let i = 11; i >= 0; i--) months12.push(new Date(now.getFullYear(), now.getMonth() - i, 1).getTime());
+    const rows = [];
+    m.stations.forEach(st => {
+        const lims = m.limits.filter(l => zoneKey(l.zone) === zoneKey(st.zone));
+        if (!lims.length) return;
+        const count = (l, t) => limitStatus(l, t).entries.filter(e => e.barcode === st.barcode).reduce((n, e) => n + e.count, 0);
+        lims.forEach(l => {
+            const now1 = count(l, thisM), prev = count(l, lastM), zoneNow = limitStatus(l, thisM);
+            const breachedMonths = months12.filter(t => { const z = limitStatus(l, t); return z.over && z.entries.some(e => e.barcode === st.barcode); }).length;
+            const total12 = months12.reduce((n, t) => n + count(l, t), 0);
+            rows.push({ st, l, now1, prev, change: prev ? Math.round((now1 - prev) / prev * 100) : (now1 ? null : 0), share: zoneNow.total ? Math.round(now1 / zoneNow.total * 100) : 0, zoneOver: zoneNow.over, breachedMonths, total12 });
+        });
+    });
+    rows.sort((a, b) => (b.zoneOver && b.now1 > 0) - (a.zoneOver && a.now1 > 0) || b.now1 - a.now1 || b.breachedMonths - a.breachedMonths);
+    const breached = rows.filter(r => r.zoneOver && r.now1 > 0);
+    const chg = r => r.change == null ? '<span class="chip chip-red">New</span>' : r.change === 0 ? '<span class="t-faint">-</span>' : `<span style="color:${r.change > 0 ? '#dc2626' : '#10b981'};font-weight:800;">${r.change > 0 ? '▲' : '▼'} ${Math.abs(r.change)}%</span>`;
+    const zones = m.limits.map(l => { const z = limitStatus(l, thisM); return `<button type="button" class="card p-3 text-left ${z.over ? 'zone-over' : ''}" onclick="showBreach('${esc(l.id)}')"><div class="eyebrow t-faint">${esc(l.zone)}</div><div class="font-black text-lg" ${z.over ? 'style="color:#dc2626;"' : ''}>${z.total} <span class="text-xs t-faint font-normal">/ ${l.max}</span></div><div class="text-[11px] t-muted">${esc(limitPest(l))} · ${z.over ? 'over the limit' : 'within the limit'}</div></button>`; }).join('');
+    return `<div class="card p-5 space-y-4">
+        <div><h3 class="font-black t-strong">Breaches by station · ${esc(monthLabel(thisM))}</h3><p class="text-xs t-muted">Every station in a zone with a critical limit. Red rows are units adding to a breach right now. Tap a station for its trend and history.</p></div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">${zones}</div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+            <div class="inset p-2.5"><div class="eyebrow t-faint">Units in breach</div><div class="font-black text-lg" ${breached.length ? 'style="color:#dc2626;"' : ''}>${breached.length}</div></div>
+            <div class="inset p-2.5"><div class="eyebrow t-faint">Caught this month</div><div class="font-black text-lg">${rows.reduce((n, r) => n + r.now1, 0)}</div></div>
+            <div class="inset p-2.5"><div class="eyebrow t-faint">Last month</div><div class="font-black text-lg">${rows.reduce((n, r) => n + r.prev, 0)}</div></div>
+            <div class="inset p-2.5"><div class="eyebrow t-faint">Worst unit</div><div class="font-black text-sm truncate">${rows[0] && rows[0].now1 ? esc(rows[0].st.name) + ' (' + rows[0].now1 + ')' : '-'}</div></div>
+        </div>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Station</th><th>Zone · limit</th><th class="num">This month</th><th class="num">Last month</th><th class="num">Change</th><th class="num">Share of zone</th><th class="num">12 months</th><th class="num">Months in breach</th></tr></thead><tbody>
+            ${rows.map(r => `<tr class="clickable ${r.zoneOver && r.now1 > 0 ? 'row-breach' : ''}" onclick="showStation('${esc(r.st.barcode)}')"><td>${stationCell(r.st)}</td><td class="whitespace-nowrap">${esc(r.l.zone)} · ${esc(limitPest(r.l))} <span class="t-faint">(${r.l.max})</span></td>
+                <td class="num font-black" ${r.zoneOver && r.now1 > 0 ? 'style="color:#dc2626;"' : ''}>${r.now1}</td><td class="num">${r.prev}</td><td class="num">${chg(r)}</td><td class="num">${r.share}%</td><td class="num">${r.total12}</td><td class="num">${r.breachedMonths || '-'}</td></tr>`).join('') || '<tr><td colspan="8" class="t-faint italic text-center p-4">No stations are in a zone with a limit yet.</td></tr>'}</tbody></table></div>
+    </div>`;
+}
+// every breach in the last few months, grouped by limit (records from a visit still in progress aren't counted)
+const DISMISS_KEY = () => 'pestis-portal-dismissed:' + ((state.me && state.me.email) || '');
+function dismissedBreaches() { try { return new Set(JSON.parse(localStorage.getItem(DISMISS_KEY()) || '[]')); } catch (e) { return new Set(); } }
+function dismissBreaches(keys) {
+    const d = dismissedBreaches();
+    keys.split(',').forEach(k => d.add(k));
+    try { localStorage.setItem(DISMISS_KEY(), JSON.stringify(Array.from(d).slice(-500))); } catch (e) {}
+    renderTab(); renderBell();
+}
+function activeBreaches(monthsBack) {
+    const m = state.model, d = dismissedBreaches(), now = new Date();
+    const months = []; for (let i = monthsBack - 1; i >= 0; i--) months.push(new Date(now.getFullYear(), now.getMonth() - i, 1).getTime());
+    return m.limits.map(l => ({ limit: l, months: months.map(t => limitStatus(l, t)).filter(x => x.over && !d.has(`lim:${l.id}:${x.month}`)) })).filter(g => g.months.length);
+}
+function activeBreachesHtml() {
+    const groups = activeBreaches(3);
+    if (!groups.length) return '';
+    const allKeys = groups.flatMap(g => g.months.map(x => `lim:${g.limit.id}:${x.month}`)).join(',');
+    return `<div class="alert-box breach-box p-4 space-y-2" role="alert">
+        <div class="flex flex-wrap items-center justify-between gap-2"><div class="font-black uppercase tracking-wide text-sm">⚠ Critical limits exceeded</div>
+            ${groups.length > 1 ? `<button type="button" class="link-btn !text-xs" style="color:inherit;" data-keys="${allKeys}" onclick="dismissBreaches(this.dataset.keys)">Dismiss all</button>` : ''}</div>
+        ${groups.map(g => {
+            const keys = g.months.map(x => `lim:${g.limit.id}:${x.month}`).join(',');
+            const stations = new Map();
+            g.months.forEach(x => x.entries.forEach(e => { const o = stations.get(e.barcode) || { name: e.name, n: 0 }; o.n += e.count; stations.set(e.barcode, o); }));
+            return `<div class="breach-row space-y-1.5">
+                <div class="flex flex-wrap items-center justify-between gap-2"><b>${esc(g.limit.zone)} · ${esc(limitPest(g.limit))} <span class="t-faint font-normal text-xs">limit ${g.limit.max} a month</span></b>
+                    <button type="button" class="link-btn !text-xs" data-keys="${keys}" onclick="dismissBreaches(this.dataset.keys)" title="Hide this until there's a new breach">Dismiss</button></div>
+                <div class="flex flex-wrap gap-1.5">${g.months.map(x => `<button type="button" class="chip chip-red cursor-pointer" onclick="showBreach('${esc(g.limit.id)}', ${x.month})">${esc(monthLabel(x.month))}: ${x.total} of ${g.limit.max}${g.limit.max ? ` (+${Math.round((x.total - g.limit.max) / g.limit.max * 100)}%)` : ''}</button>`).join('')}</div>
+                <div class="text-xs">Breached units: ${Array.from(stations.entries()).sort((a, b) => b[1].n - a[1].n).map(([bc, o]) => `<button type="button" class="station-link" onclick="showStation('${esc(bc)}')">${esc(o.name)} (${o.n})</button>`).join(', ')}</div>
+            </div>`;
+        }).join('')}</div>`;
 }
 function breachesNow() { return state.model.limits.map(l => limitStatus(l)).filter(x => x.over); }
 // limits a visit took over (counting that month's records up to the end of the visit)
@@ -1211,7 +1340,9 @@ function recCardHtml(r, ctx) {
             ${media.length > 1 ? `<span class="rec-count">📷 ${media.length}</span>` : ''}
         </div>
         <div class="p-3.5 space-y-1">
+            ${r.category ? `<span class="chip chip-blue !py-0 !text-[10px]">${esc(r.category)}</span>` : ''}
             <div class="text-sm t-strong font-bold clamp2">${esc(r.text)}</div>
+            ${r.details ? `<div class="text-xs t-muted clamp2">${esc(r.details)}</div>` : ''}
             <div class="text-[11px] t-muted flex items-center gap-1.5">${typeDot(r.type)} <span class="truncate">${esc(r.station)}</span></div>
             <div class="text-[11px] t-faint">${recAge(r)} · raised ${fmtDate(r.raisedAt)}${r.views.length ? ` · 👁 ${r.views.length}` : ''}</div>
         </div>
@@ -1254,7 +1385,54 @@ function renderRecs() {
             <p class="text-xs t-muted">Open a recommendation to mark it as pending or complete, with a note and photos or videos showing what was done. Pesties is notified of each change.</p>
             <div id="recListBox" class="space-y-2.5"></div>
         </div>`;
+    $('tabBody').insertAdjacentHTML('afterbegin', recStatsHtml());
     renderRecList();
+}
+// Recommendations at a glance: how many, how long they stay open, what kind, and the trend
+function recStatsHtml() {
+    const m = state.model, now = Date.now(), day = 86400000;
+    if (!m.recs.length) return '';
+    const open = m.recs.filter(r => r.status !== 'complete'), done = m.recs.filter(r => r.status === 'complete');
+    const closedAt = r => r.completedAt || r.lastChange;
+    const daysOpen = r => Math.max(0, Math.round(((r.status === 'complete' ? closedAt(r) : now) - r.raisedAt) / day));
+    const avgClose = done.length ? Math.round(done.reduce((n, r) => n + daysOpen(r), 0) / done.length) : null;
+    const oldest = open.slice().sort((a, b) => a.raisedAt - b.raisedAt)[0];
+    const done90 = done.filter(r => closedAt(r) > now - 90 * day).length;
+    const rate = Math.round(done.length / m.recs.length * 100);
+    const ages = [['Under 30 days', 0, 30], ['30-89 days', 30, 90], ['90+ days', 90, 1e9]].map(([l, a, b]) => ({ l, n: open.filter(r => daysOpen(r) >= a && daysOpen(r) < b).length }));
+    const types = new Map(); m.recs.forEach(r => { const k = r.category || 'Not set'; const o = types.get(k) || { open: 0, done: 0 }; if (r.status === 'complete') o.done++; else o.open++; types.set(k, o); });
+    const typeRows = Array.from(types.entries()).sort((a, b) => (b[1].open + b[1].done) - (a[1].open + a[1].done));
+    const months = []; { const d = new Date(); for (let i = 11; i >= 0; i--) months.push(new Date(d.getFullYear(), d.getMonth() - i, 1).getTime()); }
+    const inMonth = (t, i) => t >= months[i] && (i === 11 || t < months[i + 1]);
+    const raised = months.map((_, i) => m.recs.filter(r => inMonth(r.raisedAt, i)).length), closed = months.map((_, i) => done.filter(r => inMonth(closedAt(r), i)).length);
+    const max = Math.max(1, ...raised, ...closed);
+    const W = 360, H = 130, pl = 22, pb = 18, bw = (W - pl) / 12;
+    const y = v => 8 + (H - pb - 8) * (1 - v / max);
+    const chart = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Recommendations raised and completed each month">
+        <line x1="${pl}" x2="${W}" y1="${y(0)}" y2="${y(0)}" stroke="var(--border)"/>
+        ${months.map((t, i) => { const x = pl + i * bw; return `<rect x="${(x + 2).toFixed(1)}" y="${y(raised[i]).toFixed(1)}" width="${(bw / 2 - 3).toFixed(1)}" height="${(y(0) - y(raised[i])).toFixed(1)}" rx="2" fill="#f97316"><title>${monthLabel(t)}: ${raised[i]} raised</title></rect>
+            <rect x="${(x + bw / 2).toFixed(1)}" y="${y(closed[i]).toFixed(1)}" width="${(bw / 2 - 3).toFixed(1)}" height="${(y(0) - y(closed[i])).toFixed(1)}" rx="2" fill="#10b981"><title>${monthLabel(t)}: ${closed[i]} completed</title></rect>
+            ${i % 3 === 0 ? `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 4}" text-anchor="middle" font-size="9" fill="var(--faint)">${new Date(t).toLocaleString('en-NZ', { month: 'short' })}</text>` : ''}`; }).join('')}
+        <text x="${pl - 4}" y="${y(max) + 3}" text-anchor="end" font-size="9" fill="var(--faint)">${max}</text></svg>`;
+    const ring = (pct) => { const r = 30, c = 2 * Math.PI * r; return `<svg viewBox="0 0 80 80" width="88" height="88" role="img" aria-label="${pct}% completed"><circle cx="40" cy="40" r="${r}" fill="none" stroke="var(--surface3)" stroke-width="9"/><circle cx="40" cy="40" r="${r}" fill="none" stroke="#10b981" stroke-width="9" stroke-linecap="round" stroke-dasharray="${(c * pct / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 40 40)"/><text x="40" y="45" text-anchor="middle" font-size="17" font-weight="900" fill="var(--text)">${pct}%</text></svg>`; };
+    const tile = (v, k, sub, color) => `<div class="card stat"><div class="v" ${color ? `style="color:${color}"` : ''}>${v}</div><div class="k">${k}</div>${sub ? `<div class="s">${sub}</div>` : ''}</div>`;
+    const bar = (n, total, color) => `<span class="limit-bar inline-block w-full"><span style="width:${total ? Math.round(n / total * 100) : 0}%;background:${color};"></span></span>`;
+    return `<div class="space-y-4 mb-5">
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            ${tile(open.length, 'Still open', `${open.filter(r => r.status === 'pending').length} being worked on`, open.length ? 'var(--accent-text)' : '#10b981')}
+            ${tile(done90, 'Completed in 90 days', done90 ? 'Nice work! 🎉' : 'Nothing closed lately')}
+            ${tile(avgClose == null ? '-' : plural(avgClose, 'day'), 'Average time to fix', done.length ? `over ${plural(done.length, 'completed recommendation')}` : 'None completed yet')}
+            ${tile(oldest ? plural(daysOpen(oldest), 'day') : '-', 'Oldest still open', oldest ? esc(fmtRecNo(oldest.no) + ' · ' + oldest.text) : 'All caught up', oldest && daysOpen(oldest) >= 90 ? '#dc2626' : '')}
+            <div class="card stat flex items-center gap-3">${ring(rate)}<div><div class="k">Resolved</div><div class="s">${done.length} of ${m.recs.length}</div></div></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="card p-4 space-y-2"><div class="eyebrow t-faint">How long open ones have been open</div>
+                ${ages.map(a => `<div class="text-xs"><div class="flex justify-between"><span class="t-strong font-semibold">${a.l}</span><b>${a.n}</b></div>${bar(a.n, open.length, a.l.startsWith('90') ? '#dc2626' : a.l.startsWith('30') ? '#d97706' : '#2a78d6')}</div>`).join('')}</div>
+            <div class="card p-4 space-y-2"><div class="eyebrow t-faint">By type</div>
+                ${typeRows.map(([k, o]) => `<div class="text-xs"><div class="flex justify-between gap-2"><span class="t-strong font-semibold truncate">${esc(k)}</span><span class="t-muted whitespace-nowrap">${o.open} open · ${o.done} done</span></div>${bar(o.done, o.open + o.done, '#10b981')}</div>`).join('')}</div>
+            <div class="card p-4 space-y-1"><div class="flex flex-wrap justify-between gap-2"><span class="eyebrow t-faint">Raised vs completed, by month</span>
+                <span class="text-[11px] t-muted flex gap-3"><span class="legend-key"><i style="background:#f97316"></i>Raised</span><span class="legend-key"><i style="background:#10b981"></i>Completed</span></span></div>${chart}</div>
+        </div></div>`;
 }
 function renderRecList() {
     const list = recList('recs');
@@ -1359,7 +1537,8 @@ async function showRec(id) {
         </div>`).join('');
     $('modalBody').innerHTML = `
         ${r.photos.length ? galleryHtml(r.photos, r.photos.map(p => linkOf.get(p)), fmtRecNo(r.no) + ' · ' + r.text) : ''}
-        <div class="flex flex-wrap items-center gap-2">${statusChip(r.status)}<span class="text-xs t-faint">${recAge(r)}</span></div>
+        <div class="flex flex-wrap items-center gap-2">${r.category ? `<span class="chip chip-blue">${esc(r.category)}</span>` : ''}${statusChip(r.status)}<span class="text-xs t-faint">${recAge(r)}</span></div>
+        ${r.details ? `<div class="inset p-3 text-sm t-strong whitespace-pre-line">${esc(r.details)}</div>` : ''}
         <div class="inset p-4 space-y-3">
             <div class="eyebrow t-accent">Update this recommendation</div>
             <div class="seg" role="group" aria-label="Status">${['open', 'pending', 'complete'].map(st => `<button type="button" data-st="${st}" onclick="setDraftStatus('${st}')">${STATUS[st].label}</button>`).join('')}</div>
@@ -1687,7 +1866,7 @@ function showStation(barcode) {
     $('modalSub').innerHTML = `${typeDot(s.type)} ${esc(s.type)} · <span class="mono">${esc(s.barcode)}</span>`;
     const recs = state.model.recs.filter(r => r.barcode === barcode);
     const hist = s.entries.slice().reverse();
-    $('modalBody').innerHTML = (s.photoPath ? `<div class="inset p-3 flex items-center gap-3 flex-wrap"><div id="stPhoto" class="st-photo"></div><div class="min-w-0 flex-1"><div class="eyebrow t-faint">Where to find it</div><div class="text-xs t-muted mt-0.5">Photo taken by your technician. Tap it to enlarge.</div></div></div>` : '') + `
+    $('modalBody').innerHTML = (s.photoPath ? `<div class="inset p-3 flex items-center gap-3 flex-wrap"><div id="stPhoto" class="st-photo"></div><div class="min-w-0 flex-1"><div class="eyebrow t-faint">Where to find it</div><div class="text-xs t-muted mt-0.5">Photo taken by your technician. Tap it to enlarge.</div></div></div>` : '') + stationTrendHtml(s) + `
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
             <div class="inset p-2.5"><div class="eyebrow t-faint">Last checked</div><div class="font-bold t-strong mt-0.5">${s.lastAt ? fmtDate(s.lastAt) : 'Never'}</div></div>
             <div class="inset p-2.5"><div class="eyebrow t-faint">Days since</div><div class="font-bold t-strong mt-0.5">${s.daysSince == null ? '-' : s.daysSince}${s.overdue ? ' · <span style="color:#ef4444">overdue</span>' : ''}</div></div>
