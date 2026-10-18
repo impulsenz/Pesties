@@ -1693,7 +1693,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.18-r29';
+        const APP_VERSION = '2026.10.18-r30';
         // after Check for updates, tidy the address bar
         try { if (/[?&]fresh=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
         // New Zealand date style everywhere: day/month/year
@@ -7210,7 +7210,6 @@
                     </div>
                     ${station}
                     <div class="t-strong font-semibold break-words mt-1 line-clamp-2">${item.category ? `<span class="chip chip-blue !py-0 mr-1">${esc(item.category)}</span>` : ''}${esc(item.recommendation)}</div>
-                    ${item.details ? `<div class="t-muted break-words line-clamp-2">${esc(item.details)}</div>` : ''}
                     <div class="t-faint text-[11px] mt-0.5">${bits.join(' · ')}</div>
                     ${opts && opts.photos ? `<div class="rec-thumbs flex flex-wrap gap-1.5 mt-2" data-rec-thumbs="${esc(item.id)}"></div>` : ''}
                 </button>`;
