@@ -416,7 +416,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.18-p15';
+const PORTAL_VERSION = '2026.10.18-p16';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -495,6 +495,8 @@ function fmtRecNo(n) { return n == null || n === '' || isNaN(Number(n)) ? 'R-·�
 function fmtQty(q, u) { if (q == null || q === '' || isNaN(q)) return ''; return `${Math.round(Number(q) * 100) / 100} ${u === 'L' ? 'L' : (u || 'each')}`; }
 function initials(name) { return String(name || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase(); }
 function isVideo(p) { return /\.(mp4|webm|mov|m4v|3gp|ogv)$/i.test(String(p || '').split('?')[0]); }
+const mediaIcon = paths => !paths.length ? '' : paths.every(isVideo) ? '🎥' : paths.some(isVideo) ? '📷🎥' : '📷';
+const mediaWord = (paths, verb) => { const v = paths.filter(isVideo).length, p = paths.length - v; return [p ? `${p} photo${p === 1 ? '' : 's'}` : '', v ? `${v} video${v === 1 ? '' : 's'}` : ''].filter(Boolean).join(' and ') + (verb ? ' ' + verb : ''); };
 function safeName(s) { return String(s || 'Site').replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim().slice(0, 60); }
 function plural(n, w, p) { return `${n} ${n === 1 ? w : (p || w + 's')}`; }
 function freqLabel(v) { return (FREQUENCIES[v] && FREQUENCIES[v].label) || 'Frequency not set'; }
@@ -1558,7 +1560,7 @@ function recRowHtml(r, ctx) {
         <div class="min-w-0 flex-1 space-y-1">
             <div class="flex flex-wrap items-center gap-2"><span class="mono font-black t-accent text-xs">${fmtRecNo(r.no)}</span>${statusChip(r.status)}<span class="text-[11px] t-faint">${recAge(r)}</span></div>
             <div class="text-sm t-strong font-semibold">${esc(r.text)}</div>
-            <div class="text-[11px] t-muted flex items-center gap-1.5">${typeDot(r.type)} ${esc(r.station)}${r.barcode ? ` · <span class="mono">${esc(r.barcode)}</span>` : ''} · raised ${fmtDate(r.raisedAt)}${r.photos.length ? ` · 📷 ${r.photos.length}` : ''}</div>
+            <div class="text-[11px] t-muted flex items-center gap-1.5">${typeDot(r.type)} ${esc(r.station)}${r.barcode ? ` · <span class="mono">${esc(r.barcode)}</span>` : ''} · raised ${fmtDate(r.raisedAt)}${r.photos.length ? ` · ${mediaIcon(r.photos)} ${r.photos.length}` : ''}</div>
         </div>
         <span class="t-faint text-lg font-black self-center">›</span>
     </div>`;
@@ -1571,7 +1573,7 @@ function recCardHtml(r, ctx) {
     const lead = r.photos[0] || media[media.length - 1] || '';
     return `<button type="button" class="rec-card" onclick="openRec('${esc(r.id)}', '${ctx}')" aria-label="${esc(fmtRecNo(r.no) + ' ' + r.text)}">
         <div class="rec-media" data-media="${esc(lead)}">
-            <div class="rec-media-ph">${lead ? 'Loading photo...' : '<b>📝</b>No photo'}</div>
+            <div class="rec-media-ph">${lead ? (isVideo(lead) ? 'Loading video...' : 'Loading photo...') : '<b>📝</b>No photo or video'}</div>
             <div class="rec-badges"><span class="rec-no mono">${fmtRecNo(r.no)}</span>${statusChip(r.status)}</div>
             ${media.length > 1 ? `<span class="rec-count">📷 ${media.length}</span>` : ''}
         </div>
@@ -1762,7 +1764,7 @@ async function showRec(id) {
     openModal();
     markRecViewed(r);
     const allPaths = recMedia(r);
-    $('modalBody').innerHTML = `<div class="flex items-center gap-2">${statusChip(r.status)}<span class="text-xs t-faint">${recAge(r)}</span></div><div class="t-faint text-xs">${allPaths.length ? 'Loading photos...' : ''}</div>`;
+    $('modalBody').innerHTML = `<div class="flex items-center gap-2">${statusChip(r.status)}<span class="text-xs t-faint">${recAge(r)}</span></div><div class="t-faint text-xs">${allPaths.length ? `Loading ${mediaWord(allPaths)}...` : ''}</div>`;
     const links = await signPaths(allPaths);
     if (!modalNav || modalNav.current !== id || $('modal').classList.contains('hidden')) return;
     const linkOf = new Map(allPaths.map((p, i) => [p, links[i]]));
@@ -1832,7 +1834,7 @@ async function saveRec() {
     const r = state.model.recs.find(x => x.id === modalNav.current);
     if (!r || !recDraft) return;
     const note = ($('recNote').value || '').trim();
-    if (recDraft.status === r.status && !note && !recDraft.files.length) { alert('Change the status, or add a note or a photo, then save.'); return; }
+    if (recDraft.status === r.status && !note && !recDraft.files.length) { alert('Change the status, or add a note, photo or video, then save.'); return; }
     if (recDraft.status !== r.status && !note) { alert('Add a note saying why the status is changing (for example what was done).'); $('recNote').focus(); return; }
     const btn = $('recSaveBtn');
     btn.disabled = true; btn.textContent = recDraft.files.length ? 'Uploading...' : 'Saving...';
