@@ -7,26 +7,60 @@
     <meta name="description" content="Pesties client portal: service records, recommendations, audit reports and site documents.">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { 50: '#fff7ed', 100: '#ffedd5', 400: '#fb923c', 500: '#f97316', 600: '#ea580c', 700: '#c2410c', 900: '#7c2d12', 950: '#431407' } } } } };
+        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { 50: '#fff7ed', 100: '#ffedd5', 400: 'rgb(var(--b400) / <alpha-value>)', 500: 'rgb(var(--b500) / <alpha-value>)', 600: 'rgb(var(--b600) / <alpha-value>)', 700: 'rgb(var(--b700) / <alpha-value>)', 900: '#7c2d12', 950: '#431407' } } } } };
     </script>
     <script>
-        try { if (localStorage.getItem('pestis-theme') === 'dark') document.documentElement.classList.add('dark'); } catch (e) {}
+        // Colour themes (each person picks one; saved to their account). [key, name, 400, 500, 600, 700 (r g b), day background, night background]
+        window.PESTIS_THEMES = [
+            ['orange', 'Pestis Orange', '251 146 60', '249 115 22', '234 88 12', '194 65 12', '#f3f5fa', '#060d1f'],
+            ['blue', 'Ocean Blue', '96 165 250', '59 130 246', '37 99 235', '29 78 216', '#f1f5fb', '#050d1f'],
+            ['green', 'Forest Green', '74 222 128', '34 197 94', '22 163 74', '21 128 61', '#f1f7f3', '#04140c'],
+            ['teal', 'Lagoon Teal', '45 212 191', '20 184 166', '13 148 136', '15 118 110', '#eff7f6', '#031312'],
+            ['purple', 'Royal Purple', '192 132 252', '168 85 247', '147 51 234', '126 34 206', '#f6f3fb', '#0d081d'],
+            ['indigo', 'Indigo', '129 140 248', '99 102 241', '79 70 229', '67 56 202', '#f2f2fb', '#08091d'],
+            ['red', 'Crimson', '248 113 113', '239 68 68', '220 38 38', '185 28 28', '#faf3f4', '#16070b'],
+            ['rose', 'Rose', '244 114 182', '236 72 153', '219 39 119', '190 24 93', '#faf2f6', '#15060f'],
+            ['gold', 'Harvest Gold', '250 204 21', '234 179 8', '202 138 4', '161 98 7', '#f8f6ee', '#120f05'],
+            ['graphite', 'Graphite', '148 163 184', '100 116 139', '71 85 105', '51 65 85', '#f2f3f5', '#0a0d12']
+        ];
+        // theme: a key above · size: small | normal | large | xl · motion: on | off
+        window.applyPestisLook = function (theme, size, motion) {
+            const t = window.PESTIS_THEMES.find(x => x[0] === theme) || window.PESTIS_THEMES[0], h = document.documentElement;
+            if (!h || !h.style || !h.style.setProperty) return;
+            ['--b400', '--b500', '--b600', '--b700'].forEach((v, i) => h.style.setProperty(v, t[i + 2]));
+            h.style.setProperty('--bg-l', t[6]); h.style.setProperty('--bg-d', t[7]);
+            h.setAttribute('data-theme', t[0]);
+            h.style.fontSize = size === 'small' ? '15px' : size === 'large' ? '17.5px' : size === 'xl' ? '19px' : '';
+            if (h.classList) h.classList.toggle('reduce-motion', motion === 'off');
+        };
+        try {
+            const look = JSON.parse(localStorage.getItem('pestis-portal-look') || 'null');
+            if (look && look.dark != null ? look.dark : localStorage.getItem('pestis-theme') === 'dark') document.documentElement.classList.add('dark');
+            if (look) window.applyPestisLook(look.theme, look.size, look.motion);
+        } catch (e) {}
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
+        :root { --b400: 251 146 60; --b500: 249 115 22; --b600: 234 88 12; --b700: 194 65 12; }
+        html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition: none !important; }
+        .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.2rem, 1fr)); gap: .5rem; }
+        .theme-sw { display: flex; align-items: center; gap: .55rem; padding: .5rem .6rem; border-radius: .8rem; border: 2px solid var(--border); background: var(--surface2); cursor: pointer; font-size: .72rem; font-weight: 700; color: var(--text); text-align: left; }
+        .theme-sw.on { border-color: rgb(var(--b500)); box-shadow: 0 0 0 3px rgb(var(--b500) / .2); }
+        .theme-dot { width: 1.4rem; height: 1.4rem; border-radius: 999px; flex-shrink: 0; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .5); }
+        .map-logo-prev { height: 2.2rem; max-width: 7rem; border-radius: .5rem; background: #000; padding: 2px; object-fit: contain; }
         :root {
-            --bg: #f3f5fa; --surface: #ffffff; --surface2: #f4f6fb; --surface3: #e7ebf5; --field: #ffffff; --border: #d8deeb;
-            --text: #0b1530; --muted: #4b5a78; --faint: #6b7896; --accent: #f97316; --accent-text: #c2410c;
+            --bg: var(--bg-l, #f3f5fa); --surface: #ffffff; --surface2: #f4f6fb; --surface3: #e7ebf5; --field: #ffffff; --border: #d8deeb;
+            --text: #0b1530; --muted: #4b5a78; --faint: #6b7896; --accent: rgb(var(--b500)); --accent-text: rgb(var(--b700));
             --header-bg: rgba(255, 255, 255, .88); --shadow: 0 10px 30px -14px rgba(15, 23, 42, .22); --overlay: rgba(15, 23, 42, .55);
         }
         html.dark {
-            --bg: #060d1f; --surface: #0c1733; --surface2: #091229; --surface3: #16244a; --field: #0f1c3d; --border: #1d2d58;
-            --text: #f1f5f9; --muted: #9db0d1; --faint: #7b8fb6; --accent: #fb923c; --accent-text: #fb923c;
+            --bg: var(--bg-d, #060d1f); --surface: #0c1733; --surface2: #091229; --surface3: #16244a; --field: #0f1c3d; --border: #1d2d58;
+            --text: #f1f5f9; --muted: #9db0d1; --faint: #7b8fb6; --accent: rgb(var(--b400)); --accent-text: rgb(var(--b400));
             --header-bg: rgba(9, 18, 42, .85); --shadow: 0 20px 40px -22px rgba(0, 0, 0, .75); --overlay: rgba(3, 8, 22, .82);
         }
         body { background: var(--bg); color: var(--text); }
-        ::selection { background: #f97316; color: #fff; }
+        ::selection { background: rgb(var(--b500)); color: #fff; }
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 1.1rem; box-shadow: var(--shadow); }
         .inset { background: var(--surface2); border: 1px solid var(--border); border-radius: .85rem; }
         .app-header { background: var(--header-bg); border-bottom: 1px solid var(--border); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
@@ -38,16 +72,16 @@
         .eyebrow { font-size: .62rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
         .field { width: 100%; background: var(--field); border: 1px solid var(--border); color: var(--text); border-radius: .75rem; padding: .6rem .8rem; font-size: .85rem; outline: none; transition: border-color .15s, box-shadow .15s; }
         .field::placeholder { color: var(--faint); }
-        .field:focus { border-color: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, .18); }
+        .field:focus { border-color: rgb(var(--b500)); box-shadow: 0 0 0 3px rgb(var(--b500) / .18); }
         html.dark .field { color-scheme: dark; }
         .btn { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; font-weight: 800; font-size: .75rem; padding: .62rem 1rem; border-radius: .8rem; cursor: pointer; transition: all .15s ease; border: 1px solid transparent; white-space: nowrap; }
         .btn:hover { filter: brightness(1.08); } .btn:active { transform: scale(.98); } .btn:disabled { opacity: .55; cursor: not-allowed; }
-        .btn-primary { background: linear-gradient(90deg, #ea580c, #f97316); color: #fff; box-shadow: 0 8px 20px -10px rgba(249, 115, 22, .8); }
+        .btn-primary { background: linear-gradient(90deg, rgb(var(--b600)), rgb(var(--b500))); color: #fff; box-shadow: 0 8px 20px -10px rgb(var(--b500) / .8); }
         .btn-secondary { background: var(--surface3); color: var(--text); border-color: var(--border); }
         .btn-white { background: #fff; color: #0f172a; border-color: #d8deeb; }
         .btn.hidden, .chip.hidden, .tab-btn.hidden { display: none; }
         .icon-btn { width: 2.5rem; height: 2.5rem; display: inline-flex; align-items: center; justify-content: center; border-radius: .8rem; background: var(--surface3); border: 1px solid var(--border); color: var(--text); cursor: pointer; flex-shrink: 0; }
-        .icon-btn:hover { border-color: #f97316; color: var(--accent-text); }
+        .icon-btn:hover { border-color: rgb(var(--b500)); color: var(--accent-text); }
         .icon-sun { display: none; } html.dark .icon-sun { display: inline; } html.dark .icon-moon { display: none; }
         .chip { display: inline-flex; align-items: center; gap: .35rem; padding: .2rem .6rem; border-radius: .65rem; font-size: .68rem; font-weight: 700; border: 1px solid; white-space: nowrap; }
         .chip-amber { color: #b45309; background: #fef3c7; border-color: #fcd34d; }
@@ -61,20 +95,20 @@
         html.dark .chip-red { color: #f87171; background: rgba(239, 68, 68, .12); border-color: rgba(239, 68, 68, .3); }
         html.dark .chip-grey { color: #cbd5e1; background: rgba(148, 163, 184, .1); border-color: rgba(148, 163, 184, .3); }
         .row-item { background: var(--surface2); border: 1px solid var(--border); border-radius: .8rem; transition: border-color .15s, background .15s; overflow-wrap: anywhere; }
-        .row-item.clickable { cursor: pointer; } .row-item.clickable:hover, .row-item.clickable:focus-visible { border-color: #f97316; background: var(--surface3); outline: none; }
+        .row-item.clickable { cursor: pointer; } .row-item.clickable:hover, .row-item.clickable:focus-visible { border-color: rgb(var(--b500)); background: var(--surface3); outline: none; }
         .link-btn { color: var(--accent-text); font-weight: 700; text-decoration: underline; cursor: pointer; font-size: .75rem; background: none; border: 0; padding: 0; }
         .tab-btn { font-size: .7rem; font-weight: 800; padding: .38rem .7rem; border-radius: .6rem; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); cursor: pointer; white-space: nowrap; }
-        .tab-btn.active { background: #f97316; border-color: #f97316; color: #fff; }
+        .tab-btn.active { background: rgb(var(--b500)); border-color: rgb(var(--b500)); color: #fff; }
         .nav-tabs { display: flex; gap: .4rem; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
         .nav-tabs::-webkit-scrollbar { display: none; }
         .nav-tab { flex-shrink: 0; font-size: .78rem; font-weight: 800; padding: .55rem .9rem; border-radius: .75rem; color: var(--muted); border: 1px solid transparent; cursor: pointer; background: none; white-space: nowrap; }
         .nav-tab:hover { color: var(--text); background: var(--surface2); }
         .nav-tab.active { color: var(--accent-text); background: var(--surface2); border-color: var(--border); }
-        .nav-tab .count { margin-left: .3rem; font-size: .62rem; padding: .05rem .4rem; border-radius: 999px; background: #f97316; color: #fff; }
+        .nav-tab .count { margin-left: .3rem; font-size: .62rem; padding: .05rem .4rem; border-radius: 999px; background: rgb(var(--b500)); color: #fff; }
 
         /* Site picker (Netflix style) */
         .site-card { position: relative; display: block; width: 100%; aspect-ratio: 4 / 3; border-radius: 1rem; overflow: hidden; text-align: left; cursor: pointer; border: 1px solid rgba(255, 255, 255, .08); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; box-shadow: var(--shadow); background: linear-gradient(135deg, #1e293b, #0f172a); }
-        .site-card:hover, .site-card:focus-visible { transform: translateY(-4px) scale(1.03); box-shadow: 0 18px 40px -14px rgba(249, 115, 22, .6); border-color: #fb923c; outline: none; }
+        .site-card:hover, .site-card:focus-visible { transform: translateY(-4px) scale(1.03); box-shadow: 0 18px 40px -14px rgb(var(--b500) / .6); border-color: rgb(var(--b400)); outline: none; }
         .site-cover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
         .site-card:hover .site-cover { transform: scale(1.06); }
         .site-initials { position: absolute; right: .8rem; top: .2rem; font-size: 4.5rem; font-weight: 900; color: rgba(255, 255, 255, .15); line-height: 1; pointer-events: none; }
@@ -83,7 +117,7 @@
         .site-addr { color: rgba(255, 255, 255, .78); font-size: .72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .site-badges { position: absolute; top: .6rem; left: .6rem; display: flex; flex-wrap: wrap; gap: .3rem; }
         .site-badge { font-size: .62rem; font-weight: 800; padding: .18rem .5rem; border-radius: .45rem; color: #fff; background: rgba(2, 6, 23, .72); border: 1px solid rgba(255, 255, 255, .15); }
-        .site-badge.warn { background: #c2410c; border-color: #fb923c; }
+        .site-badge.warn { background: rgb(var(--b700)); border-color: rgb(var(--b400)); }
 
         /* Tables */
         .tbl-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: .85rem; }
@@ -117,12 +151,12 @@
         @media (max-width: 639px) { .modal-panel { max-height: 100vh; border-radius: 0; } }
         .scroll-thin { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
         .load-logo { display: inline-flex; background: #000; border-radius: .9rem; padding: 3px; border: 1px solid var(--border); animation: loadPulse 1.6s ease-in-out infinite; }
-        @keyframes loadPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(249, 115, 22, .45); } 50% { transform: scale(1.04); box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); } }
+        @keyframes loadPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgb(var(--b500) / .45); } 50% { transform: scale(1.04); box-shadow: 0 0 0 10px rgb(var(--b500) / 0); } }
         .load-bar { position: relative; height: .7rem; border-radius: 999px; background: var(--surface2); border: 1px solid var(--border); overflow: hidden; }
-        .load-bar span { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 999px; background: linear-gradient(90deg, #ea580c, #fb923c); transition: width .35s ease; }
+        .load-bar span { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 999px; background: linear-gradient(90deg, rgb(var(--b600)), rgb(var(--b400))); transition: width .35s ease; }
         .load-bar.indet span { width: 35%; animation: loadIndet 1.15s ease-in-out infinite; }
         @keyframes loadIndet { 0% { left: -35%; } 100% { left: 100%; } }
-        .spinner { width: 1.4rem; height: 1.4rem; border-radius: 999px; border: 3px solid var(--border); border-top-color: #f97316; animation: spin .8s linear infinite; }
+        .spinner { width: 1.4rem; height: 1.4rem; border-radius: 999px; border: 3px solid var(--border); border-top-color: rgb(var(--b500)); animation: spin .8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .doc-icon { width: 2.4rem; height: 2.4rem; border-radius: .6rem; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: .62rem; color: #fff; flex-shrink: 0; }
 
@@ -143,7 +177,7 @@
         .plan-pin.overdue span { outline: 3px solid #dc2626; outline-offset: 1px; }
         /* clickable tiles */
         button.stat { text-align: left; cursor: pointer; transition: border-color .15s, transform .15s; width: 100%; }
-        button.stat:hover, button.stat:focus-visible { border-color: #f97316; transform: translateY(-2px); outline: none; }
+        button.stat:hover, button.stat:focus-visible { border-color: rgb(var(--b500)); transform: translateY(-2px); outline: none; }
         /* recommendations: the photo leads */
         .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .9rem; }
         .rec-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 1rem; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; text-align: left; transition: border-color .15s, transform .15s; color: inherit; font: inherit; padding: 0; }
@@ -157,7 +191,7 @@
         .rec-title { font-size: .92rem; font-weight: 800; line-height: 1.3; color: var(--text); }
         .rec-meta { margin-top: auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem .75rem; font-size: .7rem; color: var(--muted); padding-top: .45rem; border-top: 1px solid var(--border); }
         .rec-meta-item { display: inline-flex; align-items: center; gap: .35rem; min-width: 0; max-width: 100%; }
-        .rec-card:hover, .rec-card:focus-visible { border-color: #f97316; transform: translateY(-2px); outline: none; }
+        .rec-card:hover, .rec-card:focus-visible { border-color: rgb(var(--b500)); transform: translateY(-2px); outline: none; }
         .rec-media { position: relative; aspect-ratio: 4 / 3; background: var(--surface3); overflow: hidden; }
         @media (max-width: 520px) { .rec-media { aspect-ratio: 16 / 9; } }
         .rec-media img, .rec-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -175,16 +209,16 @@
         .st-photo { width: 9rem; height: 9rem; border-radius: .8rem; overflow: hidden; background: var(--surface3); display: flex; align-items: center; justify-content: center; }
         .st-photo img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
         .sig-img { background: #fff; border-radius: .5rem; padding: .2rem; max-height: 4.5rem; }
-        .tech-photo { width: 4.5rem; height: 4.5rem; border-radius: 999px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.3rem; color: #fff; background: linear-gradient(135deg, #f97316, #c2410c); }
+        .tech-photo { width: 4.5rem; height: 4.5rem; border-radius: 999px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.3rem; color: #fff; background: linear-gradient(135deg, rgb(var(--b500)), rgb(var(--b700))); }
         .tech-photo img { width: 100%; height: 100%; object-fit: cover; }
         .tech-contact { display: flex; align-items: center; gap: .5rem; padding: .45rem .7rem; border-radius: .7rem; background: var(--surface3); font-weight: 700; color: var(--text); }
-        .tech-contact:hover { outline: 2px solid #f97316; }
+        .tech-contact:hover { outline: 2px solid rgb(var(--b500)); }
         .breach-box { border-width: 2px; }
         .breach-row.clickable { cursor: pointer; }
         .station-link { font-weight: 800; text-decoration: underline; text-underline-offset: 2px; color: inherit; }
         .station-link:hover { color: #dc2626; }
         .st-card { border-radius: 1rem; overflow: hidden; border: 1px solid var(--border); background: var(--surface); text-align: left; transition: transform .15s, border-color .15s; display: flex; flex-direction: column; }
-        .st-card:hover, .st-card:focus-visible { transform: translateY(-2px); border-color: #f97316; outline: none; }
+        .st-card:hover, .st-card:focus-visible { transform: translateY(-2px); border-color: rgb(var(--b500)); outline: none; }
         .st-card-media { aspect-ratio: 4 / 3; background: var(--surface3); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; position: relative; }
         .st-card-media img { width: 100%; height: 100%; object-fit: cover; }
         .breach-row.clickable:hover, .breach-row.clickable:focus-visible { outline: 2px solid #dc2626; }
@@ -197,8 +231,8 @@
         .live-dot { display: inline-block; width: .5rem; height: .5rem; border-radius: 999px; background: #10b981; box-shadow: 0 0 0 0 rgba(16, 185, 129, .6); animation: livePulse 2s infinite; vertical-align: middle; }
         @keyframes livePulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, .6); } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
         tr.area-start td { border-top: 2px solid var(--border); }
-        tr.row-selected td { box-shadow: inset 0 2px 0 #f97316, inset 0 -2px 0 #f97316; }
-        tr.row-selected td:first-child { box-shadow: inset 2px 2px 0 #f97316, inset 0 -2px 0 #f97316; }
+        tr.row-selected td { box-shadow: inset 0 2px 0 rgb(var(--b500)), inset 0 -2px 0 rgb(var(--b500)); }
+        tr.row-selected td:first-child { box-shadow: inset 2px 2px 0 rgb(var(--b500)), inset 0 -2px 0 rgb(var(--b500)); }
         .zone-over { border-color: #ef4444 !important; }
         .alert-box { border: 1px solid #fca5a5; background: #fee2e2; color: #991b1b; border-radius: .9rem; }
         html.dark .alert-box { border-color: rgba(239, 68, 68, .45); background: rgba(239, 68, 68, .12); color: #fca5a5; }
@@ -416,7 +450,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.18-p17';
+const PORTAL_VERSION = '2026.10.19-p18';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -506,6 +540,7 @@ function parsePayload(p) { if (typeof p === 'string') { try { return JSON.parse(
 function toggleTheme() {
     const dark = document.documentElement.classList.toggle('dark');
     try { localStorage.setItem('pestis-theme', dark ? 'dark' : 'light'); } catch (e) {}
+    if (state.me) savePrefs({ dark });
     if (state.tab === 'activity' || state.tab === 'overview') renderTab();
 }
 
@@ -560,8 +595,40 @@ async function signOut() {
 }
 const PREFS_KEY = () => 'pestis-portal-settings:' + ((state.me && state.me.email) || '');
 const BELL_TYPES = [['visit', 'New service reports'], ['rec', 'New recommendations'], ...(LIMITS_ON ? [['lim', 'Critical limits exceeded']] : []), ['sight', 'Pest sightings to review'], ['doc', 'Documents expiring']];
-function portalPrefs() { let p = {}; try { p = JSON.parse(localStorage.getItem(PREFS_KEY()) || '{}') || {}; } catch (e) {} return Object.assign({ startTab: 'overview', period: '12m', bell: {} }, p); }
-function savePrefs(change) { const p = Object.assign(portalPrefs(), change); try { localStorage.setItem(PREFS_KEY(), JSON.stringify(p)); } catch (e) {} return p; }
+function portalPrefs() { let p = {}; try { p = JSON.parse(localStorage.getItem(PREFS_KEY()) || '{}') || {}; } catch (e) {} return Object.assign({ startTab: 'overview', period: '12m', bell: {}, theme: 'orange', textSize: 'normal', motion: 'on' }, p); }
+// every change is kept on this device and saved to the person's account, so it follows them and never affects anyone else
+function savePrefs(change) {
+    const p = Object.assign(portalPrefs(), change, { savedAt: Date.now() });
+    try { localStorage.setItem(PREFS_KEY(), JSON.stringify(p)); } catch (e) {}
+    applyPortalLook(p);
+    clearTimeout(prefsPushTimer); prefsPushTimer = setTimeout(pushPrefs, 1500);
+    return p;
+}
+let prefsPushTimer = null;
+async function pushPrefs() {
+    if (!state.me || !navigator.onLine) return;
+    try { const r = await sb.rpc('save_my_pref', { p_key: 'portal', p_value: portalPrefs() }); if (r && r.error) console.warn('Settings not saved to the account:', r.error.message); } catch (e) {}
+}
+// at sign-in: the newer of this device's and the account's settings
+async function loadAccountPrefs() {
+    applyPortalLook();
+    try {
+        const { data, error } = await sb.rpc('get_my_prefs');
+        if (error) return;
+        const remote = data && data.portal, local = portalPrefs();
+        if (remote && (remote.savedAt || 0) > (local.savedAt || 0)) {
+            try { localStorage.setItem(PREFS_KEY(), JSON.stringify(remote)); } catch (e) {}
+            applyPortalLook();
+            if (state.site) renderTab();
+        } else if (local.savedAt && !remote) pushPrefs();
+    } catch (e) {}
+}
+function applyPortalLook(p) {
+    p = p || portalPrefs();
+    if (p.dark != null) document.documentElement.classList.toggle('dark', !!p.dark);
+    window.applyPestisLook(p.theme, p.textSize, p.motion);
+    try { localStorage.setItem('pestis-portal-look', JSON.stringify({ theme: p.theme, size: p.textSize, motion: p.motion, dark: document.documentElement.classList.contains('dark') })); } catch (e) {}
+}
 function startTab() { const t = portalPrefs().startTab; return TABS.some(x => x[0] === t) ? t : 'overview'; }
 function openSettings() {
     const p = portalPrefs(), me = state.me || {}, dark = document.documentElement.classList.contains('dark');
@@ -573,7 +640,15 @@ function openSettings() {
     const sec = (t, body) => `<div class="space-y-2"><div class="eyebrow t-accent">${t}</div>${body}</div>`;
     $('modalBody').innerHTML = `
         ${sec('Your account', `<div class="inset p-3 text-sm"><div class="font-bold t-strong">${esc(me.name || me.email || '')}</div><div class="text-xs t-muted">${esc(me.email || '')}${me.company ? ' · ' + esc(me.company) : ''}</div><div class="text-xs t-faint mt-1">${plural(state.sites.length, 'site')} shared with you</div></div>`)}
-        ${sec('Appearance', `<div class="seg" role="group" aria-label="Theme"><button type="button" class="${dark ? '' : 'on-complete'}" onclick="setThemeMode(false)">☀ Day</button><button type="button" class="${dark ? 'on-pending' : ''}" onclick="setThemeMode(true)">☾ Night</button></div>`)}
+        ${sec('Appearance', `<p class="text-[11px] t-faint">Saved to your account - only changes things for you.</p>
+            <div class="theme-grid">${window.PESTIS_THEMES.map(t => `<button type="button" class="theme-sw ${p.theme === t[0] ? 'on' : ''}" onclick="savePrefs({ theme: '${t[0]}' }); openSettings()"><span class="theme-dot" style="background:linear-gradient(135deg, rgb(${t[3]}), rgb(${t[5]}));"></span>${esc(t[1])}</button>`).join('')}</div>
+            <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs pt-1">
+                <span class="flex items-center gap-2"><span class="t-muted font-semibold">Mode</span><span class="seg" role="group" aria-label="Day or night"><button type="button" class="${dark ? '' : 'on-complete'}" onclick="setThemeMode(false)">☀ Day</button><button type="button" class="${dark ? 'on-pending' : ''}" onclick="setThemeMode(true)">☾ Night</button></span></span>
+                <span class="flex items-center gap-2"><span class="t-muted font-semibold">Text size</span><select class="field !w-auto !py-1.5 !text-xs" onchange="savePrefs({ textSize: this.value })">${[['small', 'Small'], ['normal', 'Normal'], ['large', 'Large'], ['xl', 'Extra large']].map(([k, l]) => `<option value="${k}" ${p.textSize === k ? 'selected' : ''}>${l}</option>`).join('')}</select></span>
+                <span class="flex items-center gap-2"><span class="t-muted font-semibold">Animations</span><select class="field !w-auto !py-1.5 !text-xs" onchange="savePrefs({ motion: this.value })"><option value="on" ${p.motion !== 'off' ? 'selected' : ''}>On</option><option value="off" ${p.motion === 'off' ? 'selected' : ''}>Off</option></select></span>
+            </div>`)}
+        ${sec('Pest map logo', `<div class="inset p-3 flex flex-wrap items-center gap-3"><img src="${esc(mapLogoSrc())}" alt="Map logo" class="map-logo-prev"><p class="text-xs t-muted flex-1" style="min-width:12rem;">Shown in the top right of the pest maps you download from Floor plans.</p>
+            <span class="flex gap-2"><button type="button" class="btn btn-secondary" onclick="pickMapLogo()">Change logo</button>${portalPrefs().mapLogo ? '<button type="button" class="btn btn-secondary" onclick="savePrefs({ mapLogo: null }); openSettings(); toast(\'Logo reset.\')">Use the Pesties logo</button>' : ''}</span></div>`)}
         ${sec('When I open a site', `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><label class="lbl" for="setStartTab">Start on</label><select id="setStartTab" class="field" onchange="savePrefs({ startTab: this.value }); toast('Saved.')">${TABS.map(([k, l]) => `<option value="${k}" ${p.startTab === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
             <div><label class="lbl" for="setPeriod">Reports period</label><select id="setPeriod" class="field" onchange="savePrefs({ period: this.value }); setPreset(this.value, true); if (state.site) renderTab(); toast('Saved.')">${[['30d', 'Last 30 days'], ['90d', 'Last 3 months'], ['12m', 'Last 12 months'], ['ytd', 'This year'], ['all', 'All records']].map(([k, l]) => `<option value="${k}" ${p.period === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div></div>`)}
@@ -697,6 +772,7 @@ async function afterSignIn(session) {
         return;
     }
     state.me = Object.assign({ email: session.user.email, uid: session.user.id }, me || {});
+    loadAccountPrefs();
     if (!me || (!me.staff && !me.client)) {
         await sb.auth.signOut().catch(() => {});
         state.started = false;
@@ -1672,7 +1748,7 @@ function recStatsHtml() {
             <div class="card p-4 space-y-2"><div class="eyebrow t-faint">By type</div>
                 ${typeRows.map(([k, o]) => `<div class="text-xs"><div class="flex justify-between gap-2"><span class="t-strong font-semibold truncate">${esc(k)}</span><span class="t-muted whitespace-nowrap">${o.open} open · ${o.done} done</span></div>${bar(o.done, o.open + o.done, '#10b981')}</div>`).join('')}</div>
             <div class="card p-4 space-y-1"><div class="flex flex-wrap justify-between gap-2"><span class="eyebrow t-faint">Raised vs completed, by month</span>
-                <span class="text-[11px] t-muted flex gap-3"><span class="legend-key"><i style="background:#f97316"></i>Raised</span><span class="legend-key"><i style="background:#10b981"></i>Completed</span></span></div>${chart}</div>
+                <span class="text-[11px] t-muted flex gap-3"><span class="legend-key"><i style="background:rgb(var(--b500))"></i>Raised</span><span class="legend-key"><i style="background:#10b981"></i>Completed</span></span></div>${chart}</div>
         </div></div>`;
 }
 function renderRecList() {
@@ -2742,7 +2818,8 @@ async function renderPlans() {
             <div class="flex flex-wrap gap-1.5">${m.maps.map(p => `<button type="button" class="tab-btn ${p.id === planId ? 'active' : ''}" onclick="planId = '${esc(p.id)}'; renderPlans();">${esc(p.name)}</button>`).join('')}</div>
             <div class="flex flex-wrap items-center gap-2">
                 <span class="text-xs t-muted">${plural(pins.length, 'station')} on this plan</span>
-                <button type="button" class="btn btn-secondary" onclick="downloadPlan('${esc(plan.id)}', true)">⬇ Plan with stations</button>
+                <span class="flex items-center gap-2" title="The logo on your pest maps"><img src="${esc(mapLogoSrc())}" alt="Map logo" class="map-logo-prev"><button type="button" class="link-btn !text-[11px]" onclick="pickMapLogo()">Change logo</button></span>
+                <button type="button" class="btn btn-primary" onclick="downloadPlan('${esc(plan.id)}', true)">⬇ Pest map</button>
                 <button type="button" class="btn btn-secondary" onclick="downloadPlan('${esc(plan.id)}', false)">⬇ Original image</button>
             </div>
         </div>
@@ -2780,6 +2857,111 @@ async function planCanvas(plan, withPins) {
     }
     return { canvas: c, blob };
 }
+// the logo in the pest map's top right: the person's own, or the Pesties logo
+function mapLogoSrc() { return portalPrefs().mapLogo || 'images/pesties-logo.png'; }
+function pickMapLogo() {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*';
+    inp.onchange = async () => {
+        const f = inp.files[0];
+        if (!f) return;
+        const url = URL.createObjectURL(f);
+        const img = await new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = url; });
+        if (!img) { alert("That file couldn't be read as a picture."); return; }
+        const k = Math.min(1, 480 / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        let data = c.toDataURL('image/png');
+        if (data.length > 150000) data = c.toDataURL('image/jpeg', .85);
+        savePrefs({ mapLogo: data });
+        toast('Logo saved - it will show on your pest maps.');
+        if (!$('modal').classList.contains('hidden') && $('modalTitle').textContent === 'Settings') openSettings();
+        if (state.tab === 'plans') renderPlans();
+    };
+    inp.click();
+}
+// The plan with its stations, framed as a "Pest map": a header with the logo, then a legend and the site details
+async function pestMapCanvas(plan) {
+    const { canvas: map } = await planCanvas(plan, true);
+    const W = Math.max(1600, map.width), pad = Math.round(W * 0.028), mapW = W - pad * 2, mapH = Math.round(map.height * mapW / map.width);
+    const F = n => Math.round(n * W / 1600);
+    const pins = planPins(plan);
+    const types = Array.from(pins.reduce((m, x) => m.set(x.type, (m.get(x.type) || 0) + 1), new Map()).entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    const overdue = pins.filter(x => x.overdue).length;
+    const site = state.site || {}, me = state.me || {};
+    const details = [
+        ['Client', siteName(site)],
+        ['Site address', site.Address || '-'],
+        ['Floor plan', plan.name || '-'],
+        ['Stations on this plan', String(pins.length)],
+        ['Map made by', plan.created_by || 'Pesties'],
+        ['Plan created', plan.created_at ? fmtDate(Date.parse(plan.created_at)) : '-'],
+        ['Last updated', plan.updated_at ? fmtDate(Date.parse(plan.updated_at)) : (plan.created_at ? fmtDate(Date.parse(plan.created_at)) : '-')],
+        ['Generated', `${fmtDate(Date.now())}${me.name || me.email ? ' by ' + (me.name || me.email) : ''}`]
+    ];
+    const legCols = types.length + (overdue ? 1 : 0) > 5 ? 2 : 1;
+    const headH = F(150), legendRows = Math.ceil((types.length + (overdue ? 1 : 0)) / legCols), legH = Math.max(F(70) + legendRows * F(44), F(70) + Math.ceil(details.length / 2) * F(58)) + F(30);
+    const H = headH + pad + mapH + pad + legH + pad + F(40);
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--b500').trim() || '249 115 22';
+    const acc = `rgb(${accent.split(/\s+/).join(',')})`;
+    const font = (w, px) => `${w} ${F(px)}px system-ui, -apple-system, Segoe UI, Roboto, sans-serif`;
+    const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+    const fit = (t, max) => { t = String(t); if (g.measureText(t).width <= max) return t; while (t.length > 1 && g.measureText(t + '…').width > max) t = t.slice(0, -1); return t + '…'; };
+    g.fillStyle = '#f1f5f9'; g.fillRect(0, 0, W, H);
+    // header card
+    const grd = g.createLinearGradient(0, 0, W, headH);
+    grd.addColorStop(0, '#0b1530'); grd.addColorStop(1, '#16244a');
+    g.fillStyle = grd; g.fillRect(0, 0, W, headH);
+    g.fillStyle = acc; g.fillRect(0, headH - F(8), W, F(8));
+    g.textBaseline = 'alphabetic';
+    g.fillStyle = acc; g.font = font(800, 22); g.fillText('PEST MAP', pad, F(48));
+    const logo = await new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = mapLogoSrc(); });
+    let logoW = 0;
+    if (logo) {
+        const lh = headH * 0.62, lw = Math.min(W * 0.28, logo.width * lh / logo.height);
+        const lhh = logo.height * lw / logo.width;
+        logoW = lw + F(24);
+        g.fillStyle = '#000'; rr(W - pad - lw - F(12), (headH - F(8) - lhh) / 2 - F(6), lw + F(12), lhh + F(12), F(12)); g.fill();
+        g.drawImage(logo, W - pad - lw - F(6), (headH - F(8) - lhh) / 2, lw, lhh);
+    }
+    g.fillStyle = '#ffffff'; g.font = font(900, 44); g.fillText(fit(siteName(site), W - pad * 2 - logoW - F(20)), pad, F(98));
+    g.fillStyle = '#9db0d1'; g.font = font(600, 21); g.fillText(fit(`${plan.name || 'Floor plan'}${site.Address ? '  ·  ' + site.Address : ''}`, W - pad * 2 - logoW - F(20)), pad, F(128));
+    // the plan
+    const my = headH + pad;
+    g.save(); g.shadowColor = 'rgba(15,23,42,.18)'; g.shadowBlur = F(24); g.fillStyle = '#fff'; rr(pad, my, mapW, mapH, F(14)); g.fill(); g.restore();
+    g.save(); rr(pad, my, mapW, mapH, F(14)); g.clip(); g.drawImage(map, pad, my, mapW, mapH); g.restore();
+    g.strokeStyle = '#d8deeb'; g.lineWidth = F(2); rr(pad, my, mapW, mapH, F(14)); g.stroke();
+    // legend and site details card
+    const ly = my + mapH + pad;
+    g.save(); g.shadowColor = 'rgba(15,23,42,.12)'; g.shadowBlur = F(18); g.fillStyle = '#ffffff'; rr(pad, ly, mapW, legH, F(16)); g.fill(); g.restore();
+    const colL = pad + F(32), splitX = pad + mapW * 0.46;
+    g.fillStyle = acc; g.font = font(800, 17); g.fillText('LEGEND', colL, ly + F(44));
+    g.fillText('MAP DETAILS', splitX + F(32), ly + F(44));
+    g.strokeStyle = '#e2e8f0'; g.lineWidth = F(2); g.beginPath(); g.moveTo(splitX, ly + F(24)); g.lineTo(splitX, ly + legH - F(24)); g.stroke();
+    const legendItems = types.map(([t, n]) => ({ t, n, col: stationColor(t) })).concat(overdue ? [{ t: 'Overdue for service', n: overdue, ring: true }] : []);
+    const colW = (splitX - colL - F(24)) / legCols;
+    legendItems.forEach((it, i) => {
+        const x = colL + (i % legCols) * colW, y = ly + F(84) + Math.floor(i / legCols) * F(44);
+        g.beginPath(); g.arc(x + F(11), y - F(7), F(11), 0, Math.PI * 2);
+        if (it.ring) { g.strokeStyle = '#dc2626'; g.lineWidth = F(3.5); g.stroke(); }
+        else { g.fillStyle = it.col; g.fill(); g.strokeStyle = '#fff'; g.lineWidth = F(3); g.stroke(); }
+        g.fillStyle = '#0b1530'; g.font = font(700, 19); g.fillText(fit(it.t, colW - F(80)), x + F(32), y);
+        g.fillStyle = '#64748b'; g.font = font(800, 19); g.textAlign = 'right'; g.fillText(String(it.n), x + colW - F(16), y); g.textAlign = 'left';
+    });
+    if (!legendItems.length) { g.fillStyle = '#64748b'; g.font = font(600, 19); g.fillText('No stations placed on this plan yet.', colL, ly + F(84)); }
+    const dW = (pad + mapW - splitX - F(64)) / 2;
+    details.forEach(([k, v], i) => {
+        const x = splitX + F(32) + (i % 2) * dW, y = ly + F(80) + Math.floor(i / 2) * F(58);
+        g.fillStyle = '#64748b'; g.font = font(800, 14); g.fillText(k.toUpperCase(), x, y);
+        g.fillStyle = '#0b1530'; g.font = font(700, 20); g.fillText(fit(v, dW - F(16)), x, y + F(26));
+    });
+    g.fillStyle = '#94a3b8'; g.font = font(600, 15); g.fillText(`Generated from the Pesties Client Portal · ${new Date().toLocaleString()}`, pad, H - F(18));
+    return c;
+}
 async function downloadPlan(id, withPins) {
     const plan = state.model.maps.find(p => p.id === id);
     if (!plan) return;
@@ -2787,7 +2969,8 @@ async function downloadPlan(id, withPins) {
         const { canvas, blob } = await planCanvas(plan, withPins);
         const name = `${safeName(siteName(state.site))} - ${safeName(plan.name)}${withPins ? ' (stations)' : ''}`;
         if (!withPins) { downloadBlob(blob, name + '.' + ((blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg'))); return; }
-        canvas.toBlob(b => downloadBlob(b, name + '.png'), 'image/png');
+        const pm = await pestMapCanvas(plan);
+        pm.toBlob(b => downloadBlob(b, `${safeName(siteName(state.site))} - ${safeName(plan.name)} - Pest map.png`), 'image/png');
     } catch (e) { alert('Could not download the floor plan: ' + (e.message || e)); }
 }
 
@@ -3167,4 +3350,4 @@ async function buildAuditPack() {
 init();
 </script>
 </body>
-</html>
+    </html>
