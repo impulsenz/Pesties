@@ -246,6 +246,9 @@
         .land-card.lc-resizing { outline: 2px solid rgb(var(--b500) / .6); outline-offset: 3px; }
         body.lc-busy, body.lc-busy * { user-select: none !important; }
         body.lc-busy .lc-move { cursor: grabbing; }
+        /* Bigger text in the site boxes: what's inside each box is scaled up; the box keeps its own size, drag and resize */
+        .land-card { --lc-zoom: 1.35; }
+        .land-card > .lc-head > *, .land-card > .lc-scroll { zoom: var(--lc-zoom); }
         .board-hint { display: flex; align-items: center; justify-content: flex-end; gap: .75rem; font-size: 11px; color: var(--faint); margin: -.75rem 0 -.75rem; }
         /* open recommendations by age: small donut in the box's top corner */
         .rec-mini { display: flex; align-items: center; gap: .55rem; margin-left: auto; }
@@ -2151,7 +2154,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.19-r45';
+        const APP_VERSION = '2026.10.19-r46';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
