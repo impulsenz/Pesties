@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pestis - Enterprise Field Operations</title>
+    <script>
+        // Start-up check: notes anything that goes wrong while the app starts, so the sign-in screen can say what it is
+        window.__boot = { step: 'Loading the app', errors: [], started: Date.now() };
+        window.addEventListener('error', function (e) {
+            try {
+                var t = e && e.target, src = t && /^(SCRIPT|LINK)$/.test(t.tagName || '') && (t.src || t.href);
+                if (!src && !e.message) return;
+                window.__boot.errors.push(src && !e.message ? 'Could not download ' + src : (e.message || 'Error') + (e.filename ? ' (' + String(e.filename).split('/').pop() + ':' + e.lineno + ')' : ''));
+            } catch (x) {}
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) { try { var r = e && e.reason; window.__boot.errors.push('Unhandled: ' + ((r && r.message) || r)); } catch (x) {} });
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -673,6 +685,42 @@
         </div>
     </div>
 
+
+    <!-- Start-up watchdog: runs even if the main app code can't. Shows what's stuck and offers a repair. -->
+    <script>
+        (function () {
+            function stuck() {
+                var load = document.getElementById('authLoading'), panel = document.getElementById('loginPanel'), screen = document.getElementById('loginScreen');
+                return load && panel && screen && !load.classList.contains('hidden') && panel.classList.contains('hidden') && !screen.classList.contains('hidden');
+            }
+            function esc(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+            window.pestisRepair = async function () {
+                var b = document.getElementById('bootRepairBtn'); if (b) { b.disabled = true; b.textContent = 'Repairing...'; }
+                // removes the saved app files only - anything not uploaded yet stays on this device
+                try { if (navigator.serviceWorker) { var regs = await navigator.serviceWorker.getRegistrations(); for (var i = 0; i < regs.length; i++) await regs[i].unregister(); } } catch (e) {}
+                try { if (window.caches) { var keys = await caches.keys(); for (var k = 0; k < keys.length; k++) await caches.delete(keys[k]); } } catch (e) {}
+                location.reload();
+            };
+            function show() {
+                if (!stuck()) return;
+                var B = window.__boot || { step: '', errors: [] };
+                var lib = typeof window.supabase === 'undefined' ? 'The sign-in library (supabase-js) did not download - check the internet connection or any ad / content blocker.' : '';
+                var errs = (lib ? [lib] : []).concat(B.errors || []).slice(-6);
+                var el = document.getElementById('authLoading');
+                el.classList.remove('italic');
+                el.innerHTML = '<div class="space-y-2 text-left not-italic" style="font-style:normal">' +
+                    '<div class="font-bold t-strong">Pestis is taking longer than usual to start.</div>' +
+                    '<div>Stuck at: <b>' + esc(B.step || 'starting') + '</b></div>' +
+                    (errs.length ? '<div style="color:#dc2626;word-break:break-word">' + errs.map(esc).join('<br>') + '</div>' : '') +
+                    '<div class="flex flex-wrap gap-2 pt-1"><button type="button" class="btn btn-primary !py-2" onclick="location.reload()">Try again</button>' +
+                    '<button type="button" id="bootRepairBtn" class="btn btn-secondary !py-2" onclick="pestisRepair()">Repair app</button></div>' +
+                    '<div class="text-[11px] t-faint">Repair app re-downloads the app files. Anything not uploaded yet stays on this device. If this keeps happening, send a screenshot of this message.</div></div>';
+            }
+            setTimeout(show, 15000);
+            setTimeout(show, 30000);
+        })();
+    </script>
+
     <!-- ===================== APP HEADER ===================== -->
     <header id="appHeader" class="app-header hidden sticky top-0 z-40 w-full">
         <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 py-2.5 flex justify-between items-center gap-3">
@@ -959,49 +1007,4 @@
                 <div class="card land-card" id="siteVisitsCard" data-box="visits">
                     <div class="lc-head">
                         <div class="lc-bar">
-                            <h3 class="eyebrow flex items-center gap-2 min-w-0" style="color:#2563eb;"><button type="button" class="lc-move" title="Drag to move this box (or use the arrow keys)" aria-label="Move box">⠿</button><span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>Past Visits</h3>
-                            <span class="lc-tools"><span id="visitTypeChart" class="viz-root"></span><button type="button" class="lc-refresh" onclick="refreshBox(this)" title="Check for changes" aria-label="Refresh">⟳</button></span>
-                        </div>
-                    </div>
-                    <div class="lc-scroll scroll-thin space-y-3">
-                        <div id="siteLandingVisitsList" class="space-y-2.5 text-xs">
-                            <span class="t-faint italic">No previous visit records found.</span>
-                        </div>
-                    </div>
-                    <span class="lc-resize" title="Drag to resize" aria-hidden="true"></span>
-                </div>
-
-                <!-- Activity log -->
-                <div class="card land-card" id="siteActivityCard" data-box="activity">
-                    <div class="lc-head">
-                        <div class="lc-bar">
-                            <h3 class="eyebrow flex items-center gap-2 min-w-0" style="color:#7c3aed;"><button type="button" class="lc-move" title="Drag to move this box (or use the arrow keys)" aria-label="Move box">⠿</button><span class="w-2 h-2 rounded-full shrink-0" style="background:#7c3aed;"></span>Site Activity Log</h3>
-                            <span class="lc-tools"><button type="button" class="lc-refresh" onclick="refreshBox(this)" title="Check for changes" aria-label="Refresh">⟳</button></span>
-                        </div>
-                        <div id="activityLogTabs" class="flex flex-wrap gap-1.5"></div>
-                    </div>
-                    <div id="siteActivityLog" class="lc-scroll scroll-thin space-y-1.5 text-xs"></div>
-                    <span class="lc-resize" title="Drag to resize" aria-hidden="true"></span>
-                </div>
-            </div>
-            <!-- Critical limits (switched off while they are rebuilt) -->
-                    <div id="siteLimitsCard" class="card p-5 space-y-3 hidden">
-                        <div class="flex justify-between items-center gap-2">
-                            <span class="eyebrow flex items-center gap-2" style="color:#dc2626;"><span class="w-2 h-2 rounded-full" style="background:#dc2626;"></span>Critical limits</span>
-                            <button type="button" id="siteLimitAddBtn" onclick="editSiteLimit('new')" class="link-btn !no-underline">+ Add</button>
-                        </div>
-                        <div id="siteLimitsBox" class="space-y-2 text-xs"></div>
-                    </div>
-            <!-- (contract, technician and access notes are kept in Edit Site; not shown on this page) -->
-                    <div class="hidden" aria-hidden="true"><div id="siteContractChip"></div><p id="siteContractDates"></p><p id="siteContractNotes"></p><span id="siteAssignedTech"></span><p id="siteLandingNotes"></p></div>
-        </section>
-
-        <!-- 3. ACTIVE SERVICE WORKSPACE -->
-        <section id="visitWorkspace" class="ws-stack hidden pb-28 w-full max-w-6xl mx-auto">
-            <!-- Station search (top of the service screen) -->
-            <div class="card scan-bar">
-                <div class="relative flex-1 min-w-0">
-                    <div class="absolute inset-y-0 left-3.5 flex items-center pointer-events-none t-faint">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </div>
-                    <input type="text" id="stationSearchInput" oninput="filterStationsList()" placeholder=
+                            <h3 class="eyebrow flex items-center gap-2 min-w-0" style=
