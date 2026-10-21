@@ -2,10 +2,10 @@
 // Keeps the app and its libraries available with no connection. Photos are NOT stored on the device.
 // Database calls are NOT cached here - the app's own upload queue handles data.
 
-const SHELL_CACHE = 'pestis-shell-v45';
-const RUNTIME_CACHE = 'pestis-runtime-v45';
+const SHELL_CACHE = 'pestis-shell-v49';
+const RUNTIME_CACHE = 'pestis-runtime-v49';
 
-const SHELL = ['./', './index.html', './images/pesties-logo.png'];
+const SHELL = ['./', './index.html', './admin.html', './images/pesties-logo.png'];   // admin.html: the app's add-ons (Admin, profile, Settings)
 const CDN = [
     'https://cdn.tailwindcss.com',
     'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
@@ -66,6 +66,20 @@ self.addEventListener('fetch', event => {
                         { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
                 }
                 return (await caches.match('./index.html')) || (await caches.match('./')) || Response.error();
+            }
+        })());
+        return;
+    }
+
+    // The add-ons file (admin.html): like the app page - the newest from the server, the saved copy when offline
+    if (url.origin === self.location.origin && /\/admin\.html$/.test(url.pathname)) {
+        event.respondWith((async () => {
+            try {
+                const res = await fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' });
+                if (res.ok) { const cache = await caches.open(SHELL_CACHE); cache.put(url.origin + url.pathname, res.clone()); }
+                return res;
+            } catch (e) {
+                return (await caches.match(url.origin + url.pathname)) || (await caches.match('./admin.html')) || Response.error();
             }
         })());
         return;
