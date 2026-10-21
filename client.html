@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pesties Client Portal</title>
+    <script>
+        // Start-up check: notes anything that goes wrong while the app starts, so the sign-in screen can say what it is
+        window.__boot = { step: 'Loading the app', errors: [], started: Date.now() };
+        window.addEventListener('error', function (e) {
+            try {
+                var t = e && e.target, src = t && /^(SCRIPT|LINK)$/.test(t.tagName || '') && (t.src || t.href);
+                if (!src && !e.message) return;
+                window.__boot.errors.push(src && !e.message ? 'Could not download ' + src : (e.message || 'Error') + (e.filename ? ' (' + String(e.filename).split('/').pop() + ':' + e.lineno + ')' : ''));
+            } catch (x) {}
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) { try { var r = e && e.reason; window.__boot.errors.push('Unhandled: ' + ((r && r.message) || r)); } catch (x) {} });
+    </script>
     <meta name="description" content="Pesties client portal: service records, recommendations, audit reports and site documents.">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -444,6 +456,41 @@
         </div>
     </div>
 
+    <!-- Start-up watchdog: runs even if the main app code can't. Shows what's stuck and offers a repair. -->
+    <script>
+        (function () {
+            function stuck() {
+                var load = document.getElementById('authLoading'), panel = document.getElementById('loginPanel'), screen = document.getElementById('loginScreen');
+                return load && panel && screen && !load.classList.contains('hidden') && panel.classList.contains('hidden') && !screen.classList.contains('hidden');
+            }
+            function esc(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+            window.pestisRepair = async function () {
+                var b = document.getElementById('bootRepairBtn'); if (b) { b.disabled = true; b.textContent = 'Repairing...'; }
+                // removes the saved app files only - anything not uploaded yet stays on this device
+                try { if (navigator.serviceWorker) { var regs = await navigator.serviceWorker.getRegistrations(); for (var i = 0; i < regs.length; i++) await regs[i].unregister(); } } catch (e) {}
+                try { if (window.caches) { var keys = await caches.keys(); for (var k = 0; k < keys.length; k++) await caches.delete(keys[k]); } } catch (e) {}
+                location.reload();
+            };
+            function show() {
+                if (!stuck()) return;
+                var B = window.__boot || { step: '', errors: [] };
+                var lib = typeof window.supabase === 'undefined' ? 'The sign-in library (supabase-js) did not download - check the internet connection or any ad / content blocker.' : '';
+                var errs = (lib ? [lib] : []).concat(B.errors || []).slice(-6);
+                var el = document.getElementById('authLoading');
+                el.classList.remove('italic');
+                el.innerHTML = '<div class="space-y-2 text-left not-italic" style="font-style:normal">' +
+                    '<div class="font-bold t-strong">The portal is taking longer than usual to start.</div>' +
+                    '<div>Stuck at: <b>' + esc(B.step || 'starting') + '</b></div>' +
+                    (errs.length ? '<div style="color:#dc2626;word-break:break-word">' + errs.map(esc).join('<br>') + '</div>' : '') +
+                    '<div class="flex flex-wrap gap-2 pt-1"><button type="button" class="btn btn-primary !py-2" onclick="location.reload()">Try again</button>' +
+                    '<button type="button" id="bootRepairBtn" class="btn btn-secondary !py-2" onclick="pestisRepair()">Repair app</button></div>' +
+                    '<div class="text-[11px] t-faint">Repair app re-downloads the portal files. If this keeps happening, send a screenshot of this message.</div></div>';
+            }
+            setTimeout(show, 15000);
+            setTimeout(show, 30000);
+        })();
+    </script>
+
     <!-- Pest guide -->
     <div id="pestModal" class="hidden fixed inset-0 z-[70] overlay flex justify-center items-stretch sm:items-center sm:p-6" onclick="if (event.target === this) closePestGuide()">
         <div class="card modal-panel w-full max-w-2xl flex flex-col overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="pestModalTitle">
@@ -478,7 +525,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.21-p20';
+const PORTAL_VERSION = '2026.10.21-p21';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -642,7 +689,7 @@ async function idleSignOut() {
     const mins = idleMins;
     if (idleWarnEl) { idleWarnEl.remove(); idleWarnEl = null; }
     stopLive();
-    try { await sb.auth.signOut(); } catch (e) {}
+    try { await sb.auth.signOut({ scope: 'local' }); } catch (e) {}
     state.me = null; state.sites = []; state.site = null; state.data = null;
     ['modal', 'pestModal', 'viewer'].forEach(id => { const el = $(id); if (el) el.classList.add('hidden'); });
     document.body.style.overflow = '';
@@ -1140,58 +1187,4 @@ async function loadSiteData(site) {
     fillFilterOptions();
 }
 
-// Service records, stations, visits and recommendations in one shape
-function buildModel(site, d) {
-    const superseded = new Set(d.logs.map(r => parsePayload(r.payload).supersedes).filter(Boolean));
-    const entries = [];
-    d.logs.forEach(r => {
-        const p = parsePayload(r.payload);
-        if (META_IDS.has(r.barcode_id) || p.recOnly) return;
-        const key = p.clientRef || (r.barcode_id + '@' + r.created_at);
-        if (superseded.has(key)) return;
-        const at = Date.parse(p.servicedAt) || Date.parse(r.created_at);
-        if (isNaN(at)) return;
-        const species = p.speciesCaught && p.speciesCaught !== NONE_SPECIES ? p.speciesCaught : '';
-        const prep = p.prepUsed && p.prepUsed !== NONE_PREP ? p.prepUsed : '';
-        entries.push({
-            key, barcode: r.barcode_id, at, name: p.locationName || r.barcode_id, type: p.deviceType || '',
-            activity: p.activityLevel || 'None', species, count: species ? (Number(p.pestCount) > 0 ? Number(p.pestCount) : 1) : 0,
-            prep, qty: prep && p.quantity != null && !isNaN(p.quantity) ? Number(p.quantity) : null, unit: prep ? (p.quantityUnit || 'each') : '',
-            batch: prep ? (p.batchNumber || '') : '', notes: p.notes || '', tech: p.technician || '', edited: !!p.editedAt
-        });
-    });
-    entries.sort((a, b) => a.at - b.at);
-
-    // stations: the stations table, plus anything only seen in service records
-    const st = new Map();
-    d.stations.forEach(s => st.set(s.barcode, { barcode: s.barcode, name: s.name || s.barcode, type: s.type || '', zone: (s.zone || '').trim(), mapId: s.map_id || null, x: s.pin_x, y: s.pin_y, photoPath: s.photo_path || null, entries: [], fromTable: true }));
-    entries.forEach(e => {
-        let s = st.get(e.barcode);
-        if (!s) { s = { barcode: e.barcode, name: e.name, type: e.type, zone: '', mapId: null, entries: [] }; st.set(e.barcode, s); }
-        if (!s.fromTable) { s.name = e.name || s.name; s.type = e.type || s.type; }
-        s.entries.push(e);
-        // a station's name and type as they were when serviced stay on the record; the register shows the current ones
-        e.station = s;
-    });
-    const stations = Array.from(st.values()).map(s => {
-        const last = s.entries[s.entries.length - 1] || null;
-        return Object.assign(s, { last, lastAt: last ? last.at : null });
-    }).sort((a, b) => String(a.name).localeCompare(String(b.name), undefined, { numeric: true, sensitivity: 'base' }));
-    entries.forEach(e => { if (e.station) { e.name = e.station.name; e.type = e.station.type || e.type; e.zone = e.station.zone || ''; e.mapId = e.station.mapId || null; } });
-
-    // how often stations should be checked: the most frequent contracted service
-    const intervals = (site.services || []).map(s => FREQUENCIES[s.frequency] && FREQUENCIES[s.frequency].days).filter(Boolean);
-    const interval = intervals.length ? Math.min(...intervals) : null;
-    stations.forEach(s => {
-        s.daysSince = daysSince(s.lastAt);
-        s.overdue = interval != null && (s.lastAt == null || s.daysSince > interval + OVERDUE_GRACE_DAYS);
-    });
-
-    // visits, each with the station records done on it
-    const visits = d.visits.map(v => ({
-        id: v.id, type: v.visit_type || 'Routine Service', tech: v.technician || '', notes: v.notes || '',
-        start: Date.parse(v.signed_in_at || v.started_at) || null, end: Date.parse(v.signed_out_at || v.completed_at) || Date.parse(v.created_at),
-        completed: Date.parse(v.completed_at) || Date.parse(v.created_at), services: Array.isArray(v.services_completed) ? v.services_completed : [], entries: [],
-        signedBy: v.signed_by || '', signedAt: Date.parse(v.signed_at) || null, noSignatureReason: v.no_signature_reason || '', signaturePath: v.signature_path || null
-    })).filter(v => !isNaN(v.completed)).sort((a, b) => a.completed - b.completed);
-    let 
+// Service records, stations, visits and recommenda
