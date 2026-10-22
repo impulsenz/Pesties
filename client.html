@@ -260,6 +260,16 @@
 .pest-name { font-size: .75rem; font-weight: 800; color: var(--text); line-height: 1.2; padding: 0 .15rem .1rem; }
 .pest-hero { aspect-ratio: 16 / 9; border-radius: 1rem; overflow: hidden; background: var(--surface2); display: flex; align-items: center; justify-content: center; }
 .pest-hero img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+.pest-sub { font-size: .68rem; font-weight: 800; color: var(--muted); padding-top: .2rem; }
+.pg-stage { position: relative; }
+.pg-stage img { cursor: zoom-in; }
+.pg-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 2.3rem; height: 2.3rem; border-radius: 999px; background: rgba(2, 6, 23, .55); color: #fff; font-size: 1.4rem; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+.pg-prev { left: .5rem; } .pg-next { right: .5rem; }
+.pg-count { position: absolute; bottom: .45rem; right: .55rem; font-size: .65rem; font-weight: 800; color: #fff; background: rgba(2, 6, 23, .55); padding: .1rem .45rem; border-radius: 999px; }
+.pg-thumbs { display: flex; gap: .35rem; overflow-x: auto; padding: .4rem 0 .1rem; }
+.pg-thumb { flex: 0 0 auto; width: 3.6rem; height: 2.7rem; border-radius: .45rem; overflow: hidden; border: 2px solid transparent; opacity: .7; }
+.pg-thumb.on { border-color: rgb(var(--b500)); opacity: 1; }
+.pg-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .idle-warn { position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(2, 6, 23, .6); backdrop-filter: blur(3px); }
 </style>
 </head>
@@ -527,7 +537,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.22-p23';
+const PORTAL_VERSION = '2026.10.22-p24';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -2367,6 +2377,73 @@ function pestCategoryGuess(name) {
 }
 const pestCategoryOf = o => (o && String(o.category || '').trim()) || pestCategoryGuess(o ? o.label : '');
 const pestItems = () => (state.pestGuide || []).filter(o => o.label).slice().sort((a, b) => String(a.label).localeCompare(String(b.label)));
+// the sub-group inside a category (Cockroaches, Ants, Spiders ...): as Pesties set it, or from the name
+function pestSubOf(o) {
+    if (o && String(o.subcategory || '').trim()) return String(o.subcategory).trim();
+    const n = String((o && o.label) || '').toLowerCase(), cat = pestCategoryOf(o);
+    if (/cockroach|roach/.test(n)) return 'Cockroaches';
+    if (/\bants?\b/.test(n)) return 'Ants';
+    if (/spider|katip/.test(n)) return 'Spiders';
+    if (/beetle|borer|weevil/.test(n)) return cat === 'Stored product pests' ? 'Beetles & weevils' : 'Beetles & borers';
+    if (/moth/.test(n)) return 'Moths';
+    if (/fly|flies|gnat|midge|mosquito/.test(n)) return 'Flies';
+    if (/wasp|bee\b|bees|hornet/.test(n)) return 'Wasps & bees';
+    return cat === 'Crawling insects' ? 'Other crawling insects' : '';
+}
+const PEST_SUB_ORDER = ['Cockroaches', 'Ants', 'Spiders', 'Beetles & borers', 'Other crawling insects', 'Flies', 'Wasps & bees', 'Moths', 'Beetles & weevils', 'Other'];
+function pestSubs(items) {
+    const used = new Set(items.map(pestSubOf));
+    return PEST_SUB_ORDER.filter(x => used.has(x)).concat(Array.from(used).filter(x => !PEST_SUB_ORDER.includes(x)).sort((a, b) => (a === '') - (b === '') || a.localeCompare(b)));
+}
+// ---------- photos: the pest, and the signs of an infestation (saved by Pesties, or found on Wikimedia Commons) ----------
+const BAD_PIC = /\b(map|range|distribution|logo|icon|diagram|drawing|illustration|stamp|chart|graph)\b|\.(svg|gif|tiff?|pdf|webm|ogv)$/i;
+async function commonsSearch(term, limit) {
+    const url = `https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=${Math.max(3, limit * 2)}&gsrsearch=${encodeURIComponent('filetype:bitmap ' + term)}&prop=imageinfo&iiprop=url&iiurlwidth=900`;
+    const r = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!r.ok) throw new Error('Wikimedia ' + r.status);
+    const j = await r.json(), pages = Object.values((j.query && j.query.pages) || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
+    return pages.filter(pg => pg.imageinfo && pg.imageinfo[0] && !BAD_PIC.test(pg.title || '')).map(pg => ({ u: pg.imageinfo[0].thumburl || pg.imageinfo[0].url, p: pg.imageinfo[0].descriptionurl || '', t: String(pg.title || '').replace(/^File:/, '').replace(/\.[a-z]+$/i, '') })).slice(0, limit);
+}
+const galleryCache = new Map();
+async function pestGallery(o) {
+    let saved = o.gallery;
+    if (typeof saved === 'string') { try { saved = JSON.parse(saved); } catch (e) { saved = null; } }
+    let g = saved && (saved.pest || saved.signs) ? { pest: (saved.pest || []).slice(), signs: (saved.signs || []).slice() } : null;
+    if (!g) {
+        if (!galleryCache.has(o.id)) galleryCache.set(o.id, (async () => {
+            const pest = await commonsSearch(o.label, 4).catch(() => []);
+            const signs = (await commonsSearch(o.label + ' infestation', 3).catch(() => [])).concat(await commonsSearch(o.label + ' damage', 2).catch(() => []));
+            return { pest, signs: signs.filter((x, i, a) => a.findIndex(y => y.u === x.u) === i) };
+        })());
+        const f = await galleryCache.get(o.id);
+        g = { pest: f.pest.slice(), signs: f.signs.slice() };
+    }
+    if (o.photo_path && !g.pest.some(x => x.u === o.photo_path)) {
+        const [u] = await signPaths([o.photo_path], PHOTO_BUCKET);
+        if (u) g.pest.unshift({ u, p: /^https?:/i.test(o.photo_path) ? (o.photo_source || '') : '', own: !/^https?:/i.test(o.photo_path) });
+    }
+    return g;
+}
+let pgState = { title: '', pest: [], signs: [], tab: 'pest', i: 0 };
+function drawPestGallery() {
+    const el = $('pestHeroBox');
+    if (!el) return;
+    const list = pgState[pgState.tab], it = list[pgState.i];
+    const tab = (k, l) => `<button type="button" class="tab-btn ${pgState.tab === k ? 'active' : ''}" onclick="pgState.tab = '${k}'; pgState.i = 0; drawPestGallery()" ${pgState[k].length ? '' : 'disabled style="opacity:.5"'}>${l} ${pgState[k].length}</button>`;
+    el.innerHTML = `<div class="flex flex-wrap gap-1.5 mb-2">${tab('pest', '📷 The pest')}${tab('signs', '🔍 Signs of infestation')}</div>
+        <div class="pest-hero pg-stage">${it ? `<img src="${esc(it.u)}" alt="${esc(it.t || pgState.title)}" onclick="pgOpenFull()">` : '<span class="t-faint text-xs">No pictures found.</span>'}
+            ${list.length > 1 ? `<button type="button" class="pg-nav pg-prev" onclick="pgStep(-1)" aria-label="Previous picture">‹</button><button type="button" class="pg-nav pg-next" onclick="pgStep(1)" aria-label="Next picture">›</button><span class="pg-count">${pgState.i + 1} / ${list.length}</span>` : ''}</div>
+        ${list.length > 1 ? `<div class="pg-thumbs">${list.map((x, k) => `<button type="button" class="pg-thumb ${k === pgState.i ? 'on' : ''}" onclick="pgState.i = ${k}; drawPestGallery()"><img src="${esc(x.u)}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
+        ${it && !it.own ? `<p class="text-[10px] t-faint mt-1">${esc(it.t || '')}${it.t ? ' · ' : ''}Photo: <a href="${esc(it.p || 'https://commons.wikimedia.org')}" target="_blank" rel="noopener" class="underline">Wikimedia Commons</a></p>` : ''}`;
+}
+function pgStep(d) { const n = pgState[pgState.tab].length; if (!n) return; pgState.i = (pgState.i + d + n) % n; drawPestGallery(); }
+function pgOpenFull() {
+    const list = pgState[pgState.tab];
+    if (!list.length) return;
+    const key = 'pg' + Math.random().toString(36).slice(2, 8);
+    viewerGroups[key] = { items: list.map(x => ({ url: x.u, video: false })), caption: pgState.title + (pgState.tab === 'signs' ? ' · signs of infestation' : '') };
+    openViewer(key, pgState.i);
+}
 function pestCategoriesOf(items) {
     const used = new Set(items.map(pestCategoryOf));
     return PEST_CATEGORIES.filter(c => used.has(c)).concat(Array.from(used).filter(c => !PEST_CATEGORIES.includes(c)).sort());
@@ -2395,13 +2472,20 @@ async function renderPestGuideList() {
     if (!el) return;
     const q = pestGuideQ.trim().toLowerCase();
     const items = pestItems().filter(o => !q || `${o.label} ${pestCategoryOf(o)} ${o.about || ''}`.toLowerCase().includes(q));
-    el.innerHTML = pestCategoriesOf(items).map(c => `<div><div class="eyebrow t-accent mb-2">${PEST_CAT_ICON[c] || '🐞'} ${esc(c)}</div><div class="pest-grid">${items.filter(o => pestCategoryOf(o) === c).map(o => `
-        <button type="button" class="pest-card" data-pest="${esc(o.id)}" onclick="showPestInfo(this.dataset.pest)"><span class="pest-pic" data-pest-pic="${esc(o.id)}">${o.photo_path ? '' : PEST_CAT_ICON[c] || '🐞'}</span><span class="pest-name">${esc(o.label)}</span></button>`).join('')}</div></div>`).join('')
-        || emptyNote(pestItems().length ? 'No pests match.' : 'The pest guide is being written. Check back soon.');
-    const want = items.filter(o => o.photo_path);
-    if (!want.length) return;
-    const links = await signPaths(want.map(o => o.photo_path), PHOTO_BUCKET);
-    want.forEach((o, i) => { const box = el.querySelector(`[data-pest-pic="${CSS.escape(String(o.id))}"]`); if (box && links[i]) box.innerHTML = `<img src="${esc(links[i])}" alt="${esc(o.label)}" loading="lazy">`; });
+    const card = (o, c) => `<button type="button" class="pest-card" data-pest="${esc(o.id)}" onclick="showPestInfo(this.dataset.pest)"><span class="pest-pic" data-pest-pic="${esc(o.id)}">${PEST_CAT_ICON[c] || '🐞'}</span><span class="pest-name">${esc(o.label)}</span></button>`;
+    el.innerHTML = pestCategoriesOf(items).map(c => {
+        const inCat = items.filter(o => pestCategoryOf(o) === c);
+        return `<div class="space-y-2"><div class="eyebrow t-accent">${PEST_CAT_ICON[c] || '🐞'} ${esc(c)}</div>${pestSubs(inCat).map(sub => `${sub ? `<div class="pest-sub">${esc(sub)}</div>` : ''}<div class="pest-grid">${inCat.filter(o => pestSubOf(o) === sub).map(o => card(o, c)).join('')}</div>`).join('')}</div>`;
+    }).join('') || emptyNote(pestItems().length ? 'No pests match.' : 'The pest guide is being written. Check back soon.');
+    // each card shows the pest's first photo (a few at a time)
+    let next = 0;
+    const worker = async () => {
+        while (next < items.length) {
+            const o = items[next++];
+            try { const g = await pestGallery(o), it = g.pest[0] || g.signs[0], box = el.querySelector(`[data-pest-pic="${CSS.escape(String(o.id))}"]`); if (box && it) box.innerHTML = `<img src="${esc(it.u)}" alt="${esc(o.label)}" loading="lazy">`; } catch (e) {}
+        }
+    };
+    await Promise.all([worker(), worker(), worker(), worker()]);
 }
 async function showPestInfo(key) {
     const o = findPest(key);
@@ -2410,20 +2494,16 @@ async function showPestInfo(key) {
     const sec = (t, v) => v ? `<div class="space-y-1"><div class="eyebrow t-accent">${t}</div><div class="t-strong whitespace-pre-line leading-relaxed">${esc(v)}</div></div>` : '';
     $('pestModalTitle').textContent = o.label;
     $('pestModalBack').classList.remove('hidden');
-    $('pestModalBody').innerHTML = `<div class="pest-hero" id="pestHero">${o.photo_path ? '<span class="t-faint text-xs">Loading picture...</span>' : `<span class="text-5xl">${PEST_CAT_ICON[c] || '🐞'}</span>`}</div>
-        <div><span class="chip chip-grey">${PEST_CAT_ICON[c] || '🐞'} ${esc(c)}</span></div>
+    const sub = pestSubOf(o);
+    $('pestModalBody').innerHTML = `<div id="pestHeroBox"><div class="pest-hero"><span class="t-faint text-xs">Loading pictures...</span></div></div>
+        <div><span class="chip chip-grey">${PEST_CAT_ICON[c] || '🐞'} ${esc(c)}${sub ? ' · ' + esc(sub) : ''}</span></div>
         ${(sec('About this pest', o.about) + sec('Breeding habits', o.breeding) + sec('Control strategy', o.control)) || emptyNote("Pesties hasn't written the guide for this pest yet.")}`;
     $('pestModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
-    if (o.photo_path) {
-        const [u] = await signPaths([o.photo_path], PHOTO_BUCKET);
-        const box = $('pestHero');
-        if (!box) return;
-        if (!u) { box.innerHTML = '<span class="t-faint text-xs">Picture unavailable</span>'; return; }
-        const key = 'p' + Math.random().toString(36).slice(2, 8);
-        viewerGroups[key] = { items: [{ url: u, video: false }], caption: o.label };
-        box.innerHTML = `<img src="${esc(u)}" alt="${esc(o.label)}" onclick="openViewer('${key}', 0)">`;
-    }
+    const g = await pestGallery(o);
+    if ($('pestModalTitle').textContent !== o.label) return;
+    pgState = { title: o.label, pest: g.pest, signs: g.signs, tab: g.pest.length ? 'pest' : 'signs', i: 0 };
+    drawPestGallery();
 }
 
 // ---------- preparation safety data sheets (SDS) ----------
