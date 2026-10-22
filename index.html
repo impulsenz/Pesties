@@ -171,11 +171,13 @@
         /* header controls share one height */
         .visit-act { width: 100%; justify-content: center; text-align: center; line-height: 1.2; padding-left: .5rem; padding-right: .5rem; white-space: normal; }
         .header-h { height: 2.5rem; border-radius: .8rem; box-sizing: border-box; }
-        /* phones: a compact header so "Service App" and the site name still fit (Admin is in the profile, day/night in Settings) */
+        /* phones: a compact header so "Service App" and the site name still fit (Admin is in the profile, day/night in Settings in the profile) */
         @media (max-width: 639px) {
             #appHeader .icon-btn, #appHeader .header-h { width: 2.2rem; height: 2.2rem; min-width: 2.2rem; }
             #appHeader #syncStatusBadge { width: auto; padding: 0 .55rem; }
-            #appHeader button.header-h:last-child { width: auto; }
+            /* the profile button: a square tile with the picture centred in it */
+            #appHeader #profileChip { width: 2.2rem; padding: 0; gap: 0; justify-content: center; }
+            #appHeader #profileChip #headerAvatar, #appHeader #profileChip #headerAvatarFallback { width: 1.7rem; height: 1.7rem; border-radius: .55rem; }
             #appHeader #adminBtn, #appHeader #themeBtnHeader { display: none !important; }
             #appHeader .logo-tile img { height: 2.4rem; }
         }
@@ -534,6 +536,8 @@
         .seg-set { display: inline-flex; flex-wrap: wrap; gap: .3rem; }
         /* ================= PHONES: less on screen at once ================= */
         .m-only { display: none !important; }
+        .bell-tabs .bell-n:empty, .bell-tabs .bell-t:empty { display: none; }
+        .bell-tabs .bell-n, .bell-tabs .bell-t { margin-left: .25rem; padding: 0 .35rem; border-radius: 999px; background: rgb(var(--b500) / .18); font-size: .65rem; }
         @media (max-width: 639px) {
             .m-only { display: inline-flex !important; }
             .m-hide { display: none !important; }
@@ -678,8 +682,18 @@
         .pm-card { width: 100%; max-width: 64rem; height: min(46rem, 100%); display: flex; flex-direction: column; gap: .6rem; padding: .9rem; }
         .pm-view { position: relative; flex: 1 1 auto; min-height: 12rem; border-radius: .8rem; overflow: hidden; background: #1e293b; touch-action: none; cursor: grab; user-select: none; }
         .pm-view:active { cursor: grabbing; }
-        .pm-tiles { position: absolute; inset: 0; }
-        .pm-tiles img { position: absolute; width: 256px; height: 256px; max-width: none; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+        .pm-tiles { position: absolute; transform-origin: 50% 50%; }
+        .pm-search { position: relative; }
+        .pm-sug { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + .25rem); max-height: 16rem; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: .8rem; box-shadow: 0 12px 28px rgba(0, 0, 0, .25); padding: .25rem; }
+        .pm-sug.hidden { display: none; }
+        .pm-sug button { display: block; width: 100%; text-align: left; padding: .5rem .6rem; border-radius: .55rem; font-size: .8rem; color: var(--text); }
+        .pm-sug button:hover, .pm-sug button.on { background: rgb(var(--b500) / .12); }
+        .pm-sug small { display: block; font-size: .68rem; color: var(--faint); }
+        .pm-sug .pm-sug-h { padding: .35rem .6rem .1rem; font-size: .6rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); }
+        .pm-turn { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+        .pm-north { position: absolute; left: .5rem; top: .5rem; width: 2.2rem; height: 2.2rem; border-radius: 999px; background: #ffffff; color: #dc2626; box-shadow: 0 2px 8px rgba(0, 0, 0, .3); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: .6rem; font-weight: 900; line-height: .9; pointer-events: none; }
+        .pm-north span { color: #0f172a; }
+        .pm-tiles img { position: absolute; width: 257px; height: 257px; max-width: none; user-select: none; -webkit-user-drag: none; pointer-events: none; }
         .pm-zoom { position: absolute; right: .5rem; top: .5rem; display: flex; flex-direction: column; gap: .3rem; }
         .pm-zoom button { width: 2.2rem; height: 2.2rem; border-radius: .6rem; background: #ffffff; color: #0f172a; font-weight: 900; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(0, 0, 0, .3); }
         .pm-credit { position: absolute; right: 0; bottom: 0; padding: .1rem .4rem; font-size: 9.5px; background: rgba(255, 255, 255, .8); color: #334155; border-top-left-radius: .4rem; pointer-events: none; }
@@ -825,16 +839,13 @@
                     <span id="notifCount" class="hidden absolute -top-1.5 -right-1.5 min-w-[1.2rem] h-[1.2rem] px-1 rounded-full text-[10px] font-black text-white flex items-center justify-center" style="background:#dc2626;">0</span>
                 </button>
 
-                <button type="button" id="actionsBtn" onclick="openActionsModal()" class="icon-btn relative" title="Needs action" aria-label="Needs action">
+                <button type="button" id="actionsBtn" onclick="openActionsModal()" class="icon-btn relative m-hide" title="Needs action" aria-label="Needs action">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                     <span id="actionsCount" class="hidden absolute -top-1.5 -right-1.5 min-w-[1.2rem] h-[1.2rem] px-1 rounded-full text-[10px] font-black text-white flex items-center justify-center" style="background:#0891b2;">0</span>
                 </button>
 
                 <button type="button" id="adminBtn" onclick="openAdmin('overview')" class="icon-btn hidden" title="Admin" aria-label="Admin">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                </button>
-                <button type="button" onclick="openSettingsModal()" class="icon-btn" title="Settings">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 </button>
 
                 <button type="button" id="themeBtnHeader" onclick="toggleTheme()" class="icon-btn" title="Toggle day / night mode">
@@ -843,7 +854,7 @@
                 </button>
 
                 <!-- Profile chip -->
-                <button type="button" onclick="openProfileModal()" class="header-h relative flex items-center gap-2.5 pl-1 pr-3 cursor-pointer transition-all" style="background: var(--surface3); border: 1px solid var(--border);">
+                <button type="button" id="profileChip" onclick="openProfileModal()" class="header-h relative flex items-center gap-2.5 pl-1 pr-3 cursor-pointer transition-all" style="background: var(--surface3); border: 1px solid var(--border);">
                     <img id="headerAvatar" src="" alt="" class="w-8 h-8 rounded-lg object-cover hidden">
                     <span id="headerAvatarFallback" class="w-8 h-8 rounded-lg bg-brand-500 text-white font-black text-xs flex items-center justify-center">?</span>
                     <span id="headerName" class="text-xs font-bold t-strong hidden sm:block max-w-[9rem] truncate"></span>
@@ -1370,53 +1381,7 @@
     </div>
 
     <!-- ===================== SETTINGS MODAL ===================== -->
-    <div id="settingsModal" class="hidden overlay fixed inset-0 z-50 flex flex-col justify-center items-center p-4">
-        <div class="card p-6 sm:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto scroll-thin space-y-6">
-            <div class="flex justify-between items-start gap-3">
-                <div>
-                    <h3 class="font-black text-lg t-accent">Settings</h3>
-                    <p class="text-[11px] t-faint">App version <span class="app-version font-mono"></span></p>
-                    <button type="button" id="checkUpdatesBtn" onclick="checkForUpdates()" class="btn btn-secondary !py-2 !px-3 !text-xs mt-2">⟳ Check for updates</button>
-                    <button type="button" onclick="toggleTheme()" class="btn btn-secondary !py-2 !px-3 !text-xs mt-2 sm:hidden">◐ Day / night mode</button>
-                </div>
-                <button type="button" onclick="closeSettingsModal()" class="t-faint hover:opacity-70 text-xs font-semibold cursor-pointer shrink-0">✕ Close</button>
-            </div>
-
-            <div class="space-y-3">
-                <h4 class="eyebrow t-accent">Notifications</h4>
-                <div class="flex flex-wrap items-center gap-2 text-xs">
-                    <label for="notifDueSelect" class="t-muted font-semibold">Alert me about services</label>
-                    <select id="notifDueSelect" onchange="setNotifDueMode(this.value)" class="field !w-auto !py-2 cursor-pointer">
-                        <option value="today">Due today</option>
-                        <option value="week">Due within 7 days</option>
-                    </select>
-                    <span class="t-faint">Missed (overdue) services are always shown.</span>
-                </div>
-            </div>
-
-            <div class="border-t divider pt-5 space-y-3">
-                <div class="flex flex-wrap items-baseline justify-between gap-2"><h4 class="eyebrow t-accent">Appearance</h4><span id="prefsSavedNote" class="text-[11px] t-faint">Your settings are saved to your account and only change things for you.</span></div>
-                <div id="lookSettings" class="space-y-3"></div>
-            </div>
-
-            <div class="border-t divider pt-5 space-y-2">
-                <h4 class="eyebrow t-accent">Scanning</h4>
-                <div id="scanSettings" class="space-y-2"></div>
-            </div>
-
-            <div class="border-t divider pt-5 space-y-2">
-                <h4 class="eyebrow t-accent">Photos</h4>
-                <div id="photoSizeSetting" class="space-y-1.5"></div>
-            </div>
-
-            <div id="settingsAdminNote" class="hidden border-t divider pt-5 flex flex-wrap items-center justify-between gap-3">
-                <p class="text-xs t-muted">Team settings, the station form lists, staff and client access are on the Admin page.</p>
-                <button type="button" onclick="closeSettingsModal(); openAdmin('overview')" class="btn btn-secondary">🛡 Open Admin</button>
-            </div>
-
-            <div class="hidden" aria-hidden="true"><p id="diagSummary"></p><div id="diagList"></div></div>
-        </div>
-    </div>
+    <div id="settingsModal" class="hidden" aria-hidden="true"></div><!-- settings now live in the profile pop-up -->
 
     <!-- ===================== ADD CLIENT MODAL ===================== -->
     <div id="addClientModal" class="hidden overlay fixed inset-0 z-50 flex flex-col justify-center items-center p-4">
@@ -1545,11 +1510,16 @@
 
     <!-- ===================== PROFILE & TEAM ACCESS MODAL ===================== -->
     <div id="profileModal" class="hidden overlay fixed inset-0 z-50 flex flex-col justify-center items-center p-4">
-        <div class="card p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto scroll-thin space-y-6">
-            <div class="flex justify-between items-start">
+        <div class="card p-6 sm:p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto scroll-thin space-y-6">
+            <div class="flex justify-between items-start gap-3">
                 <h3 class="font-black text-lg t-accent">My Profile</h3>
                 <button type="button" onclick="closeProfileModal()" class="t-faint hover:opacity-70 text-xs font-semibold cursor-pointer">✕ Close</button>
             </div>
+            <div class="flex flex-wrap gap-1.5" role="tablist">
+                <button type="button" id="profTabMe" role="tab" class="tab-btn active" onclick="setProfileTab('me')">👤 Me</button>
+                <button type="button" id="profTabSettings" role="tab" class="tab-btn" onclick="setProfileTab('settings')">⚙ Settings</button>
+            </div>
+            <div id="profPaneMe" class="space-y-6">
 
             <div class="flex items-center gap-4 inset p-4">
                 <img id="profileAvatarLarge" src="" alt="" class="w-16 h-16 rounded-2xl object-cover hidden">
@@ -1574,6 +1544,47 @@
 
             <div class="flex justify-end pt-2">
                 <button type="button" onclick="signOut()" class="btn btn-danger !px-6 !py-3">Sign Out</button>
+            </div>
+            </div>
+            <div id="profPaneSettings" class="hidden space-y-6">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[11px] t-faint mr-auto">App version <span class="app-version font-mono"></span></span>
+                <button type="button" id="checkUpdatesBtn" onclick="checkForUpdates()" class="btn btn-secondary !py-2 !px-3 !text-xs">⟳ Check for updates</button>
+                <button type="button" onclick="toggleTheme()" class="btn btn-secondary !py-2 !px-3 !text-xs">◐ Day / night mode</button>
+            </div>
+            <div class="space-y-3">
+                <h4 class="eyebrow t-accent">Notifications</h4>
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <label for="notifDueSelect" class="t-muted font-semibold">Alert me about services</label>
+                    <select id="notifDueSelect" onchange="setNotifDueMode(this.value)" class="field !w-auto !py-2 cursor-pointer">
+                        <option value="today">Due today</option>
+                        <option value="week">Due within 7 days</option>
+                    </select>
+                    <span class="t-faint">Missed (overdue) services are always shown.</span>
+                </div>
+            </div>
+
+            <div class="border-t divider pt-5 space-y-3">
+                <div class="flex flex-wrap items-baseline justify-between gap-2"><h4 class="eyebrow t-accent">Appearance</h4><span id="prefsSavedNote" class="text-[11px] t-faint">Your settings are saved to your account and only change things for you.</span></div>
+                <div id="lookSettings" class="space-y-3"></div>
+            </div>
+
+            <div class="border-t divider pt-5 space-y-2">
+                <h4 class="eyebrow t-accent">Scanning</h4>
+                <div id="scanSettings" class="space-y-2"></div>
+            </div>
+
+            <div class="border-t divider pt-5 space-y-2">
+                <h4 class="eyebrow t-accent">Photos</h4>
+                <div id="photoSizeSetting" class="space-y-1.5"></div>
+            </div>
+
+            <div id="settingsAdminNote" class="hidden border-t divider pt-5 flex flex-wrap items-center justify-between gap-3">
+                <p class="text-xs t-muted">Team settings, the station form lists, staff and client access are on the Admin page.</p>
+                <button type="button" onclick="closeProfileModal(); openAdmin('overview')" class="btn btn-secondary">🛡 Open Admin</button>
+            </div>
+
+            <div class="hidden" aria-hidden="true"><p id="diagSummary"></p><div id="diagList"></div></div>
             </div>
         </div>
     </div>
@@ -1686,6 +1697,10 @@
                 <div><h3 class="font-black text-lg" style="color:#0891b2;">Needs action</h3><p class="text-xs t-muted mt-1">Things your sites are missing, so every site is set up properly.</p></div>
                 <button type="button" onclick="closeActionsModal()" class="t-faint hover:opacity-70 text-xs font-semibold cursor-pointer shrink-0">✕ Close</button>
             </div>
+            <div class="m-only bell-tabs gap-1.5" role="tablist" aria-label="Notifications and tasks">
+                <button type="button" role="tab" class="tab-btn " onclick="switchBell('notif')">🔔 Notifications <span class="bell-n"></span></button>
+                <button type="button" role="tab" class="tab-btn active" onclick="switchBell('tasks')">✓ Tasks <span class="bell-t"></span></button>
+            </div>
             <div class="flex items-center gap-2 text-xs"><span class="t-muted font-semibold">Show for</span>
                 <select id="actionsScope" onchange="setActionsScope(this.value)" class="field !w-auto !py-2 cursor-pointer"><option value="mine">My sites</option><option value="all">All sites</option></select></div>
             <div id="actionsList" class="space-y-4 text-xs"></div>
@@ -1787,6 +1802,10 @@
                     <p class="text-xs t-muted mt-1">These stay here until the job is done - they can't be dismissed.</p>
                 </div>
                 <button type="button" onclick="closeNotifModal()" class="t-faint hover:opacity-70 text-xs font-semibold cursor-pointer shrink-0">✕ Close</button>
+            </div>
+            <div class="m-only bell-tabs gap-1.5" role="tablist" aria-label="Notifications and tasks">
+                <button type="button" role="tab" class="tab-btn active" onclick="switchBell('notif')">🔔 Notifications <span class="bell-n"></span></button>
+                <button type="button" role="tab" class="tab-btn " onclick="switchBell('tasks')">✓ Tasks <span class="bell-t"></span></button>
             </div>
             <div class="flex items-center gap-2 text-xs">
                 <span class="t-muted font-semibold">Show for</span>
@@ -1958,24 +1977,33 @@
             <aside id="pePanel" class="pe-panel hidden"></aside>
         </div>
         <input type="file" id="peBgFile" accept="image/*" class="hidden">
-        <!-- a satellite or street map of the site, captured under the plan at real scale -->
+        <!-- a satellite map of the site, turned to line up with the site and captured under the plan at real scale -->
         <div id="peMapPick" class="pm-wrap hidden" role="dialog" aria-modal="true" aria-label="Map of the site">
             <div class="card pm-card">
-                <div class="flex items-center justify-between gap-2"><div><div class="eyebrow t-accent">Map of the site</div><div class="text-[11px] t-faint">Find the site, zoom in until it fills the frame, then use this view.</div></div><button type="button" class="pe-x" onclick="pmClose()" aria-label="Close">✕</button></div>
-                <form class="flex gap-1.5" onsubmit="event.preventDefault(); pmFind(document.getElementById('pmSearch').value)">
-                    <input type="search" id="pmSearch" class="field !py-1.5 !text-sm flex-1 min-w-0" placeholder="Street address or place">
-                    <button type="submit" class="btn btn-secondary !py-1.5 !px-3 !text-xs shrink-0">Find</button>
-                    <button type="button" class="btn btn-secondary !py-1.5 !px-2.5 !text-xs shrink-0" onclick="pmLocate()" title="Where I am now">📍<span class="sm-inline">&nbsp;Here</span></button>
-                </form>
-                <div class="flex flex-wrap items-center gap-1.5"><span id="pmLayers" class="flex gap-1.5"></span><span id="pmMsg" class="text-[11px] t-faint"></span></div>
+                <div class="flex items-center justify-between gap-2"><div><div class="eyebrow t-accent">Map of the site</div><div class="text-[11px] t-faint">Start typing the address and pick it from the list. Drag, zoom and turn the map to line it up, then use this view.</div></div><button type="button" class="pe-x" onclick="pmClose()" aria-label="Close">✕</button></div>
+                <div class="relative pm-search">
+                    <input type="search" id="pmSearch" class="field !py-2 !text-sm w-full" placeholder="Start typing an address..." autocomplete="off" oninput="pmType(this.value)" onkeydown="pmKey(event)" onfocus="if (this.value.trim()) pmType(this.value)">
+                    <div id="pmSug" class="pm-sug hidden" role="listbox"></div>
+                </div>
+                <div id="pmMsg" class="text-[11px] t-faint min-h-[1rem]"></div>
                 <div id="pmView" class="pm-view">
                     <div id="pmTiles" class="pm-tiles"></div>
                     <div class="pm-zoom"><button type="button" onclick="pmZoom(1)" aria-label="Zoom in">+</button><button type="button" onclick="pmZoom(-1)" aria-label="Zoom out">−</button></div>
-                    <div id="pmCredit" class="pm-credit"></div>
+                    <div id="pmNorth" class="pm-north" title="North" aria-hidden="true"><span>N</span>▲</div>
+                    <div class="pm-credit">Imagery © Esri, Maxar, Earthstar Geographics</div>
                 </div>
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                    <a id="pmGoogle" href="#" target="_blank" rel="noopener" class="link-btn !text-[11px]">Compare with Google Maps ↗</a>
-                    <div class="flex gap-2 ml-auto"><button type="button" class="btn btn-secondary !py-2" onclick="pmClose()">Cancel</button><button type="button" id="pmUseBtn" class="btn btn-primary !py-2" onclick="pmUse()">Use this view</button></div>
+                <div class="pm-turn">
+                    <span class="text-xs font-bold t-muted shrink-0">Turn</span>
+                    <button type="button" class="pe-chip" onclick="pmTurn(-15)" aria-label="Turn left 15 degrees">↺ 15°</button>
+                    <button type="button" class="pe-chip" onclick="pmTurn(-1)" aria-label="Turn left 1 degree">‹</button>
+                    <input type="range" id="pmRot" min="-180" max="180" step="1" value="0" oninput="pmSetRot(this.value)" class="flex-1 min-w-[6rem] accent-orange-500" aria-label="Turn the map">
+                    <button type="button" class="pe-chip" onclick="pmTurn(1)" aria-label="Turn right 1 degree">›</button>
+                    <button type="button" class="pe-chip" onclick="pmTurn(15)" aria-label="Turn right 15 degrees">↻ 15°</button>
+                    <span id="pmRotLabel" class="text-xs font-mono t-strong w-11 text-right shrink-0">0°</span>
+                    <button type="button" class="link-btn !text-[11px] shrink-0" onclick="pmSetRot(0)">North up</button>
+                </div>
+                <div class="flex flex-wrap items-center justify-end gap-2">
+                    <button type="button" class="btn btn-secondary !py-2" onclick="pmClose()">Cancel</button><button type="button" id="pmUseBtn" class="btn btn-primary !py-2" onclick="pmUse()">Use this view</button>
                 </div>
             </div>
         </div>
@@ -2132,7 +2160,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.22-r55';
+        const APP_VERSION = '2026.10.22-r58';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -3012,11 +3040,27 @@
         }
 
         // ---------- Profile modal & admin panel ----------
-        function openProfileModal() {
+        function openProfileModal(tab) {
             document.getElementById('profileModal').classList.remove('hidden');
             document.getElementById('profileAdminLink').classList.toggle('hidden', !isAdmin());
             renderProfileMonth();
             renderDayBar();
+            setProfileTab(tab === 'settings' ? 'settings' : 'me');
+        }
+        // the profile pop-up has two tabs: you (month, working day, sign out) and your settings
+        function setProfileTab(t) {
+            const settings = t === 'settings';
+            document.getElementById('profTabMe').classList.toggle('active', !settings);
+            document.getElementById('profTabSettings').classList.toggle('active', settings);
+            document.getElementById('profPaneMe').classList.toggle('hidden', settings);
+            document.getElementById('profPaneSettings').classList.toggle('hidden', !settings);
+            if (settings) {
+                document.getElementById('notifDueSelect').value = notifDueMode;
+                document.getElementById('settingsAdminNote').classList.toggle('hidden', !isAdmin());
+                renderPhotoSetting();
+                renderLookSettings();
+                renderDiagnostics();
+            }
         }
         function renderProfileMonth() {
             const el = document.getElementById('profileMonth');
@@ -3326,6 +3370,13 @@
             else if (go === 'edit') openEditSiteModal();
         }
         function openActionsModal() { document.getElementById('actionsModal').classList.remove('hidden'); renderActions(); if (!siteSetup) loadBellExtras().then(() => { renderNotifications(); renderActions(); }); }
+        function buildActionsCount() { try { return buildActions().length; } catch (e) { return 0; } }
+        // phones: notifications and tasks are one pop-up with two tabs
+        function switchBell(t) {
+            if (t === 'tasks') { closeNotifModal(); openActionsModal(); }
+            else { closeActionsModal(); openNotifModal(); }
+        }
+        if (window.matchMedia) { const mq = window.matchMedia('(max-width: 639px)'); const re = () => { try { renderNotifications(); } catch (e) {} }; mq.addEventListener ? mq.addEventListener('change', re) : mq.addListener && mq.addListener(re); }
         function closeActionsModal() { document.getElementById('actionsModal').classList.add('hidden'); }
 
         // ---------- client updates to recommendations (shown in the bell) ----------
@@ -5390,6 +5441,13 @@
             badge.textContent = n.total > 99 ? '99+' : n.total;
             badge.classList.toggle('hidden', n.total === 0);
             badge.style.background = (n.missed.length || n.longVisits.length || n.breaches.length || n.sightings.some(x => x.urgency === 'Urgent') || n.contracts.some(x => x.ci.days < 0)) ? '#dc2626' : '#ea580c';
+            // phones: Needs action has no button of its own - it's the Tasks tab of the bell, so the bell counts both
+            const tasks = buildActionsCount();
+            const phone = window.matchMedia && window.matchMedia('(max-width: 639px)').matches, shown = n.total + (phone ? tasks : 0);
+            badge.textContent = shown > 99 ? '99+' : shown;
+            badge.classList.toggle('hidden', shown === 0);
+            document.querySelectorAll('.bell-n').forEach(el => { el.textContent = n.total || ''; });
+            document.querySelectorAll('.bell-t').forEach(el => { el.textContent = tasks || ''; });
             document.getElementById('notifBtn').title = n.total ? `${n.total} notification${n.total === 1 ? '' : 's'}` : 'No notifications';
 
             const list = document.getElementById('notifList');
@@ -10457,7 +10515,7 @@
             const g = document.getElementById('peGridRect'), d = pe.doc, z = pe.view.z;
             g.style.display = pe.show.grid ? '' : 'none';
             g.setAttribute('width', d.w); g.setAttribute('height', d.h);
-            const step = d.ppm * (d.ppm * z < 7 ? 5 : 1);   // too dense when zoomed out: one line every 5 m
+            const step = d.ppm * ([1, 5, 10, 50, 100, 500, 1000].find(m => d.ppm * m * z >= 7) || 1000);   // too dense when zoomed out: wider squares
             const minor = document.getElementById('peGridMinor'), major = document.getElementById('peGridMajor');
             minor.setAttribute('width', step); minor.setAttribute('height', step);
             minor.innerHTML = `<path d="M ${step} 0 L 0 0 0 ${step}" fill="none" stroke="#cbd5e1" stroke-width="${1 / z}"/>`;
@@ -11123,12 +11181,9 @@
             else peSetTool(what);
         }
 
-        // ---------- a map of the site underneath (satellite or street map, captured at real scale) ----------
-        const PM_LAYERS = {
-            sat: { label: '🛰️ Satellite', max: 19, url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`, credit: 'Imagery © Esri, Maxar, Earthstar Geographics' },
-            street: { label: '🗺️ Street map', max: 19, url: (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`, credit: '© OpenStreetMap contributors' }
-        };
-        const PM_MIN_USE = 17;   // closer than this and a site is too small to draw on
+        // ---------- a map of the site underneath (satellite, turned to line up with the site, captured at real scale) ----------
+        const PM_TILE = (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
+        const PM_MAX = 19, PM_CREDIT = 'Imagery © Esri, Maxar, Earthstar Geographics';
         let pm = null;
         const pmWorld = z => 256 * Math.pow(2, z);
         function pmProj(lat, lon, z) {
@@ -11143,85 +11198,148 @@
             if (!pe) return;
             if (!isOnline) { peToast("The map needs a connection - try again when you're back online"); return; }
             const g = pe.doc.geo;
-            pm = { lat: g ? g.lat : -41.2, lon: g ? g.lon : 174.0, z: g ? Math.max(3, g.z - 1) : 5, layer: (g && g.layer) || 'sat', pointers: new Map() };
+            pm = { lat: g ? g.lat : -41.2, lon: g ? g.lon : 174.0, z: g ? Math.max(3, g.z - 1) : 5, rot: g && g.rot ? g.rot : 0, pointers: new Map(), sug: [], sugOn: -1 };
             document.getElementById('peMapPick').classList.remove('hidden');
             const q = siteMapQuery(selectedClient);
             document.getElementById('pmSearch').value = q;
-            pmDraw();
-            if (!g && q) pmFind(q);
-            else if (!g) pmMsg('Search for the address, or tap 📍 Here when you are on site.');
+            pmSetRot(pm.rot);
+            if (!g && q) pmGoText(q);
+            else if (!g) pmMsg('Start typing the address of the site.');
         }
-        function pmClose() { pm = null; document.getElementById('peMapPick').classList.add('hidden'); }
+        function pmClose() { pm = null; document.getElementById('peMapPick').classList.add('hidden'); pmSugHide(); }
         function pmMsg(t) { const el = document.getElementById('pmMsg'); if (el) el.textContent = t || ''; }
-        function pmSetLayer(k) { if (pm) { pm.layer = k; pmDraw(); } }
+        function pmTilesHtml(z, cx, cy, D) {
+            const x0 = cx - D / 2, y0 = cy - D / 2, n = Math.pow(2, z), out = [];
+            for (let ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + D) / 256); ty++) {
+                if (ty < 0 || ty >= n) continue;
+                for (let tx = Math.floor(x0 / 256); tx <= Math.floor((x0 + D) / 256); tx++) out.push({ url: PM_TILE(z, ((tx % n) + n) % n, ty), x: Math.round(tx * 256 - x0), y: Math.round(ty * 256 - y0) });
+            }
+            return out;
+        }
         function pmDraw() {
             if (!pm) return;
-            const L = PM_LAYERS[pm.layer], view = document.getElementById('pmView'), W = view.clientWidth || 600, H = view.clientHeight || 400;
-            pm.z = Math.max(2, Math.min(L.max, pm.z));
-            const c = pmProj(pm.lat, pm.lon, pm.z), x0 = c.x - W / 2, y0 = c.y - H / 2, n = Math.pow(2, pm.z);
-            let html = '';
-            for (let ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + H) / 256); ty++) {
-                if (ty < 0 || ty >= n) continue;
-                for (let tx = Math.floor(x0 / 256); tx <= Math.floor((x0 + W) / 256); tx++) {
-                    const wx = ((tx % n) + n) % n;
-                    html += `<img src="${L.url(pm.z, wx, ty)}" alt="" draggable="false" style="left:${Math.round(tx * 256 - x0)}px;top:${Math.round(ty * 256 - y0)}px;">`;
-                }
-            }
-            document.getElementById('pmTiles').innerHTML = html;
-            document.getElementById('pmCredit').textContent = L.credit;
-            document.getElementById('pmLayers').innerHTML = Object.entries(PM_LAYERS).map(([k, v]) => `<button type="button" class="pe-chip ${pm.layer === k ? 'on' : ''}" onclick="pmSetLayer('${k}')">${v.label}</button>`).join('');
-            document.getElementById('pmGoogle').href = `https://www.google.com/maps/@${pm.lat.toFixed(6)},${pm.lon.toFixed(6)},${Math.round(pm.z * 10) / 10 + 0.5}z/data=!3m1!1e3`;
-            const ok = pm.z >= PM_MIN_USE;
-            document.getElementById('pmUseBtn').disabled = !ok;
-            document.getElementById('pmUseBtn').title = ok ? '' : 'Zoom in closer to the site first';
-            if (!pm.busy) pmMsg(ok ? '' : 'Zoom in closer to use this view.');
+            const view = document.getElementById('pmView'), W = view.clientWidth || 600, H = view.clientHeight || 400;
+            pm.z = Math.max(2, Math.min(PM_MAX, pm.z));
+            const D = Math.ceil(Math.hypot(W, H)) + 2;   // a square big enough to cover the view at any turn
+            const c = pmProj(pm.lat, pm.lon, pm.z), box = document.getElementById('pmTiles');
+            box.style.width = D + 'px'; box.style.height = D + 'px';
+            box.style.left = Math.round((W - D) / 2) + 'px'; box.style.top = Math.round((H - D) / 2) + 'px';
+            box.style.transform = `rotate(${pm.rot}deg)`;
+            box.innerHTML = pmTilesHtml(pm.z, c.x, c.y, D).map(t => `<img src="${t.url}" alt="" draggable="false" style="left:${t.x}px;top:${t.y}px;">`).join('');
+            document.getElementById('pmNorth').style.transform = `rotate(${pm.rot}deg)`;
+            if (!pm.busy && !pm.searching) pmMsg(pm.z < 15 ? 'Zoomed out a long way - that works, but walls, objects and labels are drawn at real size, so they will look small.' : '');
         }
-        function pmZoom(d) { if (pm) { pm.z = Math.max(2, Math.min(PM_LAYERS[pm.layer].max, pm.z + d)); pmDraw(); } }
-        async function pmFind(q) {
-            q = String(q || '').trim();
-            if (!pm || !q) return;
-            pmMsg('Finding ' + q + '...');
-            try {
-                const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } });
-                const a = r.ok ? await r.json() : [];
-                if (!pm) return;
-                if (!a.length) { pmMsg("Couldn't find that address - try a shorter one, or drag the map there."); return; }
-                pm.lat = parseFloat(a[0].lat); pm.lon = parseFloat(a[0].lon); pm.z = 18;
-                pmMsg(''); pmDraw();
-            } catch (e) { pmMsg("Couldn't search right now - drag and zoom the map there instead."); }
-        }
-        function pmLocate() {
+        function pmZoom(d) { if (pm) { pm.z = Math.max(2, Math.min(PM_MAX, pm.z + d)); pmDraw(); } }
+        function pmSetRot(v) {
             if (!pm) return;
-            if (!navigator.geolocation) { pmMsg("This device can't share its location."); return; }
-            pmMsg('Finding where you are...');
-            navigator.geolocation.getCurrentPosition(pos => {
-                if (!pm) return;
-                pm.lat = pos.coords.latitude; pm.lon = pos.coords.longitude; pm.z = 19; pmMsg(''); pmDraw();
-            }, () => pmMsg("Location isn't available - allow it in the browser, or search the address."), { enableHighAccuracy: true, timeout: 12000 });
+            let r = Math.round(parseFloat(v) || 0);
+            r = ((r + 180) % 360 + 360) % 360 - 180;
+            pm.rot = r;
+            document.getElementById('pmRot').value = r;
+            document.getElementById('pmRotLabel').textContent = r + '°';
+            pmDraw();
+        }
+        function pmTurn(d) { if (pm) pmSetRot(pm.rot + d); }
+        // ----- the address box: sites already recorded, then addresses found as you type -----
+        let pmTypeTimer = null;
+        function pmSugHide() { const el = document.getElementById('pmSug'); if (el) el.classList.add('hidden'); if (pm) { pm.sug = []; pm.sugOn = -1; } }
+        function pmSugDraw() {
+            const el = document.getElementById('pmSug');
+            if (!pm || !pm.sug.length) { el.classList.add('hidden'); return; }
+            let lastKind = '';
+            el.innerHTML = pm.sug.map((x, i) => { const h = x.kind !== lastKind ? `<div class="pm-sug-h">${x.kind === 'site' ? 'Your sites' : 'Addresses'}</div>` : ''; lastKind = x.kind;
+                return `${h}<button type="button" role="option" class="${i === pm.sugOn ? 'on' : ''}" onmousedown="event.preventDefault()" onclick="pmPick(${i})">${esc(x.label)}${x.sub ? `<small>${esc(x.sub)}</small>` : ''}</button>`; }).join('');
+            el.classList.remove('hidden');
+        }
+        function pmType(v) {
+            if (!pm) return;
+            const q = String(v || '').trim(), ql = q.toLowerCase();
+            clearTimeout(pmTypeTimer);
+            if (q.length < 2) { pmSugHide(); return; }
+            const sites = (clientsData || []).filter(c => txt(c.Address).trim() && (txt(c.Address).toLowerCase().includes(ql) || txt(c.Name).toLowerCase().includes(ql)))
+                .slice(0, 5).map(c => ({ kind: 'site', label: txt(c.Address).trim(), sub: txt(c.Name), q: txt(c.Address).trim() }));
+            pm.sug = sites; pm.sugOn = -1; pmSugDraw();
+            if (q.length < 3) return;
+            pmTypeTimer = setTimeout(async () => {
+                const found = await pmLookup(q, 6);
+                if (!pm || document.getElementById('pmSearch').value.trim() !== q) return;
+                const seen = new Set(sites.map(x => x.label.toLowerCase()));
+                pm.sug = sites.concat(found.filter(f => !seen.has(f.label.toLowerCase())).map(f => Object.assign({ kind: 'addr' }, f)));
+                pmSugDraw();
+            }, 300);
+        }
+        // address search (Photon, built on OpenStreetMap - made for search-as-you-type)
+        async function pmLookup(q, limit) {
+            const near = pm ? `&lat=${pm.lat.toFixed(3)}&lon=${pm.lon.toFixed(3)}` : '';
+            try {
+                const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=${limit || 6}&lang=en${near}`);
+                const j = r.ok ? await r.json() : { features: [] };
+                return (j.features || []).map(f => {
+                    const p = f.properties || {}, c = (f.geometry && f.geometry.coordinates) || [];
+                    const line1 = [p.housenumber, p.street].filter(Boolean).join(' ') || p.name || '';
+                    const place = [p.name && p.name !== line1 && p.street ? p.name : '', p.district || p.locality, p.city || p.county, p.postcode].filter(Boolean);
+                    return { label: [line1].concat(place).filter(Boolean).join(', ') || q, sub: [p.state, p.country].filter(Boolean).join(', '), lat: c[1], lon: c[0], street: !!(p.housenumber || p.street) };
+                }).filter(x => x.lat != null);
+            } catch (e) { return []; }
+        }
+        async function pmGoText(q) {
+            if (!pm) return;
+            pm.searching = true; pmMsg('Finding ' + q + '...');
+            const hit = (await pmLookup(q, 1))[0];
+            if (!pm) return;
+            pm.searching = false;
+            if (!hit) { pmMsg("Couldn't find that address - try typing it differently, or drag the map there."); return; }
+            pm.lat = hit.lat; pm.lon = hit.lon; pm.z = 18; pmMsg(''); pmDraw();
+        }
+        function pmPick(i) {
+            const x = pm && pm.sug[i];
+            if (!x) return;
+            document.getElementById('pmSearch').value = x.label;
+            pmSugHide();
+            document.getElementById('pmSearch').blur();
+            if (x.lat != null) { pm.lat = x.lat; pm.lon = x.lon; pm.z = x.street ? 19 : 16; pmMsg(''); pmDraw(); }
+            else pmGoText(x.q);
+        }
+        function pmKey(e) {
+            if (!pm) return;
+            const n = pm.sug.length;
+            if (e.key === 'ArrowDown' && n) { e.preventDefault(); pm.sugOn = (pm.sugOn + 1) % n; pmSugDraw(); }
+            else if (e.key === 'ArrowUp' && n) { e.preventDefault(); pm.sugOn = (pm.sugOn - 1 + n) % n; pmSugDraw(); }
+            else if (e.key === 'Enter') { e.preventDefault(); if (n) pmPick(Math.max(0, pm.sugOn)); else pmGoText(e.target.value); }
+            else if (e.key === 'Escape' && n) { e.stopPropagation(); pmSugHide(); }
         }
         (function bindMapPick() {
             const v = document.getElementById('pmView');
             if (!v) return;
+            document.addEventListener('pointerdown', e => { if (pm && !e.target.closest('#pmSug') && !e.target.closest('#pmSearch')) pmSugHide(); });
             v.addEventListener('pointerdown', e => {
                 if (!pm || e.target.closest('.pm-zoom')) return;
                 try { v.setPointerCapture(e.pointerId); } catch (x) {}
                 pm.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
                 const c = pmProj(pm.lat, pm.lon, pm.z);
                 pm.drag = { sx: e.clientX, sy: e.clientY, cx: c.x, cy: c.y };
-                if (pm.pointers.size === 2) { const [a, b] = Array.from(pm.pointers.values()); pm.pinch = Math.hypot(a.x - b.x, a.y - b.y); }
+                if (pm.pointers.size === 2) { const [a, b] = Array.from(pm.pointers.values()); pm.pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), ang: Math.atan2(b.y - a.y, b.x - a.x), rot: pm.rot }; }
             });
             v.addEventListener('pointermove', e => {
                 if (!pm || !pm.pointers.has(e.pointerId)) return;
                 pm.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
                 if (pm.pointers.size === 1 && pm.drag) {
-                    const g = pmUnproj(pm.drag.cx - (e.clientX - pm.drag.sx), pm.drag.cy - (e.clientY - pm.drag.sy), pm.z);
+                    // a drag on the turned map moves it the way the finger goes
+                    const dx = e.clientX - pm.drag.sx, dy = e.clientY - pm.drag.sy, r = pm.rot * Math.PI / 180;
+                    const mx = dx * Math.cos(r) + dy * Math.sin(r), my = -dx * Math.sin(r) + dy * Math.cos(r);
+                    const g = pmUnproj(pm.drag.cx - mx, pm.drag.cy - my, pm.z);
                     pm.lat = g.lat; pm.lon = g.lon; pmDraw();
+                } else if (pm.pointers.size === 2 && pm.pinch) {
+                    // two fingers twisting turn the map
+                    const [a, b] = Array.from(pm.pointers.values()), ang = Math.atan2(b.y - a.y, b.x - a.x);
+                    const turn = (ang - pm.pinch.ang) * 180 / Math.PI;
+                    if (Math.abs(turn) > 4 || pm.pinch.turning) { pm.pinch.turning = true; pmSetRot(pm.pinch.rot + turn); }
                 }
             });
             const end = e => {
                 if (!pm || !pm.pointers.has(e.pointerId)) return;
                 if (pm.pointers.size === 2 && pm.pinch) {
-                    const [a, b] = Array.from(pm.pointers.values()), steps = Math.round(Math.log2(Math.hypot(a.x - b.x, a.y - b.y) / pm.pinch));
+                    const [a, b] = Array.from(pm.pointers.values()), steps = Math.round(Math.log2(Math.hypot(a.x - b.x, a.y - b.y) / pm.pinch.d));
                     if (steps) pmZoom(steps);
                     pm.pinch = null;
                 }
@@ -11234,43 +11352,41 @@
             v.addEventListener('wheel', e => { if (!pm) return; e.preventDefault(); clearTimeout(pm.wt); pm.wd = (pm.wd || 0) + e.deltaY; pm.wt = setTimeout(() => { if (pm) { pmZoom(pm.wd < 0 ? 1 : -1); pm.wd = 0; } }, 60); }, { passive: false });
             window.addEventListener('resize', () => { if (pm) pmDraw(); });
         })();
-        // the view becomes the picture under the plan, sharper (one zoom step closer) and at real scale
+        // the view becomes the picture under the plan: sharper (one zoom step closer), turned as shown, at real scale
         async function pmUse() {
             if (!pm || !pe || pm.busy) return;
-            const L = PM_LAYERS[pm.layer], view = document.getElementById('pmView');
-            const zc = Math.min(L.max, pm.z + 1), k = Math.pow(2, zc - pm.z);
+            const view = document.getElementById('pmView');
+            const zc = Math.min(PM_MAX, pm.z + 1), k = Math.pow(2, zc - pm.z);
             const CW = Math.min(4096, Math.round((view.clientWidth || 600) * k)), CH = Math.min(4096, Math.round((view.clientHeight || 400) * k));
             const btn = document.getElementById('pmUseBtn');
             pm.busy = true; btn.disabled = true; btn.textContent = 'Getting the map...';
             try {
-                const c = pmProj(pm.lat, pm.lon, zc), x0 = c.x - CW / 2, y0 = c.y - CH / 2, n = Math.pow(2, zc);
+                const D = Math.ceil(Math.hypot(CW, CH)) + 2, c = pmProj(pm.lat, pm.lon, zc);
+                const sq = document.createElement('canvas'); sq.width = D; sq.height = D;
+                const gs = sq.getContext('2d');
+                gs.fillStyle = '#e2e8f0'; gs.fillRect(0, 0, D, D);
+                const got = await Promise.all(pmTilesHtml(zc, c.x, c.y, D).map(t => new Promise(res => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => { gs.drawImage(i, t.x, t.y, 256, 256); res(true); }; i.onerror = () => res(false); i.src = t.url; })));
+                if (!got.some(Boolean)) throw new Error("the map pictures didn't load");
                 const cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
                 const g = cv.getContext('2d');
-                g.fillStyle = '#e2e8f0'; g.fillRect(0, 0, CW, CH);
-                const jobs = [];
-                for (let ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + CH) / 256); ty++) {
-                    if (ty < 0 || ty >= n) continue;
-                    for (let tx = Math.floor(x0 / 256); tx <= Math.floor((x0 + CW) / 256); tx++) {
-                        const wx = ((tx % n) + n) % n;
-                        jobs.push(new Promise(res => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => { g.drawImage(i, Math.round(tx * 256 - x0), Math.round(ty * 256 - y0), 256, 256); res(true); }; i.onerror = () => res(false); i.src = L.url(zc, wx, ty); }));
-                    }
-                }
-                const got = await Promise.all(jobs);
-                if (!got.some(Boolean)) throw new Error("the map pictures didn't load");
+                g.translate(CW / 2, CH / 2); g.rotate(pm.rot * Math.PI / 180); g.drawImage(sq, -D / 2, -D / 2); g.setTransform(1, 0, 0, 1, 0, 0);
                 const fs = Math.max(11, Math.round(CW / 110));
                 g.font = `600 ${fs}px system-ui, sans-serif`;
-                const tw = g.measureText(L.credit).width;
+                const tw = g.measureText(PM_CREDIT).width;
                 g.fillStyle = 'rgba(255,255,255,.8)'; g.fillRect(CW - tw - fs, CH - fs * 1.6, tw + fs, fs * 1.6);
-                g.fillStyle = '#334155'; g.textBaseline = 'middle'; g.fillText(L.credit, CW - tw - fs / 2, CH - fs * 0.8);
-                const blob = await new Promise((res, rej) => { try { cv.toBlob(b => b ? res(b) : rej(new Error('no picture')), 'image/jpeg', 0.86); } catch (e) { rej(new Error("this browser won't let the map be copied - take a screenshot of the map and use 'Trace over a photo' instead")); } });
-                // metres the picture covers
+                g.fillStyle = '#334155'; g.textBaseline = 'middle'; g.fillText(PM_CREDIT, CW - tw - fs / 2, CH - fs * 0.8);
+                const blob = await new Promise((res, rej) => { try { cv.toBlob(b => b ? res(b) : rej(new Error('no picture')), 'image/jpeg', 0.82); } catch (e) { rej(new Error("this browser won't let the map be copied - take a screenshot of the map and use 'Trace over a photo' instead")); } });
+                // metres the picture covers (turning doesn't change the scale)
                 const mpp = 156543.03392 * Math.cos(pm.lat * Math.PI / 180) / Math.pow(2, zc), mW = CW * mpp, mH = CH * mpp;
                 const d = pe.doc, empty = !d.nodes.length && !d.items.length && !(pe.mapId && pinsOn(pe.mapId).length);
                 let rect = null;
                 if (empty) {
-                    const ppm = Math.max(4, Math.min(40, Math.round(4000 / Math.max(mW, mH))));
+                    const ppm = Math.min(40, Math.max(0.05, Math.round(4000 / Math.max(mW, mH) * 100) / 100));
                     d.ppm = ppm; d.w = Math.round(mW * ppm); d.h = Math.round(mH * ppm); d.sizes = false;
                     pe.w0 = d.w; pe.h0 = d.h; delete d._ox; delete d._oy;
+                    // a north arrow in the corner, pointing where north is on the turned map
+                    const na = Math.min(d.w, d.h) * 0.07;
+                    d.items.push({ id: uid(), kind: 'north', x: d.w - na * 0.9, y: na * 1.1, rot: pm.rot, w: na, h: na });
                 } else {
                     const w = mW * d.ppm, h = mH * d.ppm;
                     rect = { x: Math.round((d.w - w) / 2), y: Math.round((d.h - h) / 2), w: Math.round(w), h: Math.round(h) };
@@ -11279,7 +11395,7 @@
                 pe.bgBlob = blob; pe.bgUrl = URL.createObjectURL(blob);
                 d.bg = { path: null, include: true, opacity: 1, src: 'map' };
                 if (rect) d.bg.rect = rect;
-                d.geo = { lat: Math.round(pm.lat * 1e6) / 1e6, lon: Math.round(pm.lon * 1e6) / 1e6, z: zc, layer: pm.layer };
+                d.geo = { lat: Math.round(pm.lat * 1e6) / 1e6, lon: Math.round(pm.lon * 1e6) / 1e6, z: zc, rot: pm.rot };
                 pmClose();
                 document.getElementById('peWelcome').classList.add('hidden');
                 peCommit(); peFit(); peRender(); peRenderPanel();
@@ -11287,7 +11403,8 @@
             } catch (e) {
                 pmMsg("Couldn't use the map: " + (e.message || e));
             } finally {
-                if (pm) { pm.busy = false; btn.textContent = 'Use this view'; pmDraw(); } else { btn.textContent = 'Use this view'; btn.disabled = false; }
+                btn.textContent = 'Use this view'; btn.disabled = false;
+                if (pm) { pm.busy = false; pmDraw(); }
             }
         }
 
@@ -11301,11 +11418,16 @@
         // ---------- save: the drawing, and a picture of it ----------
         async function peRenderPng() {
             const d = pe.doc;
+            // a plan with a photo or satellite map in it is saved as a JPEG (a fraction of the size of a PNG of a photo,
+            // with no visible loss) and no bigger than 4000 px across; a plan that's only drawn stays a crisp PNG
+            const photo = !!(d.bg && d.bg.include && pe.bgUrl);
+            const k = photo ? Math.min(1, 4000 / Math.max(d.w, d.h)) : 1;
             const c = document.createElement('canvas');
-            c.width = d.w; c.height = d.h;
+            c.width = Math.round(d.w * k); c.height = Math.round(d.h * k);
             const g = c.getContext('2d');
+            g.scale(k, k);
             g.fillStyle = '#ffffff'; g.fillRect(0, 0, d.w, d.h);
-            if (d.bg && d.bg.include && pe.bgUrl) {
+            if (photo) {
                 const img = await new Promise(res => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => res(null); i.src = pe.bgUrl; });
                 if (!img) throw new Error("the photo under the plan couldn't be loaded");
                 const br = peBgRect(d);
@@ -11317,7 +11439,7 @@
                 const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('the drawing could not be turned into a picture')); i.src = url; });
                 g.drawImage(img, 0, 0, d.w, d.h);
             } finally { URL.revokeObjectURL(url); }
-            return await new Promise((res, rej) => { try { c.toBlob(b => b ? res(b) : rej(new Error('the picture could not be made')), 'image/png'); } catch (e) { rej(new Error("the photo under the plan can't be copied from this browser - untick 'Keep the photo in the saved plan' or upload it again")); } });
+            return await new Promise((res, rej) => { try { c.toBlob(b => b ? res(b) : rej(new Error('the picture could not be made')), photo ? 'image/jpeg' : 'image/png', photo ? 0.85 : undefined); } catch (e) { rej(new Error("the photo under the plan can't be copied from this browser - untick 'Keep the photo in the saved plan' or upload it again")); } });
         }
         async function peSave() {
             if (!pe || pe.saving) return;
@@ -13491,6 +13613,18 @@
               about: 'The brown-banded cockroach is a small (10-14 mm) cockroach with two pale bands across its wings and body. Unlike the German cockroach it prefers warm, dry places higher up - behind pictures, in furniture, electrical appliances, light fittings and ceilings - not just kitchens.',
               breeding: 'Females glue small egg cases (about 16 eggs) under furniture, in cupboards and on ceilings, producing up to 20 cases. Nymphs mature in 2-4 months.',
               control: 'Inspect high and dry areas as well as kitchens - furniture, appliances, wardrobes and ceilings. Use gel bait in small spots in those areas and an insect growth regulator to stop breeding. Remove egg cases with a vacuum. Monitor with sticky traps at different heights.' },
+            { m: /surinam|pycnoscelus/i, name: 'Surinam cockroach', cat: 'Crawling insects', sub: 'Cockroaches', sci: 'Pycnoscelus surinamensis', wiki: 'Pycnoscelus_surinamensis', signs: ["Pycnoscelus surinamensis", "cockroach in potting mix"],
+              about: 'The Surinam cockroach is a medium (18-25 mm), shiny dark-brown to black burrowing cockroach with paler brown wings. In New Zealand it is mostly found in glasshouses, nurseries, garden centres, potting mix and indoor plant displays, and is carried into buildings in pot plants. It burrows in soil and damages roots and seedlings.',
+              breeding: 'Most populations are all female and reproduce without males. The female carries her eggs inside her body and gives birth to live nymphs (around 25 at a time). Nymphs live in the soil and take 4-6 months to mature in warm conditions.',
+              control: 'Check where plants and potting mix come in, and inspect the soil and the base of pots. Remove or repot infested plants, and avoid over-watering and thick organic mulch indoors. Apply gel bait or granular bait on the soil surface and around planters, and treat the edges of beds and planter boxes with a residual insecticide labelled for that use. Monitor with sticky traps placed at soil level.' },
+            { m: /bush cockroach|native cockroach|celatoblatta|parellipsidion/i, name: 'Native bush cockroach', cat: 'Crawling insects', sub: 'Cockroaches', sci: 'Celatoblatta spp.', wiki: 'Celatoblatta', signs: ["Celatoblatta", "cockroach leaf litter"],
+              about: 'Native bush cockroaches are small (up to about 15 mm), brown, wingless cockroaches with faint pale stripes - less distinct than the Gisborne cockroach, and much smaller than an adult Gisborne. They live outdoors in leaf litter, under logs, bark and stones in bush and gardens, and feed on decaying plant material. They are not household pests, but occasionally wander indoors, often from firewood or plants.',
+              breeding: 'Females produce small egg cases which they hide in leaf litter and rotting wood. Nymphs develop slowly outdoors, and the cockroaches do not breed or establish inside buildings.',
+              control: 'Identify them correctly first - they are native and harmless, so a full cockroach treatment is not needed. Reduce harbourage next to the building (leaf litter, mulch and firewood against walls), keep firewood outside until it is used, and seal gaps under doors. Remove any that come inside by hand or vacuum. If they keep coming in, a residual perimeter treatment around entry points is enough.' },
+            { m: /black cockroach|m[aā]ori bug|stinky cockroach|platyzosteria/i, name: 'Black cockroach (Māori bug)', cat: 'Crawling insects', sub: 'Cockroaches', sci: 'Platyzosteria novaeseelandiae', wiki: 'Platyzosteria_novaeseelandiae', signs: ["Platyzosteria novaeseelandiae", "cockroach under bark"],
+              about: 'The black cockroach, often called the Māori bug or stinky cockroach, is a native, glossy black, wingless cockroach about 20-25 mm long. It lives outdoors in leaf litter, under loose bark, in rotten wood, firewood and among stones, and feeds on decaying plant material. When disturbed it gives off a strong, unpleasant smell. It usually does not establish itself in homes, but is brought in with firewood or wanders in.',
+              breeding: 'Females produce egg cases that are left in sheltered spots under bark and logs. Nymphs look like small adults and mature outdoors over a year or more. It does not breed indoors.',
+              control: 'Identify it correctly - it is a native outdoor species, not an indoor infestation. Keep firewood stacks, timber and leaf litter away from the building, and check firewood before bringing it in. Seal gaps under doors and around cladding. Remove individuals by hand or vacuum. Where they keep coming in, apply a residual perimeter treatment to entry points and foundations.' },
             { m: /argentine ant|linepithema/i, name: 'Argentine ant', cat: 'Crawling insects', sub: 'Ants', sci: 'Linepithema humile', wiki: 'Argentine_ant', signs: ["ant trail", "Linepithema humile trail", "ant nest"],
               about: 'The Argentine ant is a small (2-3 mm), light-brown ant that forms huge "super-colonies" with many queens. It is aggressive, displaces other ants, invades buildings in long trails, and farms aphids and scale insects on plants. It is an unwanted organism in New Zealand.',
               breeding: 'Each colony has many queens laying eggs all year, and new nests form by budding - queens walk off with workers to start a new nest nearby, so they spread steadily from site to site.',
@@ -14023,17 +14157,8 @@
             }
         }
 
-        function openSettingsModal() {
-            document.getElementById('notifDueSelect').value = notifDueMode;
-            document.getElementById('settingsAdminNote').classList.toggle('hidden', !isAdmin());
-            renderPhotoSetting();
-            renderLookSettings();
-            renderDiagnostics();
-            document.getElementById('settingsModal').classList.remove('hidden');
-        }
-        function closeSettingsModal() {
-            document.getElementById('settingsModal').classList.add('hidden');
-        }
+        function openSettingsModal() { openProfileModal('settings'); }   // settings live in the profile pop-up
+        function closeSettingsModal() { closeProfileModal(); }
 
 
 
