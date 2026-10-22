@@ -2,8 +2,8 @@
 // Keeps the app and its libraries available with no connection. Photos are NOT stored on the device.
 // Database calls are NOT cached here - the app's own upload queue handles data.
 
-const SHELL_CACHE = 'pestis-shell-v65';
-const RUNTIME_CACHE = 'pestis-runtime-v65';
+const SHELL_CACHE = 'pestis-shell-v66';
+const RUNTIME_CACHE = 'pestis-runtime-v66';
 
 const SHELL = ['./', './index.html', './admin.html', './images/pesties-logo.png'];   // admin.html: the app's add-ons (Admin, profile, Settings)
 const CDN = [
@@ -33,6 +33,28 @@ self.addEventListener('activate', event => {
     })());
 });
 
+// Weak or no signal: a request can hang for a minute instead of failing. Give the server a few
+// seconds, then answer from the saved copy; the download carries on and refreshes the saved copy.
+const NET_WAIT_MS = 4000;
+function fetchAndSave(url, key) {
+    return fetch(url, { cache: 'no-cache', credentials: 'same-origin' }).then(res => {
+        if (res.ok) caches.open(SHELL_CACHE).then(c => c.put(key, res.clone())).catch(() => {});
+        return res;
+    });
+}
+async function networkOrSaved(url, key, savedLookup) {
+    const net = fetchAndSave(url, key);
+    net.catch(() => {});
+    const timer = new Promise(r => setTimeout(() => r('slow'), NET_WAIT_MS));
+    try {
+        const first = await Promise.race([net, timer]);
+        if (first !== 'slow') return first;
+    } catch (e) { /* no connection: use the saved copy */ }
+    const saved = await savedLookup();
+    if (saved) return saved;
+    return net;   // nothing saved yet: wait for the server after all
+}
+
 async function trimCache(name, max) {
     const cache = await caches.open(name);
     const keys = await cache.keys();
@@ -49,12 +71,10 @@ self.addEventListener('fetch', event => {
         event.respondWith((async () => {
             try {
                 // Always check the server for a newer copy of the app (skips the browser's own cache)
-                const res = await fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' });
-                if (res.ok) {
-                    const cache = await caches.open(SHELL_CACHE);
-                    cache.put(url.origin + url.pathname, res.clone());
-                }
-                return res;
+                const res = await networkOrSaved(req.url, url.origin + url.pathname,
+                    async () => (await caches.match(url.origin + url.pathname)) || (await caches.match(req, { ignoreSearch: true })));
+                if (res) return res;
+                throw new Error('no copy');
             } catch (e) {
                 const saved = (await caches.match(url.origin + url.pathname)) || (await caches.match(req, { ignoreSearch: true }));
                 if (saved) return saved;
@@ -75,9 +95,7 @@ self.addEventListener('fetch', event => {
     if (url.origin === self.location.origin && /\/(admin|index)\.html$/.test(url.pathname)) {
         event.respondWith((async () => {
             try {
-                const res = await fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' });
-                if (res.ok) { const cache = await caches.open(SHELL_CACHE); cache.put(url.origin + url.pathname, res.clone()); }
-                return res;
+                return await networkOrSaved(req.url, url.origin + url.pathname, () => caches.match(url.origin + url.pathname));
             } catch (e) {
                 return (await caches.match(url.origin + url.pathname)) || (await caches.match('./admin.html')) || Response.error();
             }
