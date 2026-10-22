@@ -581,6 +581,18 @@
         .pest-pic img { width: 100%; height: 100%; object-fit: cover; }
         .pest-name { font-size: .75rem; font-weight: 800; color: var(--text); line-height: 1.2; padding: 0 .15rem; }
         .pest-none { font-size: .62rem; color: var(--faint); padding: 0 .15rem .1rem; }
+        .pest-sci { font-size: .6rem; font-style: italic; color: var(--faint); padding: 0 .15rem .1rem; line-height: 1.2; }
+        .pest-sub { font-size: .66rem; font-weight: 800; color: var(--muted); padding-top: .2rem; }
+        #infoModal > .card { max-height: 88vh; overflow-y: auto; }
+        .pg-stage { position: relative; }
+        .pg-stage img { cursor: zoom-in; }
+        .pg-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 2.3rem; height: 2.3rem; border-radius: 999px; background: rgba(2, 6, 23, .55); color: #fff; font-size: 1.4rem; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+        .pg-prev { left: .5rem; } .pg-next { right: .5rem; }
+        .pg-count { position: absolute; bottom: .45rem; right: .55rem; font-size: .65rem; font-weight: 800; color: #fff; background: rgba(2, 6, 23, .55); padding: .1rem .45rem; border-radius: 999px; }
+        .pg-thumbs { display: flex; gap: .35rem; overflow-x: auto; padding: .4rem 0 .1rem; }
+        .pg-thumb { flex: 0 0 auto; width: 3.6rem; height: 2.7rem; border-radius: .45rem; overflow: hidden; border: 2px solid transparent; opacity: .7; }
+        .pg-thumb.on { border-color: rgb(var(--b500)); opacity: 1; }
+        .pg-thumb img { width: 100%; height: 100%; object-fit: cover; }
         .pest-hero { aspect-ratio: 16 / 9; border-radius: 1rem; overflow: hidden; background: var(--surface2); display: flex; align-items: center; justify-content: center; }
         .pest-hero img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
         .sight-thumb { position: relative; width: 6rem; height: 6rem; border-radius: .6rem; overflow: hidden; border: 1px solid var(--border); cursor: zoom-in; background: var(--surface3); }
@@ -2076,7 +2088,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.22-r53';
+        const APP_VERSION = '2026.10.22-r54';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -2108,9 +2120,9 @@
         ];
         const FREQ_MAP = Object.fromEntries(FREQUENCIES.map(f => [f.v, f]));
 
-        // admin.html opens this same app in "admin mode" with its own sign-in. In the Service App (index.html)
-        // nobody gets admin powers or admin links, whatever their role.
-        const ADMIN_MODE = window.PESTIS_MODE === 'admin';
+        // The Admin site is its own page (admin.html) with its own sign-in. In the Service App nobody gets
+        // admin powers or admin links, whatever their role.
+        const ADMIN_MODE = false;
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: {
@@ -2936,15 +2948,23 @@
         const sessionSet = (k, v) => { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} };
         function setRoute(r) { sessionSet('pestis-route', r ? JSON.stringify(r) : null); }
         let routeRestored = false;
+        // a link from the Admin site opened in a tab that already has the app
+        window.addEventListener('hashchange', () => { if (/[#&]site=/.test(location.hash) && appStarted) { routeRestored = false; if (selectedClient) backToSites(); restoreRoute(); } });
         async function restoreRoute() {
             if (routeRestored) return;
             routeRestored = true;
             let r = null;
             try { r = JSON.parse(sessionGet('pestis-route') || 'null'); } catch (e) {}
+            const link = new URLSearchParams(String(location.hash || '').replace(/^#/, ''));
+            if (link.get('site')) {
+                r = { site: link.get('site'), view: 'dashboard', rec: link.get('rec') || null };
+                history.replaceState(null, '', location.pathname + location.search);
+            }
             if (!r || !r.site || selectedClient || !clientsData.some(c => String(c.id) === String(r.site))) return;
             if (ADMIN_MODE && sessionGet('pestis-admin-route') !== 'closed') return;
             await startSiteVisit(r.site);
             if (r.view === 'workspace' && selectedClient && visitInfo(selectedClient)) proceedToWorkSpace();
+            if (r.rec && selectedClient && findRec(r.rec)) openRecModal(r.rec);
         }
 
         // ---------- Profile modal & admin panel ----------
@@ -12842,7 +12862,7 @@
         // ---------- Lists in their own tables ----------
         const LIST_TABLES = { prep: 'preparations', species: 'species', station_type: 'station_types' };
         // extra details kept with list items: a preparation's safety data sheet, a pest's category, picture and guide
-        const LIST_EXTRA_COLS = { prep: ['sds_path', 'sds_name', 'sds_expires', 'sds_updated_at', 'sds_updated_by'], species: ['category', 'photo_path', 'photo_source', 'about', 'breeding', 'control', 'updated_at', 'updated_by'] };
+        const LIST_EXTRA_COLS = { prep: ['sds_path', 'sds_name', 'sds_expires', 'sds_updated_at', 'sds_updated_by'], species: ['category', 'subcategory', 'photo_path', 'photo_source', 'gallery', 'about', 'breeding', 'control', 'updated_at', 'updated_by'] };
         let listExtrasMissing = false;
         let listTablesMissing = false;
         async function loadListTables() {
@@ -12872,7 +12892,29 @@
             if (/bird|pigeon|sparrow|starling|myna|gull|swallow/.test(n)) return 'Birds';
             return 'Other pests';
         }
-        const pestCategoryOf = o => (o && String(o.category || '').trim()) || pestCategoryGuess(o ? o.label : '');
+        const pestCategoryOf = o => (o && String(o.category || '').trim()) || ((pestLibraryFor(o ? o.label : '') || {}).cat) || pestCategoryGuess(o ? o.label : '');
+        // the sub-group inside a category (Cockroaches, Ants, Spiders ...): saved, from the guide, or worked out from the name
+        function pestSubOf(o) {
+            if (o && String(o.subcategory || '').trim()) return String(o.subcategory).trim();
+            const lib = pestLibraryFor(o && o.label);
+            if (lib) return lib.sub || '';
+            const n = String((o && o.label) || '').toLowerCase(), cat = pestCategoryOf(o);
+            if (/cockroach|roach/.test(n)) return 'Cockroaches';
+            if (/\bants?\b/.test(n)) return 'Ants';
+            if (/spider/.test(n)) return 'Spiders';
+            if (/beetle|borer|weevil/.test(n)) return cat === 'Stored product pests' ? 'Beetles & weevils' : 'Beetles & borers';
+            if (/moth/.test(n)) return 'Moths';
+            if (/fly|flies|gnat|midge|mosquito/.test(n)) return 'Flies';
+            if (/wasp|bee\b|bees|hornet/.test(n)) return 'Wasps & bees';
+            return cat === 'Crawling insects' ? 'Other crawling insects' : '';
+        }
+        const PEST_SUB_ORDER = ['Cockroaches', 'Ants', 'Spiders', 'Beetles & borers', 'Other crawling insects', 'Flies', 'Wasps & bees', 'Moths', 'Beetles & weevils', 'Other'];
+        function pestSubs(items) {
+            const used = new Set(items.map(pestSubOf));
+            return PEST_SUB_ORDER.filter(x => used.has(x)).concat(Array.from(used).filter(x => !PEST_SUB_ORDER.includes(x)).sort((a, b) => (a === '') - (b === '') || a.localeCompare(b)));
+        }
+        // a general name ("Rats", "Ants") rather than a specific pest: those are the categories now
+        const isGeneralPest = name => /^(rats?|mice|mouse|rodents?|ants?|cockroach(es)?|roach(es)?|spiders?|flies|fly|wasps?|bees?|birds?|beetles?|moths?|insects?|weevils?)$/i.test(String(name || '').trim());
         const speciesItems = () => appOptions.filter(o => o.kind === 'species').sort(byLabel);
         function pestCategories(items) {
             const used = new Set((items || speciesItems()).map(pestCategoryOf));
@@ -12883,245 +12925,270 @@
             const items = speciesItems();
             const opt = l => `<option value="${esc(l)}">${esc(l)}</option>`;
             let html = noneLabel ? opt(noneLabel) : '';
-            pestCategories(items).forEach(c => { html += `<optgroup label="${esc(c)}">${items.filter(o => pestCategoryOf(o) === c).map(o => opt(o.label)).join('')}</optgroup>`; });
+            pestCategories(items).forEach(c => {
+                const inCat = items.filter(o => pestCategoryOf(o) === c);
+                pestSubs(inCat).forEach(sub => { html += `<optgroup label="${esc(c + (sub ? ' · ' + sub : ''))}">${inCat.filter(o => pestSubOf(o) === sub).map(o => opt(o.label)).join('')}</optgroup>`; });
+            });
             if (current && current !== noneLabel && !items.some(o => o.label === current)) html += opt(current);
             return html;
         }
         const findPest = key => speciesItems().find(o => o.id === key) || speciesItems().find(o => String(o.label).toLowerCase() === String(key || '').toLowerCase()) || null;
-        // Built-in pest guide: fills in a pest's category, picture (from Wikipedia), about, breeding habits and control strategy.
-        // Matched on the pest's name; the first match wins, so the specific names come before the general ones.
+        // Built-in pest guide: the specific pests (no general "rats" or "ants" - those are the categories), each with its
+        // category and sub-group, scientific name, photo searches (the pest, and signs of an infestation), about, breeding and strategy.
+        // Matched on the pest's name; the first match wins, so the more specific names come first.
         const PEST_LIBRARY = [
-            // ----- Rodents -----
-            { m: /norway|brown rat|sewer rat|rattus norvegicus/i, cat: 'Rodents', wiki: 'Brown_rat',
+            { m: /norway|brown rat|sewer rat|rattus norvegicus/i, name: 'Norway rat', cat: 'Rodents', sub: '', sci: 'Rattus norvegicus', wiki: 'Brown_rat', signs: ["rat droppings", "rat burrow", "rat gnawing damage"],
               about: 'The Norway (brown) rat is a large, heavy-bodied rat (up to 500 g) with a blunt nose, small ears and a tail shorter than its body. It burrows in soil, under slabs and along drains, and lives at ground level in sewers, gardens, warehouses and rubbish areas. It contaminates food with droppings and urine, gnaws cables and pipes, and spreads diseases such as leptospirosis and salmonella.',
               breeding: 'Breeds all year when there is food and shelter. A female can have 4-6 litters a year of 6-12 young, and the young can breed at 2-3 months old, so a small colony grows into hundreds within a year. Nests are in burrows, wall cavities and under stored goods.',
               control: 'Inspect for burrows, runways, rub marks and droppings to find where they live and travel. Use tamper-resistant bait stations (rodenticide or traps) along walls and runways, spaced 5-10 m apart outside and checked on every service. Proof the building: seal gaps over 12 mm, fit door sweeps, cover drains and vents with mesh. Remove food and harbourage: secure bins, clear vegetation and clutter from walls, store goods off the floor. Record activity at each station and re-bait or move stations where activity is high.' },
-            { m: /ship rat|roof rat|black rat|rattus rattus/i, cat: 'Rodents', wiki: 'Black_rat',
+            { m: /ship rat|roof rat|black rat|rattus rattus/i, name: 'Ship rat (roof rat)', cat: 'Rodents', sub: '', sci: 'Rattus rattus', wiki: 'Black_rat', signs: ["rat nest roof", "rat droppings", "rat gnawed cable"],
               about: 'The ship (roof) rat is a slender, agile rat with a pointed nose, large ears and a tail longer than its body. It is an excellent climber and nests in ceilings, roof voids, trees and creepers, travelling along cables, fences and branches. It damages wiring and insulation and contaminates stored food.',
               breeding: 'Breeds mainly from spring to autumn, with 3-5 litters a year of 5-8 young. Young mature at about 3-4 months. Nests are built high up - in roof spaces, wall cavities and dense trees.',
               control: 'Look high: check roof voids, ceiling spaces and above false ceilings for droppings, gnawing and nesting. Place bait stations or traps in the roof space and along elevated runways as well as at ground level. Trim trees and creepers back at least 1 m from the roof, and fit rat guards on cables and pipes. Seal entry points at the roof line, eaves and service penetrations. Monitor and keep stations stocked until there is no more activity.' },
-            { m: /\brats?\b|rodent/i, cat: 'Rodents', wiki: 'Brown_rat',
-              about: 'Rats are large rodents that live alongside people, contaminating food with droppings and urine, gnawing cables and timber, and spreading disease. The two common species are the Norway (brown) rat, which burrows at ground level, and the ship (roof) rat, which climbs and nests up high.',
-              breeding: 'Rats breed quickly - several litters a year of 5-12 young, and young can breed from 2-3 months old.',
-              control: 'Find where they live and travel (droppings, runways, gnawing, burrows). Use tamper-resistant bait stations or traps along walls and runways at ground level and in roof spaces, proof entry points over 12 mm, and remove food and harbourage. Monitor and record activity every service.' },
-            { m: /house mouse|\bmice\b|\bmouse\b|mus musculus/i, cat: 'Rodents', wiki: 'House_mouse',
+            { m: /house mouse|\\bmice\\b|\\bmouse\\b|mus musculus/i, name: 'House mouse', cat: 'Rodents', sub: '', sci: 'Mus musculus', wiki: 'House_mouse', signs: ["mouse droppings", "mouse nest", "mouse damage food"],
               about: 'The house mouse is a small rodent (12-30 g) with large ears and a tail about as long as its body. It lives inside buildings, in wall cavities, cupboards, appliances and stored goods, and only needs a 6 mm gap to get in. Mice nibble small amounts from many food items and leave many small droppings, contaminating far more than they eat.',
               breeding: 'Breeds all year indoors. A female can have 6-10 litters a year of 5-8 young, and young breed from 6 weeks old. Nests are made from shredded paper, fabric and insulation close to food.',
               control: 'Mice range only 3-10 m from the nest, so place stations or traps close together (2-3 m apart) where activity is seen. Use tamper-resistant bait stations, snap traps or multi-catch traps along walls and behind appliances. Seal gaps over 6 mm with steel wool, mesh or sealant, and fit door sweeps. Keep food in sealed containers, clean up spills, and reduce clutter. Check frequently - mice are curious, so move stations if they are not visited.' },
-            { m: /possum/i, cat: 'Other pests', wiki: 'Common_brushtail_possum',
-              about: 'The common brushtail possum is a large, nocturnal marsupial introduced to New Zealand from Australia. It often moves into roof spaces, causing noise, odour, droppings and urine damage to ceilings and insulation, and it damages gardens, trees and native bush.',
-              breeding: 'Usually one young a year (sometimes two), born mainly in autumn. The young stays in the pouch for about 5 months, then rides on the mother\'s back. Possums live up to 10 years or more.',
-              control: 'Find the entry points into the roof (gaps at eaves, roof iron and vents) and confirm the possum has left at night before sealing. Use one-way exits or cage traps where allowed, and follow local regulations for trapping and humane dispatch. Proof the building with mesh and flashing, and fit guards on trees and downpipes. Trim branches back from the roof.' },
-            { m: /stoat|ferret|weasel|mustelid/i, cat: 'Other pests', wiki: 'Stoat',
-              about: 'Stoats are small, fast predators with a long body, brown back, cream belly and black-tipped tail. In New Zealand they are a major threat to native birds and can also raid poultry and enter outbuildings.',
-              breeding: 'Females mate in early summer but the pregnancy is delayed, so young (often 6-12) are born the following spring. Young females are mated while still in the nest.',
-              control: 'Use approved kill traps (e.g. DOC-series traps) in tunnels along fence lines, stream edges and hedges. Bait with fresh meat or egg and check regularly. Secure poultry houses and outbuildings with fine mesh. Work with local trapping groups for wider control.' },
-            // ----- Cockroaches -----
-            { m: /german cockroach|blattella/i, cat: 'Crawling insects', wiki: 'German_cockroach',
+            { m: /german cockroach|blattella/i, name: 'German cockroach', cat: 'Crawling insects', sub: 'Cockroaches', sci: 'Blattella germanica', wiki: 'German_cockroach', signs: ["cockroach infestation", "German cockroach infestation kitchen", "cockroach droppings"],
               about: 'The German cockroach is a small (12-15 mm) light-brown cockroach with two dark stripes behind the head. It is the most common cockroach in commercial kitchens and food businesses, living in warm, humid cracks near food, water and heat - behind fridges, dishwashers, ovens and in electrical equipment. It spreads bacteria such as salmonella and triggers allergies and asthma.',
               breeding: 'Breeds very fast. The female carries an egg case of 30-40 eggs until just before they hatch, and can produce 4-8 egg cases in her life. Nymphs mature in about 6-8 weeks, so populations explode quickly in warm conditions.',
               control: 'Inspect at night or with a flushing agent to find harbourages. Apply cockroach gel bait in small spots in cracks and crevices close to harbourages, and rotate bait types to avoid bait aversion. Use an insect growth regulator (IGR) to stop breeding, and sticky monitors to track numbers. Improve hygiene: remove food residue and grease, fix leaks, and seal cracks. Repeat treatments every 2-4 weeks until monitors show no activity.' },
-            { m: /american cockroach/i, cat: 'Crawling insects', wiki: 'American_cockroach',
+            { m: /american cockroach/i, name: 'American cockroach', cat: 'Crawling insects', sub: 'Cockroaches', sci: 'Periplaneta americana', wiki: 'American_cockroach', signs: ["American cockroach infestation", "cockroach ootheca", "cockroach drain"],
               about: 'The American cockroach is a large (30-40 mm) reddish-brown cockroach with a pale band around the edge of the shield behind its head. It lives in drains, sewers, boiler rooms and basements, and comes up into buildings through drains and floor wastes.',
               breeding: 'The female drops egg cases of about 16 eggs in hidden, humid places, producing up to 90 cases in her life. Nymphs take 6-12 months to mature, and adults can live for a year or more.',
               control: 'Treat drains, grease traps, service ducts and voids where they live. Use gel baits and residual dust in voids, and seal gaps around pipes. Keep floor wastes and drains covered or water-sealed. Reduce moisture and fix leaks. Monitor with sticky traps near drains and entry points.' },
-            { m: /australian cockroach/i, cat: 'Crawling insects', wiki: 'Periplaneta_australasiae',
+            { m: /australian cockroach/i, name: 'Australian cockroach', cat: 'Crawling insects', sub: 'Cockroaches', sci: 'Periplaneta australasiae', wiki: 'Periplaneta_australasiae', signs: ["cockroach ootheca", "cockroach infestation"],
               about: 'The Australian cockroach is a large (30-35 mm) dark-brown cockroach with distinct yellow stripes on the edges of its wings and a yellow band on the shield behind the head. It lives outdoors in gardens, mulch and under bark, and moves indoors into warm, damp areas.',
               breeding: 'The female produces egg cases of about 24 eggs, which she glues in sheltered places. Nymphs take 6-12 months to mature.',
               control: 'Reduce outdoor harbourage: move mulch, leaf litter and firewood away from the building. Apply a residual perimeter treatment around the outside and gel bait in cracks indoors. Seal gaps around doors, windows and pipes. Monitor with sticky traps.' },
-            { m: /gisborne|drymaplaneta/i, cat: 'Crawling insects', wiki: 'Drymaplaneta_semivitta',
+            { m: /gisborne|drymaplaneta/i, name: 'Gisborne cockroach', cat: 'Crawling insects', sub: 'Cockroaches', sci: 'Drymaplaneta semivitta', wiki: 'Drymaplaneta_semivitta', signs: ["Drymaplaneta semivitta", "cockroach under bark"],
               about: 'The Gisborne cockroach is a large (25-35 mm), dark, wingless cockroach with pale stripes on the edges of its body. It lives outdoors under bark, in firewood, mulch and wall cladding, and wanders into homes in warm weather.',
               breeding: 'Females carry their egg case for some time before depositing it in a sheltered place. Nymphs develop over several months, mostly through summer.',
               control: 'Remove outdoor harbourage near the building - firewood stacks, loose bark and leaf litter. Apply a residual perimeter spray to foundations, cladding and entry points. Use gel bait indoors where they are found, and seal gaps under doors and cladding.' },
-            { m: /oriental cockroach|blatta orientalis/i, cat: 'Crawling insects', wiki: 'Oriental_cockroach',
+            { m: /oriental cockroach|blatta orientalis/i, name: 'Oriental cockroach', cat: 'Crawling insects', sub: 'Cockroaches', sci: 'Blatta orientalis', wiki: 'Oriental_cockroach', signs: ["Blatta orientalis nymphs", "cockroach infestation"],
               about: 'The Oriental cockroach is a dark brown to black, slow-moving cockroach (20-27 mm) that prefers cool, damp places - drains, basements, crawl spaces and under floors.',
               breeding: 'Females produce egg cases of about 16 eggs. Development is slow: nymphs may take a year to mature, mostly breeding in warmer months.',
               control: 'Reduce moisture under floors and in basements, and fix leaks. Treat drains, voids and crawl spaces with residual dust or spray and gel bait. Seal gaps around pipes and floor wastes. Monitor with sticky traps.' },
-            { m: /cockroach|roach/i, cat: 'Crawling insects', wiki: 'Cockroach',
-              about: 'Cockroaches are fast-running, flat-bodied insects that hide in cracks during the day and come out at night to feed. They carry bacteria onto food and surfaces and can trigger allergies and asthma.',
-              breeding: 'Females produce egg cases containing many eggs. Nymphs moult several times before becoming adults; warm, humid conditions speed up breeding.',
-              control: 'Find harbourages with a night inspection or sticky monitors. Use gel bait in cracks and crevices, an insect growth regulator to stop breeding, and residual treatments in voids. Improve hygiene, fix leaks and seal cracks. Follow up until monitors are clear.' },
-            // ----- Ants -----
-            { m: /argentine ant|linepithema/i, cat: 'Crawling insects', wiki: 'Argentine_ant',
+            { m: /smoky ?brown|periplaneta fuliginosa/i, name: 'Smoky brown cockroach', cat: 'Crawling insects', sub: 'Cockroaches', sci: 'Periplaneta fuliginosa', wiki: 'Smokybrown_cockroach', signs: ["Periplaneta fuliginosa nymph", "cockroach ootheca"],
+              about: 'The smoky brown cockroach is a large (25-38 mm), shiny, uniformly dark mahogany-brown cockroach. It lives outdoors in tree holes, mulch, gutters and roof spaces in warm, humid areas, and flies towards lights at night, getting into buildings through eaves and vents.',
+              breeding: 'Females glue egg cases of about 20 eggs in sheltered places, producing around 10-15 cases in their life. Nymphs take 6-12 months to mature.',
+              control: 'Reduce outdoor harbourage - clear gutters, mulch and leaf litter near the building. Treat roof voids, eaves and the building perimeter with a residual insecticide and use gel bait indoors. Seal gaps at eaves and vents and reduce outside lighting near doors.' },
+            { m: /brown.?banded|supella/i, name: 'Brown-banded cockroach', cat: 'Crawling insects', sub: 'Cockroaches', sci: 'Supella longipalpa', wiki: 'Brown-banded_cockroach', signs: ["Supella longipalpa egg case", "cockroach infestation"],
+              about: 'The brown-banded cockroach is a small (10-14 mm) cockroach with two pale bands across its wings and body. Unlike the German cockroach it prefers warm, dry places higher up - behind pictures, in furniture, electrical appliances, light fittings and ceilings - not just kitchens.',
+              breeding: 'Females glue small egg cases (about 16 eggs) under furniture, in cupboards and on ceilings, producing up to 20 cases. Nymphs mature in 2-4 months.',
+              control: 'Inspect high and dry areas as well as kitchens - furniture, appliances, wardrobes and ceilings. Use gel bait in small spots in those areas and an insect growth regulator to stop breeding. Remove egg cases with a vacuum. Monitor with sticky traps at different heights.' },
+            { m: /argentine ant|linepithema/i, name: 'Argentine ant', cat: 'Crawling insects', sub: 'Ants', sci: 'Linepithema humile', wiki: 'Argentine_ant', signs: ["ant trail", "Linepithema humile trail", "ant nest"],
               about: 'The Argentine ant is a small (2-3 mm), light-brown ant that forms huge "super-colonies" with many queens. It is aggressive, displaces other ants, invades buildings in long trails, and farms aphids and scale insects on plants. It is an unwanted organism in New Zealand.',
               breeding: 'Each colony has many queens laying eggs all year, and new nests form by budding - queens walk off with workers to start a new nest nearby, so they spread steadily from site to site.',
               control: 'Follow trails back to nests in soil, under paving and in garden beds. Use slow-acting ant gel or granular baits that workers carry back to the queens - do not spray trails, as this scatters the colony. Apply a non-repellent residual treatment around the building perimeter. Remove aphid-infested plants and trim vegetation touching the building. Report suspected new infestations to the regional council.' },
-            { m: /white.?footed|technomyrmex/i, cat: 'Crawling insects', wiki: 'Technomyrmex_albipes',
+            { m: /white.?footed|technomyrmex/i, name: 'White-footed house ant', cat: 'Crawling insects', sub: 'Ants', sci: 'Technomyrmex jocosus', wiki: 'Technomyrmex_albipes', signs: ["ant trail wall", "ant trail"],
               about: 'The white-footed house ant is a small (2.5-3 mm) black ant with pale feet. It nests in wall cavities, roof spaces and plants, and forms large colonies that trail through homes looking for sweet foods.',
               breeding: 'Colonies are large with many reproductive females, and new nests form by budding off from the parent colony.',
               control: 'Use sweet liquid or gel ant baits along trails, near entry points and in voids so workers carry it back to the nest. Avoid repellent sprays that split colonies. Trim plants touching the building and seal entry points.' },
-            { m: /black house ant|ochetellus/i, cat: 'Crawling insects', wiki: 'Ochetellus_glaber',
+            { m: /black house ant|ochetellus/i, name: 'Black house ant', cat: 'Crawling insects', sub: 'Ants', sci: 'Ochetellus glaber', wiki: 'Ochetellus_glaber', signs: ["ant trail kitchen", "ant nest paving"],
               about: 'The black house ant is a small (2.5-3 mm) shiny black ant that nests in wall cavities, under paving and in garden beds, and trails indoors for sweet foods and grease.',
               breeding: 'Colonies have one or several queens and grow through spring and summer.',
               control: 'Find and treat nests where possible. Use sweet gel or liquid baits along trails, and a perimeter treatment around the building. Seal cracks and keep benches free of food residue.' },
-            { m: /\bants?\b/i, cat: 'Crawling insects', wiki: 'Ant',
-              about: 'Ants are social insects that live in colonies and forage in trails for food. In buildings they contaminate food, nest in walls and paving, and some species bite or sting.',
-              breeding: 'A colony has one or more queens that lay eggs continuously in warm months. Winged males and new queens swarm to start new colonies; some species spread by budding.',
-              control: 'Identify the species, then follow trails to the nest. Use slow-acting baits that workers carry back to the queen, and non-repellent perimeter treatments. Remove food sources and seal entry points.' },
-            // ----- Other crawling -----
-            { m: /bed ?bug|cimex/i, cat: 'Crawling insects', wiki: 'Bed_bug',
-              about: 'Bed bugs are small (4-5 mm), flat, reddish-brown insects that feed on human blood at night. They hide in mattress seams, bed frames, headboards, skirting boards and furniture, and spread in luggage and second-hand furniture. Signs are itchy bites in rows, dark spots of droppings and shed skins.',
-              breeding: 'A female lays 1-5 eggs a day (200-500 in her life) in cracks near where people sleep. Nymphs need a blood meal before each of five moults and reach adulthood in 4-6 weeks in warm rooms. Adults can survive months without feeding.',
-              control: 'Inspect beds, furniture and skirtings thoroughly to map the infestation. Heat-treat or hot-wash (60 °C) and tumble-dry bedding and clothing. Vacuum seams and cracks and dispose of the bag. Apply residual insecticide and dust to cracks, bed frames and skirtings, and fit mattress encasements. Re-inspect and re-treat after 2 weeks, as eggs survive the first treatment.' },
-            { m: /\bfleas?\b|ctenocephalides/i, cat: 'Crawling insects', wiki: 'Cat_flea',
-              about: 'Fleas are tiny (2-3 mm), wingless, jumping insects that feed on the blood of cats, dogs and people. Most infestations are cat fleas living on pets and in carpets, bedding and under floors.',
-              breeding: 'Adults on the animal lay up to 50 eggs a day that fall into carpets and bedding. Larvae feed on debris and adult flea droppings, then pupate in a cocoon that can wait weeks or months until vibration or warmth signals a host.',
-              control: 'Treat all pets with a vet-recommended flea product at the same time. Vacuum carpets, furniture and pet bedding thoroughly before treatment, and wash bedding hot. Apply an insecticide with an insect growth regulator to carpets, under furniture and pet areas. Keep vacuuming daily for 2 weeks to trigger emerging fleas, and re-treat if needed.' },
-            { m: /silverfish/i, cat: 'Crawling insects', wiki: 'Silverfish',
-              about: 'Silverfish are small (10-12 mm), silvery, wingless insects with a carrot-shaped body and three tail bristles. They live in damp, dark places - bathrooms, laundries, roof spaces and bookshelves - and eat paper, glue, starch, fabric and food crumbs.',
-              breeding: 'Females lay small batches of eggs in cracks over their long life (2-8 years). Nymphs look like small adults and take several months to mature.',
-              control: 'Reduce humidity with ventilation and dehumidifiers, and fix leaks. Apply residual dust or spray to roof voids, wall cavities, skirtings and cracks. Store papers and books in dry, sealed containers. Use sticky traps to monitor.' },
-            { m: /earwig/i, cat: 'Crawling insects', wiki: 'European_earwig',
-              about: 'Earwigs are brown insects (12-20 mm) with pincers at the end of the body. They live outdoors in damp mulch, under pots and in garden beds, and come indoors in hot or wet weather. They damage seedlings and soft fruit.',
-              breeding: 'The female lays 30-60 eggs in a burrow in soil and guards them and the young nymphs. There are usually one or two generations a year.',
-              control: 'Remove damp harbourage near the building - mulch, leaf litter, boards and pots. Apply a residual perimeter treatment to foundations and door thresholds. Seal gaps under doors and windows.' },
-            { m: /slater|woodlouse|pill bug/i, cat: 'Crawling insects', wiki: 'Woodlouse',
-              about: 'Slaters are small grey crustaceans (10-15 mm) with segmented, armoured bodies. They need damp conditions and live under timber, pots, mulch and leaf litter, coming indoors in damp areas.',
-              breeding: 'The female carries her eggs in a pouch under her body; the young stay there for several weeks. Several broods are raised each year.',
-              control: 'Reduce moisture and remove damp harbourage near the building. Improve sub-floor ventilation and drainage. A residual perimeter treatment helps in heavy infestations; seal gaps at ground level.' },
-            { m: /white.?tail|lampona/i, cat: 'Crawling insects', wiki: 'Lampona_cylindrata',
+            { m: /coastal brown|big.?headed|pheidole/i, name: 'Coastal brown ant', cat: 'Crawling insects', sub: 'Ants', sci: 'Pheidole megacephala', wiki: 'Pheidole_megacephala', signs: ["Pheidole megacephala nest", "ant soil mound paving"],
+              about: 'The coastal brown (big-headed) ant is a small (2-4 mm) brown ant whose soldiers have very large heads. It nests in soil under paving, along foundations and in garden beds, pushing up small piles of soil, and invades buildings for protein and sweet foods. It is a serious invasive pest.',
+              breeding: 'Colonies have many queens and spread by budding into large super-colonies. Breeding is fastest in warm months.',
+              control: 'Look for small piles of soil along paving joints and foundations. Use protein-based granular or gel baits along trails and nest areas - avoid repellent sprays that scatter colonies. Treat the building perimeter with a non-repellent insecticide and seal entry points. Report suspected new infestations to the regional council or MPI.' },
+            { m: /darwin|doleromyrma/i, name: 'Darwin\'s ant', cat: 'Crawling insects', sub: 'Ants', sci: 'Doleromyrma darwiniana', wiki: 'Doleromyrma', signs: ["ant trail", "ant nest garden"],
+              about: 'Darwin\'s ant is a small (2-2.5 mm) brown ant from Australia that is now common in New Zealand cities. It forms large colonies in gardens, under paving and in walls, and trails indoors for sweet foods. Crushed workers smell of rotten coconut.',
+              breeding: 'Colonies have several queens and grow quickly through spring and summer, spreading by budding.',
+              control: 'Follow trails back to the nests outside. Use sweet liquid or gel baits along trails so workers carry it back to the queens, and a non-repellent perimeter treatment. Seal entry points and keep benches clear of sweet residue.' },
+            { m: /ghost ant|tapinoma/i, name: 'Ghost ant', cat: 'Crawling insects', sub: 'Ants', sci: 'Tapinoma melanocephalum', wiki: 'Tapinoma_melanocephalum', signs: ["ant trail bathroom", "ant trail kitchen"],
+              about: 'The ghost ant is a tiny (1.3-1.5 mm) ant with a dark head and pale, almost see-through legs and body, which makes it hard to see. It nests in wall cavities, pot plants and under flooring and trails to sweet foods and moisture in kitchens and bathrooms.',
+              breeding: 'Colonies have many queens and split easily into new nests, so they spread through buildings quickly.',
+              control: 'Use sweet gel or liquid baits along trails and near moisture sources. Treat wall voids and entry points with a non-repellent insecticide. Check pot plants brought indoors. Avoid repellent sprays, which cause colonies to split.' },
+            { m: /pharaoh|monomorium pharaonis/i, name: 'Pharaoh ant', cat: 'Crawling insects', sub: 'Ants', sci: 'Monomorium pharaonis', wiki: 'Pharaoh_ant', signs: ["Monomorium pharaonis", "ant trail hospital"],
+              about: 'The Pharaoh ant is a tiny (2 mm) yellowish ant that nests in warm, hidden places inside heated buildings - wall voids, behind skirtings and in electrical fittings. It is a serious pest in hospitals, hotels and food premises, where it can carry bacteria onto sterile items and food.',
+              breeding: 'Colonies have many queens and split ("bud") easily, especially when disturbed by sprays, so infestations spread through a building.',
+              control: 'Use slow-acting protein and sweet baits placed along trails throughout the infested area - never use repellent sprays, which cause budding. Treat the whole building at once and keep baiting until no activity is seen. Monitor with small bait points.' },
+            { m: /southern ant|monomorium antarcticum/i, name: 'Southern ant', cat: 'Crawling insects', sub: 'Ants', sci: 'Monomorium antarcticum', wiki: 'Monomorium_antarcticum', signs: ["ant trail", "ant nest soil"],
+              about: 'The southern ant is a small (2.5-4 mm), shiny native New Zealand ant, varying from yellow to almost black. It nests in soil, under stones and in lawns and sometimes trails indoors for sweet and protein foods.',
+              breeding: 'Colonies are usually small with one or a few queens; winged ants swarm in late summer.',
+              control: 'Usually only a nuisance. Use sweet or protein baits along trails if they come indoors and seal entry points. Perimeter treatments help with heavy activity.' },
+            { m: /white.?tail|lampona/i, name: 'White-tail spider', cat: 'Crawling insects', sub: 'Spiders', sci: 'Lampona cylindrata', wiki: 'Lampona_cylindrata', signs: ["Lampona egg sac", "spider webs house"],
               about: 'The white-tail spider is a long, cigar-shaped dark grey spider (12-18 mm) with a white spot at the tip of its body. It hunts other spiders at night and wanders indoors, often into bedding and clothing left on the floor. Bites are painful but not usually serious.',
               breeding: 'Females lay egg sacs of up to 90 eggs in sheltered places such as under bark or in cracks. Spiderlings disperse and mature over the following year.',
               control: 'Reduce other spiders (their food) with regular spider treatments around eaves, window frames and outbuildings. Apply residual spray to entry points, skirtings and under houses. Shake out clothes and bedding left on the floor, and seal gaps around doors and windows.' },
-            { m: /redback|katipo|latrodectus/i, cat: 'Crawling insects', wiki: 'Redback_spider',
+            { m: /redback|latrodectus hasselti/i, name: 'Redback spider', cat: 'Crawling insects', sub: 'Spiders', sci: 'Latrodectus hasselti', wiki: 'Redback_spider', signs: ["redback spider web", "Latrodectus hasselti egg sac"],
               about: 'The redback spider is a small black spider with a red stripe on its back. It builds messy webs in dry, sheltered places - under outdoor furniture, in letterboxes, sheds and around rubbish. Its bite is venomous and needs medical attention.',
               breeding: 'Females produce several round, cream egg sacs each holding up to 250 eggs. Spiderlings disperse on silk and mature within a few months in warm weather.',
               control: 'Inspect sheltered outdoor areas carefully. Remove webs and egg sacs and treat harbourages with a residual insecticide. Reduce clutter and rubbish around the site. Wear gloves when handling stored items.' },
-            { m: /daddy long|pholcus|cellar spider/i, cat: 'Crawling insects', wiki: 'Pholcus_phalangioides',
+            { m: /katipo|latrodectus katipo/i, name: 'Katipō', cat: 'Crawling insects', sub: 'Spiders', sci: 'Latrodectus katipo', wiki: 'Katipo', signs: ["Latrodectus katipo web"],
+              about: 'The katipō is a small native New Zealand spider - the female is black with a red stripe (or brown in the north) - found in coastal sand dunes under driftwood and vegetation. It is rare and protected. Its bite is venomous and needs medical attention.',
+              breeding: 'Females lay several round egg sacs in summer; spiderlings disperse on silk.',
+              control: 'Katipō are protected - do not treat. Wear gloves and footwear in dune areas and seek medical help for bites. If found near a building, contact DOC for advice.' },
+            { m: /daddy long|pholcus|cellar spider/i, name: 'Daddy long-legs spider', cat: 'Crawling insects', sub: 'Spiders', sci: 'Pholcus phalangioides', wiki: 'Pholcus_phalangioides', signs: ["Pholcus phalangioides web ceiling"],
               about: 'The daddy long-legs spider has a small body and very long thin legs and hangs upside down in loose webs in ceiling corners, garages and roof spaces. It is harmless but the webs make buildings look untidy.',
               breeding: 'The female carries her eggs in her jaws until they hatch. Several broods are produced each year.',
               control: 'Brush down webs and egg sacs regularly. Apply a residual spider treatment to eaves, ceilings, corners and window frames. Reduce outside lighting that attracts the insects spiders feed on.' },
-            { m: /spider/i, cat: 'Crawling insects', wiki: 'Spider',
-              about: 'Spiders are eight-legged predators that feed on insects. Most are harmless, but webs and some biting species cause concern around buildings.',
-              breeding: 'Females lay eggs in silk egg sacs; spiderlings disperse and mature over weeks to months.',
-              control: 'Remove webs and egg sacs, reduce clutter and outdoor lighting, and apply residual treatments to eaves, window frames, entry points and outbuildings.' },
-            { m: /termite/i, cat: 'Crawling insects', wiki: 'Termite',
+            { m: /black house spider|badumna/i, name: 'Black house spider', cat: 'Crawling insects', sub: 'Spiders', sci: 'Badumna longinqua', wiki: 'Badumna_longinqua', signs: ["Badumna longinqua web window", "spider webs window frame"],
+              about: 'The grey/black house spider is a medium-sized dark spider that builds messy, lacy funnel webs in window frames, under eaves, around gutters and in brickwork. Bites are uncommon but can be painful.',
+              breeding: 'Females lay egg sacs inside the web retreat; spiderlings mature over the following year.',
+              control: 'Brush down webs and egg sacs from windows, eaves and fences. Apply a residual spider treatment to window frames, eaves and entry points, and reduce outdoor lighting that attracts the insects they feed on.' },
+            { m: /bed ?bug|cimex/i, name: 'Bed bug', cat: 'Crawling insects', sub: 'Other crawling insects', sci: 'Cimex lectularius', wiki: 'Bed_bug', signs: ["bed bug infestation mattress", "bed bug feces", "bed bug bites"],
+              about: 'Bed bugs are small (4-5 mm), flat, reddish-brown insects that feed on human blood at night. They hide in mattress seams, bed frames, headboards, skirting boards and furniture, and spread in luggage and second-hand furniture. Signs are itchy bites in rows, dark spots of droppings and shed skins.',
+              breeding: 'A female lays 1-5 eggs a day (200-500 in her life) in cracks near where people sleep. Nymphs need a blood meal before each of five moults and reach adulthood in 4-6 weeks in warm rooms. Adults can survive months without feeding.',
+              control: 'Inspect beds, furniture and skirtings thoroughly to map the infestation. Heat-treat or hot-wash (60 °C) and tumble-dry bedding and clothing. Vacuum seams and cracks and dispose of the bag. Apply residual insecticide and dust to cracks, bed frames and skirtings, and fit mattress encasements. Re-inspect and re-treat after 2 weeks, as eggs survive the first treatment.' },
+            { m: /\\bfleas?\\b|ctenocephalides/i, name: 'Cat flea', cat: 'Crawling insects', sub: 'Other crawling insects', sci: 'Ctenocephalides felis', wiki: 'Cat_flea', signs: ["flea dirt", "flea larvae carpet", "flea bites"],
+              about: 'Fleas are tiny (2-3 mm), wingless, jumping insects that feed on the blood of cats, dogs and people. Most infestations are cat fleas living on pets and in carpets, bedding and under floors.',
+              breeding: 'Adults on the animal lay up to 50 eggs a day that fall into carpets and bedding. Larvae feed on debris and adult flea droppings, then pupate in a cocoon that can wait weeks or months until vibration or warmth signals a host.',
+              control: 'Treat all pets with a vet-recommended flea product at the same time. Vacuum carpets, furniture and pet bedding thoroughly before treatment, and wash bedding hot. Apply an insecticide with an insect growth regulator to carpets, under furniture and pet areas. Keep vacuuming daily for 2 weeks to trigger emerging fleas, and re-treat if needed.' },
+            { m: /silverfish/i, name: 'Silverfish', cat: 'Crawling insects', sub: 'Other crawling insects', sci: 'Lepisma saccharinum', wiki: 'Silverfish', signs: ["silverfish damage paper", "silverfish damage book"],
+              about: 'Silverfish are small (10-12 mm), silvery, wingless insects with a carrot-shaped body and three tail bristles. They live in damp, dark places - bathrooms, laundries, roof spaces and bookshelves - and eat paper, glue, starch, fabric and food crumbs.',
+              breeding: 'Females lay small batches of eggs in cracks over their long life (2-8 years). Nymphs look like small adults and take several months to mature.',
+              control: 'Reduce humidity with ventilation and dehumidifiers, and fix leaks. Apply residual dust or spray to roof voids, wall cavities, skirtings and cracks. Store papers and books in dry, sealed containers. Use sticky traps to monitor.' },
+            { m: /earwig/i, name: 'European earwig', cat: 'Crawling insects', sub: 'Other crawling insects', sci: 'Forficula auricularia', wiki: 'European_earwig', signs: ["earwig damage leaves", "earwigs under bark"],
+              about: 'Earwigs are brown insects (12-20 mm) with pincers at the end of the body. They live outdoors in damp mulch, under pots and in garden beds, and come indoors in hot or wet weather. They damage seedlings and soft fruit.',
+              breeding: 'The female lays 30-60 eggs in a burrow in soil and guards them and the young nymphs. There are usually one or two generations a year.',
+              control: 'Remove damp harbourage near the building - mulch, leaf litter, boards and pots. Apply a residual perimeter treatment to foundations and door thresholds. Seal gaps under doors and windows.' },
+            { m: /slater|woodlouse|pill bug/i, name: 'Slater (woodlouse)', cat: 'Crawling insects', sub: 'Other crawling insects', sci: 'Porcellio scaber', wiki: 'Woodlouse', signs: ["woodlice under log", "woodlice group"],
+              about: 'Slaters are small grey crustaceans (10-15 mm) with segmented, armoured bodies. They need damp conditions and live under timber, pots, mulch and leaf litter, coming indoors in damp areas.',
+              breeding: 'The female carries her eggs in a pouch under her body; the young stay there for several weeks. Several broods are raised each year.',
+              control: 'Reduce moisture and remove damp harbourage near the building. Improve sub-floor ventilation and drainage. A residual perimeter treatment helps in heavy infestations; seal gaps at ground level.' },
+            { m: /millipede|ommatoiulus/i, name: 'Portuguese millipede', cat: 'Crawling insects', sub: 'Other crawling insects', sci: 'Ommatoiulus moreleti', wiki: 'Ommatoiulus_moreleti', signs: ["millipede swarm", "millipedes on wall"],
+              about: 'The Portuguese millipede is a slender, smooth, grey-black millipede (20-45 mm) that curls into a spiral when disturbed. After autumn rain they can invade buildings in large numbers, attracted to lights, and release a smelly, staining fluid.',
+              breeding: 'Females lay eggs in soil in spring; millipedes take about two years to mature and live several years.',
+              control: 'Reduce mulch, leaf litter and damp harbourage around the building. Apply a residual barrier treatment around the perimeter and entry points in autumn. Fit door seals and reduce outside lighting near doors. Sweep up and remove millipedes that get inside.' },
+            { m: /termite/i, name: 'Termite', cat: 'Crawling insects', sub: 'Other crawling insects', sci: 'Isoptera', wiki: 'Termite', signs: ["termite damage wood", "termite mud tubes"],
               about: 'Termites are pale, soft-bodied social insects that eat timber. In New Zealand they are mostly found in damp or decaying wood, but introduced species can cause serious structural damage.',
               breeding: 'A colony is headed by a king and queen; winged reproductives swarm in warm weather to start new colonies.',
               control: 'Confirm the species - suspected subterranean or drywood termites must be reported to MPI. Remove damp, decaying timber and fix moisture problems. Treat affected timber and soil, and inspect regularly.' },
-            { m: /borer|anobium|furniture beetle/i, cat: 'Crawling insects', wiki: 'Anobium_punctatum',
+            { m: /house borer|anobium|furniture beetle|\\bborer\\b/i, name: 'Common house borer', cat: 'Crawling insects', sub: 'Beetles & borers', sci: 'Anobium punctatum', wiki: 'Anobium_punctatum', signs: ["woodworm holes", "woodworm damage furniture", "Anobium punctatum damage"],
               about: 'The common house borer (furniture beetle) is a small brown beetle whose larvae tunnel through untreated timber, leaving 1-2 mm round flight holes and fine powdery frass. It attacks floorboards, framing and furniture, especially in older or damp buildings.',
               breeding: 'Adults emerge in spring and summer and lay eggs in cracks in timber. Larvae tunnel inside the wood for 2-4 years before pupating and emerging.',
               control: 'Look for fresh flight holes and frass to confirm activity. Apply a borer treatment to affected timber in the flight season (spring-summer), and improve ventilation to keep timber dry. Replace badly damaged timber with treated timber.' },
-            { m: /carpet beetle|anthrenus|attagenus/i, cat: 'Crawling insects', wiki: 'Varied_carpet_beetle',
+            { m: /carpet beetle|anthrenus|attagenus/i, name: 'Carpet beetle', cat: 'Crawling insects', sub: 'Beetles & borers', sci: 'Anthrenus verbasci', wiki: 'Varied_carpet_beetle', signs: ["carpet beetle larva", "carpet beetle damage"],
               about: 'Carpet beetles are small, rounded, mottled beetles. Their hairy larvae ("woolly bears") eat wool, silk, fur, feathers and dried animal products, damaging carpets, clothing and museum items.',
               breeding: 'Adults lay eggs in fabrics, carpet edges, nests and lint. Larvae feed for months to years depending on temperature before pupating.',
               control: 'Find and remove the source - old bird nests, lint, stored wool and fur. Vacuum carpet edges, under furniture and in cupboards thoroughly. Apply a residual treatment to carpet edges and cracks, and store fabrics clean in sealed containers.' },
-            { m: /book ?lice|booklouse|psocid/i, cat: 'Stored product pests', wiki: 'Booklouse',
-              about: 'Booklice (psocids) are tiny (1-2 mm), pale insects that feed on moulds in damp places - in stored food, cardboard, books and new buildings with damp plaster.',
-              breeding: 'Females lay eggs singly; development takes about a month and many species reproduce without males, so numbers build quickly in humid conditions.',
-              control: 'Reduce humidity below 60 % with ventilation and dehumidifiers. Discard infested food and packaging, clean shelves and dry the area. A residual treatment in cracks helps in heavy infestations.' },
-            // ----- Flies and flying insects -----
-            { m: /house ?fly|musca/i, cat: 'Flying insects', wiki: 'Housefly',
+            { m: /house ?fly|musca/i, name: 'House fly', cat: 'Flying insects', sub: 'Flies', sci: 'Musca domestica', wiki: 'Housefly', signs: ["fly larvae maggots", "flies on rubbish", "fly specks"],
               about: 'The house fly is a grey fly (6-7 mm) with four dark stripes on its thorax. It feeds on rubbish, manure and food, and carries bacteria from waste onto food and surfaces, spreading food poisoning.',
               breeding: 'Females lay batches of 100-150 eggs in rotting organic matter - rubbish, food waste and manure. In warm weather the life cycle takes only 7-10 days, so numbers rise fast in summer.',
               control: 'Remove breeding sites: empty and clean bins often, keep lids closed and clean up food waste and spills. Fit fly screens, strip curtains and self-closing doors. Use UV insect light traps (ILTs) inside, away from doors and food prep, and service them regularly. Use fly baits outside around bins and waste areas.' },
-            { m: /blow ?fly|bluebottle|greenbottle|calliphor/i, cat: 'Flying insects', wiki: 'Calliphoridae',
+            { m: /blow ?fly|bluebottle|greenbottle|calliphor/i, name: 'Blowfly', cat: 'Flying insects', sub: 'Flies', sci: 'Calliphora vicina', wiki: 'Calliphoridae', signs: ["blowfly maggots", "Calliphoridae larvae"],
               about: 'Blowflies are large, metallic blue or green flies attracted to meat, dead animals and rubbish. They contaminate food and are often a sign of a dead rodent or bird in a wall or roof space.',
               breeding: 'Females lay eggs on meat, carcasses and food waste; maggots feed for a few days, then move away to pupate. The life cycle takes 2-3 weeks.',
               control: 'Find and remove the source (dead animal, waste or meat scraps). Keep bins clean and sealed. Use insect light traps and fly screens inside, and baits around waste areas outside.' },
-            { m: /fruit fly|drosophila|vinegar fly/i, cat: 'Flying insects', wiki: 'Drosophila_melanogaster',
+            { m: /fruit fly|drosophila|vinegar fly/i, name: 'Fruit (vinegar) fly', cat: 'Flying insects', sub: 'Flies', sci: 'Drosophila melanogaster', wiki: 'Drosophila_melanogaster', signs: ["fruit flies on fruit", "Drosophila larvae"],
               about: 'Fruit (vinegar) flies are tiny (2-3 mm) flies with red eyes that breed in fermenting fruit, spilled drinks, drains and damp mops. They are common in bars, kitchens and food stores.',
               breeding: 'Females lay up to 500 eggs on fermenting material; the life cycle takes only 8-10 days, so they build up very quickly.',
               control: 'Find and remove breeding material - overripe fruit, spilled drinks, residue in drains, bins and floor wastes. Clean drains with a bio-enzymatic drain cleaner. Use fruit-fly traps and insect light traps, and keep produce refrigerated or covered.' },
-            { m: /drain fly|moth fly|psychod/i, cat: 'Flying insects', wiki: 'Psychodidae',
+            { m: /drain fly|moth fly|psychod/i, name: 'Drain fly', cat: 'Flying insects', sub: 'Flies', sci: 'Clogmia albipunctata', wiki: 'Psychodidae', signs: ["drain fly larvae", "Psychodidae larva"],
               about: 'Drain flies are small, fuzzy, moth-like flies (2-4 mm) that rest on walls near drains, showers and grease traps. Their larvae live in the slimy film inside drains and floor wastes.',
               breeding: 'Eggs are laid in the organic film in drains; larvae feed there and the life cycle takes 1-3 weeks.',
               control: 'Clean drains, floor wastes and grease traps thoroughly with a brush and bio-enzymatic cleaner to remove the film the larvae live in. Fix broken pipes and pooled water. Adult sprays alone do not solve the problem.' },
-            { m: /cluster fly|pollenia/i, cat: 'Flying insects', wiki: 'Pollenia',
+            { m: /cluster fly|pollenia/i, name: 'Cluster fly', cat: 'Flying insects', sub: 'Flies', sci: 'Pollenia rudis', wiki: 'Pollenia', signs: ["cluster flies window", "flies overwintering"],
               about: 'Cluster flies are slow, dark flies that gather in large numbers in roof spaces and window frames in autumn to shelter over winter, then appear inside on warm days.',
               breeding: 'Larvae are parasites of earthworms in lawns and paddocks; adults emerge in late summer and look for shelter.',
               control: 'Seal gaps at eaves, window frames and roof vents before autumn. Treat roof voids and window frames with a residual spray or smoke treatment, and use insect light traps inside.' },
-            { m: /mosquito/i, cat: 'Flying insects', wiki: 'Mosquito',
+            { m: /fungus gnat|sciarid/i, name: 'Fungus gnat', cat: 'Flying insects', sub: 'Flies', sci: 'Bradysia', wiki: 'Fungus_gnat', signs: ["fungus gnat larvae soil", "sticky trap fungus gnats"],
+              about: 'Fungus gnats are tiny (2-4 mm), dark, delicate flies that hover around pot plants, windows and damp areas. Their larvae live in moist potting mix and organic matter and can damage seedlings.',
+              breeding: 'Eggs are laid in damp soil; larvae feed for 1-2 weeks and the cycle takes about 3-4 weeks, faster in warm conditions.',
+              control: 'Let potting mix dry out between watering and remove decaying plant material. Use yellow sticky traps for adults and a biological larvicide (e.g. Bti) in potting mix. Fix leaks and damp areas.' },
+            { m: /mosquito/i, name: 'Mosquito', cat: 'Flying insects', sub: 'Flies', sci: 'Culex pervigilans', wiki: 'Mosquito', signs: ["mosquito larvae water", "mosquito breeding container"],
               about: 'Mosquitoes are small biting flies; females feed on blood and can spread diseases. They are a nuisance around homes, workplaces and outdoor areas near water.',
               breeding: 'Eggs are laid on or near still water - containers, gutters, drains and ponds. Larvae live in the water and develop in 1-2 weeks.',
               control: 'Remove standing water: empty containers, clear gutters and drains, cover tanks. Treat water that cannot be removed with a larvicide. Fit insect screens and use residual treatments on resting surfaces.' },
-            { m: /german wasp|vespula germanica/i, cat: 'Flying insects', wiki: 'German_wasp',
-              about: 'The German wasp is a yellow-and-black wasp with black dots on its abdomen. It builds large paper nests in the ground, wall cavities and roof spaces, and stings repeatedly when disturbed. In late summer workers scavenge for sweet foods and meat around outdoor eating areas.',
-              breeding: 'A single queen starts a nest in spring; the colony grows to thousands of workers by late summer. New queens and males leave in autumn to mate, and in mild areas nests can survive winter and grow huge.',
-              control: 'Locate the nest by following flight paths. Treat the nest entrance with insecticide dust at dusk when wasps are inside, wearing protective gear. Remove or seal the nest once dead. Reduce food sources around bins and outdoor seating. Use protein baits for area control where available.' },
-            { m: /paper wasp|polistes/i, cat: 'Flying insects', wiki: 'Polistes',
-              about: 'Paper wasps are long-legged, slender wasps that build small, open, umbrella-shaped nests under eaves, fences and shrubs. They sting if the nest is disturbed.',
-              breeding: 'A queen starts a nest in spring and colonies stay small (tens of wasps). New queens overwinter in sheltered places.',
-              control: 'Treat small nests with an aerosol or dust at dusk and remove them. Check eaves, fences and play equipment regularly in spring and summer.' },
-            { m: /common wasp|vespula vulgaris|\bwasps?\b|yellow ?jacket/i, cat: 'Flying insects', wiki: 'Vespula_vulgaris',
-              about: 'Common and German wasps are yellow-and-black social wasps that build paper nests in the ground, wall cavities and roof spaces. They sting repeatedly when disturbed and are attracted to sweet food and meat.',
-              breeding: 'A queen starts the nest in spring; it grows to thousands of workers by late summer. New queens leave in autumn to overwinter.',
-              control: 'Find the nest by following flight paths and treat the entrance with insecticide dust at dusk, wearing protective gear. Reduce food sources around bins and outdoor seating, and use protein baits for area control.' },
-            { m: /bumble ?bee/i, cat: 'Flying insects', wiki: 'Bumblebee',
-              about: 'Bumblebees are large, hairy bees and important pollinators. They nest in old rodent burrows, compost and wall cavities and rarely sting unless handled.',
-              breeding: 'A queen starts a small colony in spring; it lasts one season and produces new queens in late summer.',
-              control: 'Leave nests alone where possible - they die out at the end of the season. If a nest must be moved, contact a beekeeper. Seal the entry point after the colony has finished.' },
-            { m: /honey ?bee|\bbees?\b|swarm/i, cat: 'Flying insects', wiki: 'Western_honey_bee',
-              about: 'Honey bees are valuable pollinators. Problems arise when a swarm settles on a building or a colony moves into a wall cavity or roof space, where honey and comb can attract other pests.',
-              breeding: 'Colonies reproduce by swarming in spring and summer, when the old queen leaves with thousands of workers to find a new home.',
-              control: 'Contact a local beekeeper to collect swarms. Colonies established in walls should be removed with the comb by a specialist, then the cavity sealed. Do not use insecticide on honey bees unless no alternative exists.' },
-            { m: /midge|chironom/i, cat: 'Flying insects', wiki: 'Chironomidae',
+            { m: /midge|chironom/i, name: 'Midge', cat: 'Flying insects', sub: 'Flies', sci: 'Chironomidae', wiki: 'Chironomidae', signs: ["midge swarm", "Chironomidae larvae"],
               about: 'Midges are small, delicate flies that swarm near water and lights. Most do not bite, but large numbers are a nuisance and are attracted to lit buildings, ILTs and windows.',
               breeding: 'Larvae live in ponds, streams, wetlands and waste water, emerging in large numbers in warm weather.',
               control: 'Reduce lighting that attracts them (use yellow or LED lighting outside), fit insect screens and use insect light traps inside. Residual sprays on resting surfaces near water help during peak emergence.' },
-            { m: /clothes moth|tineola|tinea/i, cat: 'Flying insects', wiki: 'Tineola_bisselliella',
+            { m: /german wasp|vespula germanica/i, name: 'German wasp', cat: 'Flying insects', sub: 'Wasps & bees', sci: 'Vespula germanica', wiki: 'German_wasp', signs: ["wasp nest", "Vespula nest ground", "wasp nest roof"],
+              about: 'The German wasp is a yellow-and-black wasp with black dots on its abdomen. It builds large paper nests in the ground, wall cavities and roof spaces, and stings repeatedly when disturbed. In late summer workers scavenge for sweet foods and meat around outdoor eating areas.',
+              breeding: 'A single queen starts a nest in spring; the colony grows to thousands of workers by late summer. New queens and males leave in autumn to mate, and in mild areas nests can survive winter and grow huge.',
+              control: 'Locate the nest by following flight paths. Treat the nest entrance with insecticide dust at dusk when wasps are inside, wearing protective gear. Remove or seal the nest once dead. Reduce food sources around bins and outdoor seating. Use protein baits for area control where available.' },
+            { m: /common wasp|vespula vulgaris/i, name: 'Common wasp', cat: 'Flying insects', sub: 'Wasps & bees', sci: 'Vespula vulgaris', wiki: 'Vespula_vulgaris', signs: ["Vespula vulgaris nest", "wasp nest"],
+              about: 'Common and German wasps are yellow-and-black social wasps that build paper nests in the ground, wall cavities and roof spaces. They sting repeatedly when disturbed and are attracted to sweet food and meat.',
+              breeding: 'A queen starts the nest in spring; it grows to thousands of workers by late summer. New queens leave in autumn to overwinter.',
+              control: 'Find the nest by following flight paths and treat the entrance with insecticide dust at dusk, wearing protective gear. Reduce food sources around bins and outdoor seating, and use protein baits for area control.' },
+            { m: /paper wasp|polistes/i, name: 'Asian paper wasp', cat: 'Flying insects', sub: 'Wasps & bees', sci: 'Polistes chinensis', wiki: 'Polistes', signs: ["Polistes nest", "paper wasp nest"],
+              about: 'Paper wasps are long-legged, slender wasps that build small, open, umbrella-shaped nests under eaves, fences and shrubs. They sting if the nest is disturbed.',
+              breeding: 'A queen starts a nest in spring and colonies stay small (tens of wasps). New queens overwinter in sheltered places.',
+              control: 'Treat small nests with an aerosol or dust at dusk and remove them. Check eaves, fences and play equipment regularly in spring and summer.' },
+            { m: /bumble ?bee/i, name: 'Bumblebee', cat: 'Flying insects', sub: 'Wasps & bees', sci: 'Bombus terrestris', wiki: 'Bumblebee', signs: ["bumblebee nest"],
+              about: 'Bumblebees are large, hairy bees and important pollinators. They nest in old rodent burrows, compost and wall cavities and rarely sting unless handled.',
+              breeding: 'A queen starts a small colony in spring; it lasts one season and produces new queens in late summer.',
+              control: 'Leave nests alone where possible - they die out at the end of the season. If a nest must be moved, contact a beekeeper. Seal the entry point after the colony has finished.' },
+            { m: /honey ?bee|apis mellifera|bee swarm/i, name: 'Honey bee', cat: 'Flying insects', sub: 'Wasps & bees', sci: 'Apis mellifera', wiki: 'Western_honey_bee', signs: ["bee swarm", "honey bee swarm tree", "bee hive wall"],
+              about: 'Honey bees are valuable pollinators. Problems arise when a swarm settles on a building or a colony moves into a wall cavity or roof space, where honey and comb can attract other pests.',
+              breeding: 'Colonies reproduce by swarming in spring and summer, when the old queen leaves with thousands of workers to find a new home.',
+              control: 'Contact a local beekeeper to collect swarms. Colonies established in walls should be removed with the comb by a specialist, then the cavity sealed. Do not use insecticide on honey bees unless no alternative exists.' },
+            { m: /clothes moth|tineola|tinea/i, name: 'Clothes moth', cat: 'Flying insects', sub: 'Moths', sci: 'Tineola bisselliella', wiki: 'Tineola_bisselliella', signs: ["clothes moth damage wool", "clothes moth larvae"],
               about: 'Clothes moths are small (6-8 mm), golden-buff moths that avoid light. Their larvae eat wool, silk, fur and feathers, leaving holes in clothing, carpets and upholstery.',
               breeding: 'Females lay 40-50 eggs on fabrics; larvae feed for 1-3 months (longer in cool conditions) in dark, undisturbed places.',
               control: 'Find and clean or discard infested items. Vacuum carpets, cupboards and under furniture thoroughly. Freeze or hot-wash affected fabrics. Apply a residual treatment to carpet edges and cupboards and use pheromone traps to monitor.' },
-            // ----- Stored product pests -----
-            { m: /indian ?meal ?moth|plodia/i, cat: 'Stored product pests', wiki: 'Plodia_interpunctella',
+            { m: /indian ?meal ?moth|plodia/i, name: 'Indian meal moth', cat: 'Stored product pests', sub: 'Moths', sci: 'Plodia interpunctella', wiki: 'Plodia_interpunctella', signs: ["pantry moth webbing", "Plodia interpunctella larva", "Indian meal moth infestation"],
               about: 'The Indian meal moth is a small moth (8-10 mm) with two-tone wings - pale at the base and copper-coloured at the tips. Its larvae infest cereals, nuts, dried fruit, pet food and grain, leaving webbing in the food.',
               breeding: 'Each female lays 100-300 eggs on or near food. Larvae feed for 2-6 weeks, then wander to pupate in cracks and ceilings. The cycle takes 4-8 weeks in warm conditions.',
               control: 'Find and remove infested products - check packets, bins and bulk stores. Clean shelves, cracks and corners with a vacuum. Use pheromone traps to monitor and catch males. Store food in sealed containers and rotate stock (first in, first out).' },
-            { m: /mediterranean flour moth|ephestia/i, cat: 'Stored product pests', wiki: 'Mediterranean_flour_moth',
+            { m: /mediterranean flour moth|ephestia/i, name: 'Mediterranean flour moth', cat: 'Stored product pests', sub: 'Moths', sci: 'Ephestia kuehniella', wiki: 'Mediterranean_flour_moth', signs: ["Ephestia kuehniella larva", "flour moth webbing"],
               about: 'The Mediterranean flour moth is a grey moth whose larvae infest flour, cereals and grain products, spinning silk that clumps the product and clogs mill equipment.',
               breeding: 'Females lay up to 350 eggs in flour and grain; the life cycle takes about 8-10 weeks.',
               control: 'Remove and dispose of infested product, clean equipment and dead spots in machinery, and use pheromone monitoring. Seal food in containers and keep stock rotating.' },
-            { m: /flour beetle|tribolium|confused flour/i, cat: 'Stored product pests', wiki: 'Red_flour_beetle',
+            { m: /flour beetle|tribolium/i, name: 'Flour beetle', cat: 'Stored product pests', sub: 'Beetles & weevils', sci: 'Tribolium castaneum', wiki: 'Red_flour_beetle', signs: ["flour beetle infestation", "Tribolium larvae flour"],
               about: 'Flour beetles are small (3-4 mm), reddish-brown beetles that infest flour, cereals, cake mixes and processed grain products, giving them a grey colour and an unpleasant smell.',
               breeding: 'Females lay 300-400 eggs in the food over their long life (up to 3 years). The life cycle takes 5-6 weeks in warm conditions.',
               control: 'Remove and dispose of infested products. Vacuum and clean shelves, cracks and equipment. Store products in sealed containers, rotate stock, and use pheromone or food-lure traps to monitor. Residual crack and crevice treatments help in storage areas.' },
-            { m: /rice weevil|sitophilus oryzae|maize weevil/i, cat: 'Stored product pests', wiki: 'Rice_weevil',
+            { m: /rice weevil|sitophilus oryzae|maize weevil/i, name: 'Rice weevil', cat: 'Stored product pests', sub: 'Beetles & weevils', sci: 'Sitophilus oryzae', wiki: 'Rice_weevil', signs: ["rice weevil damage grain", "weevils in rice"],
               about: 'The rice weevil is a small (3 mm) brown beetle with a long snout. Larvae develop inside whole grains of rice, wheat and maize, hollowing them out.',
               breeding: 'Each female lays 300-400 eggs, one inside each grain. The cycle takes about 4-6 weeks in warm conditions.',
               control: 'Remove infested grain, clean storage areas, and store grain in sealed containers. Freezing small quantities for a week kills all stages. Use traps to monitor.' },
-            { m: /granary weevil|sitophilus granarius|\bweevil/i, cat: 'Stored product pests', wiki: 'Sitophilus_granarius',
+            { m: /granary weevil|sitophilus granarius/i, name: 'Granary weevil', cat: 'Stored product pests', sub: 'Beetles & weevils', sci: 'Sitophilus granarius', wiki: 'Sitophilus_granarius', signs: ["weevil damaged wheat", "weevils grain"],
               about: 'Weevils are small beetles with a long snout whose larvae develop inside whole grains, seeds and nuts, hollowing them out and spoiling stored food.',
               breeding: 'Females lay eggs inside individual grains; larvae feed and pupate inside, emerging as adults after 4-8 weeks.',
               control: 'Find and remove infested product, clean storage areas thoroughly, and store food in sealed containers. Rotate stock and use traps to monitor storage areas.' },
-            { m: /saw.?toothed|oryzaephilus/i, cat: 'Stored product pests', wiki: 'Oryzaephilus_surinamensis',
+            { m: /saw.?toothed|oryzaephilus/i, name: 'Saw-toothed grain beetle', cat: 'Stored product pests', sub: 'Beetles & weevils', sci: 'Oryzaephilus surinamensis', wiki: 'Oryzaephilus_surinamensis', signs: ["Oryzaephilus surinamensis infestation", "beetles in cereal"],
               about: 'The saw-toothed grain beetle is a slim, flat brown beetle (2.5-3 mm) with six tooth-like points on each side of the thorax. It infests cereals, dried fruit, nuts and pet food.',
               breeding: 'Females lay 50-300 eggs in food; the cycle takes 3-4 weeks in warm conditions.',
               control: 'Remove infested products, clean shelves and cracks, store food in sealed containers and rotate stock. Monitor with traps.' },
-            { m: /cigarette beetle|lasioderma/i, cat: 'Stored product pests', wiki: 'Cigarette_beetle',
+            { m: /cigarette beetle|lasioderma/i, name: 'Cigarette beetle', cat: 'Stored product pests', sub: 'Beetles & weevils', sci: 'Lasioderma serricorne', wiki: 'Cigarette_beetle', signs: ["Lasioderma serricorne damage", "beetle holes packaging"],
               about: 'The cigarette beetle is a small (2-3 mm), round, reddish-brown beetle with its head tucked down. It infests dried tobacco, spices, herbs, dried flowers, pet food and cereals.',
               breeding: 'Females lay up to 100 eggs in food; the cycle takes 6-8 weeks.',
               control: 'Find and remove infested products, especially spices and pet food. Clean shelves and cracks, and use pheromone traps. Store products in sealed containers.' },
-            { m: /drugstore beetle|stegobium|biscuit beetle/i, cat: 'Stored product pests', wiki: 'Drugstore_beetle',
+            { m: /drugstore beetle|stegobium|biscuit beetle/i, name: 'Drugstore (biscuit) beetle', cat: 'Stored product pests', sub: 'Beetles & weevils', sci: 'Stegobium paniceum', wiki: 'Drugstore_beetle', signs: ["Stegobium paniceum damage", "beetle infestation pantry"],
               about: 'The drugstore (biscuit) beetle is a small brown beetle that infests dry foods - biscuits, flour, spices and pet food - and even books and medicines.',
               breeding: 'Females lay eggs in the food; larvae feed for several weeks before pupating.',
               control: 'Remove infested products, clean storage areas and store food in sealed containers. Use traps to monitor.' },
-            // ----- Birds -----
-            { m: /pigeon|rock dove|columba/i, cat: 'Birds', wiki: 'Rock_dove',
+            { m: /warehouse beetle|trogoderma|khapra/i, name: 'Warehouse beetle', cat: 'Stored product pests', sub: 'Beetles & weevils', sci: 'Trogoderma variabile', wiki: 'Trogoderma_variabile', signs: ["Trogoderma larvae", "dermestid larvae skins"],
+              about: 'The warehouse beetle is a small (2-4 mm), oval, mottled brown beetle. Its hairy larvae infest grain, cereals, seeds, pet food and dried foods in warehouses and food factories, and their cast skins and hairs contaminate products.',
+              breeding: 'Females lay up to 90 eggs in food; larvae can live for months, and even years without food, hiding in cracks.',
+              control: 'Remove infested product and vacuum cracks, dead spaces and under equipment where larvae hide. Use pheromone traps to monitor and locate infestations, treat cracks and crevices, and rotate stock. Report any suspected khapra beetle to MPI.' },
+            { m: /book ?lice|booklouse|psocid/i, name: 'Booklice (psocids)', cat: 'Stored product pests', sub: 'Other', sci: 'Liposcelis', wiki: 'Booklouse', signs: ["psocids on food", "booklice mould"],
+              about: 'Booklice (psocids) are tiny (1-2 mm), pale insects that feed on moulds in damp places - in stored food, cardboard, books and new buildings with damp plaster.',
+              breeding: 'Females lay eggs singly; development takes about a month and many species reproduce without males, so numbers build quickly in humid conditions.',
+              control: 'Reduce humidity below 60 % with ventilation and dehumidifiers. Discard infested food and packaging, clean shelves and dry the area. A residual treatment in cracks helps in heavy infestations.' },
+            { m: /pigeon|rock dove|columba/i, name: 'Feral pigeon', cat: 'Birds', sub: '', sci: 'Columba livia', wiki: 'Rock_dove', signs: ["pigeon droppings building", "pigeon nest ledge", "bird spikes pigeons"],
               about: 'Feral pigeons roost and nest on ledges, roofs, gutters and signs. Their droppings foul buildings and products, are slippery and corrosive, block gutters, and carry diseases and parasites such as mites.',
               breeding: 'Pigeons breed all year, raising 2 eggs per clutch and up to 6 broods a year in nests on ledges and in roof spaces.',
               control: 'Remove roosting and nesting spots with bird spikes, netting, wire or sloped ledges. Seal openings into roof spaces. Remove nests and droppings safely (wear a mask). Stop people feeding them. Use trapping by a licensed operator where needed.' },
-            { m: /sparrow/i, cat: 'Birds', wiki: 'House_sparrow',
+            { m: /sparrow/i, name: 'House sparrow', cat: 'Birds', sub: '', sci: 'Passer domesticus', wiki: 'House_sparrow', signs: ["sparrow nest building", "bird droppings warehouse"],
               about: 'House sparrows are small brown birds that nest in gaps in buildings, signs and roof spaces, and enter warehouses and food premises through open doors, contaminating stock with droppings.',
               breeding: 'They raise 2-4 broods a year of 3-5 eggs, in untidy nests in cavities.',
               control: 'Seal gaps and cavities in buildings, fit bird netting and strip curtains or fast doors to warehouses. Remove nests outside the breeding season. Do not leave food or spilled grain out.' },
-            { m: /starling/i, cat: 'Birds', wiki: 'Common_starling',
+            { m: /starling/i, name: 'Common starling', cat: 'Birds', sub: '', sci: 'Sturnus vulgaris', wiki: 'Common_starling', signs: ["starling nest roof", "starling roost"],
               about: 'Starlings are glossy, dark birds that nest in roof spaces, wall cavities and gutters and roost in large flocks. Nests block gutters and bring mites into buildings.',
               breeding: 'One or two broods a year of 4-6 eggs, in cavities.',
               control: 'Seal entry points into roof spaces and soffits with mesh. Remove nests outside the breeding season and treat for bird mites. Use netting or spikes at roost sites.' },
-            { m: /myna/i, cat: 'Birds', wiki: 'Common_myna',
+            { m: /myna/i, name: 'Common myna', cat: 'Birds', sub: '', sci: 'Acridotheres tristis', wiki: 'Common_myna', signs: ["myna nest roof"],
               about: 'Common mynas are brown birds with a yellow eye patch and legs. They nest in roof spaces and cavities, are aggressive to native birds, and gather around food outlets.',
               breeding: 'Two or three broods a year of 4-5 eggs, in cavities.',
               control: 'Block cavities and roof entry points, remove nests outside the breeding season, and reduce available food scraps. Trapping is effective where allowed.' },
-            { m: /gull|seagull/i, cat: 'Birds', wiki: 'Red-billed_gull',
+            { m: /gull|seagull/i, name: 'Red-billed gull', cat: 'Birds', sub: '', sci: 'Chroicocephalus novaehollandiae', wiki: 'Red-billed_gull', signs: ["gulls nesting roof", "gull droppings"],
               about: 'Gulls nest and roost on flat roofs and around food premises and waste areas, fouling buildings with droppings and harassing people for food.',
               breeding: 'Gulls nest on roofs and coastal sites in spring and summer, laying 2-3 eggs. They return to the same site each year.',
               control: 'Use netting, wire systems or spikes on roofs and ledges, remove nesting material before eggs are laid, and keep bins and food waste covered.' },
-            { m: /bird/i, cat: 'Birds', wiki: 'Bird',
-              about: 'Pest birds roost and nest on buildings, foul them with droppings, block gutters, and bring mites and disease into food areas.',
-              breeding: 'Most pest birds raise several broods a year in cavities and on ledges.',
-              control: 'Proof the building: seal cavities, fit netting, spikes or wire to roosting areas, and remove nests outside the breeding season. Reduce food sources.' }
+            { m: /possum/i, name: 'Brushtail possum', cat: 'Other pests', sub: '', sci: 'Trichosurus vulpecula', wiki: 'Common_brushtail_possum', signs: ["possum damage tree", "possum droppings"],
+              about: 'The common brushtail possum is a large, nocturnal marsupial introduced to New Zealand from Australia. It often moves into roof spaces, causing noise, odour, droppings and urine damage to ceilings and insulation, and it damages gardens, trees and native bush.',
+              breeding: 'Usually one young a year (sometimes two), born mainly in autumn. The young stays in the pouch for about 5 months, then rides on the mother\'s back. Possums live up to 10 years or more.',
+              control: 'Find the entry points into the roof (gaps at eaves, roof iron and vents) and confirm the possum has left at night before sealing. Use one-way exits or cage traps where allowed, and follow local regulations for trapping and humane dispatch. Proof the building with mesh and flashing, and fit guards on trees and downpipes. Trim branches back from the roof.' },
+            { m: /stoat|ferret|weasel|mustelid/i, name: 'Stoat', cat: 'Other pests', sub: '', sci: 'Mustela erminea', wiki: 'Stoat', signs: ["stoat trap", "DOC 200 trap"],
+              about: 'Stoats are small, fast predators with a long body, brown back, cream belly and black-tipped tail. In New Zealand they are a major threat to native birds and can also raid poultry and enter outbuildings.',
+              breeding: 'Females mate in early summer but the pregnancy is delayed, so young (often 6-12) are born the following spring. Young females are mated while still in the nest.',
+              control: 'Use approved kill traps (e.g. DOC-series traps) in tunnels along fence lines, stream edges and hedges. Bait with fresh meat or egg and check regularly. Secure poultry houses and outbuildings with fine mesh. Work with local trapping groups for wider control.' }
         ];
         // general text for a category, used when a pest has no entry of its own
         const PEST_CATEGORY_TEXT = {
@@ -13168,6 +13235,15 @@
             let wiki = null;
             if (!o.photo_path || !o.about) wiki = await wikiPestInfo(o.label);
             if (!o.photo_path && wiki && wiki.photo) { upd.photo_path = wiki.photo; upd.photo_source = wiki.page || 'Wikipedia'; }
+            if (!o.subcategory && lib && lib.sub) upd.subcategory = lib.sub;
+            // the photo gallery: the pest itself, and the signs of an infestation
+            if (!o.gallery || (opts && opts.gallery)) {
+                try {
+                    const g = await findPestGallery(o);
+                    if (g.pest.length || g.signs.length) upd.gallery = g;
+                    if (!o.photo_path && !upd.photo_path && g.pest[0]) { upd.photo_path = g.pest[0].u; upd.photo_source = g.pest[0].p; }
+                } catch (e) {}
+            }
             if (!o.about) upd.about = (lib && lib.about) || (wiki && wiki.extract) || '';
             if (!o.breeding) upd.breeding = (lib && lib.breeding) || gen.breeding;
             if (!o.control) upd.control = (lib && lib.control) || gen.control;
@@ -13176,6 +13252,63 @@
         }
         // a pest picture is either a file in the app's storage or a web address (e.g. from Wikipedia)
         const isWebPic = p => /^https?:\/\//i.test(String(p || ''));
+
+        // ---------- photo galleries: pictures of the pest, and of the signs of an infestation (Wikimedia Commons) ----------
+        const COMMONS_API = 'https://commons.wikimedia.org/w/api.php';
+        const BAD_PIC = /\b(map|range|distribution|logo|icon|diagram|drawing|illustration|stamp|coat of arms|chart|graph|museum specimen label|svg)\b|\.(svg|gif|tiff?|pdf|webm|ogv)$/i;
+        async function commonsSearch(term, limit) {
+            const url = `${COMMONS_API}?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=${Math.max(3, (limit || 4) * 2)}&gsrsearch=${encodeURIComponent('filetype:bitmap ' + term)}&prop=imageinfo&iiprop=url&iiurlwidth=900`;
+            const r = await fetch(url, { headers: { Accept: 'application/json' } });
+            if (!r.ok) throw new Error('Wikimedia ' + r.status);
+            const j = await r.json(), pages = Object.values((j.query && j.query.pages) || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
+            return pages.filter(pg => pg.imageinfo && pg.imageinfo[0] && !BAD_PIC.test(pg.title || ''))
+                .map(pg => ({ u: pg.imageinfo[0].thumburl || pg.imageinfo[0].url, p: pg.imageinfo[0].descriptionurl || '', t: String(pg.title || '').replace(/^File:/, '').replace(/\.[a-z]+$/i, '') }))
+                .slice(0, limit || 4);
+        }
+        // finds photos for a pest: up to 5 of the pest itself and up to 6 of the signs of an infestation
+        async function findPestGallery(o) {
+            const lib = pestLibraryFor(o.label), seen = new Set(), keep = list => list.filter(x => x.u && !seen.has(x.u) && seen.add(x.u));
+            let pest = [];
+            try { pest = keep(await commonsSearch(lib && lib.sci ? `"${lib.sci}"` : o.label, 5)); } catch (e) {}
+            if (pest.length < 3) { try { pest = pest.concat(keep(await commonsSearch((lib && lib.name) || o.label, 5 - pest.length))); } catch (e) {} }
+            const signs = [];
+            for (const term of (lib && lib.signs) || [o.label + ' infestation', o.label + ' damage']) {
+                if (signs.length >= 6) break;
+                try { signs.push(...keep(await commonsSearch(term, 2))); } catch (e) {}
+            }
+            return { pest: pest.slice(0, 5), signs: signs.slice(0, 6), at: new Date().toISOString() };
+        }
+        // a pest's gallery: what's saved for it, otherwise found now (kept for this session)
+        const galleryCache = new Map();
+        async function pestGallery(o) {
+            const saved = o.gallery && typeof o.gallery === 'string' ? (() => { try { return JSON.parse(o.gallery); } catch (e) { return null; } })() : o.gallery;
+            let g = saved && (saved.pest || saved.signs) ? { pest: saved.pest || [], signs: saved.signs || [] } : null;
+            if (!g) {
+                if (!galleryCache.has(o.id)) galleryCache.set(o.id, (navigator.onLine ? findPestGallery(o) : Promise.resolve({ pest: [], signs: [] })).catch(() => ({ pest: [], signs: [] })));
+                g = await galleryCache.get(o.id);
+            }
+            g = { pest: (g.pest || []).slice(), signs: (g.signs || []).slice() };
+            // a picture uploaded for the pest comes first
+            if (o.photo_path && !g.pest.some(x => x.u === o.photo_path)) {
+                const u = isWebPic(o.photo_path) ? o.photo_path : (await getSignedUrls([o.photo_path])).get(o.photo_path);
+                if (u) g.pest.unshift({ u, p: isWebPic(o.photo_path) ? (o.photo_source || '') : '', own: !isWebPic(o.photo_path) });
+            }
+            return g;
+        }
+        // the gallery in a pest's page: "The pest" and "Signs of infestation", with arrows
+        let pgState = { title: '', pest: [], signs: [], tab: 'pest', i: 0 };
+        function pestGalleryHtml() {
+            const list = pgState[pgState.tab], it = list[pgState.i];
+            const tab = (k, l) => `<button type="button" class="tab-btn ${pgState.tab === k ? 'active' : ''}" onclick="pgState.tab = '${k}'; pgState.i = 0; drawPestGallery()" ${pgState[k].length ? '' : 'disabled style="opacity:.5"'}>${l} ${pgState[k].length}</button>`;
+            return `<div class="flex flex-wrap gap-1.5 mb-2">${tab('pest', '📷 The pest')}${tab('signs', '🔍 Signs of infestation')}</div>
+                <div class="pest-hero pg-stage">${it ? `<img src="${esc(it.u)}" alt="${esc(it.t || pgState.title)}" onclick="pgOpenFull()" onerror="this.replaceWith(Object.assign(document.createElement('span'), { className: 't-faint text-xs', textContent: 'Picture unavailable' }))">` : '<span class="t-faint text-xs">No pictures found.</span>'}
+                    ${list.length > 1 ? `<button type="button" class="pg-nav pg-prev" onclick="pgStep(-1)" aria-label="Previous picture">‹</button><button type="button" class="pg-nav pg-next" onclick="pgStep(1)" aria-label="Next picture">›</button><span class="pg-count">${pgState.i + 1} / ${list.length}</span>` : ''}</div>
+                ${list.length > 1 ? `<div class="pg-thumbs">${list.map((x, k) => `<button type="button" class="pg-thumb ${k === pgState.i ? 'on' : ''}" onclick="pgState.i = ${k}; drawPestGallery()"><img src="${esc(x.u)}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
+                ${it && !it.own ? `<p class="text-[10px] t-faint mt-1">${esc(it.t || '')}${it.t ? ' · ' : ''}Photo: <a href="${esc(it.p || 'https://commons.wikimedia.org')}" target="_blank" rel="noopener" class="underline">Wikimedia Commons</a> (see the page for the photographer and licence)</p>` : ''}`;
+        }
+        function drawPestGallery() { const el = document.getElementById('pestHeroBox'); if (el) el.innerHTML = pestGalleryHtml(); }
+        function pgStep(d) { const n = pgState[pgState.tab].length; if (!n) return; pgState.i = (pgState.i + d + n) % n; drawPestGallery(); }
+        function pgOpenFull() { const list = pgState[pgState.tab]; if (list.length) viewFullImage(list.map(x => x.u), '', pgState.title + (pgState.tab === 'signs' ? ' · signs of infestation' : ''), '', pgState.i); }
 
         let pestGuideQ = '';
         function openPestGuide() {
@@ -13190,32 +13323,47 @@
             if (!el) return;
             const q = pestGuideQ.trim().toLowerCase();
             const items = speciesItems().filter(o => !q || `${o.label} ${pestCategoryOf(o)} ${o.about || ''}`.toLowerCase().includes(q));
-            el.innerHTML = pestCategories(items).map(c => `<div><div class="eyebrow t-accent mb-2">${PEST_CAT_ICON[c] || '🐞'} ${esc(c)} <span class="t-faint normal-case tracking-normal font-semibold">· ${items.filter(o => pestCategoryOf(o) === c).length}</span></div>
-                <div class="pest-grid">${items.filter(o => pestCategoryOf(o) === c).map(o => `<button type="button" class="pest-card" data-pest="${esc(o.id)}" onclick="showPestInfo(this.dataset.pest)">
-                    <span class="pest-pic" data-pest-pic="${esc(o.id)}">${o.photo_path ? '' : `<span>${PEST_CAT_ICON[c] || '🐞'}</span>`}</span><span class="pest-name">${esc(o.label)}</span></button>`).join('')}</div></div>`).join('')
-                || '<p class="text-sm t-muted">No pests match.</p>';
+            const card = (o, c) => `<button type="button" class="pest-card" data-pest="${esc(o.id)}" onclick="showPestInfo(this.dataset.pest)">
+                    <span class="pest-pic" data-pest-pic="${esc(o.id)}"><span>${PEST_CAT_ICON[c] || '🐞'}</span></span><span class="pest-name">${esc(o.label)}</span>${(pestLibraryFor(o.label) || {}).sci ? `<span class="pest-sci">${esc(pestLibraryFor(o.label).sci)}</span>` : ''}</button>`;
+            el.innerHTML = pestCategories(items).map(c => {
+                const inCat = items.filter(o => pestCategoryOf(o) === c);
+                return `<div class="space-y-2"><div class="eyebrow t-accent">${PEST_CAT_ICON[c] || '🐞'} ${esc(c)} <span class="t-faint normal-case tracking-normal font-semibold">· ${inCat.length}</span></div>
+                    ${pestSubs(inCat).map(sub => `${sub ? `<div class="pest-sub">${esc(sub)}</div>` : ''}<div class="pest-grid">${inCat.filter(o => pestSubOf(o) === sub).map(o => card(o, c)).join('')}</div>`).join('')}</div>`;
+            }).join('') || '<p class="text-sm t-muted">No pests match.</p>';
             fillPestPics(el, items);
         }
         async function fillPestPics(el, items) {
-            const want = items.filter(o => o.photo_path && (isOnline || isWebPic(o.photo_path)));
-            if (!want.length) return;
-            const links = await getSignedUrls(want.map(o => o.photo_path));
-            want.forEach(o => { const box = el.querySelector(`[data-pest-pic="${cssEsc(o.id)}"]`), u = links.get(o.photo_path); if (box && u) box.innerHTML = `<img src="${u}" alt="${esc(o.label)}">`; });
+            if (!isOnline) return;
+            // a few at a time: the saved picture, else the first photo of its gallery
+            let next = 0;
+            const worker = async () => {
+                while (next < items.length) {
+                    const o = items[next++];
+                    try {
+                        const g = await pestGallery(o), it = g.pest[0] || g.signs[0];
+                        const box = el.querySelector(`[data-pest-pic="${cssEsc(o.id)}"]`);
+                        if (box && it) box.innerHTML = `<img src="${esc(it.u)}" alt="${esc(o.label)}" loading="lazy">`;
+                    } catch (e) {}
+                }
+            };
+            await Promise.all([worker(), worker(), worker(), worker()]);
         }
         async function showPestInfo(key) {
             const o = findPest(key);
             if (!o) { openInfoModal(String(key || 'Pest'), '<p class="text-sm t-muted">This pest isn\'t in the pest list, so there\'s no guide for it yet.</p>'); return; }
             const g = pestGuideOf(o);
             const c = pestCategoryOf(o), sec = (t, v, hint) => `<div class="space-y-1"><div class="eyebrow t-accent">${t}</div>${v ? `<div class="text-sm t-strong whitespace-pre-line leading-relaxed">${esc(v)}</div>` : `<div class="text-xs t-faint italic">${hint}</div>`}</div>`;
-            openInfoModal(o.label, `<div class="pest-hero" id="pestHero">${o.photo_path ? '<span class="t-faint text-xs">Loading picture...</span>' : `<span class="text-5xl">${PEST_CAT_ICON[c] || '🐞'}</span>`}</div>
-                <div class="flex flex-wrap gap-1.5 my-3"><span class="chip chip-orange">${PEST_CAT_ICON[c] || '🐞'} ${esc(c)}</span></div>
+            const lib = pestLibraryFor(o.label), sub = pestSubOf(o);
+            openInfoModal(o.label, `<div id="pestHeroBox"><div class="pest-hero"><span class="t-faint text-xs">Loading pictures...</span></div></div>
+                <div class="flex flex-wrap items-center gap-1.5 my-3"><span class="chip chip-orange">${PEST_CAT_ICON[c] || '🐞'} ${esc(c)}${sub ? ' · ' + esc(sub) : ''}</span>${lib && lib.sci ? `<span class="text-xs t-muted italic">${esc(lib.sci)}</span>` : ''}</div>
                 <div class="space-y-4">${sec('About this pest', g.about, 'Not written yet.')}${sec('Breeding habits', g.breeding, 'Not written yet.')}${sec('Control strategy', g.control, 'Not written yet.')}</div>
-                ${isWebPic(o.photo_path) ? `<p class="text-[10px] t-faint pt-2">Picture: <a href="${esc(o.photo_source && isWebPic(o.photo_source) ? o.photo_source : 'https://en.wikipedia.org')}" target="_blank" rel="noopener" class="underline">Wikipedia / Wikimedia Commons</a></p>` : ''}`,
+`,
                 `<button type="button" class="btn btn-secondary" onclick="openPestGuide()">‹ Pest guide</button>${isAdmin() ? `<button type="button" class="btn btn-secondary" data-id="${esc(o.id)}" onclick="closeInfoModal(); addon('editPestInfo', this.dataset.id)">✎ Edit</button>` : ''}`, { wide: true });
-            if (o.photo_path && (isOnline || isWebPic(o.photo_path))) {
-                const u = (await getSignedUrls([o.photo_path])).get(o.photo_path), box = document.getElementById('pestHero');
-                if (box) box.innerHTML = u ? `<img src="${u}" alt="${esc(o.label)}" onclick="viewFullImage(this.src, '', ${esc(JSON.stringify(o.label))})">` : '<span class="t-faint text-xs">Picture unavailable</span>';
-            } else if (o.photo_path) { const box = document.getElementById('pestHero'); if (box) box.innerHTML = '<span class="t-faint text-xs">The picture shows when you\'re online.</span>'; }
+            if (!isOnline && !o.gallery) { const box = document.getElementById('pestHeroBox'); if (box) box.innerHTML = '<div class="pest-hero"><span class="t-faint text-xs">The pictures show when you\'re online.</span></div>'; return; }
+            const gal = await pestGallery(o);
+            if (document.getElementById('infoTitle').textContent !== o.label) return;
+            pgState = { title: o.label, pest: gal.pest, signs: gal.signs, tab: gal.pest.length ? 'pest' : 'signs', i: 0 };
+            drawPestGallery();
         }
         // the ⓘ beside the pest drop-down
         function pestInfoForSelected() {
