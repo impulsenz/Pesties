@@ -2191,7 +2191,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.22-r62';
+        const APP_VERSION = '2026.10.22-r63';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -3217,7 +3217,6 @@
                     const empty = !open && !inside.length && !extra.length;
                     return `<div class="space-y-1.5${empty ? ' doc-empty' : ''}"><div class="row-item p-2 flex items-center justify-between gap-2">
                         <button type="button" data-folder="${esc(f)}" onclick="toggleDocFolder(this.dataset.folder)" class="text-left flex-1 min-w-0 font-bold t-strong flex items-center gap-2"><span>${open ? '📂' : '📁'}</span><span class="truncate">${esc(f)}</span><span class="t-faint font-normal text-[11px] shrink-0">${inside.length + extra.length} file${inside.length + extra.length === 1 ? '' : 's'}</span></button>
-                        ${isOnline && inside.length + extra.length ? `<button type="button" data-folder="${esc(f)}" onclick="downloadDocFolder(this.dataset.folder, this)" class="link-btn !no-underline !text-[11px] shrink-0" title="Download everything in ${esc(f)} as one zip file">⬇ All</button>` : ''}
                         ${admin && isOnline && siteDocsError !== 'missing' ? `<button type="button" data-folder="${esc(f)}" onclick="toggleDocForm(true, this.dataset.folder)" class="link-btn !no-underline !text-[11px]" title="Upload into ${esc(f)}">⬆</button>` : ''}
                         ${admin && !isStandardFolder(f) ? `<button type="button" data-folder="${esc(f)}" onclick="deleteDocFolder(this.dataset.folder)" class="t-faint hover:opacity-70 font-bold" title="Remove folder" aria-label="Remove folder">✕</button>` : ''}</div>
                         ${open ? `<div class="pl-4 space-y-1.5 border-l-2 divider ml-2">${(extra.join('') + inside.map(docRow).join('')) || '<span class="t-faint italic">Empty folder.</span>'}</div>` : ''}</div>`;
@@ -3320,65 +3319,6 @@
                 names = folderNames(data || [], adminData.docs.filter(d => String(d.client_id) === String(cid)));
             }
             if (document.getElementById('adminDocSite').value === cid) fillFolderSelect('adminDocFolder', names, pick);
-        }
-        // Download all: everything in the folder right now (documents, plus floor plans in Maps and the SDSs in SDS) as one zip
-        let jszipLoading = null;
-        function loadJSZip() {
-            if (window.JSZip) return Promise.resolve(window.JSZip);
-            return jszipLoading = jszipLoading || new Promise((res, rej) => {
-                const sc = document.createElement('script');
-                sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-                sc.onload = () => window.JSZip ? res(window.JSZip) : rej(new Error('the zip tool did not load'));
-                sc.onerror = () => { jszipLoading = null; rej(new Error('the zip tool could not be loaded')); };
-                document.head.appendChild(sc);
-            });
-        }
-        async function downloadDocFolder(folder, btn) {
-            if (!isOnline) { alert('Downloading needs a connection.'); return; }
-            const c = selectedClient;
-            const files = [];   // { name, url | getUrl }
-            const extOf = p => ((String(p || '').match(/\.([a-z0-9]{2,5})(?:\?|$)/i) || [])[1] || 'pdf').toLowerCase();
-            siteDocs.filter(d => docFolderOf(d) === folder && d.file_path).forEach(d => files.push({ name: `${d.title || 'Document'}.${extOf(d.file_path)}`, bucket: DOC_BUCKET, path: d.file_path }));
-            if (/^maps?$/i.test(folder)) siteMaps.filter(m => m.path).forEach(m => files.push({ name: `Floor plan - ${m.name}.${extOf(m.path)}`, photo: true, path: m.path }));
-            if (/^sds$/i.test(folder)) { const used = sitePrepsUsed(); appOptions.filter(o => o.kind === 'prep' && o.sds_path && used.has(o.label)).forEach(o => files.push({ name: `${o.label} - SDS.${extOf(o.sds_path)}`, bucket: DOC_BUCKET, path: o.sds_path })); }
-            if (!files.length) { alert('There is nothing in this folder to download yet.'); return; }
-            const label = btn ? btn.textContent : '';
-            const say = t => { if (btn) btn.textContent = t; };
-            if (btn) btn.disabled = true;
-            try {
-                say('Preparing...');
-                const JSZip = await loadJSZip();
-                const zip = new JSZip(), used = new Set();
-                const photoUrls = await getSignedUrls(files.filter(f => f.photo).map(f => f.path)).catch(() => new Map());
-                let n = 0, failed = 0;
-                for (const f of files) {
-                    say(`${++n} of ${files.length}...`);
-                    try {
-                        let url = f.photo ? photoUrls.get(f.path) : null;
-                        if (!f.photo) { const { data, error } = await _supabase.storage.from(f.bucket).createSignedUrl(f.path, 600); if (error || !data) throw error || new Error('not found'); url = data.signedUrl; }
-                        if (!url) throw new Error('not found');
-                        const r = await fetch(url);
-                        if (!r.ok) throw new Error('HTTP ' + r.status);
-                        let name = f.name.replace(/[\\/:*?"<>|]+/g, '-').trim(), k = 2;
-                        while (used.has(name.toLowerCase())) name = f.name.replace(/(\.[^.]+)$/, ` (${k++})$1`);
-                        used.add(name.toLowerCase());
-                        zip.file(name, await r.blob());
-                    } catch (e) { failed++; }
-                }
-                if (failed === files.length) throw new Error('none of the files could be downloaded');
-                say('Zipping...');
-                const blob = await zip.generateAsync({ type: 'blob' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `${(c && c.Name) || 'Site'} - ${folder}.zip`.replace(/[\\/:*?"<>|]+/g, '-');
-                document.body.appendChild(a); a.click(); a.remove();
-                setTimeout(() => URL.revokeObjectURL(a.href), 60000);
-                if (failed) alert(`${failed} of ${files.length} file${files.length === 1 ? '' : 's'} couldn't be downloaded and ${failed === 1 ? 'is' : 'are'} missing from the zip.`);
-            } catch (e) {
-                alert('Could not download the folder: ' + (e.message || e));
-            } finally {
-                if (btn) { btn.disabled = false; btn.textContent = label; }
-            }
         }
         async function openSiteDoc(id) {
             const d = siteDocs.find(x => x.id === id);
@@ -10526,7 +10466,7 @@
                 case 'tree': g = `<ellipse rx="${w / 2}" ry="${h / 2}" fill="rgba(34,197,94,.3)" stroke="#15803d" stroke-width="${sw}"/><ellipse rx="${w / 5}" ry="${h / 5}" fill="rgba(21,128,61,.35)"/>`; break;
                 case 'car': g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" stroke="#475569" stroke-width="${sw}" fill="none" stroke-dasharray="${sw * 4} ${sw * 2}"/>${txt('P', Math.min(w, h) * 0.45, '#475569')}`; break;
                 case 'north': g = `<circle r="${w / 2}" stroke="#0f172a" stroke-width="${sw}" fill="#ffffff"/><path d="M 0 ${-w * 0.42} L ${w * 0.16} ${w * 0.2} L 0 ${w * 0.08} L ${-w * 0.16} ${w * 0.2} Z" fill="#0f172a"/>${txt('N', w * 0.24, '#dc2626', -w * 0.62)}`; break;
-                case 'text': g = txt(it.text || 'Label', it.size || ppm * 0.6, it.color || '#0f172a'); break;
+                case 'text': g = `<text x="0" y="0" font-size="${it.size || ppm * 0.6}" ${peTextAttrs(it)} fill="${esc(it.color || '#0f172a')}" text-anchor="middle" dominant-baseline="central">${esc(it.text || 'Label')}</text>`; break;
                 case 'shape': g = peShapeSvg(it, ppm); break;
             }
             const hit = peItemBox(it, ppm);
@@ -10542,7 +10482,18 @@
             return { w: it.w, h: it.h, y: 0 };
         }
         // text sizes are plain numbers you can type: 24 is the normal label size (0.6 m tall on the plan)
-        const PE_FONT_K = 0.025;
+        const PE_FONT_K = 0.006;   // 100 = the normal label size
+        const PE_FONTS = [['sans', 'Standard', 'system-ui, -apple-system, Segoe UI, sans-serif'], ['serif', 'Serif', 'Georgia, Times New Roman, serif'], ['mono', 'Typewriter', 'ui-monospace, Menlo, Consolas, monospace'],
+            ['narrow', 'Narrow', 'Arial Narrow, Roboto Condensed, Helvetica Neue, sans-serif'], ['hand', 'Handwritten', 'Segoe Print, Bradley Hand, Comic Sans MS, cursive']];
+        const peFontFamily = k => (PE_FONTS.find(f => f[0] === k) || PE_FONTS[0])[2];
+        // bold / italic / font for a label or a shape's name (older labels were always bold)
+        const peTextAttrs = it => `font-family="${esc(peFontFamily(it.font))}" font-weight="${it.bold === false ? 500 : 800}" font-style="${it.italic ? 'italic' : 'normal'}"`;
+        function peTextStyleHtml(it) {
+            return `<div class="flex flex-wrap items-center gap-1.5">
+                <button type="button" class="pe-chip justify-center !px-3 ${it.bold === false ? '' : 'on'}" style="font-weight:900;" onclick="peItemSet('bold', ${it.bold === false}); peCommit(); peRenderPanel()" aria-pressed="${it.bold !== false}" title="Bold">B</button>
+                <button type="button" class="pe-chip justify-center !px-3 ${it.italic ? 'on' : ''}" style="font-style:italic;font-family:Georgia,serif;" onclick="peItemSet('italic', ${!it.italic}); peCommit(); peRenderPanel()" aria-pressed="${!!it.italic}" title="Italic">I</button>
+                <select class="field !w-auto !py-1.5 !text-sm flex-1 min-w-[8rem]" aria-label="Font" onchange="peItemSet('font', this.value); peCommit()">${PE_FONTS.map(([k, l, fam]) => `<option value="${k}" ${(it.font || 'sans') === k ? 'selected' : ''} style="font-family:${fam};">${l}</option>`).join('')}</select></div>`;
+        }
         const peFontNum = px => Math.max(1, Math.round(px / (pe.doc.ppm * PE_FONT_K)));
         function peShapeFs(it, ppm) {
             if (it.fs) return it.fs;
@@ -10550,11 +10501,12 @@
             return Math.max(ppm * 0.35, Math.min(ppm * 0.9, (peIsLine(it.shape) ? ppm * 0.6 : Math.min(w, h) * 0.28)));
         }
         function peFontSizeHtml(label, n, js) {
+            const step = n >= 40 ? 10 : 2;
             const go = v => js.split('%n').join(v);
             return `<div class="flex items-center gap-1.5"><label class="lbl !mb-0 mr-auto whitespace-nowrap" for="peFontNum">${label}</label>
-                <button type="button" class="pe-chip justify-center !px-2.5" onclick="${go(`Math.max(1, (parseInt(document.getElementById('peFontNum').value) || ${n}) - 2)`)}" aria-label="Smaller">−</button>
+                <button type="button" class="pe-chip justify-center !px-2.5" onclick="${go(`Math.max(1, (parseInt(document.getElementById('peFontNum').value) || ${n}) - ${step})`)}" aria-label="Smaller">−</button>
                 <input type="number" id="peFontNum" min="1" max="999" step="1" value="${n}" onchange="${go('Math.max(1, parseInt(this.value) || ' + n + ')')}" class="field !py-1.5 !text-sm text-center" style="width:5rem;flex:none;" inputmode="numeric">
-                <button type="button" class="pe-chip justify-center !px-2.5" onclick="${go(`Math.min(999, (parseInt(document.getElementById('peFontNum').value) || ${n}) + 2)`)}" aria-label="Bigger">+</button></div>`;
+                <button type="button" class="pe-chip justify-center !px-2.5" onclick="${go(`Math.min(999, (parseInt(document.getElementById('peFontNum').value) || ${n}) + ${step})`)}" aria-label="Bigger">+</button></div>`;
         }
         function peSetFont(k, n) {
             const it = pe && pe.sel && pe.doc.items.find(x => x.id === pe.sel.id);
@@ -10583,7 +10535,7 @@
             if (it.name) {
                 const line = peIsLine(it.shape), fs = peShapeFs(it, ppm);
                 const y = line ? -Math.max(h, sw * 2) / 2 - fs * 0.75 : 0;
-                g += `<text x="0" y="${y}" font-size="${fs}" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-weight="800" fill="#0f172a" stroke="#ffffff" stroke-width="${fs * 0.16}" paint-order="stroke" stroke-linejoin="round" text-anchor="middle" dominant-baseline="central">${esc(it.name)}</text>`;
+                g += `<text x="0" y="${y}" font-size="${fs}" ${peTextAttrs(it)} fill="#0f172a" stroke="#ffffff" stroke-width="${fs * 0.16}" paint-order="stroke" stroke-linejoin="round" text-anchor="middle" dominant-baseline="central">${esc(it.name)}</text>`;
             }
             return g;
         }
@@ -11026,7 +10978,7 @@
             peRender();
         }
         function pePlaceText(p) {
-            const it = { id: uid(), kind: 'text', x: p.x, y: p.y, rot: 0, w: 0, h: 0, text: 'Label', size: Math.round(pe.doc.ppm * 0.6) };
+            const it = { id: uid(), kind: 'text', x: p.x, y: p.y, rot: 0, w: 0, h: 0, text: 'Label', size: Math.round(100 * pe.doc.ppm * 0.006 * 100) / 100, bold: false };
             pe.doc.items.push(it);
             peCommit();
             peSetTool('select', true);
@@ -11160,11 +11112,14 @@
                     const it = d.items.find(x => x.id === sel.id);
                     if (!it) { pe.sel = null; return peRenderPanel(); }
                     const o = PE_OBJECTS.find(x => x.k === it.kind) || { label: it.kind === 'shape' ? 'Shape' : 'Object' };
-                    const rot = `<div class="lbl !mb-0">Turn</div><div class="grid grid-cols-4 gap-1.5">${[[-90, '↺ 90°'], [-15, '↺ 15°'], [15, '↻ 15°'], [90, '↻ 90°']].map(([a, l]) => `<button type="button" class="pe-chip justify-center" onclick="peRotate(${a})">${l}</button>`).join('')}</div>`;
+                    const rotNow = Math.round((((it.rot || 0) + 180) % 360 + 360) % 360 - 180);
+                    const rot = `<div class="flex items-center justify-between"><span class="lbl !mb-0">Turn</span><span id="peRotLabel" class="text-xs font-mono t-strong">${rotNow}°</span></div><div class="grid gap-1.5" style="grid-template-columns:repeat(4,minmax(0,1fr));">${[[-90, '↺ 90°'], [-15, '↺ 15°'], [15, '↻ 15°'], [90, '↻ 90°']].map(([a, l]) => `<button type="button" class="pe-chip justify-center" onclick="peRotate(${a})">${l}</button>`).join('')}</div>
+                        <input type="range" id="peRotSlider" min="-180" max="180" step="1" value="${rotNow}" oninput="peRotateTo(this.value)" onchange="peCommit()" class="w-full accent-orange-500" aria-label="Turn by any angle">`;
                     html = it.kind === 'shape' ? peShapePanel(it, head, btn, rot) : it.kind === 'text'
                         ? `${head('Label')}<label class="lbl !mb-0" for="peItemText">Text</label>
                             <input type="text" id="peItemText" maxlength="60" value="${esc(it.text || '')}" oninput="peItemSet('text', this.value)" onchange="peCommit()" class="field !py-1.5 !text-sm">
                             ${peFontSizeHtml('Text size', peFontNum(it.size || d.ppm * 0.6), "peSetFont('size', %n)")}
+                            ${peTextStyleHtml(it)}
                             <div class="lbl !mb-0">Colour</div><div class="flex flex-wrap gap-1.5">${['#0f172a', '#dc2626', '#ea580c', '#16a34a', '#2563eb'].map(c => `<button type="button" class="pe-swatch ${(it.color || '#0f172a') === c ? 'on' : ''}" style="background:${c};" onclick="peItemSet('color', '${c}'); peCommit(); peRenderPanel()" aria-label="Colour"></button>`).join('')}</div>
                             ${rot}`
                         : `${head(o ? o.label : 'Object')}
@@ -11206,6 +11161,7 @@
                 <label class="lbl !mb-0" for="peShapeName">Name</label>
                 <input type="text" id="peShapeName" maxlength="40" value="${esc(it.name || '')}" oninput="peItemSet('name', this.value)" onchange="peCommit()" class="field !py-1.5 !text-sm" placeholder="e.g. Garden bed, Skip bin, Loading zone">
                 ${peFontSizeHtml('Name size', peFontNum(peShapeFs(it, d.ppm)), "peSetFont('fs', %n)")}
+                ${peTextStyleHtml(it)}
                 <div class="lbl !mb-0">Shape</div>
                 <div class="flex flex-wrap gap-1.5">${PE_SHAPES.filter(([k]) => peIsLine(k) === line).map(([k, l]) => btn(it.shape === k, `peItemSet('shape', '${k}'); peCommit(); peRenderPanel()`, l)).join('')}</div>
                 <div class="lbl !mb-0">Colour</div>${peFillPicker(it.fill || '#bfdbfe', "peItemSet('fill', '%c'); pe.shapeFill = '%c'; peCommit(); peRenderPanel()", "peItemSet('fill', this.value); pe.shapeFill = this.value; peCommit(); peRenderPanel()")}
@@ -11242,7 +11198,15 @@
         function peRoomColor(c) { const r = pe.doc.rooms.find(x => x.id === pe.sel.id); if (r) { r.color = c; peCommit(); peRender(); peRenderPanel(); } }
         function peItemSet(k, v) { const it = pe.doc.items.find(x => x.id === pe.sel.id); if (it) { it[k] = v; peRender(); } }
         function peItemSize(k, v) { const it = pe.doc.items.find(x => x.id === pe.sel.id), m = parseFloat(v); if (it && m > 0) { it[k] = m * pe.doc.ppm; if (it.kind === 'door' || it.kind === 'door2') it.h = it.w; peCommit(); peRender(); } }
-        function peRotate(a) { const it = pe.doc.items.find(x => x.id === pe.sel.id); if (it) { it.rot = (((it.rot || 0) + a) % 360 + 360) % 360; peCommit(); peRender(); } }
+        function peRotate(a) { const it = pe.doc.items.find(x => x.id === pe.sel.id); if (it) { it.rot = (((it.rot || 0) + a) % 360 + 360) % 360; peCommit(); peRender(); peRotUi(it); } }
+        // the slider: any angle (saved when it's let go)
+        function peRotateTo(v) { const it = pe && pe.sel && pe.doc.items.find(x => x.id === pe.sel.id); if (it) { it.rot = ((Math.round(parseFloat(v) || 0) % 360) + 360) % 360; peRender(); peRotUi(it); } }
+        function peRotUi(it) {
+            const r = Math.round((((it.rot || 0) + 180) % 360 + 360) % 360 - 180);
+            const sl = document.getElementById('peRotSlider'), lb = document.getElementById('peRotLabel');
+            if (sl && document.activeElement !== sl) sl.value = r;
+            if (lb) lb.textContent = r + '°';
+        }
         function peFlipDoor() { const it = pe.doc.items.find(x => x.id === pe.sel.id); if (it) { it.rot = ((it.rot || 0) + 180) % 360; peCommit(); peRender(); } }
         const PE_MAX_PX = 12000;   // the biggest page a phone can still turn into a picture
         function peGrow(side) {
