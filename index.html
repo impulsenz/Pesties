@@ -317,10 +317,10 @@
         .nf-card:hover .nf-img img, .nf-card:hover .nf-img video { transform: scale(1.06); }
         .nf-ph { font-size: 2rem; opacity: .55; }
         .nf-play { position: absolute; width: 2.2rem; height: 2.2rem; border-radius: 999px; background: rgba(0, 0, 0, .55); color: #fff; display: flex; align-items: center; justify-content: center; font-size: .8rem; }
-        .nf-shade { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0, 0, 0, .85) 0%, rgba(0, 0, 0, .35) 45%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, .35) 100%); pointer-events: none; }
+        .nf-shade { position: absolute; inset: 0; pointer-events: none; }
         .nf-top { position: absolute; top: .4rem; left: .4rem; right: .4rem; display: flex; flex-wrap: wrap; gap: .25rem; }
         .nf-top .chip { font-size: 9.5px; padding: .1rem .4rem; backdrop-filter: blur(4px); }
-        .nf-title { position: absolute; left: .55rem; right: .55rem; bottom: .45rem; color: #fff; font-weight: 800; font-size: .78rem; line-height: 1.2; text-shadow: 0 1px 3px rgba(0, 0, 0, .6); }
+        .nf-title { position: absolute; left: .55rem; right: .55rem; bottom: .45rem; color: #fff; font-weight: 800; font-size: .78rem; line-height: 1.2; text-shadow: 0 1px 2px rgba(0, 0, 0, .95), 0 0 8px rgba(0, 0, 0, .8), 0 0 18px rgba(0, 0, 0, .55); }
         .nf-cat { display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #fdba74; margin-bottom: .1rem; }
         .nf-dot { width: .55rem; height: .55rem; border-radius: 999px; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255, 255, 255, .7); }
         .nf-meta { padding: .5rem .6rem .55rem; font-size: 11px; }
@@ -526,6 +526,46 @@
         .theme-sw.on { border-color: rgb(var(--b500)); box-shadow: 0 0 0 3px rgb(var(--b500) / .2); }
         .theme-dot { width: 1.4rem; height: 1.4rem; border-radius: 999px; flex-shrink: 0; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .5); }
         .seg-set { display: inline-flex; flex-wrap: wrap; gap: .3rem; }
+        /* ================= PHONES: less on screen at once ================= */
+        .m-only { display: none !important; }
+        @media (max-width: 639px) {
+            .m-only { display: inline-flex !important; }
+            .m-hide { display: none !important; }
+            /* site boxes: as tall as what's in them, no drag/resize handles */
+            .land-card { height: auto !important; }
+            .land-card .lc-scroll { flex: none; max-height: 26rem; }
+            .lc-move, .lc-resize, .board-hint { display: none !important; }
+            .lc-bar > h3 { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+            .lc-bar > h3::after { content: '▾'; margin-left: .35rem; font-size: .8rem; opacity: .6; }
+            .land-card.m-collapsed .lc-bar > h3::after { content: '▸'; }
+            .land-card.m-collapsed > :not(.lc-head) { display: none !important; }
+            .land-card.m-collapsed .lc-head > :not(.lc-bar) { display: none !important; }
+            .land-card.m-collapsed .lc-head { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+            .land-card.m-collapsed .lc-tools > :not(.m-count), .land-card.m-collapsed .lc-bar > :not(h3):not(.lc-tools) { display: none !important; }
+            .m-count { font-size: .68rem; font-weight: 800; color: var(--muted); }
+            /* pies and photo switches in box headers: the counts are already shown */
+            #recAgeChart, #visitTypeChart { display: none !important; }
+            .photo-toggle { font-size: 0 !important; padding: .3rem .45rem !important; }
+            .photo-toggle::before { content: '📷'; font-size: .8rem; }
+            .photo-toggle:not(.active)::before { opacity: .45; }
+            /* sightings: the filter drop-downs only when asked for */
+            #sightFilters:not(.m-show) select { display: none; }
+            /* documents: empty folders tucked away */
+            #siteDocsList:not(.show-empty) .doc-empty { display: none; }
+            /* site location: just the link, no map panel */
+            .sh-loc { min-height: 0 !important; }
+            .sh-loc #siteLocation { display: none; }
+            .sh-loc > div:first-child { padding-bottom: .75rem; }
+            /* site list: search and "My sites" first, the rest behind More */
+            #siteFilterRow:not(.m-more) .m-extra { display: none !important; }
+            .day-card .day-sub { display: none; }
+            /* visit screen: search on its own line, the buttons underneath */
+            .scan-bar { flex-wrap: wrap; }
+            .scan-bar > .relative.flex-1 { flex: 1 1 100%; }
+            .scan-bar > #scanTypeWrap { flex: 1 1 auto; }
+            .scan-bar > #scanTypeWrap .scan-type-btn { width: 100%; justify-content: flex-start; }
+        }
+        .st-actions .st-plans { grid-column: 1 / -1; }
         /* monthly work */
         .mw-bar { display: flex; height: .5rem; border-radius: 999px; overflow: hidden; background: var(--surface3); gap: 2px; }
         .mw-bar-big { height: .75rem; }
@@ -730,7 +770,7 @@
             <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 <button type="button" onclick="goHome()" class="logo-tile cursor-pointer shrink-0" title="Back to all sites"><img src="images/pesties-logo.png" alt="Pesties - back to all sites" class="h-12 sm:h-14 w-auto rounded-lg"></button>
                 <div class="min-w-0">
-                    <div class="eyebrow t-accent">Service App</div>
+                    <div class="eyebrow t-accent app-mode-label">Service App</div>
                     <div id="headerSite" class="text-sm font-black t-strong truncate">All sites</div>
                 </div>
             </div>
@@ -769,10 +809,11 @@
                 </button>
 
                 <!-- Profile chip -->
-                <button type="button" onclick="openProfileModal()" class="header-h flex items-center gap-2.5 pl-1 pr-3 cursor-pointer transition-all" style="background: var(--surface3); border: 1px solid var(--border);">
+                <button type="button" onclick="openProfileModal()" class="header-h relative flex items-center gap-2.5 pl-1 pr-3 cursor-pointer transition-all" style="background: var(--surface3); border: 1px solid var(--border);">
                     <img id="headerAvatar" src="" alt="" class="w-8 h-8 rounded-lg object-cover hidden">
                     <span id="headerAvatarFallback" class="w-8 h-8 rounded-lg bg-brand-500 text-white font-black text-xs flex items-center justify-center">?</span>
                     <span id="headerName" class="text-xs font-bold t-strong hidden sm:block max-w-[9rem] truncate"></span>
+                    <span id="headerDayDot" class="hidden absolute -top-1 -right-1 w-3 h-3 rounded-full" style="background:#10b981;box-shadow:0 0 0 2px var(--surface);"></span>
                 </button>
             </div>
         </div>
@@ -792,16 +833,16 @@
         <section id="siteSelectorSection" class="space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 class="text-2xl lg:text-3xl font-black t-strong">Site Management</h2>
-                <div id="dayBar" class="day-bar order-last w-full"></div>
-                <button type="button" onclick="openAddClientModal()" class="btn btn-primary">
+
+                <button type="button" onclick="openAddClientModal()" class="btn btn-primary m-hide">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                     Register New Site
                 </button>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2.5">
+            <div id="siteFilterRow" class="flex flex-wrap items-center gap-2.5">
                 <select id="siteFilterSelect" onchange="setSiteFilter(this.value)" class="field !w-auto min-w-[10rem] flex-1 sm:flex-none !py-2.5 cursor-pointer" title="Show sites"></select>
-                <select id="dueRangeSelect" onchange="setDueRange(this.value)" class="field !w-auto min-w-[10rem] flex-1 sm:flex-none !py-2.5 cursor-pointer" title="Services due">
+                <select id="dueRangeSelect" onchange="setDueRange(this.value)" class="m-extra field !w-auto min-w-[10rem] flex-1 sm:flex-none !py-2.5 cursor-pointer" title="Services due">
                     <option value="any">Any due date</option>
                     <option value="today">Due today</option>
                     <option value="overdue">Overdue only</option>
@@ -817,7 +858,8 @@
                     </div>
                     <input type="text" id="siteSearchInput" oninput="renderSiteCards()" placeholder="Search sites..." class="field !pl-10 !py-2.5">
                 </div>
-                <div class="flex items-center gap-2 text-xs">
+                <button type="button" class="m-only tab-btn !py-2" onclick="const r = document.getElementById('siteFilterRow'); r.classList.toggle('m-more'); this.textContent = r.classList.contains('m-more') ? 'Fewer options ▴' : 'More options ▾';">More options ▾</button>
+                <div class="m-extra flex items-center gap-2 text-xs">
                     <label for="siteSortSelect" class="t-muted font-semibold">Sort</label>
                     <select id="siteSortSelect" onchange="setSiteSort(this.value)" class="field !w-auto !py-2.5 cursor-pointer">
                         <option value="due">Next service due</option>
@@ -826,7 +868,7 @@
                         <option value="tech">Technician</option>
                     </select>
                 </div>
-                <div class="flex items-center gap-1.5 text-xs">
+                <div class="m-extra flex items-center gap-1.5 text-xs">
                     <span class="t-muted font-semibold">Size</span>
                     <button type="button" onclick="changeCardSize(-1)" class="icon-btn !w-9 !h-9 text-lg font-black" title="Smaller cards">−</button>
                     <span id="cardSizeLabel" class="t-strong font-bold w-14 text-center">Medium</span>
@@ -891,6 +933,7 @@
                             </button>
                             <button type="button" onclick="openEditSiteModal()" class="btn btn-secondary !px-4 !py-2.5 justify-center">Edit Site</button>
                             <button type="button" onclick="backToSites()" class="btn btn-secondary !px-4 !py-2.5 justify-center">Close</button>
+                            <button type="button" onclick="openMapModal()" class="btn btn-secondary st-plans !px-4 !py-2.5 justify-center">🗺 Floor plans</button>
                         </div>
                     </div>
                 </div>
@@ -1451,6 +1494,7 @@
                 <div>
                     <h3 class="font-black text-lg t-accent">Sync Data</h3>
                     <p id="queueStatusLine" class="text-xs t-muted mt-1"></p>
+                    <button type="button" id="syncSitesBtn" onclick="closeQueueModal(); openStartDay(true, true)" class="btn btn-primary !py-2 !px-3 !text-xs mt-2" title="Download your sites to this device so they open straight away and work offline">⬇ Sync sites to this device</button>
                 </div>
                 <button type="button" onclick="closeQueueModal()" class="t-faint hover:opacity-70 text-xs font-semibold cursor-pointer shrink-0">✕ Close</button>
             </div>
@@ -1484,8 +1528,9 @@
                 </div>
             </div>
 
-            <!-- My month: how much of this month's work is done -->
+            <!-- State of service: how much of this month's work is done, and the working day -->
             <div id="profileMonth" class="inset p-4 space-y-3"></div>
+            <div id="dayBar" class="day-bar"></div>
 
             <!-- Admins: everything team-wide lives on the Admin page -->
             <div id="profileAdminLink" class="hidden border-t divider pt-5 flex flex-wrap items-center justify-between gap-3">
@@ -2031,7 +2076,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.21-r51';
+        const APP_VERSION = '2026.10.22-r53';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -2063,9 +2108,13 @@
         ];
         const FREQ_MAP = Object.fromEntries(FREQUENCIES.map(f => [f.v, f]));
 
+        // admin.html opens this same app in "admin mode" with its own sign-in. In the Service App (index.html)
+        // nobody gets admin powers or admin links, whatever their role.
+        const ADMIN_MODE = window.PESTIS_MODE === 'admin';
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: {
+                storageKey: ADMIN_MODE ? 'sb-pestis-admin-auth-token' : undefined,   // a separate sign-in for the Admin site
                 persistSession: true,
                 autoRefreshToken: true,
                 detectSessionInUrl: true,
@@ -2126,7 +2175,7 @@
         const META_IDS = new Set(['SITE_VISIT_SUMMARY', 'REC_UPDATE', 'SITE_MAP', 'MAP_PIN', 'BARCODE_CHANGE', 'SITE_CHANGE']);
         // Site-level edits (maps, pins, barcode changes, site edits) are kept when a visit is cancelled
         const KEEP_ON_CANCEL = new Set(['SITE_MAP', 'MAP_PIN', 'BARCODE_CHANGE', 'SITE_CHANGE']);
-        function isAdmin() { return !!(currentProfile && currentProfile.role === 'admin'); }
+        function isAdmin() { return ADMIN_MODE && !!(currentProfile && currentProfile.role === 'admin'); }
         function fmtRecNo(n) { return n == null || n === '' || isNaN(Number(n)) ? '' : 'R-' + String(Number(n)).padStart(4, '0'); }
         // CSS.escape isn't in every browser
         function cssEsc(v) { return (window.CSS && CSS.escape) ? CSS.escape(String(v)) : String(v).replace(/["\\\]\[]/g, '\\$&'); }
@@ -2447,7 +2496,7 @@
         // ===================================================================
         //  AUTHENTICATION (Google via Supabase) - works offline after first sign-in
         // ===================================================================
-        const IDENTITY_KEY = 'pestis-identity';
+        const IDENTITY_KEY = ADMIN_MODE ? 'pestis-admin-identity' : 'pestis-identity';
 
         function saveIdentity() {
             saveJSON(IDENTITY_KEY, { user: { id: currentUser.id, email: currentUser.email }, profile: currentProfile });
@@ -2456,7 +2505,7 @@
             try { localStorage.removeItem(IDENTITY_KEY); } catch (e) {}
         }
         function hasStoredSession() {
-            try { return Object.keys(localStorage).some(k => k.startsWith('sb-') && k.endsWith('-auth-token')); } catch (e) { return false; }
+            try { return Object.keys(localStorage).some(k => k.startsWith('sb-') && k.endsWith('-auth-token') && (ADMIN_MODE === k.includes('pestis-admin'))); } catch (e) { return false; }
         }
 
         function showLoginMessage(msg) {
@@ -2604,11 +2653,20 @@
 
         function clearStoredSession() {
             try {
-                Object.keys(localStorage).forEach(k => { if (k.startsWith('sb-')) localStorage.removeItem(k); });
+                Object.keys(localStorage).forEach(k => { if (k.startsWith('sb-') && (ADMIN_MODE === k.includes('pestis-admin'))) localStorage.removeItem(k); });
             } catch (e) {}
         }
 
         function startApp(offlineMode) {
+            if (ADMIN_MODE && !(currentProfile && currentProfile.role === 'admin')) {
+                // the Admin site is for admins only
+                const email = (currentUser && currentUser.email) || '';
+                clearIdentity();
+                showLoginPanel();
+                showLoginMessage(`${email} is not an admin account. Use the Service App, or sign in with an admin account.`);
+                _supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+                return;
+            }
             loadAccountPrefs();
             applyProfileToUI();
             document.getElementById('loginScreen').classList.add('hidden');
@@ -2622,6 +2680,7 @@
             loadTeam();
             flushQueue();
             setTimeout(loadClientUpdates, 1500);
+            if (ADMIN_MODE) setTimeout(() => { const r = sessionGet('pestis-admin-route'); if (r !== 'closed') addon('openAdmin', r || 'overview'); }, 50);
         }
 
         async function recheckProfileInBackground() {
@@ -2829,7 +2888,7 @@
                     <p class="t-faint text-[11px]">${mwView.offset < 0 ? 'Sites whose services were last completed that month.' : 'A site counts as done when every service due this month has been completed. Missed means a service is past its due date and still not done.'}</p></div>` : ''}
                 <div class="flex flex-wrap gap-1.5">${tabs.map(([k, l, n]) => `<button type="button" class="tab-btn ${mwView.filter === k ? 'active' : ''}" onclick="mwView.filter = '${k}'; renderMonthWork()">${l} ${n}</button>`).join('')}</div>
                 <div class="space-y-2">${shown.map(mwRowHtml).join('') || `<div class="row-item p-4 t-faint italic text-center">${w.total ? 'Nothing here.' : `No services due in ${esc(w.mb.label)}.`}</div>`}</div></div>`;
-            openInfoModal(`📅 ${mine ? 'My month' : who} · ${w.mb.label}`, body,
+            openInfoModal(`📅 ${mine ? 'State of service' : who} · ${w.mb.label}`, body,
                 `<button type="button" class="btn btn-secondary" onclick="printMonthWork()">🖨 Print / save list</button>`, { wide: true });
         }
         function mwRowHtml(r) {
@@ -2872,16 +2931,33 @@
             win.document.close();
         }
 
+        // ---------- a refresh keeps you where you were (this browser tab only) ----------
+        const sessionGet = k => { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
+        const sessionSet = (k, v) => { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} };
+        function setRoute(r) { sessionSet('pestis-route', r ? JSON.stringify(r) : null); }
+        let routeRestored = false;
+        async function restoreRoute() {
+            if (routeRestored) return;
+            routeRestored = true;
+            let r = null;
+            try { r = JSON.parse(sessionGet('pestis-route') || 'null'); } catch (e) {}
+            if (!r || !r.site || selectedClient || !clientsData.some(c => String(c.id) === String(r.site))) return;
+            if (ADMIN_MODE && sessionGet('pestis-admin-route') !== 'closed') return;
+            await startSiteVisit(r.site);
+            if (r.view === 'workspace' && selectedClient && visitInfo(selectedClient)) proceedToWorkSpace();
+        }
+
         // ---------- Profile modal & admin panel ----------
         function openProfileModal() {
             document.getElementById('profileModal').classList.remove('hidden');
             document.getElementById('profileAdminLink').classList.toggle('hidden', !isAdmin());
             renderProfileMonth();
+            renderDayBar();
         }
         function renderProfileMonth() {
             const el = document.getElementById('profileMonth');
             if (!el || !currentUser) return;
-            el.innerHTML = `<div class="flex items-center justify-between gap-2"><span class="eyebrow t-accent">📅 My month</span>
+            el.innerHTML = `<div class="flex items-center justify-between gap-2"><span class="eyebrow t-accent">📅 State of service</span>
                     <button type="button" class="link-btn" onclick="closeProfileModal(); openMonthWork(currentUser.id, 0)">View my list ›</button></div>
                 <button type="button" class="w-full text-left" onclick="closeProfileModal(); openMonthWork(currentUser.id, 0)">${monthWorkSummaryHtml(currentUser.id, { big: true })}</button>
                 <div class="flex flex-wrap gap-1.5"><button type="button" class="btn btn-secondary !py-1.5 !px-3 text-xs" onclick="closeProfileModal(); openMonthWork(currentUser.id, 1)">Next month's list</button></div>`;
@@ -2909,7 +2985,7 @@
         const DOC_CATEGORIES = ['Service agreement', 'SDS', 'Insurance', 'Site map', 'Certificates', 'Reports', 'Other'];
         let siteDocs = [], siteDocsFor = null, siteDocsError = '', sitePortalUsers = [], docCategoriesFilled = false, siteDocFolders = [];
         const openDocFolders = new Set();
-        const isAdminUser = () => !!(currentProfile && currentProfile.role === 'admin');
+        const isAdminUser = () => isAdmin();
         async function loadSiteDocs(force) {
             const c = selectedClient;
             if (!c) return;
@@ -2999,14 +3075,17 @@
                     const isMaps = /^maps?$/i.test(f);
                     const inside = siteDocs.filter(d => docFolderOf(d) === f), open = openDocFolders.has(f);
                     const extra = isMaps ? mapRows : /^sds$/i.test(f) ? sdsRows : [];
-                    return `<div class="space-y-1.5"><div class="row-item p-2 flex items-center justify-between gap-2">
+                    const empty = !open && !inside.length && !extra.length;
+                    return `<div class="space-y-1.5${empty ? ' doc-empty' : ''}"><div class="row-item p-2 flex items-center justify-between gap-2">
                         <button type="button" data-folder="${esc(f)}" onclick="toggleDocFolder(this.dataset.folder)" class="text-left flex-1 min-w-0 font-bold t-strong flex items-center gap-2"><span>${open ? '📂' : '📁'}</span><span class="truncate">${esc(f)}</span><span class="t-faint font-normal text-[11px] shrink-0">${inside.length + extra.length} file${inside.length + extra.length === 1 ? '' : 's'}</span></button>
                         ${admin && isOnline && siteDocsError !== 'missing' ? `<button type="button" data-folder="${esc(f)}" onclick="toggleDocForm(true, this.dataset.folder)" class="link-btn !no-underline !text-[11px]" title="Upload into ${esc(f)}">⬆</button>` : ''}
                         ${admin && !isStandardFolder(f) ? `<button type="button" data-folder="${esc(f)}" onclick="deleteDocFolder(this.dataset.folder)" class="t-faint hover:opacity-70 font-bold" title="Remove folder" aria-label="Remove folder">✕</button>` : ''}</div>
                         ${open ? `<div class="pl-4 space-y-1.5 border-l-2 divider ml-2">${(extra.join('') + inside.map(docRow).join('')) || '<span class="t-faint italic">Empty folder.</span>'}</div>` : ''}</div>`;
                 }).join('');
                 const loose = siteDocs.filter(d => !docFolderOf(d) || !siteDocFolders.includes(docFolderOf(d))).map(docRow).join('');
-                box.innerHTML = (folders + loose) || `<span class="t-faint italic">No documents yet.${admin ? ' Add SDSs, insurance, agreements or maps for the client to see.' : ''}</span>`;
+                const nEmpty = (folders.match(/ doc-empty"/g) || []).length;
+                const emptyBtn = nEmpty ? `<button type="button" class="m-only link-btn !no-underline !text-[11px] mt-1" onclick="const l = document.getElementById('siteDocsList'); l.classList.toggle('show-empty'); this.textContent = l.classList.contains('show-empty') ? 'Hide empty folders' : 'Show ${nEmpty} empty folder${nEmpty === 1 ? '' : 's'}';">${box.classList.contains('show-empty') ? 'Hide empty folders' : `Show ${nEmpty} empty folder${nEmpty === 1 ? '' : 's'}`}</button>` : '';
+                box.innerHTML = ((folders + loose) ? folders + loose + emptyBtn : '') || `<span class="t-faint italic">No documents yet.${admin ? ' Add SDSs, insurance, agreements or maps for the client to see.' : ''}</span>`;
             }
             fillFolderSelect('docFolder', siteDocFolders);
             addon('renderSitePortalAccess');
@@ -4421,6 +4500,7 @@
             const out = new Map();
             const need = [];
             Array.from(new Set(paths.filter(Boolean))).forEach(p => {
+                if (/^https?:\/\//i.test(p)) { out.set(p, p); return; }
                 const c = signedCache[p];
                 if (c && c.e - now > 12 * 60 * 60 * 1000) out.set(p, c.u); else need.push(p); // renew links with under 12h left
             });
@@ -4871,6 +4951,7 @@
                 await applyPendingClientEdits();
                 renderSiteCards();
                 refreshCoverUrls();
+                restoreRoute();
             }
 
             let loadErr = null;
@@ -4888,6 +4969,7 @@
                     renderSiteCards();
                     refreshCoverUrls();
                     if (selectedClient) refreshLandingHeader();
+                    restoreRoute();
                     return;
                 } catch (err) {
                     loadErr = err;
@@ -5318,11 +5400,13 @@
         function saveDay(d) { if (d) saveJSON(dayKey(), d); else { try { localStorage.removeItem(dayKey()); } catch (e) {} } renderDayBar(); }
         function hoursText(ms) { const m = Math.max(0, Math.round(ms / 60000)); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`; }
         function renderDayBar() {
+            const dd = currentDay(), hb = document.getElementById('headerDayDot');
+            if (hb) { hb.classList.toggle('hidden', !dd); hb.title = dd ? 'Your day is running' : ''; }
             const el = document.getElementById('dayBar');
             if (!el) return;
             const d = currentDay();
             if (!d) {
-                el.innerHTML = `<div class="day-card"><span class="day-ico">☀</span><div class="min-w-0 flex-1"><div class="font-black t-strong text-sm">Start your day</div><div class="text-[11px] t-muted">Downloads your sites so they open straight away and work offline, and logs your start time.</div></div>
+                el.innerHTML = `<div class="day-card"><span class="day-ico">☀</span><div class="min-w-0 flex-1"><div class="font-black t-strong text-sm">Start your day</div><div class="day-sub text-[11px] t-muted">Downloads your sites so they open straight away and work offline, and logs your start time.</div></div>
                     <button type="button" class="btn btn-primary !py-2 shrink-0" onclick="openStartDay()">▶ Start day</button></div>`;
                 return;
             }
@@ -5341,10 +5425,12 @@
             // nobody assigned: the sites with a service due this week (or overdue)
             return new Set(clientsData.filter(c => getServices(c).some(sv => { const d = dueInfo(sv); return d.days !== null && d.days <= 7; })).map(c => String(c.id)));
         }
-        function openStartDay(refresh) {
+        function openStartDay(refresh, syncOnly) {
+            document.getElementById('profileModal').classList.add('hidden');
             const d = currentDay();
             const pick = refresh && d ? new Set(d.sites || []) : daySiteDefaults();
-            document.getElementById('dayModalTitle').textContent = refresh ? 'Download your sites again' : 'Start your day';
+            if (syncOnly && !isOnline) { alert("You're offline. Sync your sites when you have signal."); return; }
+            document.getElementById('dayModalTitle').textContent = syncOnly ? 'Sync sites to this device' : refresh ? 'Download your sites again' : 'Start your day';
             const sites = clientsData.slice().sort((a, b) => (pick.has(String(b.id)) - pick.has(String(a.id))) || String(a.Name).localeCompare(String(b.Name)));
             document.getElementById('dayModalBody').innerHTML = `
                 <p class="text-xs t-muted">${refresh ? 'Downloads the latest for these sites.' : "Pick the sites you'll work on. They're downloaded now, so they open straight away and work without signal."}</p>
@@ -5352,7 +5438,7 @@
                 <div class="flex items-center justify-between text-[11px]"><span id="dayPickCount" class="t-muted"></span><span class="flex gap-3"><button type="button" class="link-btn !text-[11px]" onclick="document.querySelectorAll('#daySites input').forEach(i => i.checked = true); dayPickCount()">All</button><button type="button" class="link-btn !text-[11px]" onclick="document.querySelectorAll('#daySites input').forEach(i => i.checked = false); dayPickCount()">None</button></span></div>
                 <div id="daySites" class="day-sites scroll-thin">${sites.map(c => `<label data-q="${esc(String(c.Name + ' ' + (c.Address || '')).toLowerCase())}"><input type="checkbox" value="${esc(String(c.id))}" ${pick.has(String(c.id)) ? 'checked' : ''} onchange="dayPickCount()"><span class="min-w-0"><b class="t-strong block truncate">${esc(c.Name)}</b><span class="t-faint block truncate">${esc(c.Address || '')}</span></span>${c.assigned_to && currentUser && c.assigned_to === currentUser.id ? '<span class="chip chip-orange !py-0 shrink-0">Mine</span>' : ''}</label>`).join('') || '<div class="t-faint italic text-xs p-2">No sites yet.</div>'}</div>
                 ${isOnline ? '' : `<p class="text-xs font-semibold" style="color:#d97706;">You're offline: your start time is logged now and the sites download when you're back online.</p>`}
-                <div class="flex justify-end gap-2 pt-1"><button type="button" class="btn btn-secondary" onclick="closeDayModal()">Cancel</button><button type="button" id="dayGoBtn" class="btn btn-primary" onclick="startDay(${refresh ? 'true' : 'false'})">${refresh ? '⟳ Download' : '▶ Start day'}</button></div>`;
+                <div class="flex justify-end gap-2 pt-1"><button type="button" class="btn btn-secondary" onclick="closeDayModal()">Cancel</button><button type="button" id="dayGoBtn" class="btn btn-primary" onclick="startDay(${refresh ? 'true' : 'false'}, ${syncOnly ? 'true' : 'false'})">${refresh ? '⟳ Download' : '▶ Start day'}</button></div>`;
             dayPickCount();
             document.getElementById('dayModal').classList.remove('hidden');
         }
@@ -5371,11 +5457,12 @@
                 <div class="sbar ${done === items.length ? 'done' : ''}" style="height:8px;"><i style="width:${pct}%;"></i></div>
                 <div class="space-y-2 pt-1">${items.map(i => `<div class="sync-item ${i.state === 'todo' ? 't-faint' : i.state === 'active' ? 't-strong font-bold' : 't-muted'}"><span class="flex justify-center">${icon(i.state)}</span><span class="truncate">${esc(i.label)}</span><span class="text-[10.5px] t-faint">${esc(i.note || '')}</span><div class="sbar ${i.state === 'done' ? 'done' : i.state === 'failed' ? 'fail' : i.state === 'active' ? 'ind' : ''}"><i style="width:${i.state === 'done' || i.state === 'failed' ? 100 : 0}%;"></i></div></div>`).join('')}</div>`;
         }
-        async function startDay(refresh) {
+        async function startDay(refresh, syncOnly) {
             const ids = Array.from(document.querySelectorAll('#daySites input:checked')).map(i => i.value);
             const now = new Date().toISOString();
             let d = currentDay();
-            if (!refresh || !d) {
+            if (syncOnly) { /* just download the sites: the day isn't started or changed */ }
+            else if (!refresh || !d) {
                 d = { id: uid(), startedAt: now, sites: ids, opened: [] };
                 saveDay(d);
                 await queueDayRow({ id: d.id, technician: technicianLabel(), started_at: now, sites: ids.map(id => { const c = siteById(id); return { id, name: c ? c.Name : id }; }) }, 'Day started');
@@ -5384,7 +5471,7 @@
             const body = document.getElementById('dayModalBody');
             document.getElementById('dayModalTitle').textContent = refresh ? 'Downloading your sites' : 'Getting your day ready';
             if (!items.length || !isOnline) {
-                body.innerHTML = `<p class="text-sm t-muted">${!items.length ? 'Day started. No sites were picked to download - sites still download when you open them.' : "Day started. You're offline, so the sites will download when you open them with signal."}</p>
+                body.innerHTML = `<p class="text-sm t-muted">${syncOnly ? (!items.length ? 'No sites were picked.' : "You're offline. Sync your sites when you have signal.") : !items.length ? 'Day started. No sites were picked to download - sites still download when you open them.' : "Day started. You're offline, so the sites will download when you open them with signal."}</p>
                     <div class="flex justify-end"><button type="button" class="btn btn-primary" onclick="closeDayModal()">OK</button></div>`;
                 return;
             }
@@ -5417,6 +5504,7 @@
             renderSiteCards();
         }
         function openEndDay() {
+            document.getElementById('profileModal').classList.add('hidden');
             const d = currentDay();
             if (!d) return;
             const started = Date.parse(d.startedAt);
@@ -5930,7 +6018,9 @@
             const shown = siteSightings.filter(x => (!SF.pest || x.pest === SF.pest) && (!SF.by || x.reported_by === SF.by) && (!SF.status || x.status === SF.status)
                 && (!days || Date.parse(x.seen_at) >= Date.now() - days * 86400000));
             const sel = (k, label, opts) => `<select class="field !w-auto !py-1 !px-2 !text-[11px] max-w-[10rem]" aria-label="${label}" onchange="setSightFilter('${k}', this.value)">${opts.map(([v, l]) => `<option value="${esc(v)}" ${SF[k] === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
+            const sfActive = !!(SF.pest || SF.by || SF.status || (SF.period && SF.period !== 'all'));
             document.getElementById('sightFilters').innerHTML = siteSightings.length ? [
+                `<button type="button" class="m-only tab-btn" onclick="this.parentElement.classList.toggle('m-show')">Filters${sfActive ? ' •' : ''} ▾</button>`,
                 sel('pest', 'Pest', [['', 'All pests']].concat(pests.map(x => [x, x]))),
                 sel('period', 'Date', [['all', 'Any date'], ['7', 'Last 7 days'], ['30', 'Last 30 days'], ['90', 'Last 3 months'], ['365', 'Last 12 months']]),
                 sel('by', 'Reported by', [['', 'Anyone']].concat(people.map(x => [x, x]))),
@@ -7031,7 +7121,8 @@
                     const rec = recById.get(p.recRef);
                     if (!r._fromTable && rec && rec.fromTable) return; // the table's copy is logged instead
                     const no = fmtRecNo(p.recNo != null ? p.recNo : rec && rec.recNo);
-                    add('rec', `Recommendation ${no || '(number on upload)'} raised`, p.recommendation || '', { station: p.locationName || devName(r.barcode_id), go: { rec: p.recRef || p.clientRef, station: r.barcode_id } });
+                    const general = r.barcode_id === NO_STATION;
+                    add('rec', `Recommendation ${no || '(number on upload)'} raised`, p.recommendation || '', { station: p.locationName || (general ? 'Site-wide' : devName(r.barcode_id)), go: general ? { rec: p.recRef || p.clientRef } : { rec: p.recRef || p.clientRef, station: r.barcode_id } });
                     return;
                 }
                 const isNew = !seen.has('st:' + r.barcode_id);
@@ -7611,6 +7702,7 @@
 
         // Back to the site cards (does NOT delete anything; visit progress is kept)
         function backToSites() {
+            setRoute(null);
             resetSiteState();
             document.getElementById('siteSelectorSection').classList.remove('hidden');
             renderSiteCards();
@@ -7732,7 +7824,8 @@
         //  Kept on the device for offline use and saved to the person's account (get_my_prefs / save_my_pref),
         //  so they follow them to any device and never change anything for anyone else.
         // ===================================================================
-        const ACCOUNT_KEYS = ['pestis-theme', 'pestis-color-theme', 'pestis-text-size', 'pestis-motion', 'pestis-beep', 'pestis-vibrate', 'pestis-scan-view', 'pestis-photo-size',
+        const ACCOUNT_KEYS = ['pestis-set-renewal_warn_days', 'pestis-set-visit_stale_hours', 'pestis-set-doc_expiry_warn_days', 'pestis-set-idle_logout_minutes',
+            'pestis-theme', 'pestis-color-theme', 'pestis-text-size', 'pestis-motion', 'pestis-beep', 'pestis-vibrate', 'pestis-scan-view', 'pestis-photo-size',
             'pestis-show-station-photos', 'pestis-show-sighting-photos', 'pestis-show-rec-photos', 'pestis-notif-scope', 'pestis-notif-due', 'pestis-card-size', 'pestis-site-sort',
             'pestis-site-filter', 'pestis-auto-repeat-prep', 'pestis-activity-range', 'pestis-actions-scope'];
         const acctCacheKey = () => 'pestis-acct-' + (currentUser && currentUser.id ? currentUser.id : 'anon');
@@ -7821,10 +7914,10 @@
                 </div>`;
             const sc = document.getElementById('scanSettings');
             if (sc) {
-                const beep = loadJSON('pestis-beep', true), vib = loadJSON('pestis-vibrate', true);
+                const snd = scanSoundName(), vib = scanVibeName();
                 sc.innerHTML = `<div class="flex flex-wrap items-center text-xs" style="column-gap:1.4rem;row-gap:.6rem;">
-                    <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="w-4 h-4" style="accent-color:rgb(var(--b500));" ${beep ? 'checked' : ''} onchange="saveJSON('pestis-beep', this.checked)"> Beep when a barcode is scanned</label>
-                    <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="w-4 h-4" style="accent-color:rgb(var(--b500));" ${vib ? 'checked' : ''} onchange="saveJSON('pestis-vibrate', this.checked)"> Vibrate</label>
+                    <span class="flex items-center gap-2"><label class="t-muted font-semibold" for="scanSoundSel">Scan sound</label><select id="scanSoundSel" class="field !w-auto !py-1.5 !text-xs" onchange="saveJSON('pestis-beep', this.value); playScanSound(this.value)">${Object.entries(SCAN_SOUNDS).map(([k, v]) => `<option value="${k}" ${snd === k ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select><button type="button" class="tab-btn" onclick="playScanSound(scanSoundName())" title="Play">▶</button></span>
+                    <span class="flex items-center gap-2"><label class="t-muted font-semibold" for="scanVibeSel">Vibration</label><select id="scanVibeSel" class="field !w-auto !py-1.5 !text-xs" onchange="saveJSON('pestis-vibrate', this.value); playScanVibe(this.value)">${Object.entries(SCAN_VIBES).map(([k, v]) => `<option value="${k}" ${vib === k ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select><button type="button" class="tab-btn" onclick="playScanVibe(scanVibeName())" title="Try it">▶</button></span>
                     <span class="flex items-center gap-2"><span class="t-muted font-semibold">Show stations as</span>${seg(scanView, [['cards', 'Photo cards'], ['list', 'A list']], "(v => { setScanView(v); renderLookSettings(); })")}</span></div>`;
             }
         }
@@ -11048,6 +11141,8 @@
         }
 
         function showSiteDashboard() {
+            try { applyMobileFolds(); } catch (e) {}
+            if (selectedClient) setRoute({ site: String(selectedClient.id), view: 'dashboard' });
             document.getElementById('visitWorkspace').classList.add('hidden');
             document.getElementById('siteLandingDashboard').classList.remove('hidden');
             applyBoardLayout();
@@ -11075,6 +11170,7 @@
             renderDeviceLists();
             window.scrollTo({ top: 0, behavior: 'smooth' });
             if (!continuing) markVisitStarted(selectedClient, type).catch(e => logAppError('Marking visit started', e));
+            setRoute({ site: String(selectedClient.id), view: 'workspace' });
             return true;
         }
         function inWorkspace() { return !document.getElementById('visitWorkspace').classList.contains('hidden'); }
@@ -11271,27 +11367,51 @@
                 if (audioCtx.state === 'suspended') audioCtx.resume();
             } catch (e) {}
         }
-        function scanBeep() {
-            if (!loadJSON('pestis-beep', true)) { try { if (loadJSON('pestis-vibrate', true) && navigator.vibrate) navigator.vibrate(80); } catch (e) {} return; }
+        // the sound played when a barcode is scanned: [frequency Hz, length s, gap after s] for each tone
+        const SCAN_SOUNDS = {
+            classic: { label: 'Classic beep', wave: 'square', tones: [[2200, 0.13, 0]] },
+            chirp: { label: 'Chirp (rising)', wave: 'sine', tones: [[1400, 0.06, 0], [2400, 0.08, 0]] },
+            double: { label: 'Double beep', wave: 'square', tones: [[2000, 0.07, 0.05], [2000, 0.07, 0]] },
+            soft: { label: 'Soft tone', wave: 'sine', tones: [[880, 0.16, 0]] },
+            ding: { label: 'Ding', wave: 'triangle', tones: [[1760, 0.35, 0]] },
+            low: { label: 'Low buzz', wave: 'sawtooth', tones: [[440, 0.14, 0]] },
+            success: { label: 'Success (three notes)', wave: 'sine', tones: [[1046, 0.07, 0.01], [1318, 0.07, 0.01], [1568, 0.12, 0]] },
+            off: { label: 'No sound', tones: [] }
+        };
+        const SCAN_VIBES = {
+            short: { label: 'Short', pattern: 80 },
+            long: { label: 'Long', pattern: 300 },
+            double: { label: 'Double', pattern: [70, 60, 70] },
+            triple: { label: 'Triple', pattern: [60, 50, 60, 50, 60] },
+            heartbeat: { label: 'Heartbeat', pattern: [40, 80, 120] },
+            off: { label: 'No vibration', pattern: 0 }
+        };
+        // older versions saved true / false
+        function scanSoundName() { const v = loadJSON('pestis-beep', 'classic'); return v === true ? 'classic' : v === false ? 'off' : SCAN_SOUNDS[v] ? v : 'classic'; }
+        function scanVibeName() { const v = loadJSON('pestis-vibrate', 'short'); return v === true ? 'short' : v === false ? 'off' : SCAN_VIBES[v] ? v : 'short'; }
+        function playScanSound(name) {
+            const snd = SCAN_SOUNDS[name] || SCAN_SOUNDS.classic;
+            if (!snd.tones.length) return;
             try {
                 primeAudio();
-                if (audioCtx) {
-                    const t = audioCtx.currentTime;
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(2200, t);
+                if (!audioCtx) return;
+                let t = audioCtx.currentTime;
+                snd.tones.forEach(([f, len, gap]) => {
+                    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                    osc.type = snd.wave || 'square';
+                    osc.frequency.setValueAtTime(f, t);
                     gain.gain.setValueAtTime(0.0001, t);
                     gain.gain.exponentialRampToValueAtTime(0.25, t + 0.01);
-                    gain.gain.setValueAtTime(0.25, t + 0.11);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+                    gain.gain.setValueAtTime(0.25, t + Math.max(0.02, len - 0.03));
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + len);
                     osc.connect(gain).connect(audioCtx.destination);
-                    osc.start(t);
-                    osc.stop(t + 0.15);
-                }
+                    osc.start(t); osc.stop(t + len + 0.01);
+                    t += len + (gap || 0);
+                });
             } catch (e) {}
-            try { if (loadJSON('pestis-vibrate', true) && navigator.vibrate) navigator.vibrate(80); } catch (e) {}
         }
+        function playScanVibe(name) { const v = SCAN_VIBES[name] || SCAN_VIBES.short; try { if (v.pattern && navigator.vibrate) navigator.vibrate(v.pattern); } catch (e) {} }
+        function scanBeep() { playScanSound(scanSoundName()); playScanVibe(scanVibeName()); }
 
         // ---------- Camera scanner ----------
         // Normal scans open the station; "capture" scans hand the code back (e.g. a new barcode for a station)
@@ -12722,7 +12842,7 @@
         // ---------- Lists in their own tables ----------
         const LIST_TABLES = { prep: 'preparations', species: 'species', station_type: 'station_types' };
         // extra details kept with list items: a preparation's safety data sheet, a pest's category, picture and guide
-        const LIST_EXTRA_COLS = { prep: ['sds_path', 'sds_name', 'sds_expires', 'sds_updated_at', 'sds_updated_by'], species: ['category', 'photo_path', 'about', 'breeding', 'control', 'updated_at', 'updated_by'] };
+        const LIST_EXTRA_COLS = { prep: ['sds_path', 'sds_name', 'sds_expires', 'sds_updated_at', 'sds_updated_by'], species: ['category', 'photo_path', 'photo_source', 'about', 'breeding', 'control', 'updated_at', 'updated_by'] };
         let listExtrasMissing = false;
         let listTablesMissing = false;
         async function loadListTables() {
@@ -12768,6 +12888,295 @@
             return html;
         }
         const findPest = key => speciesItems().find(o => o.id === key) || speciesItems().find(o => String(o.label).toLowerCase() === String(key || '').toLowerCase()) || null;
+        // Built-in pest guide: fills in a pest's category, picture (from Wikipedia), about, breeding habits and control strategy.
+        // Matched on the pest's name; the first match wins, so the specific names come before the general ones.
+        const PEST_LIBRARY = [
+            // ----- Rodents -----
+            { m: /norway|brown rat|sewer rat|rattus norvegicus/i, cat: 'Rodents', wiki: 'Brown_rat',
+              about: 'The Norway (brown) rat is a large, heavy-bodied rat (up to 500 g) with a blunt nose, small ears and a tail shorter than its body. It burrows in soil, under slabs and along drains, and lives at ground level in sewers, gardens, warehouses and rubbish areas. It contaminates food with droppings and urine, gnaws cables and pipes, and spreads diseases such as leptospirosis and salmonella.',
+              breeding: 'Breeds all year when there is food and shelter. A female can have 4-6 litters a year of 6-12 young, and the young can breed at 2-3 months old, so a small colony grows into hundreds within a year. Nests are in burrows, wall cavities and under stored goods.',
+              control: 'Inspect for burrows, runways, rub marks and droppings to find where they live and travel. Use tamper-resistant bait stations (rodenticide or traps) along walls and runways, spaced 5-10 m apart outside and checked on every service. Proof the building: seal gaps over 12 mm, fit door sweeps, cover drains and vents with mesh. Remove food and harbourage: secure bins, clear vegetation and clutter from walls, store goods off the floor. Record activity at each station and re-bait or move stations where activity is high.' },
+            { m: /ship rat|roof rat|black rat|rattus rattus/i, cat: 'Rodents', wiki: 'Black_rat',
+              about: 'The ship (roof) rat is a slender, agile rat with a pointed nose, large ears and a tail longer than its body. It is an excellent climber and nests in ceilings, roof voids, trees and creepers, travelling along cables, fences and branches. It damages wiring and insulation and contaminates stored food.',
+              breeding: 'Breeds mainly from spring to autumn, with 3-5 litters a year of 5-8 young. Young mature at about 3-4 months. Nests are built high up - in roof spaces, wall cavities and dense trees.',
+              control: 'Look high: check roof voids, ceiling spaces and above false ceilings for droppings, gnawing and nesting. Place bait stations or traps in the roof space and along elevated runways as well as at ground level. Trim trees and creepers back at least 1 m from the roof, and fit rat guards on cables and pipes. Seal entry points at the roof line, eaves and service penetrations. Monitor and keep stations stocked until there is no more activity.' },
+            { m: /\brats?\b|rodent/i, cat: 'Rodents', wiki: 'Brown_rat',
+              about: 'Rats are large rodents that live alongside people, contaminating food with droppings and urine, gnawing cables and timber, and spreading disease. The two common species are the Norway (brown) rat, which burrows at ground level, and the ship (roof) rat, which climbs and nests up high.',
+              breeding: 'Rats breed quickly - several litters a year of 5-12 young, and young can breed from 2-3 months old.',
+              control: 'Find where they live and travel (droppings, runways, gnawing, burrows). Use tamper-resistant bait stations or traps along walls and runways at ground level and in roof spaces, proof entry points over 12 mm, and remove food and harbourage. Monitor and record activity every service.' },
+            { m: /house mouse|\bmice\b|\bmouse\b|mus musculus/i, cat: 'Rodents', wiki: 'House_mouse',
+              about: 'The house mouse is a small rodent (12-30 g) with large ears and a tail about as long as its body. It lives inside buildings, in wall cavities, cupboards, appliances and stored goods, and only needs a 6 mm gap to get in. Mice nibble small amounts from many food items and leave many small droppings, contaminating far more than they eat.',
+              breeding: 'Breeds all year indoors. A female can have 6-10 litters a year of 5-8 young, and young breed from 6 weeks old. Nests are made from shredded paper, fabric and insulation close to food.',
+              control: 'Mice range only 3-10 m from the nest, so place stations or traps close together (2-3 m apart) where activity is seen. Use tamper-resistant bait stations, snap traps or multi-catch traps along walls and behind appliances. Seal gaps over 6 mm with steel wool, mesh or sealant, and fit door sweeps. Keep food in sealed containers, clean up spills, and reduce clutter. Check frequently - mice are curious, so move stations if they are not visited.' },
+            { m: /possum/i, cat: 'Other pests', wiki: 'Common_brushtail_possum',
+              about: 'The common brushtail possum is a large, nocturnal marsupial introduced to New Zealand from Australia. It often moves into roof spaces, causing noise, odour, droppings and urine damage to ceilings and insulation, and it damages gardens, trees and native bush.',
+              breeding: 'Usually one young a year (sometimes two), born mainly in autumn. The young stays in the pouch for about 5 months, then rides on the mother\'s back. Possums live up to 10 years or more.',
+              control: 'Find the entry points into the roof (gaps at eaves, roof iron and vents) and confirm the possum has left at night before sealing. Use one-way exits or cage traps where allowed, and follow local regulations for trapping and humane dispatch. Proof the building with mesh and flashing, and fit guards on trees and downpipes. Trim branches back from the roof.' },
+            { m: /stoat|ferret|weasel|mustelid/i, cat: 'Other pests', wiki: 'Stoat',
+              about: 'Stoats are small, fast predators with a long body, brown back, cream belly and black-tipped tail. In New Zealand they are a major threat to native birds and can also raid poultry and enter outbuildings.',
+              breeding: 'Females mate in early summer but the pregnancy is delayed, so young (often 6-12) are born the following spring. Young females are mated while still in the nest.',
+              control: 'Use approved kill traps (e.g. DOC-series traps) in tunnels along fence lines, stream edges and hedges. Bait with fresh meat or egg and check regularly. Secure poultry houses and outbuildings with fine mesh. Work with local trapping groups for wider control.' },
+            // ----- Cockroaches -----
+            { m: /german cockroach|blattella/i, cat: 'Crawling insects', wiki: 'German_cockroach',
+              about: 'The German cockroach is a small (12-15 mm) light-brown cockroach with two dark stripes behind the head. It is the most common cockroach in commercial kitchens and food businesses, living in warm, humid cracks near food, water and heat - behind fridges, dishwashers, ovens and in electrical equipment. It spreads bacteria such as salmonella and triggers allergies and asthma.',
+              breeding: 'Breeds very fast. The female carries an egg case of 30-40 eggs until just before they hatch, and can produce 4-8 egg cases in her life. Nymphs mature in about 6-8 weeks, so populations explode quickly in warm conditions.',
+              control: 'Inspect at night or with a flushing agent to find harbourages. Apply cockroach gel bait in small spots in cracks and crevices close to harbourages, and rotate bait types to avoid bait aversion. Use an insect growth regulator (IGR) to stop breeding, and sticky monitors to track numbers. Improve hygiene: remove food residue and grease, fix leaks, and seal cracks. Repeat treatments every 2-4 weeks until monitors show no activity.' },
+            { m: /american cockroach/i, cat: 'Crawling insects', wiki: 'American_cockroach',
+              about: 'The American cockroach is a large (30-40 mm) reddish-brown cockroach with a pale band around the edge of the shield behind its head. It lives in drains, sewers, boiler rooms and basements, and comes up into buildings through drains and floor wastes.',
+              breeding: 'The female drops egg cases of about 16 eggs in hidden, humid places, producing up to 90 cases in her life. Nymphs take 6-12 months to mature, and adults can live for a year or more.',
+              control: 'Treat drains, grease traps, service ducts and voids where they live. Use gel baits and residual dust in voids, and seal gaps around pipes. Keep floor wastes and drains covered or water-sealed. Reduce moisture and fix leaks. Monitor with sticky traps near drains and entry points.' },
+            { m: /australian cockroach/i, cat: 'Crawling insects', wiki: 'Periplaneta_australasiae',
+              about: 'The Australian cockroach is a large (30-35 mm) dark-brown cockroach with distinct yellow stripes on the edges of its wings and a yellow band on the shield behind the head. It lives outdoors in gardens, mulch and under bark, and moves indoors into warm, damp areas.',
+              breeding: 'The female produces egg cases of about 24 eggs, which she glues in sheltered places. Nymphs take 6-12 months to mature.',
+              control: 'Reduce outdoor harbourage: move mulch, leaf litter and firewood away from the building. Apply a residual perimeter treatment around the outside and gel bait in cracks indoors. Seal gaps around doors, windows and pipes. Monitor with sticky traps.' },
+            { m: /gisborne|drymaplaneta/i, cat: 'Crawling insects', wiki: 'Drymaplaneta_semivitta',
+              about: 'The Gisborne cockroach is a large (25-35 mm), dark, wingless cockroach with pale stripes on the edges of its body. It lives outdoors under bark, in firewood, mulch and wall cladding, and wanders into homes in warm weather.',
+              breeding: 'Females carry their egg case for some time before depositing it in a sheltered place. Nymphs develop over several months, mostly through summer.',
+              control: 'Remove outdoor harbourage near the building - firewood stacks, loose bark and leaf litter. Apply a residual perimeter spray to foundations, cladding and entry points. Use gel bait indoors where they are found, and seal gaps under doors and cladding.' },
+            { m: /oriental cockroach|blatta orientalis/i, cat: 'Crawling insects', wiki: 'Oriental_cockroach',
+              about: 'The Oriental cockroach is a dark brown to black, slow-moving cockroach (20-27 mm) that prefers cool, damp places - drains, basements, crawl spaces and under floors.',
+              breeding: 'Females produce egg cases of about 16 eggs. Development is slow: nymphs may take a year to mature, mostly breeding in warmer months.',
+              control: 'Reduce moisture under floors and in basements, and fix leaks. Treat drains, voids and crawl spaces with residual dust or spray and gel bait. Seal gaps around pipes and floor wastes. Monitor with sticky traps.' },
+            { m: /cockroach|roach/i, cat: 'Crawling insects', wiki: 'Cockroach',
+              about: 'Cockroaches are fast-running, flat-bodied insects that hide in cracks during the day and come out at night to feed. They carry bacteria onto food and surfaces and can trigger allergies and asthma.',
+              breeding: 'Females produce egg cases containing many eggs. Nymphs moult several times before becoming adults; warm, humid conditions speed up breeding.',
+              control: 'Find harbourages with a night inspection or sticky monitors. Use gel bait in cracks and crevices, an insect growth regulator to stop breeding, and residual treatments in voids. Improve hygiene, fix leaks and seal cracks. Follow up until monitors are clear.' },
+            // ----- Ants -----
+            { m: /argentine ant|linepithema/i, cat: 'Crawling insects', wiki: 'Argentine_ant',
+              about: 'The Argentine ant is a small (2-3 mm), light-brown ant that forms huge "super-colonies" with many queens. It is aggressive, displaces other ants, invades buildings in long trails, and farms aphids and scale insects on plants. It is an unwanted organism in New Zealand.',
+              breeding: 'Each colony has many queens laying eggs all year, and new nests form by budding - queens walk off with workers to start a new nest nearby, so they spread steadily from site to site.',
+              control: 'Follow trails back to nests in soil, under paving and in garden beds. Use slow-acting ant gel or granular baits that workers carry back to the queens - do not spray trails, as this scatters the colony. Apply a non-repellent residual treatment around the building perimeter. Remove aphid-infested plants and trim vegetation touching the building. Report suspected new infestations to the regional council.' },
+            { m: /white.?footed|technomyrmex/i, cat: 'Crawling insects', wiki: 'Technomyrmex_albipes',
+              about: 'The white-footed house ant is a small (2.5-3 mm) black ant with pale feet. It nests in wall cavities, roof spaces and plants, and forms large colonies that trail through homes looking for sweet foods.',
+              breeding: 'Colonies are large with many reproductive females, and new nests form by budding off from the parent colony.',
+              control: 'Use sweet liquid or gel ant baits along trails, near entry points and in voids so workers carry it back to the nest. Avoid repellent sprays that split colonies. Trim plants touching the building and seal entry points.' },
+            { m: /black house ant|ochetellus/i, cat: 'Crawling insects', wiki: 'Ochetellus_glaber',
+              about: 'The black house ant is a small (2.5-3 mm) shiny black ant that nests in wall cavities, under paving and in garden beds, and trails indoors for sweet foods and grease.',
+              breeding: 'Colonies have one or several queens and grow through spring and summer.',
+              control: 'Find and treat nests where possible. Use sweet gel or liquid baits along trails, and a perimeter treatment around the building. Seal cracks and keep benches free of food residue.' },
+            { m: /\bants?\b/i, cat: 'Crawling insects', wiki: 'Ant',
+              about: 'Ants are social insects that live in colonies and forage in trails for food. In buildings they contaminate food, nest in walls and paving, and some species bite or sting.',
+              breeding: 'A colony has one or more queens that lay eggs continuously in warm months. Winged males and new queens swarm to start new colonies; some species spread by budding.',
+              control: 'Identify the species, then follow trails to the nest. Use slow-acting baits that workers carry back to the queen, and non-repellent perimeter treatments. Remove food sources and seal entry points.' },
+            // ----- Other crawling -----
+            { m: /bed ?bug|cimex/i, cat: 'Crawling insects', wiki: 'Bed_bug',
+              about: 'Bed bugs are small (4-5 mm), flat, reddish-brown insects that feed on human blood at night. They hide in mattress seams, bed frames, headboards, skirting boards and furniture, and spread in luggage and second-hand furniture. Signs are itchy bites in rows, dark spots of droppings and shed skins.',
+              breeding: 'A female lays 1-5 eggs a day (200-500 in her life) in cracks near where people sleep. Nymphs need a blood meal before each of five moults and reach adulthood in 4-6 weeks in warm rooms. Adults can survive months without feeding.',
+              control: 'Inspect beds, furniture and skirtings thoroughly to map the infestation. Heat-treat or hot-wash (60 °C) and tumble-dry bedding and clothing. Vacuum seams and cracks and dispose of the bag. Apply residual insecticide and dust to cracks, bed frames and skirtings, and fit mattress encasements. Re-inspect and re-treat after 2 weeks, as eggs survive the first treatment.' },
+            { m: /\bfleas?\b|ctenocephalides/i, cat: 'Crawling insects', wiki: 'Cat_flea',
+              about: 'Fleas are tiny (2-3 mm), wingless, jumping insects that feed on the blood of cats, dogs and people. Most infestations are cat fleas living on pets and in carpets, bedding and under floors.',
+              breeding: 'Adults on the animal lay up to 50 eggs a day that fall into carpets and bedding. Larvae feed on debris and adult flea droppings, then pupate in a cocoon that can wait weeks or months until vibration or warmth signals a host.',
+              control: 'Treat all pets with a vet-recommended flea product at the same time. Vacuum carpets, furniture and pet bedding thoroughly before treatment, and wash bedding hot. Apply an insecticide with an insect growth regulator to carpets, under furniture and pet areas. Keep vacuuming daily for 2 weeks to trigger emerging fleas, and re-treat if needed.' },
+            { m: /silverfish/i, cat: 'Crawling insects', wiki: 'Silverfish',
+              about: 'Silverfish are small (10-12 mm), silvery, wingless insects with a carrot-shaped body and three tail bristles. They live in damp, dark places - bathrooms, laundries, roof spaces and bookshelves - and eat paper, glue, starch, fabric and food crumbs.',
+              breeding: 'Females lay small batches of eggs in cracks over their long life (2-8 years). Nymphs look like small adults and take several months to mature.',
+              control: 'Reduce humidity with ventilation and dehumidifiers, and fix leaks. Apply residual dust or spray to roof voids, wall cavities, skirtings and cracks. Store papers and books in dry, sealed containers. Use sticky traps to monitor.' },
+            { m: /earwig/i, cat: 'Crawling insects', wiki: 'European_earwig',
+              about: 'Earwigs are brown insects (12-20 mm) with pincers at the end of the body. They live outdoors in damp mulch, under pots and in garden beds, and come indoors in hot or wet weather. They damage seedlings and soft fruit.',
+              breeding: 'The female lays 30-60 eggs in a burrow in soil and guards them and the young nymphs. There are usually one or two generations a year.',
+              control: 'Remove damp harbourage near the building - mulch, leaf litter, boards and pots. Apply a residual perimeter treatment to foundations and door thresholds. Seal gaps under doors and windows.' },
+            { m: /slater|woodlouse|pill bug/i, cat: 'Crawling insects', wiki: 'Woodlouse',
+              about: 'Slaters are small grey crustaceans (10-15 mm) with segmented, armoured bodies. They need damp conditions and live under timber, pots, mulch and leaf litter, coming indoors in damp areas.',
+              breeding: 'The female carries her eggs in a pouch under her body; the young stay there for several weeks. Several broods are raised each year.',
+              control: 'Reduce moisture and remove damp harbourage near the building. Improve sub-floor ventilation and drainage. A residual perimeter treatment helps in heavy infestations; seal gaps at ground level.' },
+            { m: /white.?tail|lampona/i, cat: 'Crawling insects', wiki: 'Lampona_cylindrata',
+              about: 'The white-tail spider is a long, cigar-shaped dark grey spider (12-18 mm) with a white spot at the tip of its body. It hunts other spiders at night and wanders indoors, often into bedding and clothing left on the floor. Bites are painful but not usually serious.',
+              breeding: 'Females lay egg sacs of up to 90 eggs in sheltered places such as under bark or in cracks. Spiderlings disperse and mature over the following year.',
+              control: 'Reduce other spiders (their food) with regular spider treatments around eaves, window frames and outbuildings. Apply residual spray to entry points, skirtings and under houses. Shake out clothes and bedding left on the floor, and seal gaps around doors and windows.' },
+            { m: /redback|katipo|latrodectus/i, cat: 'Crawling insects', wiki: 'Redback_spider',
+              about: 'The redback spider is a small black spider with a red stripe on its back. It builds messy webs in dry, sheltered places - under outdoor furniture, in letterboxes, sheds and around rubbish. Its bite is venomous and needs medical attention.',
+              breeding: 'Females produce several round, cream egg sacs each holding up to 250 eggs. Spiderlings disperse on silk and mature within a few months in warm weather.',
+              control: 'Inspect sheltered outdoor areas carefully. Remove webs and egg sacs and treat harbourages with a residual insecticide. Reduce clutter and rubbish around the site. Wear gloves when handling stored items.' },
+            { m: /daddy long|pholcus|cellar spider/i, cat: 'Crawling insects', wiki: 'Pholcus_phalangioides',
+              about: 'The daddy long-legs spider has a small body and very long thin legs and hangs upside down in loose webs in ceiling corners, garages and roof spaces. It is harmless but the webs make buildings look untidy.',
+              breeding: 'The female carries her eggs in her jaws until they hatch. Several broods are produced each year.',
+              control: 'Brush down webs and egg sacs regularly. Apply a residual spider treatment to eaves, ceilings, corners and window frames. Reduce outside lighting that attracts the insects spiders feed on.' },
+            { m: /spider/i, cat: 'Crawling insects', wiki: 'Spider',
+              about: 'Spiders are eight-legged predators that feed on insects. Most are harmless, but webs and some biting species cause concern around buildings.',
+              breeding: 'Females lay eggs in silk egg sacs; spiderlings disperse and mature over weeks to months.',
+              control: 'Remove webs and egg sacs, reduce clutter and outdoor lighting, and apply residual treatments to eaves, window frames, entry points and outbuildings.' },
+            { m: /termite/i, cat: 'Crawling insects', wiki: 'Termite',
+              about: 'Termites are pale, soft-bodied social insects that eat timber. In New Zealand they are mostly found in damp or decaying wood, but introduced species can cause serious structural damage.',
+              breeding: 'A colony is headed by a king and queen; winged reproductives swarm in warm weather to start new colonies.',
+              control: 'Confirm the species - suspected subterranean or drywood termites must be reported to MPI. Remove damp, decaying timber and fix moisture problems. Treat affected timber and soil, and inspect regularly.' },
+            { m: /borer|anobium|furniture beetle/i, cat: 'Crawling insects', wiki: 'Anobium_punctatum',
+              about: 'The common house borer (furniture beetle) is a small brown beetle whose larvae tunnel through untreated timber, leaving 1-2 mm round flight holes and fine powdery frass. It attacks floorboards, framing and furniture, especially in older or damp buildings.',
+              breeding: 'Adults emerge in spring and summer and lay eggs in cracks in timber. Larvae tunnel inside the wood for 2-4 years before pupating and emerging.',
+              control: 'Look for fresh flight holes and frass to confirm activity. Apply a borer treatment to affected timber in the flight season (spring-summer), and improve ventilation to keep timber dry. Replace badly damaged timber with treated timber.' },
+            { m: /carpet beetle|anthrenus|attagenus/i, cat: 'Crawling insects', wiki: 'Varied_carpet_beetle',
+              about: 'Carpet beetles are small, rounded, mottled beetles. Their hairy larvae ("woolly bears") eat wool, silk, fur, feathers and dried animal products, damaging carpets, clothing and museum items.',
+              breeding: 'Adults lay eggs in fabrics, carpet edges, nests and lint. Larvae feed for months to years depending on temperature before pupating.',
+              control: 'Find and remove the source - old bird nests, lint, stored wool and fur. Vacuum carpet edges, under furniture and in cupboards thoroughly. Apply a residual treatment to carpet edges and cracks, and store fabrics clean in sealed containers.' },
+            { m: /book ?lice|booklouse|psocid/i, cat: 'Stored product pests', wiki: 'Booklouse',
+              about: 'Booklice (psocids) are tiny (1-2 mm), pale insects that feed on moulds in damp places - in stored food, cardboard, books and new buildings with damp plaster.',
+              breeding: 'Females lay eggs singly; development takes about a month and many species reproduce without males, so numbers build quickly in humid conditions.',
+              control: 'Reduce humidity below 60 % with ventilation and dehumidifiers. Discard infested food and packaging, clean shelves and dry the area. A residual treatment in cracks helps in heavy infestations.' },
+            // ----- Flies and flying insects -----
+            { m: /house ?fly|musca/i, cat: 'Flying insects', wiki: 'Housefly',
+              about: 'The house fly is a grey fly (6-7 mm) with four dark stripes on its thorax. It feeds on rubbish, manure and food, and carries bacteria from waste onto food and surfaces, spreading food poisoning.',
+              breeding: 'Females lay batches of 100-150 eggs in rotting organic matter - rubbish, food waste and manure. In warm weather the life cycle takes only 7-10 days, so numbers rise fast in summer.',
+              control: 'Remove breeding sites: empty and clean bins often, keep lids closed and clean up food waste and spills. Fit fly screens, strip curtains and self-closing doors. Use UV insect light traps (ILTs) inside, away from doors and food prep, and service them regularly. Use fly baits outside around bins and waste areas.' },
+            { m: /blow ?fly|bluebottle|greenbottle|calliphor/i, cat: 'Flying insects', wiki: 'Calliphoridae',
+              about: 'Blowflies are large, metallic blue or green flies attracted to meat, dead animals and rubbish. They contaminate food and are often a sign of a dead rodent or bird in a wall or roof space.',
+              breeding: 'Females lay eggs on meat, carcasses and food waste; maggots feed for a few days, then move away to pupate. The life cycle takes 2-3 weeks.',
+              control: 'Find and remove the source (dead animal, waste or meat scraps). Keep bins clean and sealed. Use insect light traps and fly screens inside, and baits around waste areas outside.' },
+            { m: /fruit fly|drosophila|vinegar fly/i, cat: 'Flying insects', wiki: 'Drosophila_melanogaster',
+              about: 'Fruit (vinegar) flies are tiny (2-3 mm) flies with red eyes that breed in fermenting fruit, spilled drinks, drains and damp mops. They are common in bars, kitchens and food stores.',
+              breeding: 'Females lay up to 500 eggs on fermenting material; the life cycle takes only 8-10 days, so they build up very quickly.',
+              control: 'Find and remove breeding material - overripe fruit, spilled drinks, residue in drains, bins and floor wastes. Clean drains with a bio-enzymatic drain cleaner. Use fruit-fly traps and insect light traps, and keep produce refrigerated or covered.' },
+            { m: /drain fly|moth fly|psychod/i, cat: 'Flying insects', wiki: 'Psychodidae',
+              about: 'Drain flies are small, fuzzy, moth-like flies (2-4 mm) that rest on walls near drains, showers and grease traps. Their larvae live in the slimy film inside drains and floor wastes.',
+              breeding: 'Eggs are laid in the organic film in drains; larvae feed there and the life cycle takes 1-3 weeks.',
+              control: 'Clean drains, floor wastes and grease traps thoroughly with a brush and bio-enzymatic cleaner to remove the film the larvae live in. Fix broken pipes and pooled water. Adult sprays alone do not solve the problem.' },
+            { m: /cluster fly|pollenia/i, cat: 'Flying insects', wiki: 'Pollenia',
+              about: 'Cluster flies are slow, dark flies that gather in large numbers in roof spaces and window frames in autumn to shelter over winter, then appear inside on warm days.',
+              breeding: 'Larvae are parasites of earthworms in lawns and paddocks; adults emerge in late summer and look for shelter.',
+              control: 'Seal gaps at eaves, window frames and roof vents before autumn. Treat roof voids and window frames with a residual spray or smoke treatment, and use insect light traps inside.' },
+            { m: /mosquito/i, cat: 'Flying insects', wiki: 'Mosquito',
+              about: 'Mosquitoes are small biting flies; females feed on blood and can spread diseases. They are a nuisance around homes, workplaces and outdoor areas near water.',
+              breeding: 'Eggs are laid on or near still water - containers, gutters, drains and ponds. Larvae live in the water and develop in 1-2 weeks.',
+              control: 'Remove standing water: empty containers, clear gutters and drains, cover tanks. Treat water that cannot be removed with a larvicide. Fit insect screens and use residual treatments on resting surfaces.' },
+            { m: /german wasp|vespula germanica/i, cat: 'Flying insects', wiki: 'German_wasp',
+              about: 'The German wasp is a yellow-and-black wasp with black dots on its abdomen. It builds large paper nests in the ground, wall cavities and roof spaces, and stings repeatedly when disturbed. In late summer workers scavenge for sweet foods and meat around outdoor eating areas.',
+              breeding: 'A single queen starts a nest in spring; the colony grows to thousands of workers by late summer. New queens and males leave in autumn to mate, and in mild areas nests can survive winter and grow huge.',
+              control: 'Locate the nest by following flight paths. Treat the nest entrance with insecticide dust at dusk when wasps are inside, wearing protective gear. Remove or seal the nest once dead. Reduce food sources around bins and outdoor seating. Use protein baits for area control where available.' },
+            { m: /paper wasp|polistes/i, cat: 'Flying insects', wiki: 'Polistes',
+              about: 'Paper wasps are long-legged, slender wasps that build small, open, umbrella-shaped nests under eaves, fences and shrubs. They sting if the nest is disturbed.',
+              breeding: 'A queen starts a nest in spring and colonies stay small (tens of wasps). New queens overwinter in sheltered places.',
+              control: 'Treat small nests with an aerosol or dust at dusk and remove them. Check eaves, fences and play equipment regularly in spring and summer.' },
+            { m: /common wasp|vespula vulgaris|\bwasps?\b|yellow ?jacket/i, cat: 'Flying insects', wiki: 'Vespula_vulgaris',
+              about: 'Common and German wasps are yellow-and-black social wasps that build paper nests in the ground, wall cavities and roof spaces. They sting repeatedly when disturbed and are attracted to sweet food and meat.',
+              breeding: 'A queen starts the nest in spring; it grows to thousands of workers by late summer. New queens leave in autumn to overwinter.',
+              control: 'Find the nest by following flight paths and treat the entrance with insecticide dust at dusk, wearing protective gear. Reduce food sources around bins and outdoor seating, and use protein baits for area control.' },
+            { m: /bumble ?bee/i, cat: 'Flying insects', wiki: 'Bumblebee',
+              about: 'Bumblebees are large, hairy bees and important pollinators. They nest in old rodent burrows, compost and wall cavities and rarely sting unless handled.',
+              breeding: 'A queen starts a small colony in spring; it lasts one season and produces new queens in late summer.',
+              control: 'Leave nests alone where possible - they die out at the end of the season. If a nest must be moved, contact a beekeeper. Seal the entry point after the colony has finished.' },
+            { m: /honey ?bee|\bbees?\b|swarm/i, cat: 'Flying insects', wiki: 'Western_honey_bee',
+              about: 'Honey bees are valuable pollinators. Problems arise when a swarm settles on a building or a colony moves into a wall cavity or roof space, where honey and comb can attract other pests.',
+              breeding: 'Colonies reproduce by swarming in spring and summer, when the old queen leaves with thousands of workers to find a new home.',
+              control: 'Contact a local beekeeper to collect swarms. Colonies established in walls should be removed with the comb by a specialist, then the cavity sealed. Do not use insecticide on honey bees unless no alternative exists.' },
+            { m: /midge|chironom/i, cat: 'Flying insects', wiki: 'Chironomidae',
+              about: 'Midges are small, delicate flies that swarm near water and lights. Most do not bite, but large numbers are a nuisance and are attracted to lit buildings, ILTs and windows.',
+              breeding: 'Larvae live in ponds, streams, wetlands and waste water, emerging in large numbers in warm weather.',
+              control: 'Reduce lighting that attracts them (use yellow or LED lighting outside), fit insect screens and use insect light traps inside. Residual sprays on resting surfaces near water help during peak emergence.' },
+            { m: /clothes moth|tineola|tinea/i, cat: 'Flying insects', wiki: 'Tineola_bisselliella',
+              about: 'Clothes moths are small (6-8 mm), golden-buff moths that avoid light. Their larvae eat wool, silk, fur and feathers, leaving holes in clothing, carpets and upholstery.',
+              breeding: 'Females lay 40-50 eggs on fabrics; larvae feed for 1-3 months (longer in cool conditions) in dark, undisturbed places.',
+              control: 'Find and clean or discard infested items. Vacuum carpets, cupboards and under furniture thoroughly. Freeze or hot-wash affected fabrics. Apply a residual treatment to carpet edges and cupboards and use pheromone traps to monitor.' },
+            // ----- Stored product pests -----
+            { m: /indian ?meal ?moth|plodia/i, cat: 'Stored product pests', wiki: 'Plodia_interpunctella',
+              about: 'The Indian meal moth is a small moth (8-10 mm) with two-tone wings - pale at the base and copper-coloured at the tips. Its larvae infest cereals, nuts, dried fruit, pet food and grain, leaving webbing in the food.',
+              breeding: 'Each female lays 100-300 eggs on or near food. Larvae feed for 2-6 weeks, then wander to pupate in cracks and ceilings. The cycle takes 4-8 weeks in warm conditions.',
+              control: 'Find and remove infested products - check packets, bins and bulk stores. Clean shelves, cracks and corners with a vacuum. Use pheromone traps to monitor and catch males. Store food in sealed containers and rotate stock (first in, first out).' },
+            { m: /mediterranean flour moth|ephestia/i, cat: 'Stored product pests', wiki: 'Mediterranean_flour_moth',
+              about: 'The Mediterranean flour moth is a grey moth whose larvae infest flour, cereals and grain products, spinning silk that clumps the product and clogs mill equipment.',
+              breeding: 'Females lay up to 350 eggs in flour and grain; the life cycle takes about 8-10 weeks.',
+              control: 'Remove and dispose of infested product, clean equipment and dead spots in machinery, and use pheromone monitoring. Seal food in containers and keep stock rotating.' },
+            { m: /flour beetle|tribolium|confused flour/i, cat: 'Stored product pests', wiki: 'Red_flour_beetle',
+              about: 'Flour beetles are small (3-4 mm), reddish-brown beetles that infest flour, cereals, cake mixes and processed grain products, giving them a grey colour and an unpleasant smell.',
+              breeding: 'Females lay 300-400 eggs in the food over their long life (up to 3 years). The life cycle takes 5-6 weeks in warm conditions.',
+              control: 'Remove and dispose of infested products. Vacuum and clean shelves, cracks and equipment. Store products in sealed containers, rotate stock, and use pheromone or food-lure traps to monitor. Residual crack and crevice treatments help in storage areas.' },
+            { m: /rice weevil|sitophilus oryzae|maize weevil/i, cat: 'Stored product pests', wiki: 'Rice_weevil',
+              about: 'The rice weevil is a small (3 mm) brown beetle with a long snout. Larvae develop inside whole grains of rice, wheat and maize, hollowing them out.',
+              breeding: 'Each female lays 300-400 eggs, one inside each grain. The cycle takes about 4-6 weeks in warm conditions.',
+              control: 'Remove infested grain, clean storage areas, and store grain in sealed containers. Freezing small quantities for a week kills all stages. Use traps to monitor.' },
+            { m: /granary weevil|sitophilus granarius|\bweevil/i, cat: 'Stored product pests', wiki: 'Sitophilus_granarius',
+              about: 'Weevils are small beetles with a long snout whose larvae develop inside whole grains, seeds and nuts, hollowing them out and spoiling stored food.',
+              breeding: 'Females lay eggs inside individual grains; larvae feed and pupate inside, emerging as adults after 4-8 weeks.',
+              control: 'Find and remove infested product, clean storage areas thoroughly, and store food in sealed containers. Rotate stock and use traps to monitor storage areas.' },
+            { m: /saw.?toothed|oryzaephilus/i, cat: 'Stored product pests', wiki: 'Oryzaephilus_surinamensis',
+              about: 'The saw-toothed grain beetle is a slim, flat brown beetle (2.5-3 mm) with six tooth-like points on each side of the thorax. It infests cereals, dried fruit, nuts and pet food.',
+              breeding: 'Females lay 50-300 eggs in food; the cycle takes 3-4 weeks in warm conditions.',
+              control: 'Remove infested products, clean shelves and cracks, store food in sealed containers and rotate stock. Monitor with traps.' },
+            { m: /cigarette beetle|lasioderma/i, cat: 'Stored product pests', wiki: 'Cigarette_beetle',
+              about: 'The cigarette beetle is a small (2-3 mm), round, reddish-brown beetle with its head tucked down. It infests dried tobacco, spices, herbs, dried flowers, pet food and cereals.',
+              breeding: 'Females lay up to 100 eggs in food; the cycle takes 6-8 weeks.',
+              control: 'Find and remove infested products, especially spices and pet food. Clean shelves and cracks, and use pheromone traps. Store products in sealed containers.' },
+            { m: /drugstore beetle|stegobium|biscuit beetle/i, cat: 'Stored product pests', wiki: 'Drugstore_beetle',
+              about: 'The drugstore (biscuit) beetle is a small brown beetle that infests dry foods - biscuits, flour, spices and pet food - and even books and medicines.',
+              breeding: 'Females lay eggs in the food; larvae feed for several weeks before pupating.',
+              control: 'Remove infested products, clean storage areas and store food in sealed containers. Use traps to monitor.' },
+            // ----- Birds -----
+            { m: /pigeon|rock dove|columba/i, cat: 'Birds', wiki: 'Rock_dove',
+              about: 'Feral pigeons roost and nest on ledges, roofs, gutters and signs. Their droppings foul buildings and products, are slippery and corrosive, block gutters, and carry diseases and parasites such as mites.',
+              breeding: 'Pigeons breed all year, raising 2 eggs per clutch and up to 6 broods a year in nests on ledges and in roof spaces.',
+              control: 'Remove roosting and nesting spots with bird spikes, netting, wire or sloped ledges. Seal openings into roof spaces. Remove nests and droppings safely (wear a mask). Stop people feeding them. Use trapping by a licensed operator where needed.' },
+            { m: /sparrow/i, cat: 'Birds', wiki: 'House_sparrow',
+              about: 'House sparrows are small brown birds that nest in gaps in buildings, signs and roof spaces, and enter warehouses and food premises through open doors, contaminating stock with droppings.',
+              breeding: 'They raise 2-4 broods a year of 3-5 eggs, in untidy nests in cavities.',
+              control: 'Seal gaps and cavities in buildings, fit bird netting and strip curtains or fast doors to warehouses. Remove nests outside the breeding season. Do not leave food or spilled grain out.' },
+            { m: /starling/i, cat: 'Birds', wiki: 'Common_starling',
+              about: 'Starlings are glossy, dark birds that nest in roof spaces, wall cavities and gutters and roost in large flocks. Nests block gutters and bring mites into buildings.',
+              breeding: 'One or two broods a year of 4-6 eggs, in cavities.',
+              control: 'Seal entry points into roof spaces and soffits with mesh. Remove nests outside the breeding season and treat for bird mites. Use netting or spikes at roost sites.' },
+            { m: /myna/i, cat: 'Birds', wiki: 'Common_myna',
+              about: 'Common mynas are brown birds with a yellow eye patch and legs. They nest in roof spaces and cavities, are aggressive to native birds, and gather around food outlets.',
+              breeding: 'Two or three broods a year of 4-5 eggs, in cavities.',
+              control: 'Block cavities and roof entry points, remove nests outside the breeding season, and reduce available food scraps. Trapping is effective where allowed.' },
+            { m: /gull|seagull/i, cat: 'Birds', wiki: 'Red-billed_gull',
+              about: 'Gulls nest and roost on flat roofs and around food premises and waste areas, fouling buildings with droppings and harassing people for food.',
+              breeding: 'Gulls nest on roofs and coastal sites in spring and summer, laying 2-3 eggs. They return to the same site each year.',
+              control: 'Use netting, wire systems or spikes on roofs and ledges, remove nesting material before eggs are laid, and keep bins and food waste covered.' },
+            { m: /bird/i, cat: 'Birds', wiki: 'Bird',
+              about: 'Pest birds roost and nest on buildings, foul them with droppings, block gutters, and bring mites and disease into food areas.',
+              breeding: 'Most pest birds raise several broods a year in cavities and on ledges.',
+              control: 'Proof the building: seal cavities, fit netting, spikes or wire to roosting areas, and remove nests outside the breeding season. Reduce food sources.' }
+        ];
+        // general text for a category, used when a pest has no entry of its own
+        const PEST_CATEGORY_TEXT = {
+            'Rodents': { breeding: 'Rodents breed quickly, often all year where there is food and shelter, with several litters a year.', control: 'Inspect for droppings, runways and gnawing. Use tamper-resistant bait stations or traps along walls and runways, proof entry points, and remove food and harbourage. Monitor every service.' },
+            'Crawling insects': { breeding: 'Most crawling insects breed fastest in warm, humid conditions, laying eggs in cracks and hidden places close to food.', control: 'Find harbourages, then use baits and residual treatments in cracks and crevices, improve hygiene, fix moisture problems and seal entry points. Monitor with sticky traps.' },
+            'Flying insects': { breeding: 'Flying insects breed in rotting organic matter, drains or water, and numbers rise quickly in warm weather.', control: 'Remove breeding sites, keep bins and drains clean, fit screens and door strips, and use insect light traps inside, serviced regularly.' },
+            'Stored product pests': { breeding: 'Stored product pests lay their eggs in food; larvae feed inside the product and the cycle repeats every few weeks in warm conditions.', control: 'Remove infested product, clean shelves and equipment, store food in sealed containers, rotate stock and monitor with traps.' },
+            'Birds': { breeding: 'Pest birds raise several broods a year in cavities and on ledges.', control: 'Proof roosting and nesting areas with netting, spikes or wire, seal cavities and reduce food sources.' },
+            'Other pests': { breeding: 'Breeding depends on the species - check its habits before choosing a treatment.', control: 'Identify the pest, find where it lives and how it gets in, then remove food and shelter, proof entry points and use targeted treatment or trapping.' }
+        };
+        const pestLibraryFor = name => PEST_LIBRARY.find(e => e.m.test(String(name || ''))) || null;
+        // A pest's guide with the gaps filled from the built-in library (what's saved always wins)
+        function pestGuideOf(o) {
+            const lib = pestLibraryFor(o && o.label), cat = pestCategoryOf(o), gen = PEST_CATEGORY_TEXT[cat] || PEST_CATEGORY_TEXT['Other pests'];
+            return {
+                about: (o && o.about) || (lib && lib.about) || '',
+                breeding: (o && o.breeding) || (lib && lib.breeding) || gen.breeding,
+                control: (o && o.control) || (lib && lib.control) || gen.control,
+                fromLibrary: !(o && o.about && o.control)
+            };
+        }
+        // Picture and summary from Wikipedia for a pest (used when an admin adds a pest or fills in the guides)
+        async function wikiPestInfo(name) {
+            const lib = pestLibraryFor(name);
+            const get = async url => { const r = await fetch(url, { headers: { Accept: 'application/json' } }); if (!r.ok) throw new Error('Wikipedia ' + r.status); return r.json(); };
+            let title = lib && lib.wiki;
+            try {
+                if (!title) {
+                    const q = await get('https://en.wikipedia.org/w/api.php?action=query&list=search&srlimit=1&format=json&origin=*&srsearch=' + encodeURIComponent(name + ' pest'));
+                    title = q && q.query && q.query.search && q.query.search[0] && q.query.search[0].title;
+                }
+                if (!title) return null;
+                const s = await get('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(String(title).replace(/ /g, '_')));
+                const img = (s.thumbnail && s.thumbnail.source) || (s.originalimage && s.originalimage.source) || '';
+                return { photo: img ? img.replace(/\/(\d+)px-/, '/640px-') : '', extract: s.extract || '', page: s.content_urls && s.content_urls.desktop ? s.content_urls.desktop.page : '' };
+            } catch (e) { console.warn('Pest picture lookup', name, e); return null; }
+        }
+        // Fills in whatever a pest is missing (category, picture, about, breeding, strategy); returns the changes
+        async function autoFillPest(o, opts) {
+            const lib = pestLibraryFor(o.label), upd = {};
+            if (opts && opts.force) ['about', 'breeding', 'control'].forEach(k => { o = Object.assign({}, o, { [k]: '' }); });
+            if (!o.category) upd.category = (lib && lib.cat) || pestCategoryGuess(o.label);
+            const cat = upd.category || pestCategoryOf(o), gen = PEST_CATEGORY_TEXT[cat] || PEST_CATEGORY_TEXT['Other pests'];
+            let wiki = null;
+            if (!o.photo_path || !o.about) wiki = await wikiPestInfo(o.label);
+            if (!o.photo_path && wiki && wiki.photo) { upd.photo_path = wiki.photo; upd.photo_source = wiki.page || 'Wikipedia'; }
+            if (!o.about) upd.about = (lib && lib.about) || (wiki && wiki.extract) || '';
+            if (!o.breeding) upd.breeding = (lib && lib.breeding) || gen.breeding;
+            if (!o.control) upd.control = (lib && lib.control) || gen.control;
+            Object.keys(upd).forEach(k => { if (!upd[k]) delete upd[k]; });
+            return upd;
+        }
+        // a pest picture is either a file in the app's storage or a web address (e.g. from Wikipedia)
+        const isWebPic = p => /^https?:\/\//i.test(String(p || ''));
+
         let pestGuideQ = '';
         function openPestGuide() {
             const items = speciesItems();
@@ -12783,25 +13192,27 @@
             const items = speciesItems().filter(o => !q || `${o.label} ${pestCategoryOf(o)} ${o.about || ''}`.toLowerCase().includes(q));
             el.innerHTML = pestCategories(items).map(c => `<div><div class="eyebrow t-accent mb-2">${PEST_CAT_ICON[c] || '🐞'} ${esc(c)} <span class="t-faint normal-case tracking-normal font-semibold">· ${items.filter(o => pestCategoryOf(o) === c).length}</span></div>
                 <div class="pest-grid">${items.filter(o => pestCategoryOf(o) === c).map(o => `<button type="button" class="pest-card" data-pest="${esc(o.id)}" onclick="showPestInfo(this.dataset.pest)">
-                    <span class="pest-pic" data-pest-pic="${esc(o.id)}">${o.photo_path ? '' : `<span>${PEST_CAT_ICON[c] || '🐞'}</span>`}</span><span class="pest-name">${esc(o.label)}</span>${o.about ? '' : '<span class="pest-none">No guide yet</span>'}</button>`).join('')}</div></div>`).join('')
+                    <span class="pest-pic" data-pest-pic="${esc(o.id)}">${o.photo_path ? '' : `<span>${PEST_CAT_ICON[c] || '🐞'}</span>`}</span><span class="pest-name">${esc(o.label)}</span></button>`).join('')}</div></div>`).join('')
                 || '<p class="text-sm t-muted">No pests match.</p>';
             fillPestPics(el, items);
         }
         async function fillPestPics(el, items) {
-            const want = items.filter(o => o.photo_path);
-            if (!want.length || !isOnline) return;
+            const want = items.filter(o => o.photo_path && (isOnline || isWebPic(o.photo_path)));
+            if (!want.length) return;
             const links = await getSignedUrls(want.map(o => o.photo_path));
             want.forEach(o => { const box = el.querySelector(`[data-pest-pic="${cssEsc(o.id)}"]`), u = links.get(o.photo_path); if (box && u) box.innerHTML = `<img src="${u}" alt="${esc(o.label)}">`; });
         }
         async function showPestInfo(key) {
             const o = findPest(key);
             if (!o) { openInfoModal(String(key || 'Pest'), '<p class="text-sm t-muted">This pest isn\'t in the pest list, so there\'s no guide for it yet.</p>'); return; }
+            const g = pestGuideOf(o);
             const c = pestCategoryOf(o), sec = (t, v, hint) => `<div class="space-y-1"><div class="eyebrow t-accent">${t}</div>${v ? `<div class="text-sm t-strong whitespace-pre-line leading-relaxed">${esc(v)}</div>` : `<div class="text-xs t-faint italic">${hint}</div>`}</div>`;
             openInfoModal(o.label, `<div class="pest-hero" id="pestHero">${o.photo_path ? '<span class="t-faint text-xs">Loading picture...</span>' : `<span class="text-5xl">${PEST_CAT_ICON[c] || '🐞'}</span>`}</div>
                 <div class="flex flex-wrap gap-1.5 my-3"><span class="chip chip-orange">${PEST_CAT_ICON[c] || '🐞'} ${esc(c)}</span></div>
-                <div class="space-y-4">${sec('About this pest', o.about, 'Not written yet.')}${sec('Breeding habits', o.breeding, 'Not written yet.')}${sec('How to deal with it', o.control, 'Not written yet.')}</div>`,
+                <div class="space-y-4">${sec('About this pest', g.about, 'Not written yet.')}${sec('Breeding habits', g.breeding, 'Not written yet.')}${sec('Control strategy', g.control, 'Not written yet.')}</div>
+                ${isWebPic(o.photo_path) ? `<p class="text-[10px] t-faint pt-2">Picture: <a href="${esc(o.photo_source && isWebPic(o.photo_source) ? o.photo_source : 'https://en.wikipedia.org')}" target="_blank" rel="noopener" class="underline">Wikipedia / Wikimedia Commons</a></p>` : ''}`,
                 `<button type="button" class="btn btn-secondary" onclick="openPestGuide()">‹ Pest guide</button>${isAdmin() ? `<button type="button" class="btn btn-secondary" data-id="${esc(o.id)}" onclick="closeInfoModal(); addon('editPestInfo', this.dataset.id)">✎ Edit</button>` : ''}`, { wide: true });
-            if (o.photo_path && isOnline) {
+            if (o.photo_path && (isOnline || isWebPic(o.photo_path))) {
                 const u = (await getSignedUrls([o.photo_path])).get(o.photo_path), box = document.getElementById('pestHero');
                 if (box) box.innerHTML = u ? `<img src="${u}" alt="${esc(o.label)}" onclick="viewFullImage(this.src, '', ${esc(JSON.stringify(o.label))})">` : '<span class="t-faint text-xs">Picture unavailable</span>';
             } else if (o.photo_path) { const box = document.getElementById('pestHero'); if (box) box.innerHTML = '<span class="t-faint text-xs">The picture shows when you\'re online.</span>'; }
@@ -12841,10 +13252,59 @@
             idle_logout_minutes: { label: 'Sign people out after this many minutes without using the app (0 = never)', def: 5, min: 0, max: 480 }
         };
         let teamSettings = loadJSON('pestis-team-settings', {});
+        // Everything a person can have set for them, as shown in Admin -> Users -> (person) -> Settings.
+        // enc: how the app keeps the value on the device ('json' = saveJSON, 'raw' = plain text)
+        function userSettingFields() {
+            const work = Object.entries(TEAM_SETTINGS).map(([k, d]) => ({ key: 'pestis-set-' + k, group: 'Work', label: d.label, type: 'number', min: d.min, max: d.max, def: d.def, enc: 'raw' }));
+            return work.concat([
+                { key: 'pestis-color-theme', group: 'Look', label: 'Colour theme', type: 'select', def: 'orange', enc: 'json', opts: (window.PESTIS_THEMES || []).map(t => [t[0], t[1]]) },
+                { key: 'pestis-theme', group: 'Look', label: 'Day / night', type: 'select', def: 'light', enc: 'raw', opts: [['light', 'Day'], ['dark', 'Night']] },
+                { key: 'pestis-text-size', group: 'Look', label: 'Text size', type: 'select', def: 'normal', enc: 'json', opts: [['small', 'Small'], ['normal', 'Normal'], ['large', 'Large'], ['xl', 'Extra large']] },
+                { key: 'pestis-motion', group: 'Look', label: 'Animations', type: 'select', def: 'on', enc: 'json', opts: [['on', 'On'], ['off', 'Off']] },
+                { key: 'pestis-beep', group: 'Scanning', label: 'Scan sound', type: 'select', def: 'classic', enc: 'json', opts: Object.entries(SCAN_SOUNDS).map(([k, v]) => [k, v.label]) },
+                { key: 'pestis-vibrate', group: 'Scanning', label: 'Scan vibration', type: 'select', def: 'short', enc: 'json', opts: Object.entries(SCAN_VIBES).map(([k, v]) => [k, v.label]) },
+                { key: 'pestis-scan-view', group: 'Scanning', label: 'Show stations as', type: 'select', def: 'cards', enc: 'raw', opts: [['cards', 'Photo cards'], ['list', 'A list']] },
+                { key: 'pestis-auto-repeat-prep', group: 'Scanning', label: 'Repeat the last preparation automatically', type: 'select', def: 'false', enc: 'json', opts: [['true', 'Yes'], ['false', 'No']] },
+                { key: 'pestis-photo-size', group: 'Photos', label: 'Photo size', type: 'select', def: 'balanced', enc: 'json', opts: Object.entries(PHOTO_PRESETS).map(([k, v]) => [k, v.label]) },
+                { key: 'pestis-notif-due', group: 'Notifications', label: 'Services due', type: 'select', def: 'today', enc: 'json', opts: [['today', 'Due today'], ['week', 'Due in the next 7 days']] },
+                { key: 'pestis-notif-scope', group: 'Notifications', label: 'Notifications for', type: 'select', def: '', enc: 'json', opts: [['', 'Their sites (if any are assigned)'], ['mine', 'Only their sites'], ['all', 'All sites']] }
+            ]);
+        }
+        // a stored value -> what the form shows, and back
+        function userSettingRead(f, keys) {
+            const raw = keys ? keys[f.key] : null;
+            if (raw == null) return String(f.def);
+            if (f.enc === 'raw') return String(raw);
+            try { const v = JSON.parse(raw); if (f.key === 'pestis-beep' && typeof v === 'boolean') return v ? 'classic' : 'off'; if (f.key === 'pestis-vibrate' && typeof v === 'boolean') return v ? 'short' : 'off'; return v == null ? String(f.def) : String(v); } catch (e) { return String(raw); }
+        }
+        function userSettingWrite(f, val) {
+            if (f.enc === 'raw') return String(val);
+            if (f.key === 'pestis-auto-repeat-prep') return JSON.stringify(val === 'true');
+            if (f.key === 'pestis-notif-scope' && !val) return null;
+            return JSON.stringify(val);
+        }
         function teamSetting(key) {
+            // this person's own setting (set for them in the Admin site) comes first, then the old team-wide one
+            const own = (() => { try { return localStorage.getItem('pestis-set-' + key); } catch (e) { return null; } })();
+            if (own != null && own !== '' && isFinite(Number(own)) && (Number(own) > 0 || (TEAM_SETTINGS[key].min === 0 && Number(own) === 0))) return Number(own);
             const v = Number(teamSettings[key]);
             if (TEAM_SETTINGS[key].min === 0 && teamSettings[key] != null && teamSettings[key] !== '' && isFinite(v) && v >= 0) return v;   // 0 is allowed (off)
             return isFinite(v) && v > 0 ? v : TEAM_SETTINGS[key].def;
+        }
+        // the Admin site saves a person's settings straight to their account
+        async function adminLoadUserSettings(userId) {
+            const { data, error } = await _supabase.rpc('admin_get_user_prefs', { p_user: userId });
+            if (error) throw error;
+            const sa = (data && data.service_app) || {};
+            return { keys: Object.assign({}, sa.keys || {}), savedAt: sa.savedAt || 0 };
+        }
+        async function adminSaveUserSettings(userId, keys) {
+            const value = { savedAt: Date.now(), keys, pushed: true, by: technicianLabel() };
+            const { error } = await _supabase.rpc('admin_save_user_pref', { p_user: userId, p_key: 'service_app', p_value: value });
+            if (error) throw error;
+            // your own settings: apply them here straight away
+            if (currentUser && userId === currentUser.id) { saveJSON(acctCacheKey(), value); acctApply(keys); }
+            return value;
         }
         async function loadTeamSettings() {
             try {
@@ -13016,6 +13476,30 @@
             }
         }
 
+        // ---------- phones: tap a box's title to fold it away (remembered on this device) ----------
+        const M_FOLD_KEY = 'pestis-m-folded';
+        const M_FOLD_DEFAULT = ['docs', 'visits', 'activity'];   // less-used boxes start folded on a phone
+        const isPhone = () => window.matchMedia && window.matchMedia('(max-width: 639px)').matches;
+        function mFolded() { const v = loadJSON(M_FOLD_KEY, null); return Array.isArray(v) ? v : M_FOLD_DEFAULT.slice(); }
+        function applyMobileFolds() {
+            const folded = new Set(mFolded()), phone = isPhone();
+            document.querySelectorAll('#landBoard .land-card[data-box]').forEach(c => {
+                c.classList.toggle('m-collapsed', phone && folded.has(c.dataset.box));
+                const h = c.querySelector('.lc-bar > h3');
+                if (h) h.setAttribute('aria-expanded', String(!(phone && folded.has(c.dataset.box))));
+            });
+        }
+        document.addEventListener('click', e => {
+            if (!isPhone()) return;
+            const h = e.target.closest && e.target.closest('#landBoard .land-card .lc-bar > h3');
+            if (!h || e.target.closest('button, a, select, input')) return;
+            const c = h.closest('.land-card'), folded = new Set(mFolded());
+            if (folded.has(c.dataset.box)) folded.delete(c.dataset.box); else folded.add(c.dataset.box);
+            saveJSON(M_FOLD_KEY, Array.from(folded));
+            applyMobileFolds();
+        });
+        window.addEventListener('resize', () => applyMobileFolds());
+
         // ---------- drop-down menus stay on the screen (phones) ----------
         const ONSCREEN_SEL = '.scan-type-menu, #mapMenu, #mapPopover, [data-onscreen]';
         function keepOnScreen(el) {
@@ -13068,7 +13552,13 @@
                 try { await withTimeout(Promise.resolve().then(fn), ms, name); }
                 catch (e) { console.warn(name, e); B.errors.push(name + ': ' + ((e && e.message) || e)); }
             };
-            await step('Loading the admin tools (admin.html)', loadAddons, 12000);
+            if (ADMIN_MODE) {
+                document.title = 'Pestis Admin';
+                document.querySelectorAll('.app-mode-label').forEach(el => { el.textContent = 'Admin'; });
+                const lp = document.querySelector ? document.querySelector('#loginPanel > p') : null;
+                if (lp) lp.textContent = 'Pestis Admin. Sign in with an admin Google account.';
+                await step('Loading the admin tools (admin.html)', loadAddons, 12000);
+            }
             await step('Checking the page', checkPageIntegrity, 3000);
             await step('Team settings', applyTeamSettings, 3000);
             document.querySelectorAll('.app-version').forEach(el => { el.textContent = APP_VERSION; });
