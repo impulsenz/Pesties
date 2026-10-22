@@ -6,7 +6,7 @@
     The Admin site, separate from the Service App (index.html) and the Client Portal (client.html):
     its own page, its own sign-in (admin accounts only) and its own code. They only share the database.
     Open it at  https://<your site>/admin.html  and upload it next to index.html.
-    Version 2026.10.22-a6
+    Version 2026.10.22-a7
 -->
 <head>
     <meta charset="UTF-8">
@@ -176,11 +176,13 @@
         /* header controls share one height */
         .visit-act { width: 100%; justify-content: center; text-align: center; line-height: 1.2; padding-left: .5rem; padding-right: .5rem; white-space: normal; }
         .header-h { height: 2.5rem; border-radius: .8rem; box-sizing: border-box; }
-        /* phones: a compact header so "Service App" and the site name still fit (Admin is in the profile, day/night in Settings) */
+        /* phones: a compact header so "Service App" and the site name still fit (Admin is in the profile, day/night in Settings in the profile) */
         @media (max-width: 639px) {
             #appHeader .icon-btn, #appHeader .header-h { width: 2.2rem; height: 2.2rem; min-width: 2.2rem; }
             #appHeader #syncStatusBadge { width: auto; padding: 0 .55rem; }
-            #appHeader button.header-h:last-child { width: auto; }
+            /* the profile button: a square tile with the picture centred in it */
+            #appHeader #profileChip { width: 2.2rem; padding: 0; gap: 0; justify-content: center; }
+            #appHeader #profileChip #headerAvatar, #appHeader #profileChip #headerAvatarFallback { width: 1.7rem; height: 1.7rem; border-radius: .55rem; }
             #appHeader #adminBtn, #appHeader #themeBtnHeader { display: none !important; }
             #appHeader .logo-tile img { height: 2.4rem; }
         }
@@ -539,6 +541,8 @@
         .seg-set { display: inline-flex; flex-wrap: wrap; gap: .3rem; }
         /* ================= PHONES: less on screen at once ================= */
         .m-only { display: none !important; }
+        .bell-tabs .bell-n:empty, .bell-tabs .bell-t:empty { display: none; }
+        .bell-tabs .bell-n, .bell-tabs .bell-t { margin-left: .25rem; padding: 0 .35rem; border-radius: 999px; background: rgb(var(--b500) / .18); font-size: .65rem; }
         @media (max-width: 639px) {
             .m-only { display: inline-flex !important; }
             .m-hide { display: none !important; }
@@ -2176,6 +2180,18 @@
               about: 'The brown-banded cockroach is a small (10-14 mm) cockroach with two pale bands across its wings and body. Unlike the German cockroach it prefers warm, dry places higher up - behind pictures, in furniture, electrical appliances, light fittings and ceilings - not just kitchens.',
               breeding: 'Females glue small egg cases (about 16 eggs) under furniture, in cupboards and on ceilings, producing up to 20 cases. Nymphs mature in 2-4 months.',
               control: 'Inspect high and dry areas as well as kitchens - furniture, appliances, wardrobes and ceilings. Use gel bait in small spots in those areas and an insect growth regulator to stop breeding. Remove egg cases with a vacuum. Monitor with sticky traps at different heights.' },
+            { m: /surinam|pycnoscelus/i, name: 'Surinam cockroach', cat: 'Crawling insects', sub: 'Cockroaches', sci: 'Pycnoscelus surinamensis', wiki: 'Pycnoscelus_surinamensis', signs: ["Pycnoscelus surinamensis", "cockroach in potting mix"],
+              about: 'The Surinam cockroach is a medium (18-25 mm), shiny dark-brown to black burrowing cockroach with paler brown wings. In New Zealand it is mostly found in glasshouses, nurseries, garden centres, potting mix and indoor plant displays, and is carried into buildings in pot plants. It burrows in soil and damages roots and seedlings.',
+              breeding: 'Most populations are all female and reproduce without males. The female carries her eggs inside her body and gives birth to live nymphs (around 25 at a time). Nymphs live in the soil and take 4-6 months to mature in warm conditions.',
+              control: 'Check where plants and potting mix come in, and inspect the soil and the base of pots. Remove or repot infested plants, and avoid over-watering and thick organic mulch indoors. Apply gel bait or granular bait on the soil surface and around planters, and treat the edges of beds and planter boxes with a residual insecticide labelled for that use. Monitor with sticky traps placed at soil level.' },
+            { m: /bush cockroach|native cockroach|celatoblatta|parellipsidion/i, name: 'Native bush cockroach', cat: 'Crawling insects', sub: 'Cockroaches', sci: 'Celatoblatta spp.', wiki: 'Celatoblatta', signs: ["Celatoblatta", "cockroach leaf litter"],
+              about: 'Native bush cockroaches are small (up to about 15 mm), brown, wingless cockroaches with faint pale stripes - less distinct than the Gisborne cockroach, and much smaller than an adult Gisborne. They live outdoors in leaf litter, under logs, bark and stones in bush and gardens, and feed on decaying plant material. They are not household pests, but occasionally wander indoors, often from firewood or plants.',
+              breeding: 'Females produce small egg cases which they hide in leaf litter and rotting wood. Nymphs develop slowly outdoors, and the cockroaches do not breed or establish inside buildings.',
+              control: 'Identify them correctly first - they are native and harmless, so a full cockroach treatment is not needed. Reduce harbourage next to the building (leaf litter, mulch and firewood against walls), keep firewood outside until it is used, and seal gaps under doors. Remove any that come inside by hand or vacuum. If they keep coming in, a residual perimeter treatment around entry points is enough.' },
+            { m: /black cockroach|m[aā]ori bug|stinky cockroach|platyzosteria/i, name: 'Black cockroach (Māori bug)', cat: 'Crawling insects', sub: 'Cockroaches', sci: 'Platyzosteria novaeseelandiae', wiki: 'Platyzosteria_novaeseelandiae', signs: ["Platyzosteria novaeseelandiae", "cockroach under bark"],
+              about: 'The black cockroach, often called the Māori bug or stinky cockroach, is a native, glossy black, wingless cockroach about 20-25 mm long. It lives outdoors in leaf litter, under loose bark, in rotten wood, firewood and among stones, and feeds on decaying plant material. When disturbed it gives off a strong, unpleasant smell. It usually does not establish itself in homes, but is brought in with firewood or wanders in.',
+              breeding: 'Females produce egg cases that are left in sheltered spots under bark and logs. Nymphs look like small adults and mature outdoors over a year or more. It does not breed indoors.',
+              control: 'Identify it correctly - it is a native outdoor species, not an indoor infestation. Keep firewood stacks, timber and leaf litter away from the building, and check firewood before bringing it in. Seal gaps under doors and around cladding. Remove individuals by hand or vacuum. Where they keep coming in, apply a residual perimeter treatment to entry points and foundations.' },
             { m: /argentine ant|linepithema/i, name: 'Argentine ant', cat: 'Crawling insects', sub: 'Ants', sci: 'Linepithema humile', wiki: 'Argentine_ant', signs: ["ant trail", "Linepithema humile trail", "ant nest"],
               about: 'The Argentine ant is a small (2-3 mm), light-brown ant that forms huge "super-colonies" with many queens. It is aggressive, displaces other ants, invades buildings in long trails, and farms aphids and scale insects on plants. It is an unwanted organism in New Zealand.',
               breeding: 'Each colony has many queens laying eggs all year, and new nests form by budding - queens walk off with workers to start a new nest nearby, so they spread steadily from site to site.',
@@ -2678,7 +2694,7 @@
         // ===================================================================
 
         // Tells index.html what loaded, and which version of the hook-up it was written for
-        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.22-a6', api: 0 };
+        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.22-a7', api: 0 };
 
         async function loadAdminPanel() {
             const profList = document.getElementById('adminProfilesList');
