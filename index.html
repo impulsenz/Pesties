@@ -2191,7 +2191,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.22-r63';
+        const APP_VERSION = '2026.10.22-r64';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -11478,11 +11478,6 @@
                 const cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
                 const g = cv.getContext('2d');
                 g.translate(CW / 2, CH / 2); g.rotate(pm.rot * Math.PI / 180); g.drawImage(sq, -D / 2, -D / 2); g.setTransform(1, 0, 0, 1, 0, 0);
-                const fs = Math.max(11, Math.round(CW / 110));
-                g.font = `600 ${fs}px system-ui, sans-serif`;
-                const tw = g.measureText(PM_CREDIT).width;
-                g.fillStyle = 'rgba(255,255,255,.8)'; g.fillRect(CW - tw - fs, CH - fs * 1.6, tw + fs, fs * 1.6);
-                g.fillStyle = '#334155'; g.textBaseline = 'middle'; g.fillText(PM_CREDIT, CW - tw - fs / 2, CH - fs * 0.8);
                 const blob = await new Promise((res, rej) => { try { cv.toBlob(b => b ? res(b) : rej(new Error('no picture')), 'image/jpeg', 0.82); } catch (e) { rej(new Error("this browser won't let the map be copied - take a screenshot of the map and use 'Trace over a photo' instead")); } });
                 // metres the picture covers (turning doesn't change the scale)
                 const mpp = 156543.03392 * Math.cos(pm.lat * Math.PI / 180) / Math.pow(2, zc), mW = CW * mpp, mH = CH * mpp;
