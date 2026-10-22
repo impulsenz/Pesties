@@ -2,8 +2,8 @@
 // Keeps the app and its libraries available with no connection. Photos are NOT stored on the device.
 // Database calls are NOT cached here - the app's own upload queue handles data.
 
-const SHELL_CACHE = 'pestis-shell-v51';
-const RUNTIME_CACHE = 'pestis-runtime-v51';
+const SHELL_CACHE = 'pestis-shell-v53';
+const RUNTIME_CACHE = 'pestis-runtime-v53';
 
 const SHELL = ['./', './index.html', './admin.html', './images/pesties-logo.png'];   // admin.html: the app's add-ons (Admin, profile, Settings)
 const CDN = [
@@ -71,8 +71,8 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // The add-ons file (admin.html): like the app page - the newest from the server, the saved copy when offline
-    if (url.origin === self.location.origin && /\/admin\.html$/.test(url.pathname)) {
+    // admin.html, and index.html when the Admin site loads it: the newest from the server, the saved copy when offline
+    if (url.origin === self.location.origin && /\/(admin|index)\.html$/.test(url.pathname)) {
         event.respondWith((async () => {
             try {
                 const res = await fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' });
