@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pestis Service App - Admin</title>
+<title>Pestis Admin</title>
 <!--
     PESTIS SERVICE APP - ADMIN
     ==========================
@@ -13,18 +13,43 @@
       * technician profiles shown to clients
       * giving client logins access to a site
 
-    It isn't a page on its own: index.html loads it when the app starts (and the offline cache keeps a copy).
-    Upload it next to index.html. Its code shares everything the app has (the site list, the sync queue, ...).
+    This is the Admin site: open admin.html (e.g. https://<your site>/admin.html) and sign in with an admin account.
+    It runs the app from index.html in "admin mode" with its own sign-in, then adds the Admin page below.
+    The Service App (index.html) has no admin links or admin powers. Upload this file next to index.html.
 
-    Add-on version: 2026.10.21-a3   (written for the app's add-on hook-up version 1, see ADDON_API in index.html)
+    Add-on version: 2026.10.22-a4   (written for the app's add-on hook-up version 1, see ADDON_API in index.html)
 -->
 <style>
                 #adminProfilesList .saving { opacity: .75; }
                 #pestEditPic { aspect-ratio: 16 / 9; }
+                .user-card { cursor: pointer; }
+                .user-card:hover { border-color: rgb(var(--b500)); }
+                .day-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .35rem; }
+                .day-cal-h { font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); text-align: center; padding-bottom: .15rem; }
+                .day-cal-cell { min-height: 4.6rem; border: 1px solid var(--border); border-radius: .6rem; background: var(--surface2); padding: .3rem; display: flex; flex-direction: column; gap: .15rem; text-align: left; cursor: pointer; overflow: hidden; }
+                .day-cal-cell.has { background: var(--surface); }
+                .day-cal-cell.today { border-color: rgb(var(--b500)); }
+                .day-cal-cell.on { outline: 2px solid rgb(var(--b500)); outline-offset: 1px; }
+                .day-cal-n { font-size: .7rem; font-weight: 900; color: var(--muted); }
+                .day-cal-p { font-size: .6rem; line-height: 1.2; padding: .1rem .3rem; border-radius: .35rem; background: rgba(16, 185, 129, .15); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                .day-cal-p.open { background: rgba(217, 119, 6, .18); }
+                @media (max-width: 639px) { .day-cal-cell { min-height: 3.4rem; } .day-cal-h2 { display: none; } }
 </style>
 </head>
-<body style="font-family: system-ui, sans-serif; padding: 2rem; color: #334155;">
-<p>This file is part of the Pestis Service App. Open <a href="index.html">index.html</a> instead - it loads this file by itself.</p>
+<body style="font-family: system-ui, sans-serif; padding: 2rem; color: #334155; background: #f1f5f9;">
+<p id="adminBoot" style="font-size: 14px;">Loading Pestis Admin...</p>
+<script>
+    // Starts the Admin site: loads the app (index.html) in admin mode in place of this page
+    (function () {
+        if (window.PESTIS_MODE) return;   // already running inside the app
+        var fail = function (msg) { var el = document.getElementById('adminBoot'); if (el) el.innerHTML = 'Pestis Admin could not start: ' + msg + '. <a href="admin.html">Try again</a>'; };
+        fetch('index.html', { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error('index.html could not be downloaded (' + r.status + ')'); return r.text(); }).then(function (html) {
+            if (html.indexOf('ADMIN_MODE') < 0) throw new Error('index.html is out of date - upload the newest index.html');
+            html = html.replace(/<head>/i, '<head><script>window.PESTIS_MODE = "admin";<\/script>');
+            document.open(); document.write(html); document.close();
+        }).catch(function (e) { fail(e && e.message || e); });
+    })();
+</script>
 
 <!-- The add-on's page parts. index.html copies them into the app when it starts. -->
 <template id="addonMarkup">
@@ -32,7 +57,7 @@
     <div id="adminPage" class="hidden fixed inset-0 z-[55] overflow-y-auto scroll-thin" style="background: var(--bg);">
         <div class="app-header sticky top-0 z-10">
             <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-10 py-3 flex items-center gap-3">
-                <button type="button" onclick="closeAdmin()" class="btn btn-secondary !px-3">← Back</button>
+                <button type="button" onclick="closeAdmin()" class="btn btn-secondary !px-3" title="Go to the sites">← Sites</button>
                 <div class="min-w-0 flex-1">
                     <div class="eyebrow t-accent">Pestis</div>
                     <h2 class="text-lg font-black t-strong leading-tight">🛡 Admin</h2>
@@ -171,7 +196,9 @@
                             <select id="newSpeciesCat" class="field !w-full cursor-pointer" title="Category" onchange="pestCatNewToggle(this, 'newSpeciesCatNew')"></select>
                             <input type="text" id="newSpeciesCatNew" placeholder="New category name" class="field !w-full hidden">
                             <button type="button" onclick="addOption('species')" class="btn btn-primary w-full justify-center">Add pest</button>
-                            <p class="text-[11px] t-faint">Tap ✎ Guide on a pest to add its picture, breeding habits and how to deal with it.</p>
+                            <p class="text-[11px] t-faint">New pests get a picture and guide automatically. Tap ✎ Guide on a pest to change it.</p>
+                            <div class="flex flex-wrap gap-2"><button type="button" class="btn btn-secondary !py-1.5 !px-3 !text-xs" onclick="fillPestGuides(false)">✨ Fill in missing guides</button><button type="button" class="btn btn-secondary !py-1.5 !px-3 !text-xs" onclick="fillPestGuides(true)">↻ Rewrite all from the guide</button></div>
+                            <p id="pestFillNote" class="text-[11px] t-muted"></p>
                         </div>
                         <div id="speciesOptionsList" class="space-y-2 text-xs"></div>
                     </div>
@@ -198,12 +225,29 @@
                 <p class="text-[11px] t-faint">These apply to everyone on the team. Each person's own preferences (notification range, light or dark mode) are under Settings.</p>
             </section>
 
+            <section data-admin-tab="days" class="hidden card p-5 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div><span class="eyebrow" style="color:#0891b2;">Day log</span><p class="text-[11px] t-faint mt-0.5">When each person started and ended their day (Start day / End day in the Service App). Tap a day for the details.</p></div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <input id="dayLogWho" list="dayLogPeople" class="field !w-auto !py-1.5 !text-xs min-w-[12rem]" placeholder="Everyone - type a name" oninput="renderDayLog()" aria-label="Person">
+                        <datalist id="dayLogPeople"></datalist>
+                        <button type="button" class="btn btn-secondary !px-3 !py-1.5" onclick="dayLogMonth(-1)" aria-label="Previous month">‹</button>
+                        <span id="dayLogMonthLabel" class="font-black t-strong text-sm min-w-[8rem] text-center"></span>
+                        <button type="button" class="btn btn-secondary !px-3 !py-1.5" onclick="dayLogMonth(1)" aria-label="Next month">›</button>
+                    </div>
+                </div>
+                <div id="dayLogTotals" class="flex flex-wrap gap-2 text-xs"></div>
+                <div id="dayLogCal" class="day-cal"></div>
+                <div id="dayLogDetail" class="space-y-2 text-xs"></div>
+            </section>
+
             <section data-admin-tab="activity" class="hidden card p-5 space-y-3">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <div><span class="eyebrow" style="color:#7c3aed;">Activity across all sites</span><p class="text-[11px] t-faint mt-0.5">Site changes and client updates from the last 30 days. Tap one to open the site.</p></div>
                     <div class="flex flex-wrap gap-2">
                         <select id="adminActSite" class="field !w-auto !py-1.5 !text-xs max-w-[14rem]" onchange="renderAdminActivity()"></select>
-                        <select id="adminActKind" class="field !w-auto !py-1.5 !text-xs" onchange="renderAdminActivity()"><option value="all">Everything</option><option value="client">Client updates</option><option value="staff">Staff changes</option></select>
+                        <input id="adminActWho" list="adminActPeople" class="field !w-auto !py-1.5 !text-xs min-w-[14rem]" placeholder="Everyone - type a name" oninput="renderAdminActivity()" aria-label="Who">
+                        <datalist id="adminActPeople"></datalist>
                     </div>
                 </div>
                 <div id="adminActivityList" class="space-y-1.5 text-xs"></div>
@@ -219,7 +263,7 @@
     <!-- ===================== TECHNICIAN PROFILE (what clients see) ===================== -->
     <div id="staffProfileModal" class="hidden overlay fixed inset-0 z-[66] flex justify-center items-center p-4" onclick="if (event.target === this) closeStaffProfile()">
         <form class="card p-5 sm:p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto scroll-thin space-y-3" onsubmit="event.preventDefault(); saveStaffProfile();" role="dialog" aria-modal="true" aria-labelledby="spName">
-            <div class="flex justify-between items-start gap-3"><div><div class="eyebrow t-accent">Technician profile · shown in the Client Portal</div><h3 id="spName" class="font-black text-lg t-strong"></h3></div><button type="button" onclick="closeStaffProfile()" class="icon-btn shrink-0" title="Close" aria-label="Close">✕</button></div>
+            <div class="flex justify-between items-start gap-3"><div><div class="eyebrow t-accent">Person</div><h3 id="spName" class="font-black text-lg t-strong"></h3></div><button type="button" onclick="closeStaffProfile()" class="icon-btn shrink-0" title="Close" aria-label="Close">✕</button></div>
             <div class="flex items-center gap-3">
                 <div id="spPhoto" class="station-photo-box !rounded-full"></div>
                 <div class="space-y-1"><button type="button" class="btn btn-secondary !py-1.5 !text-xs" onclick="document.getElementById('spPhotoInput').click()">📷 Choose photo</button><input type="file" id="spPhotoInput" accept="image/*" class="hidden" onchange="staffPhotoChosen(this)"><div class="text-[11px] t-faint">A friendly head-and-shoulders photo works best.</div></div>
@@ -231,7 +275,11 @@
                 <div class="sm:col-span-2"><label class="lbl" for="spBio">About them</label><textarea id="spBio" rows="4" maxlength="800" class="field" placeholder="A little about them: experience, qualifications, what they specialise in..."></textarea></div>
             </div>
             <label class="flex items-center gap-2 text-xs t-strong"><input type="checkbox" id="spVisible" class="w-4 h-4 accent-orange-500"> Show in the Client Portal's Technicians tab</label>
-            <div class="flex justify-end gap-2 pt-1"><button type="button" class="btn btn-secondary" onclick="closeStaffProfile()">Cancel</button><button type="submit" id="spSaveBtn" class="btn btn-primary">Save profile</button></div>
+            <div class="border-t divider pt-3 space-y-3">
+                <div><div class="eyebrow t-accent">Their settings</div><p class="text-[11px] t-faint mt-0.5">Saved to their account, so they follow them to any device. They see changes the next time they open the Service App.</p></div>
+                <div id="spSettings" class="space-y-3 text-xs"><span class="t-faint italic">Loading...</span></div>
+            </div>
+            <div class="sticky bottom-0 flex justify-end gap-2 pt-2 pb-1" style="background: var(--surface);"><button type="button" class="btn btn-secondary" onclick="closeStaffProfile()">Cancel</button><button type="submit" id="spSaveBtn" class="btn btn-primary">Save</button></div>
         </form>
     </div>
 
@@ -267,7 +315,7 @@
             <textarea id="pestEditAbout" rows="4" class="field !w-full" placeholder="What it looks like, where it's found, why it's a problem..."></textarea>
             <label class="lbl !mb-0" for="pestEditBreeding">Breeding habits</label>
             <textarea id="pestEditBreeding" rows="4" class="field !w-full" placeholder="How fast it breeds, where it nests, life cycle..."></textarea>
-            <label class="lbl !mb-0" for="pestEditControl">How to deal with it</label>
+            <label class="lbl !mb-0" for="pestEditControl">Control strategy</label>
             <textarea id="pestEditControl" rows="4" class="field !w-full" placeholder="Treatment, baiting, proofing, hygiene advice for the client..."></textarea>
             <div class="flex gap-2 pt-1"><button type="button" class="btn btn-secondary" onclick="closePestEdit()">Cancel</button><button type="button" id="pestEditSave" class="btn btn-primary ml-auto" onclick="savePestEdit()">Save</button></div>
         </div>
@@ -277,7 +325,7 @@
 <!-- The add-on's code. index.html runs it after the page parts are in place (type="text/plain" so it never runs here on its own). -->
 <script type="text/plain" id="addonScript">
         // Tells index.html what loaded, and which version of the hook-up it was written for
-        window.ADDON_INFO = { name: 'Admin', version: '2026.10.21-a3', api: 1 };
+        window.ADDON_INFO = { name: 'Admin', version: '2026.10.22-a4', api: 1 };
 
         async function loadAdminPanel() {
             const profList = document.getElementById('adminProfilesList');
@@ -345,7 +393,8 @@
                 const clientSites = x.clientOn ? adminClientAccess.filter(a => a.email === x.email).length : 0;
                 const status = x.pending ? '<span class="chip chip-amber">Waiting for approval</span>' : x.invited ? '<span class="chip chip-blue">Invited - not signed in yet</span>' : '';
                 const facts = [x.staff && x.profile ? `${assigned} site${assigned === 1 ? '' : 's'} assigned` : '', x.clientOn ? `client of ${clientSites} site${clientSites === 1 ? '' : 's'}${x.client.active ? '' : ' (paused)'}` : ''].filter(Boolean).join(' · ');
-                return `<div class="row-item p-3 space-y-2" data-user="${esc(x.email)}">
+                const open = x.profile ? `openStaffProfile('${esc(x.profile.id)}')` : x.clientOn ? `setAdminTab('clients')` : '';
+                return `<div class="row-item p-3 space-y-2 ${open ? 'clickable user-card' : ''}" data-user="${esc(x.email)}" ${open ? `role="button" tabindex="0" onclick="if (!event.target.closest('button, a, input, select')) ${open}" onkeydown="if (event.key === 'Enter' && event.target === this) ${open}"` : ''} title="${open ? 'Open ' + esc(x.name) : ''}">
                     <div class="flex flex-wrap justify-between items-start gap-2">
                         <div class="min-w-0"><div class="font-bold t-strong truncate">${esc(x.name)}${x.me ? ' <span class="t-faint font-normal">(you)</span>' : ''}</div>
                             <div class="t-muted font-mono truncate">${esc(x.email)}</div>${facts ? `<div class="t-faint text-[11px]">${esc(facts)}</div>` : ''}</div>
@@ -353,7 +402,6 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-1.5">
                         ${roleBtn(x, 'technician', x.staff, 'Technician')}${roleBtn(x, 'admin', x.admin, 'Admin')}${roleBtn(x, 'client', x.clientOn, 'Client')}
-                        ${x.profile && x.staff ? `<button type="button" class="link-btn !text-[11px] ml-1" data-id="${esc(x.profile.id)}" onclick="openStaffProfile(this.dataset.id)">Profile for clients</button>` : ''}
                         ${x.clientOn ? `<button type="button" class="link-btn !text-[11px] ml-1" onclick="setAdminTab('clients')">Client sites</button>` : ''}
                         ${x.me ? '' : `<button type="button" class="font-bold !text-[11px] ml-auto" style="color:#ef4444;" data-email="${esc(x.email)}" onclick="deleteUser(this.dataset.email)">Delete user</button>`}
                     </div>
@@ -639,7 +687,43 @@
 
 
         // ---------- technician profiles shown to clients (admins set them) ----------
-        let spEditing = null, spPhotoBlob = null;
+        let spEditing = null, spPhotoBlob = null, spSettings = null;
+        // their settings: each person's own, saved to their account (Admin -> Users -> tap the person)
+        async function loadPersonSettings(u) {
+            const box = document.getElementById('spSettings');
+            spSettings = null;
+            box.innerHTML = '<span class="t-faint italic">Loading their settings...</span>';
+            try {
+                const cur = await adminLoadUserSettings(u.id);
+                if (spEditing !== u) return;
+                spSettings = cur;
+                const groups = {};
+                userSettingFields().forEach(f => { (groups[f.group] = groups[f.group] || []).push(f); });
+                box.innerHTML = Object.entries(groups).map(([g, fs]) => `<div class="space-y-1.5"><div class="text-[11px] font-black uppercase tracking-wider t-muted">${esc(g)}</div>
+                    ${fs.map((f, i) => { const v = userSettingRead(f, cur.keys), id = 'sps_' + f.key.replace(/[^a-z0-9]/gi, '_');
+                        return `<div class="flex flex-wrap items-center justify-between gap-2"><label class="t-strong font-semibold flex-1 min-w-[10rem]" for="${id}">${esc(f.label)}</label>
+                            ${f.type === 'number' ? `<input type="number" id="${id}" data-key="${esc(f.key)}" min="${f.min}" max="${f.max}" value="${esc(v)}" class="field !w-24 !py-1.5 sp-set">`
+                            : `<select id="${id}" data-key="${esc(f.key)}" class="field !w-auto !py-1.5 !text-xs sp-set">${f.opts.map(([k, l]) => `<option value="${esc(k)}" ${v === String(k) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`}</div>`; }).join('')}</div>`).join('')
+                    + (cur.savedAt ? `<div class="text-[11px] t-faint">Last saved ${esc(fmtDateTimeLong(new Date(cur.savedAt).toISOString()).date)}</div>` : '<div class="text-[11px] t-faint">They haven\'t saved any settings yet - these are the defaults.</div>');
+            } catch (e) {
+                if (spEditing !== u) return;
+                box.innerHTML = `<div style="color:#dc2626;">${/admin_get_user_prefs|function|schema cache/i.test(e.message || '') ? 'Run pestis_client_portal.sql in the Supabase SQL editor to edit people\'s settings here.' : 'Could not load their settings: ' + esc(e.message || e)}</div>`;
+            }
+        }
+        function collectPersonSettings() {
+            if (!spSettings) return null;
+            const keys = Object.assign({}, spSettings.keys), fields = userSettingFields();
+            let bad = '';
+            document.querySelectorAll('#spSettings .sp-set').forEach(el => {
+                const f = fields.find(x => x.key === el.dataset.key);
+                if (!f) return;
+                if (f.type === 'number') { const n = Math.round(Number(el.value)); if (!isFinite(n) || n < f.min || n > f.max) { bad = `${f.label}: enter a number from ${f.min} to ${f.max}.`; return; } keys[f.key] = String(n); return; }
+                const w = userSettingWrite(f, el.value);
+                if (w == null) delete keys[f.key]; else keys[f.key] = w;
+            });
+            if (bad) { alert(bad); return false; }
+            return keys;
+        }
         async function openStaffProfile(id) {
             const u = adminProfiles.find(p => p.id === id);
             if (!u) return;
@@ -653,6 +737,7 @@
             const box = document.getElementById('spPhoto');
             box.innerHTML = '<span class="station-photo-empty">👤<br>No photo</span>';
             document.getElementById('staffProfileModal').classList.remove('hidden');
+            loadPersonSettings(u);
             const src = u.photo_path ? (await getSignedUrls([u.photo_path])).get(u.photo_path) : (u.avatar_url || null);
             if (src && spEditing === u) box.innerHTML = `<img src="${src}" alt="">`;
         }
@@ -668,9 +753,12 @@
             const u = spEditing;
             if (!u) return;
             if (!isOnline) { alert('Profiles can be changed when you are online.'); return; }
+            const keys = collectPersonSettings();
+            if (keys === false) return;
             const btn = document.getElementById('spSaveBtn');
             btn.disabled = true;
             try {
+                if (keys) { await adminSaveUserSettings(u.id, keys); spSettings.keys = keys; }
                 const fields = { job_title: document.getElementById('spTitle').value.trim() || null, phone: document.getElementById('spPhone').value.trim() || null,
                     contact_email: document.getElementById('spEmail').value.trim() || null, bio: document.getElementById('spBio').value.trim() || null,
                     portal_visible: document.getElementById('spVisible').checked };
@@ -694,7 +782,7 @@
         // ===================================================================
         //  ADMIN PAGE: team-wide information and settings in one place (admins only)
         // ===================================================================
-        const ADMIN_TABS = [['overview', 'Overview'], ['team', 'Users'], ['clients', 'Client portal'], ['services', 'Services'], ['documents', 'Documents'], ['lists', 'Lists'], ['settings', 'Team settings'], ['activity', 'Activity'], ['exports', 'Exports']];
+        const ADMIN_TABS = [['overview', 'Overview'], ['team', 'Users'], ['clients', 'Client portal'], ['services', 'Services'], ['documents', 'Documents'], ['lists', 'Lists'], ['days', 'Day log'], ['activity', 'Activity'], ['exports', 'Exports']];
         let adminTab = 'overview';
         function openAdmin(tab) {
             if (!isAdmin()) { alert('Only admins can open the Admin page.'); return; }
@@ -705,12 +793,14 @@
             if (Date.now() - adminData.loadedAt > 60000) refreshAdmin();
         }
         function closeAdmin() {
+            sessionSet('pestis-admin-route', 'closed');
             document.getElementById('adminPage').classList.add('hidden');
             const formOpen = !document.getElementById('stationFormContainer').classList.contains('hidden');
             if (!formOpen) document.body.style.overflow = '';
         }
         function setAdminTab(tab) {
             adminTab = ADMIN_TABS.some(t => t[0] === tab) ? tab : 'overview';
+            sessionSet('pestis-admin-route', adminTab);   // a refresh opens the same tab
             document.getElementById('adminTabs').innerHTML = ADMIN_TABS.map(([k, l]) => `<button type="button" class="tab-btn shrink-0 ${adminTab === k ? 'active' : ''}" onclick="setAdminTab('${k}')">${l}${adminTabBadge(k)}</button>`).join('');
             document.querySelectorAll('#adminPage [data-admin-tab]').forEach(sec => sec.classList.toggle('hidden', sec.dataset.adminTab !== adminTab));
             document.getElementById('adminOffline').classList.toggle('hidden', isOnline);
@@ -729,6 +819,7 @@
             else if (adminTab === 'documents') renderAdminDocs();
             else if (adminTab === 'lists') { document.getElementById('newPrepUnit').innerHTML = PREP_UNITS.map(([v, l]) => `<option value="${v}">${l}</option>`).join(''); renderSettingsLists(); if (isOnline) loadOptions(); }
             else if (adminTab === 'settings') renderTeamSettings();
+            else if (adminTab === 'days') loadDayLog();
             else if (adminTab === 'activity') renderAdminActivity();
             else if (adminTab === 'exports') renderAdminExports();
         }
@@ -887,11 +978,18 @@
             const keep = sel.value;
             sel.innerHTML = '<option value="">All sites</option>' + clientsData.slice().sort((a, b) => String(a.Name || '').localeCompare(String(b.Name || ''))).map(c => `<option value="${esc(String(c.id))}">${esc(c.Name)}</option>`).join('');
             sel.value = keep;
-            const kind = document.getElementById('adminActKind').value;
+            const who = (document.getElementById('adminActWho').value || '').trim();
+            const kind = /^all staff/i.test(who) ? 'staff' : /^all client/i.test(who) ? 'client' : 'all';
+            const person = kind === 'all' && who && !/^everyone/i.test(who) ? who.toLowerCase() : '';
             const items = [];
             if (kind !== 'client') adminData.events.forEach(e => items.push({ at: e.at || e.created_at, cid: e.client_id, icon: '✎', title: e.title || 'Site change', detail: [e.station, e.detail].filter(Boolean).join(' · '), by: e.technician }));
             if (kind !== 'staff') clientUpdates.forEach(u => items.push({ at: u.at, cid: u.client_id, icon: '💬', title: `${u.rec && u.rec.rec_no != null ? fmtRecNo(u.rec.rec_no) : 'Recommendation'} set to ${u.status || 'updated'}`, detail: u.note || '', by: u.technician, client: true, rec: u.rec_id }));
-            const list = items.filter(x => !keep || String(x.cid) === keep).sort((a, b) => (b.at > a.at ? 1 : -1)).slice(0, 300);
+            // the people list: staff and client names that appear in the activity
+            const staffNames = new Set(adminData.events.map(e => e.technician).filter(Boolean)), clientNames = new Set(clientUpdates.map(u => u.technician).filter(Boolean));
+            adminProfiles.filter(u => u.approved).forEach(u => staffNames.add(u.full_name || u.email));
+            document.getElementById('adminActPeople').innerHTML = ['Everyone', 'All staff changes', 'All client updates'].map(v => `<option value="${esc(v)}">`).join('') +
+                Array.from(staffNames).sort().map(n => `<option value="${esc(n)}" label="Staff">`).join('') + Array.from(clientNames).filter(n => !staffNames.has(n)).sort().map(n => `<option value="${esc(n)}" label="Client">`).join('');
+            const list = items.filter(x => (!keep || String(x.cid) === keep) && (!person || String(x.by || '').toLowerCase().includes(person))).sort((a, b) => (b.at > a.at ? 1 : -1)).slice(0, 300);
             let lastDay = '';
             document.getElementById('adminActivityList').innerHTML = list.map(x => {
                 const t = fmtDateTimeLong(x.at), c = siteById(x.cid);
@@ -904,6 +1002,69 @@
             }).join('') || '<div class="row-item p-4 t-faint italic text-center">No activity in the last 30 days.</div>';
         }
         function openAdminActivity(cid, rec) { goToSite(cid, rec ? () => { if (findRec(rec)) openRecModal(rec); } : null); }
+
+        // ---------- Day log: when people started and ended their day ----------
+        let dayLog = { month: null, rows: [], error: '', pick: null };
+        function dayLogMonth(step) {
+            const d = dayLog.month ? new Date(dayLog.month) : new Date();
+            d.setDate(1); d.setMonth(d.getMonth() + step);
+            dayLog.month = toDayStr(d); dayLog.pick = null;
+            loadDayLog();
+        }
+        async function loadDayLog() {
+            if (!dayLog.month) { const d = new Date(); d.setDate(1); dayLog.month = toDayStr(d); }
+            const m0 = parseDay(dayLog.month), m1 = new Date(m0.getFullYear(), m0.getMonth() + 1, 1);
+            document.getElementById('dayLogMonthLabel').textContent = m0.toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
+            document.getElementById('dayLogCal').innerHTML = '<div class="t-faint italic text-xs">Loading...</div>';
+            try {
+                const { data, error } = await _supabase.from('staff_days').select('*').gte('started_at', new Date(m0.getTime() - 86400000).toISOString()).lt('started_at', m1.toISOString()).order('started_at', { ascending: true });
+                if (error) throw error;
+                dayLog.rows = data || []; dayLog.error = '';
+            } catch (e) { dayLog.rows = []; dayLog.error = /staff_days|does not exist|schema cache/i.test(e.message || '') ? 'The day log needs pestis_client_portal.sql to be run in the Supabase SQL editor.' : (e.message || String(e)); }
+            renderDayLog();
+        }
+        function dayLogName(r) { const u = adminProfiles.find(p => p.id === r.user_id); return (u && (u.full_name || u.email)) || r.technician || 'Someone'; }
+        function dayLogMins(r) { return r.ended_at ? Math.round((Date.parse(r.ended_at) - Date.parse(r.started_at)) / 60000) : (r.summary && r.summary.minutes) || null; }
+        const dayLogHrs = m => m == null ? 'not ended' : m < 60 ? `${m} min` : `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
+        const dayLogTime = t => t ? new Date(t).toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' }) : '-';
+        function renderDayLog() {
+            const cal = document.getElementById('dayLogCal');
+            if (!cal || !dayLog.month) return;
+            const people = Array.from(new Set(adminProfiles.filter(u => u.approved).map(u => u.full_name || u.email).concat(dayLog.rows.map(dayLogName)))).sort();
+            document.getElementById('dayLogPeople').innerHTML = ['Everyone'].concat(people).map(n => `<option value="${esc(n)}">`).join('');
+            const who = (document.getElementById('dayLogWho').value || '').trim().toLowerCase();
+            const rows = dayLog.rows.filter(r => !who || who === 'everyone' || dayLogName(r).toLowerCase().includes(who));
+            if (dayLog.error) { cal.innerHTML = `<div class="row-item p-3" style="color:#dc2626;">${esc(dayLog.error)}</div>`; document.getElementById('dayLogTotals').innerHTML = ''; document.getElementById('dayLogDetail').innerHTML = ''; return; }
+            const m0 = parseDay(dayLog.month), days = new Date(m0.getFullYear(), m0.getMonth() + 1, 0).getDate(), lead = (m0.getDay() + 6) % 7, today = todayStr();
+            const byDay = new Map();
+            rows.forEach(r => { const k = toDayStr(new Date(r.started_at)); if (!byDay.has(k)) byDay.set(k, []); byDay.get(k).push(r); });
+            const initials = n => String(n).split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+            let html = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="day-cal-h">${d}</div>`).join('') + '<div class="day-cal-blank"></div>'.repeat(lead);
+            for (let i = 1; i <= days; i++) {
+                const k = toDayStr(new Date(m0.getFullYear(), m0.getMonth(), i)), list = byDay.get(k) || [];
+                html += `<button type="button" class="day-cal-cell ${list.length ? 'has' : ''} ${k === today ? 'today' : ''} ${dayLog.pick === k ? 'on' : ''}" data-day="${k}" onclick="dayLog.pick = this.dataset.day; renderDayLog()">
+                    <span class="day-cal-n">${i}</span>
+                    ${list.slice(0, 4).map(r => { const n = dayLogName(r), mins = dayLogMins(r); return `<span class="day-cal-p ${r.ended_at ? '' : 'open'}" title="${esc(n)}: ${esc(dayLogTime(r.started_at))} - ${esc(r.ended_at ? dayLogTime(r.ended_at) : 'still open')}"><b>${esc(initials(n))}</b> ${esc(dayLogTime(r.started_at))}${mins != null ? '<span class="day-cal-h2"> · ' + esc(dayLogHrs(mins)) + '</span>' : ''}</span>`; }).join('')}
+                    ${list.length > 4 ? `<span class="t-faint text-[10px]">+${list.length - 4} more</span>` : ''}</button>`;
+            }
+            cal.innerHTML = html;
+            // month totals per person
+            const tot = new Map();
+            rows.filter(r => toDayStr(new Date(r.started_at)) >= dayLog.month).forEach(r => { const n = dayLogName(r), t = tot.get(n) || { days: 0, mins: 0 }; t.days++; t.mins += dayLogMins(r) || 0; tot.set(n, t); });
+            document.getElementById('dayLogTotals').innerHTML = Array.from(tot.entries()).sort((a, b) => a[0].localeCompare(b[0])).map(([n, t]) => `<span class="chip chip-blue">${esc(n)} · ${t.days} day${t.days === 1 ? '' : 's'} · ${esc(dayLogHrs(t.mins))}</span>`).join('') || '<span class="t-faint italic">No days logged this month.</span>';
+            // the day picked
+            const det = document.getElementById('dayLogDetail');
+            if (!dayLog.pick) { det.innerHTML = ''; return; }
+            const list = byDay.get(dayLog.pick) || [];
+            det.innerHTML = `<div class="eyebrow t-accent pt-2">${esc(parseDay(dayLog.pick).toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' }))}</div>` + (list.map(r => {
+                const sm = r.summary || {}, picked = (r.sites || []).map(x => x.name || x.id), visited = sm.sites_visited || [];
+                return `<div class="row-item p-3 space-y-1"><div class="flex flex-wrap items-center justify-between gap-2"><span class="font-bold t-strong">${esc(dayLogName(r))}</span>
+                        <span class="chip ${r.ended_at ? 'chip-green' : 'chip-amber'}">${esc(dayLogTime(r.started_at))} - ${esc(r.ended_at ? dayLogTime(r.ended_at) + ' · ' + dayLogHrs(dayLogMins(r)) : 'not ended yet')}</span></div>
+                    ${visited.length ? `<div class="t-muted"><b class="t-strong">Visited:</b> ${esc(visited.join(', '))}</div>` : ''}
+                    ${picked.length ? `<div class="t-faint text-[11px]">Downloaded for the day: ${esc(picked.join(', '))}</div>` : ''}
+                    ${sm.records != null ? `<div class="t-faint text-[11px]">${esc(sm.records)} records saved</div>` : ''}</div>`;
+            }).join('') || '<div class="row-item p-3 t-faint italic">Nobody logged a day.</div>');
+        }
 
         // ---------- Exports ----------
         // ---------- Excel (.xlsx) downloads: a small built-in writer, no extra library ----------
@@ -1096,6 +1257,7 @@
             };
             render('prep', 'prepOptionsList');
             renderSpeciesAdmin();
+            if (admin && isOnline && !pestFilling && speciesItems().some(o => !pestFillTried.has(o.id) && (!o.about || !o.control || !o.photo_path))) setTimeout(() => fillPestGuides(false, true), 300);
             fillPestCatSelect('newSpeciesCat', '');
             render('station_type', 'stationTypeOptionsList');
         }
@@ -1138,8 +1300,10 @@
             }
             if (kind === 'species') {
                 const cat = pestCatValue('newSpeciesCat', 'newSpeciesCatNew');
-                row.category = cat || pestCategoryGuess(label);
+                row.category = cat || (pestLibraryFor(label) || {}).cat || pestCategoryGuess(label);
                 document.getElementById('newSpeciesCatNew').value = '';
+                // a new pest gets its guide and picture straight away
+                try { Object.assign(row, await autoFillPest(row), { updated_at: new Date().toISOString(), updated_by: technicianLabel() }); } catch (e) {}
             }
             appOptions.push(row);
             input.value = '';
@@ -1226,6 +1390,31 @@
             const v = document.getElementById(selId).value;
             return v === '__new' ? document.getElementById(newId).value.trim().replace(/\s+/g, ' ') : v;
         }
+        // fills in every pest that is missing its picture or guide (force: rewrite the text from the built-in guide)
+        let pestFillTried = new Set(), pestFilling = false;
+        async function fillPestGuides(force, auto) {
+            if (pestFilling || !isAdmin()) return;
+            if (force && !confirm('Rewrite every pest\'s About, Breeding habits and Control strategy from the built-in guide? Text you wrote yourself is replaced. Pictures you uploaded are kept.')) return;
+            pestFilling = true;
+            const note = document.getElementById('pestFillNote');
+            const list = speciesItems().filter(o => (force || !o.about || !o.breeding || !o.control || !o.photo_path) && !(auto && pestFillTried.has(o.id)));
+            list.forEach(o => pestFillTried.add(o.id));
+            let n = 0;
+            for (const o of list) {
+                if (note) note.textContent = `Filling in the pest guide... ${++n} of ${list.length}`;
+                let upd = {};
+                try { upd = await autoFillPest(o, { force }); } catch (e) {}
+                if (force) { const lib = pestLibraryFor(o.label); if (lib) Object.assign(upd, { about: lib.about, breeding: lib.breeding, control: lib.control }); }
+                if (!Object.keys(upd).length) continue;
+                Object.assign(o, upd, { updated_at: new Date().toISOString(), updated_by: technicianLabel() });
+                await enqueue({ kind: 'add_option', siteName: 'Settings', label: `Pest guide for "${o.label}" filled in`, data: Object.assign({ id: o.id, kind: 'species', label: o.label, sort: o.sort || 0 }, upd, { updated_at: o.updated_at, updated_by: o.updated_by }) });
+            }
+            await cacheSet('app_options', appOptions);
+            pestFilling = false;
+            if (note) note.textContent = list.length ? `Pest guide filled in for ${list.length} pest${list.length === 1 ? '' : 's'}.` : 'Every pest already has its guide.';
+            populateOptionSelects();
+            renderSpeciesAdmin();
+        }
         function renderSpeciesAdmin() {
             const el = document.getElementById('speciesOptionsList');
             if (!el) return;
@@ -1236,7 +1425,7 @@
                 items.filter(o => pestCategoryOf(o) === c).map(o => `
                     <div class="row-item p-3 flex justify-between items-center gap-2">
                         <button type="button" class="min-w-0 text-left t-strong font-semibold break-words" data-id="${esc(o.id)}" onclick="showPestInfo(this.dataset.id)">${esc(o.label)}${pending(o.id) ? ' <span class="t-faint font-normal">(waiting to upload)</span>' : ''}
-                            <span class="block text-[10px] font-normal t-faint">${o.photo_path ? '📷 picture' : 'no picture'} · ${o.about || o.breeding || o.control ? 'guide written' : 'no guide yet'}</span></button>
+                            <span class="block text-[10px] font-normal t-faint">${o.photo_path ? (isWebPic(o.photo_path) ? '📷 picture (Wikipedia)' : '📷 picture') : 'no picture'} · ${o.about && o.control ? 'guide written' : 'guide from the built-in library'}</span></button>
                         ${admin ? `<div class="flex items-center gap-2 shrink-0"><button type="button" data-id="${esc(o.id)}" onclick="editPestInfo(this.dataset.id)" class="link-btn !no-underline font-bold">✎ Guide</button>
                             <button type="button" data-id="${esc(o.id)}" onclick="removeOption(this.dataset.id)" class="font-bold cursor-pointer" style="color:#ef4444;">Remove</button></div>` : ''}
                     </div>`).join('') + '</div>').join('') || '<div class="row-item p-3 t-faint italic">Nothing added yet.</div>');
@@ -1259,7 +1448,7 @@
             pic.innerHTML = o.photo_path ? '<span class="t-faint text-xs">Loading picture...</span>' : '<span class="t-faint text-xs">No picture yet</span>';
             document.getElementById('pestEditPicRemove').classList.toggle('hidden', !o.photo_path);
             document.getElementById('pestEditModal').classList.remove('hidden');
-            if (o.photo_path && isOnline) {
+            if (o.photo_path && (isOnline || isWebPic(o.photo_path))) {
                 const u = (await getSignedUrls([o.photo_path])).get(o.photo_path);
                 if (pestEditId === o.id && !pestEditFile) pic.innerHTML = u ? `<img src="${u}" alt="">` : '<span class="t-faint text-xs">Picture unavailable</span>';
             }
@@ -1300,11 +1489,11 @@
                     const path = `library/pests/${o.id}-${Date.now()}.jpg`;
                     const { error } = await withTimeout(_supabase.storage.from(PHOTO_BUCKET).upload(path, blob, { upsert: true, contentType: blob.type || 'image/jpeg' }), 120000, 'Picture upload');
                     if (error) throw error;
-                    upd.photo_path = path;
+                    upd.photo_path = path; upd.photo_source = null;
                 } catch (e) { alert('The picture could not be uploaded: ' + ((e && e.message) || e)); return; }
                 finally { btn.disabled = false; btn.textContent = 'Save'; }
-            } else if (pestEditDropPic) upd.photo_path = null;
-            if (old && upd.photo_path !== undefined && upd.photo_path !== old) _supabase.storage.from(PHOTO_BUCKET).remove([old]).catch(() => {});
+            } else if (pestEditDropPic) { upd.photo_path = null; upd.photo_source = null; }
+            if (old && !isWebPic(old) && upd.photo_path !== undefined && upd.photo_path !== old) _supabase.storage.from(PHOTO_BUCKET).remove([old]).catch(() => {});
             Object.assign(o, upd);
             await cacheSet('app_options', appOptions);
             await enqueue({ kind: 'add_option', siteName: 'Settings', label: `Pest guide for "${o.label}" updated`, data: Object.assign({ id: o.id, kind: 'species', label: o.label, sort: o.sort || 0 }, upd) });
@@ -1334,7 +1523,7 @@
 
         // ---------- this file's own page check ----------
         (function () {
-            const need = ["adminPage", "adminTabs", "adminTiles", "adminAttention", "adminWorkload", "adminDocsList", "adminDocSite", "adminActivityList", "adminExports", "adminSitesNoClient", "staffProfileModal", "userFilterChips", "adminServicesList", "adminSvcSearch", "adminDocFolder", "adminClientsList", "clientNewSites", "teamSettingsBox", "optionsAdminNote", "newPrepSds", "newPrepSdsExpiry", "newSpeciesCat", "sdsEditModal", "pestEditModal", "newPrepUnit", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList"];
+            const need = ["adminPage", "adminTabs", "adminTiles", "adminAttention", "adminWorkload", "adminDocsList", "adminDocSite", "adminActivityList", "adminExports", "adminSitesNoClient", "staffProfileModal", "userFilterChips", "adminServicesList", "adminSvcSearch", "adminDocFolder", "adminClientsList", "clientNewSites", "optionsAdminNote", "dayLogCal", "adminActWho", "spSettings", "newPrepSds", "newPrepSdsExpiry", "newSpeciesCat", "sdsEditModal", "pestEditModal", "newPrepUnit", "adminPanel", "adminNewEmail", "adminNewRole", "adminProfilesList", "adminAllowedList"];
             const missing = need.filter(id => !document.getElementById(id));
             if (missing.length) console.error('admin.html is incomplete. Missing:', missing);
             document.querySelectorAll('.addon-version').forEach(el => { el.textContent = window.ADDON_INFO.version; });
