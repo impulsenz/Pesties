@@ -6,7 +6,7 @@
     The Admin site, separate from the Service App (index.html) and the Client Portal (client.html):
     its own page, its own sign-in (admin accounts only) and its own code. They only share the database.
     Open it at  https://<your site>/admin.html  and upload it next to index.html.
-    Version 2026.10.22-a5
+    Version 2026.10.22-a6
 -->
 <head>
     <meta charset="UTF-8">
@@ -329,6 +329,11 @@
         .nf-cat { display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #fdba74; margin-bottom: .1rem; }
         .nf-dot { width: .55rem; height: .55rem; border-radius: 999px; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255, 255, 255, .7); }
         .nf-meta { padding: .5rem .6rem .55rem; font-size: 11px; }
+        .nf-card { border-left: 5px solid var(--tc, var(--border)); }
+        .nf-card:hover, .nf-card:focus-visible { border-left-color: var(--tc, var(--accent, rgb(var(--b500)))); }
+        .nf-name { font-weight: 800; font-size: .8rem; line-height: 1.2; color: var(--text); }
+        .nf-sub { display: flex; align-items: center; gap: .3rem; min-width: 0; margin-top: .15rem; font-weight: 700; }
+        .nf-sub .nf-dot { box-shadow: none; }
         .rec-no { color: rgb(var(--b500)) !important; }
         .sight-card.sight-new { border-color: rgba(220, 38, 38, .6); }
         .sight-card.sight-new .nf-meta { background: rgba(220, 38, 38, .10); }
@@ -348,7 +353,8 @@
         .ws-card.ws-done .nf-meta { background: rgba(16, 185, 129, .12); }
         .ws-card:hover, .ws-card:focus-visible { box-shadow: 0 12px 28px rgba(0, 0, 0, .28), 0 0 18px rgba(245, 158, 11, .45); }
         .ws-card.ws-done:hover, .ws-card.ws-done:focus-visible { box-shadow: 0 12px 28px rgba(0, 0, 0, .28), 0 0 18px rgba(16, 185, 129, .45); }
-        .ws-card .nf-title { font-size: .82rem; }
+        .ws-card .nf-name { font-size: .84rem; }
+        .ws-card, .ws-card.ws-done { border-left: 5px solid var(--tc); }
         .sign-pad { width: 100%; height: 11rem; background: #fff; border-radius: .8rem; border: 2px dashed rgba(148,163,184,.7); touch-action: none; display: block; cursor: crosshair; }
         .sign-img { background: #fff; border-radius: .6rem; padding: .25rem; max-height: 6rem; }
         .role-toggle { font-size: .7rem; font-weight: 800; padding: .3rem .65rem; border-radius: 999px; border: 1.5px solid var(--border); color: var(--muted); background: transparent; cursor: pointer; }
@@ -670,6 +676,21 @@
         .pe-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .35rem .6rem; border-radius: .6rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: .72rem; font-weight: 700; cursor: pointer; }
         .pe-chip.on { border-color: rgb(var(--b500)); background: rgb(var(--b500) / .12); color: rgb(var(--b600)); }
         .pe-swatch { width: 1.7rem; height: 1.7rem; border-radius: .5rem; border: 2px solid var(--border); cursor: pointer; }
+        .pe-grow { display: grid; grid-template-areas: ". t ." "l c r" ". b ."; grid-template-columns: 1fr 1fr 1fr; gap: .35rem; align-items: center; }
+        .pe-grow-page { display: block; height: 2.2rem; border-radius: .4rem; background: #ffffff; border: 1.5px solid var(--border); box-shadow: inset 0 0 0 3px var(--surface2); }
+        .pm-wrap { position: absolute; inset: 0; z-index: 8; display: flex; align-items: center; justify-content: center; padding: .75rem; background: rgba(15, 23, 42, .45); }
+        .pm-wrap.hidden { display: none; }
+        .pm-card { width: 100%; max-width: 64rem; height: min(46rem, 100%); display: flex; flex-direction: column; gap: .6rem; padding: .9rem; }
+        .pm-view { position: relative; flex: 1 1 auto; min-height: 12rem; border-radius: .8rem; overflow: hidden; background: #1e293b; touch-action: none; cursor: grab; user-select: none; }
+        .pm-view:active { cursor: grabbing; }
+        .pm-tiles { position: absolute; inset: 0; }
+        .pm-tiles img { position: absolute; width: 256px; height: 256px; max-width: none; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+        .pm-zoom { position: absolute; right: .5rem; top: .5rem; display: flex; flex-direction: column; gap: .3rem; }
+        .pm-zoom button { width: 2.2rem; height: 2.2rem; border-radius: .6rem; background: #ffffff; color: #0f172a; font-weight: 900; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(0, 0, 0, .3); }
+        .pm-credit { position: absolute; right: 0; bottom: 0; padding: .1rem .4rem; font-size: 9.5px; background: rgba(255, 255, 255, .8); color: #334155; border-top-left-radius: .4rem; pointer-events: none; }
+        #confirmModal { z-index: 66; }   /* above the floor plan editor */
+        .pe-swatch-custom { position: relative; overflow: hidden; display: inline-block; }
+        .pe-swatch-custom input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
         .pe-swatch.on { border-color: rgb(var(--b500)); box-shadow: 0 0 0 2px rgb(var(--b500) / .35); }
         .pe-objects { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
         .pe-obj { display: flex; flex-direction: column; align-items: center; gap: .15rem; padding: .4rem .2rem; border-radius: .7rem; border: 1px solid var(--border); background: #ffffff; color: #0f172a; font-size: .6rem; font-weight: 700; cursor: pointer; text-align: center; line-height: 1.15; }
@@ -679,7 +700,7 @@
         @media (max-width: 767px) {
             .pe-body { flex-direction: column-reverse; }
             .pe-tools { flex-direction: row; width: auto; border-right: 0; border-top: 1px solid var(--border); overflow-x: auto; overflow-y: hidden; padding: .35rem; padding-bottom: max(.35rem, env(safe-area-inset-bottom)); justify-content: space-between; }
-            .pe-tool { flex: 1 1 0; min-width: 2.9rem; padding: .4rem .1rem; }
+            .pe-tool { flex: 1 1 0; min-width: 2.55rem; padding: .4rem 0; font-size: .58rem; }
             .pe-panel { position: absolute; left: 0; right: 0; bottom: 4.1rem; width: auto; max-height: 46%; border-left: 0; border-top: 1px solid var(--border); border-radius: 1rem 1rem 0 0; box-shadow: 0 -10px 30px rgba(0, 0, 0, .2); z-index: 5; padding-bottom: 1rem; }
             .pe-finish { bottom: 1rem; }
             .planEditor-panel-open .pe-finish { bottom: 48%; }
@@ -696,6 +717,7 @@
         .map-pin.focus .map-pin-ring { animation: pinRing 2.6s cubic-bezier(.25, .1, .25, 1) infinite; }
         .map-pin.focus .map-pin-ring.two { animation-delay: 1.3s; }
         .map-pin.dim { opacity: .25; }
+        .map-pin.pop-open .map-pin-label { display: none; }
         .map-pin .badge { position: absolute; top: -6px; right: -8px; min-width: 15px; height: 15px; border-radius: 999px; background: #dc2626; color: #fff; font-size: 9px; font-weight: 900; display: flex; align-items: center; justify-content: center; border: 1.5px solid #fff; transform: rotate(45deg); }
         @keyframes pinRing { 0% { transform: scale(.6); opacity: .55; } 70% { opacity: .12; } 100% { transform: scale(2.6); opacity: 0; } }
         #mapViewport.placing { cursor: crosshair; }
@@ -2656,7 +2678,7 @@
         // ===================================================================
 
         // Tells index.html what loaded, and which version of the hook-up it was written for
-        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.22-a5', api: 0 };
+        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.22-a6', api: 0 };
 
         async function loadAdminPanel() {
             const profList = document.getElementById('adminProfilesList');
