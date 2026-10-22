@@ -834,7 +834,21 @@
             }
             function esc(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
             window.pestisRepair = async function () {
-                var b = document.getElementById('bootRepairBtn'); if (b) { b.disabled = true; b.textContent = 'Repairing...'; }
+                var b = document.getElementById('bootRepairBtn'); if (b) { b.disabled = true; b.textContent = 'Checking the connection...'; }
+                // never remove the saved app without signal - it couldn't be downloaded again and the app wouldn't open at all
+                var reach = false;
+                try {
+                    var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+                    var t = setTimeout(function () { if (ctrl) ctrl.abort(); }, 6000);
+                    var r = await fetch('sw.js?check=' + Date.now(), { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
+                    clearTimeout(t); reach = !!(r && r.ok);
+                } catch (e) {}
+                if (!navigator.onLine || !reach) {
+                    alert("No internet connection right now, so the app can't be re-downloaded. Repair app needs signal - try Try again, or repair when you're back online.");
+                    if (b) { b.disabled = false; b.textContent = 'Repair app'; }
+                    return;
+                }
+                if (b) b.textContent = 'Repairing...';
                 // removes the saved app files only - anything not uploaded yet stays on this device
                 try { if (navigator.serviceWorker) { var regs = await navigator.serviceWorker.getRegistrations(); for (var i = 0; i < regs.length; i++) await regs[i].unregister(); } } catch (e) {}
                 try { if (window.caches) { var keys = await caches.keys(); for (var k = 0; k < keys.length; k++) await caches.delete(keys[k]); } } catch (e) {}
@@ -2205,7 +2219,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.22-r65';
+        const APP_VERSION = '2026.10.22-r66';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = true;   // critical limits (rebuilt in r65)
         // after Check for updates, tidy the address bar
@@ -2844,11 +2858,20 @@
             let session = null;
             let sessErr = null;
 
+            // Signed in on this device before: don't sit on a blank screen when the signal is weak or gone
+            const knownHere = !!(cached && cached.user && cached.profile && cached.profile.approved && hasStoredSession());
             try {
-                const r = await withTimeout(_supabase.auth.getSession(), 8000, 'Session check');
+                const r = await withTimeout(_supabase.auth.getSession(), knownHere ? 3000 : 8000, 'Session check');
                 session = r.data && r.data.session;
                 sessErr = r.error || null;
             } catch (e) { sessErr = e; }
+
+            if (!session && knownHere && (!navigator.onLine || (sessErr && /timed out|took too long|Session check/i.test(String(sessErr.message || sessErr))))) {
+                currentUser = cached.user;
+                currentProfile = cached.profile;
+                startApp(true);   // works from this device; reconnects and uploads when the signal is back
+                return;
+            }
 
             if (session && cached && cached.user && cached.user.id === session.user.id && cached.profile && cached.profile.approved) {
                 // Known, approved user on this device: open straight away, re-check approval in the background
