@@ -542,6 +542,24 @@
         .seg-set { display: inline-flex; flex-wrap: wrap; gap: .3rem; }
         /* ================= PHONES: less on screen at once ================= */
         .m-only { display: none !important; }
+        /* phones: the station form packed tighter - the same fields, less scrolling */
+        @media (max-width: 639px) {
+            #stationFormContainer .sf-head { padding: .55rem .75rem .5rem; gap: .5rem; align-items: center; }
+            #stationFormContainer .sf-back { display: none; }
+            #stationFormContainer #formTitle { font-size: 1rem; line-height: 1.2; }
+            #stationFormContainer .sf-head h4 { gap: .4rem; }
+            #stationFormContainer .sf-head .icon-btn { width: 2.1rem; height: 2.1rem; }
+            #stationFormContainer #baitLastChanged { margin-top: .2rem; font-size: 10.5px; }
+            #stationSheetBody { padding: .6rem .7rem; }
+            #stationSheetBody.space-y-5 > :not([hidden]) ~ :not([hidden]) { margin-top: .6rem; }
+            #stationSheetBody .grid.gap-4 { gap: .6rem; }
+            #stationSheetBody .inset { padding: .6rem .7rem; }
+            #stationSheetBody .inset.space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: .4rem; }
+            #stationSheetBody .lbl { margin-bottom: .2rem; font-size: .66rem; }
+            #stationSheetBody .field { padding-top: .5rem; padding-bottom: .5rem; }
+            #stationSheetBody .sf-pests, #stationSheetBody .sf-prep { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .5rem; }
+            #stationSheetBody .sf-pests > :first-child, #stationSheetBody .sf-prep > :first-child { grid-column: 1 / -1; }
+        }
         .fold-head { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: .5rem; padding: .55rem .1rem .2rem; text-align: left; cursor: pointer; }
         .fold-pm { width: 1.3rem; height: 1.3rem; border-radius: .4rem; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: .9rem; line-height: 1; background: var(--surface3); color: var(--text); border: 1px solid var(--border); }
         .fold-head:hover .fold-pm { border-color: rgb(var(--b500)); color: rgb(var(--b500)); }
@@ -637,11 +655,10 @@
         .map-top-row { display: flex; align-items: center; gap: .45rem; min-width: 0; }
         .map-tools-row { flex-wrap: wrap; }
         /* phones: the plans are a drop-down (tabs don't fit); computers keep the tabs */
-        .map-select { display: none; }
-        @media (max-width: 639px) {
-            .map-select { display: block; flex: 1 1 auto; min-width: 0; width: auto; font-weight: 700; }
-            #mapTabs { display: none !important; }
-        }
+        /* the plans are a drop-down on every screen */
+        .map-select { display: block; flex: 0 1 22rem; min-width: 0; width: auto; font-weight: 700; }
+        #mapTabs { display: none !important; }
+        @media (max-width: 639px) { .map-select { flex: 1 1 auto; } }
         .map-tabs { display: flex; gap: .35rem; overflow-x: auto; flex: 1 1 auto; min-width: 0; padding: .1rem; scrollbar-width: thin; }
         .map-tab { display: inline-flex; align-items: center; gap: .4rem; max-width: 15rem; flex-shrink: 0; padding: .45rem .75rem; border-radius: .75rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: .75rem; font-weight: 700; cursor: pointer; }
         .map-tab:hover { border-color: rgb(var(--b500)); }
@@ -1230,9 +1247,9 @@
     <div id="stationFormContainer" class="hidden fixed inset-0 z-[55] overlay flex justify-center items-stretch sm:items-center sm:p-6">
         <div class="station-sheet w-full sm:max-w-3xl h-full sm:h-auto sm:max-h-[92vh] flex flex-col sm:rounded-[1.25rem] overflow-hidden" style="background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);">
             <!-- Header -->
-            <div class="flex justify-between items-start gap-3 p-4 sm:p-5 border-b divider shrink-0" style="background: var(--surface);">
+            <div class="sf-head flex justify-between items-start gap-3 p-4 sm:p-5 border-b divider shrink-0" style="background: var(--surface);">
                 <div class="min-w-0">
-                    <button type="button" onclick="requestCloseStation()" class="link-btn !no-underline inline-flex items-center gap-1 mb-1.5">← Back to stations</button>
+                    <button type="button" onclick="requestCloseStation()" class="sf-back link-btn !no-underline inline-flex items-center gap-1 mb-1.5">← Back to stations</button>
                     <h4 class="font-black text-lg t-strong break-words flex items-center gap-2"><span id="formTypeDot" class="type-dot shrink-0"></span><span id="formTitle">Servicing Device</span>
                         <button type="button" id="stationMapBtn" onclick="showCurrentStationOnMap()" class="chip chip-blue cursor-pointer shrink-0 !text-[11px]" title="Show this station on the floor plan" aria-label="Show on map">📍 Map</button></h4>
                     <div id="baitLastChanged" class="hidden text-[11px] font-semibold mt-1.5"></div>
@@ -1286,7 +1303,7 @@
 
                     <div class="sm:col-span-2 inset p-4 space-y-3">
                         <span class="eyebrow t-accent">Pests</span>
-                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                        <div class="sf-pests grid grid-cols-1 sm:grid-cols-12 gap-3">
                             <div class="sm:col-span-5">
                                 <div class="flex items-center justify-between gap-2"><label class="lbl" for="speciesCaught">Pest found</label><button type="button" onclick="pestInfoForSelected()" class="link-btn !no-underline !text-[11px] -mt-1" title="About this pest">ⓘ Pest guide</button></div>
                                 <select id="speciesCaught" class="field cursor-pointer" onchange="updatePestCountField(true)"></select>
@@ -1300,7 +1317,6 @@
                                 <input type="number" id="pestCount" min="0" step="1" inputmode="numeric" placeholder="0" class="field">
                             </div>
                         </div>
-                        <p id="pestHint" class="text-[11px] t-faint">Choose the pest first. Rodents: record how much bait was eaten. Insects: Low, Medium, High - or Caught, with how many.</p>
                     </div>
 
                     <div class="sm:col-span-2 inset p-4 space-y-3">
@@ -1311,7 +1327,7 @@
                                 <input type="checkbox" id="autoRepeatPrep" class="hidden">
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                        <div class="sf-prep grid grid-cols-1 sm:grid-cols-12 gap-3">
                             <div class="sm:col-span-5">
                                 <label class="lbl">Preparation / Chemical Used</label>
                                 <select id="prepUsed" class="field cursor-pointer" onchange="prepChanged()"></select>
@@ -2175,7 +2191,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.22-r61';
+        const APP_VERSION = '2026.10.22-r62';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -12381,7 +12397,7 @@
         }
         // Pest first: a rodent asks how much bait was eaten; an insect is Low / Medium / High, or Caught with a number
         const isRodentSpecies = sp => /\b(rat|rats|mouse|mice|rodent|rodents|possum|stoat|ferret|weasel)\b/i.test(String(sp || ''));
-        const RODENT_LEVELS = [['None', 'None - 0% of bait taken'], ['Low', 'Low - 25% or less of bait taken'], ['Medium', 'Medium - 25% to 75% of bait taken'], ['High', 'High - 75% to 100% of bait taken']];
+        const RODENT_LEVELS = [['None', 'None - 0% of bait taken'], ['Low', 'Low - 25% or less of bait taken'], ['Medium', 'Medium - 25% to 75% of bait taken'], ['High', 'High - 75% to 100% of bait taken'], ['Caught', 'Caught']];
         const INSECT_LEVELS = [['Low', 'Low'], ['Medium', 'Medium'], ['High', 'High'], ['Caught', 'Caught']];
         function updatePestCountField(speciesChanged) {
             const sp = document.getElementById('speciesCaught').value;
@@ -12395,11 +12411,11 @@
             if (act.dataset.kind !== kind) { act.innerHTML = levels.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join(''); act.dataset.kind = kind; }
             act.value = levels.some(x => x[0] === keep) ? keep : (rodent ? 'None' : levels[0][0]);
             document.getElementById('activityRow').classList.toggle('hidden', none);
-            document.getElementById('activityLabel').textContent = rodent ? 'Bait eaten' : 'Activity';
+            document.getElementById('activityLabel').textContent = 'Activity';
             // the number: insects only when Caught; rodents optional (e.g. a snap trap)
             const showCount = rodent || act.value === 'Caught';
             document.getElementById('pestCountRow').classList.toggle('hidden', !showCount);
-            document.getElementById('pestCountLabel').innerHTML = rodent ? 'Number caught <span class="t-faint normal-case tracking-normal font-normal">(if any)</span>' : 'Number caught <span style="color:#ef4444;">*</span>';
+            document.getElementById('pestCountLabel').innerHTML = rodent && act.value !== 'Caught' ? 'Number caught <span class="t-faint normal-case tracking-normal font-normal">(if any)</span>' : 'Number caught <span style="color:#ef4444;">*</span>';
             count.disabled = !showCount;
             if (!showCount) count.value = '';
         }
@@ -12653,7 +12669,8 @@
                 const types = optionLabels('station_type');
                 document.getElementById('newDeviceType').value = types.includes(devType) ? devType : (types[0] || '');
             } else {
-                document.getElementById('formTitle').textContent = `${locName} (${devType})`;
+                document.getElementById('formTitle').textContent = locName;
+                document.getElementById('formTitle').title = devType;
                 document.getElementById('stationDetailsHeading').textContent = 'Station details (change the type here if needed):';
                 document.getElementById('newLocName').value = locName;
                 setSelectValue('newDeviceType', devType);
