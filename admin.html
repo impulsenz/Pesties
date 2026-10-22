@@ -6,7 +6,7 @@
     The Admin site, separate from the Service App (index.html) and the Client Portal (client.html):
     its own page, its own sign-in (admin accounts only) and its own code. They only share the database.
     Open it at  https://<your site>/admin.html  and upload it next to index.html.
-    Version 2026.10.22-a10
+    Version 2026.10.22-a11
 -->
 <head>
     <meta charset="UTF-8">
@@ -195,7 +195,8 @@
         /* site header */
         .site-hero-band { position: relative; isolation: isolate; padding: 1rem; background: linear-gradient(135deg, rgb(var(--b500) / .10), transparent 55%); }
         .sh-topline { display: flex; align-items: center; justify-content: space-between; gap: .75rem; font-size: 11px; margin-bottom: .8rem; }
-        .sh-id { display: flex; align-items: flex-start; gap: .9rem; min-width: 0; }
+        .sh-id { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .9rem; min-width: 0; }
+        .sh-id > .sh-contact { flex: 1 1 100%; margin-top: 0; width: auto; }
         .sh-id > .min-w-0 { min-width: 0; flex: 1; }
         .sh-title { font-size: 1.45rem; font-weight: 900; line-height: 1.15; }
         .sh-contact { margin-top: .75rem; }
@@ -230,7 +231,7 @@
         .kpi-click .kpi-k::after { content: ' ›'; opacity: .6; }
         /* the boxes under the header: one column on phones, three across from laptop width */
         /* the site boxes: fixed height with their own scroll bar; drag ⠿ to move, the corner to resize (saved per person) */
-        .land-board { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; }
+        .land-board { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; min-height: 4rem; }
         .land-board > .land-card { flex: 0 0 auto; width: 100%; }
         /* each box's width is its share of the row (any value, set by dragging its corner); three boxes fit a row by default */
         @media (min-width: 1024px) { .land-board > .land-card { width: calc((100% + 1.5rem) * var(--lc-f, .3333) - 1.5rem); } }
@@ -261,6 +262,8 @@
         .lc-resize { position: absolute; right: 3px; bottom: 3px; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none; border-radius: 0 0 .7rem 0; opacity: .55;
             background: linear-gradient(135deg, transparent 0 55%, var(--faint) 55% 61%, transparent 61% 72%, var(--faint) 72% 78%, transparent 78%); }
         .lc-resize:hover { opacity: 1; }
+        .lc-drop-mark { position: fixed; z-index: 80; width: 4px; border-radius: 4px; background: rgb(var(--b500)); box-shadow: 0 0 0 3px rgb(var(--b500) / .25); pointer-events: none; }
+        .lc-drop-mark.hidden { display: none; }
         .land-card.lc-dragging { outline: 2px dashed rgb(var(--b500)); outline-offset: 3px; opacity: .85; }
         .land-card.lc-resizing { outline: 2px solid rgb(var(--b500) / .6); outline-offset: 3px; }
         body.lc-busy, body.lc-busy * { user-select: none !important; }
@@ -339,7 +342,15 @@
         .nf-sub { display: flex; align-items: flex-start; gap: .3rem; min-width: 0; margin-top: .12rem; font-weight: 700; }
         .nf-sub .nf-dot { box-shadow: none; width: .5rem; height: .5rem; margin-top: .2rem; }
         .nf-id { flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; color: rgb(var(--b500)); }
-        .nf-subtxt { min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .nf-subtxt { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* every card the same height: two lines of title, one line of detail, one line of status */
+        .nf-name { min-height: 2.36em; }
+        .nf-meta { height: 5.5rem; overflow: hidden; box-sizing: border-box; }
+        .nf-foot { flex-wrap: nowrap; overflow: hidden; white-space: nowrap; }
+        .nf-foot > span:last-child { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+        .nf-foot .chip { flex-shrink: 0; }
+        /* computers: every card the same width in every box */
+        @media (min-width: 640px) { .land-card .nf-grid { grid-template-columns: repeat(auto-fill, 10.75rem) !important; justify-content: start; gap: .7rem; } }
         .nf-foot { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .3rem; margin-top: .22rem; font-size: 10px; color: var(--faint); }
         .nf-foot .chip { padding: 0 .35rem; font-size: 9.5px; line-height: 1.5; }
         .rec-no { color: rgb(var(--b500)) !important; }
@@ -547,6 +558,14 @@
         .seg-set { display: inline-flex; flex-wrap: wrap; gap: .3rem; }
         /* ================= PHONES: less on screen at once ================= */
         .m-only { display: none !important; }
+        @media (max-width: 639px) {
+            .ws-fold-head { cursor: pointer; user-select: none; }
+            .ws-fold-head h4::after { content: '▾'; margin-left: .2rem; font-size: .8rem; color: var(--faint); }
+            .ws-fold.ws-folded .ws-fold-head h4::after { content: '▸'; }
+            .ws-fold.ws-folded > :not(.ws-fold-head) { display: none !important; }
+            .ws-fold.ws-folded .ws-fold-head { border-bottom: 0; padding-bottom: 0; }
+            .ws-fold.ws-folded { padding-top: .9rem; padding-bottom: .9rem; }
+        }
         /* phones: the station form packed tighter - the same fields, less scrolling */
         @media (max-width: 639px) {
             #stationFormContainer .sf-head { padding: .55rem .75rem .5rem; gap: .5rem; align-items: center; }
@@ -720,7 +739,7 @@
         .pm-view { position: relative; flex: 1 1 auto; min-height: 12rem; border-radius: .8rem; overflow: hidden; background: #1e293b; touch-action: none; cursor: grab; user-select: none; }
         .pm-view:active { cursor: grabbing; }
         .pm-tiles { position: absolute; transform-origin: 50% 50%; }
-        .pm-search { position: relative; }
+        .pm-search, .addr-wrap { position: relative; }
         .pm-sug { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + .25rem); max-height: 16rem; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: .8rem; box-shadow: 0 12px 28px rgba(0, 0, 0, .25); padding: .25rem; }
         .pm-sug.hidden { display: none; }
         .pm-sug button { display: block; width: 100%; text-align: left; padding: .5rem .6rem; border-radius: .55rem; font-size: .8rem; color: var(--text); }
@@ -800,6 +819,76 @@
                 .day-cal-p { font-size: .6rem; line-height: 1.2; padding: .1rem .3rem; border-radius: .35rem; background: rgba(16, 185, 129, .15); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
                 .day-cal-p.open { background: rgba(217, 119, 6, .18); }
                 @media (max-width: 639px) { .day-cal-cell { min-height: 3.4rem; } .day-cal-h2 { display: none; } }
+    .type-color-pick { position: relative; display: inline-block; width: 2.4rem; height: 2.4rem; flex-shrink: 0; border-radius: .7rem; overflow: hidden; border: 2px solid var(--border); cursor: pointer; }
+    .type-color-pick input { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); border: 0; padding: 0; cursor: pointer; background: none; }
+    .type-color-pick.type-color-sm { width: 1.35rem; height: 1.35rem; border-radius: 999px; }
+/* PESTIS-REPORTS-CSS:BEGIN */
+.pr-root { --pr-accent: rgb(var(--b500, 249 115 22)); display: flex; flex-direction: column; gap: 1rem; }
+.pr-head { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .75rem; }
+.pr-head > .min-w-0 { flex: 1 1 14rem; min-width: 0; }
+.pr-h { font-weight: 900; font-size: 1.1rem; color: var(--text); }
+.pr-h4 { font-weight: 800; font-size: .85rem; color: var(--text); margin-top: .25rem; }
+.pr-sub { font-size: .75rem; color: var(--muted); margin-top: .15rem; }
+.pr-acts { display: flex; flex-wrap: wrap; gap: .4rem; margin-left: auto; }
+.pr-btn, .pr-back { padding: .5rem .8rem; border-radius: .7rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-weight: 700; font-size: .75rem; cursor: pointer; white-space: nowrap; }
+.pr-btn:hover, .pr-back:hover { border-color: var(--pr-accent); }
+.pr-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .6rem; }
+.pr-card { display: flex; gap: .75rem; align-items: flex-start; text-align: left; padding: .85rem; border-radius: .9rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); cursor: pointer; transition: border-color .15s, transform .15s; }
+.pr-card:hover { border-color: var(--pr-accent); transform: translateY(-1px); }
+.pr-card b { display: block; font-size: .85rem; }
+.pr-card span span { display: block; font-size: .72rem; color: var(--muted); margin-top: .15rem; line-height: 1.35; }
+.pr-card-i { font-size: 1.4rem; line-height: 1; flex-shrink: 0; }
+.pr-filters { display: flex; flex-wrap: wrap; gap: .6rem; padding: .7rem; border-radius: .9rem; background: var(--surface2); border: 1px solid var(--border); }
+.pr-filters:empty { display: none; }
+.pr-f { display: flex; flex-direction: column; gap: .2rem; font-size: .66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.pr-f select, .pr-f input { font-size: .8rem; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: .6rem; padding: .45rem .6rem; min-width: 9rem; max-width: 16rem; }
+.pr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .6rem; }
+.pr-kpi { padding: .7rem .8rem; border-radius: .9rem; border: 1px solid var(--border); background: var(--surface2); }
+.pr-kpi-v { font-size: 1.25rem; font-weight: 900; color: var(--text); line-height: 1.15; word-break: break-word; }
+.pr-kpi-l { font-size: .68rem; color: var(--muted); margin-top: .15rem; }
+.pr-chart { padding: .7rem; border-radius: .9rem; border: 1px solid var(--border); background: var(--surface); }
+.pr-cap { font-size: .7rem; font-weight: 800; color: var(--muted); margin-bottom: .3rem; }
+.pr-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: .7rem; }
+.pr-svg { width: 100%; height: auto; display: block; }
+.pr-svg .pr-grid { stroke: var(--border); stroke-width: 1; }
+.pr-svg .pr-ax { font-size: 11px; fill: var(--muted); font-family: inherit; }
+.pr-legend { display: flex; flex-wrap: wrap; gap: .3rem .9rem; font-size: .72rem; color: var(--text); margin-top: .35rem; }
+.pr-legend i { display: inline-block; width: .7rem; height: .7rem; border-radius: 3px; margin-right: .35rem; vertical-align: -1px; }
+.pr-bars { display: flex; flex-direction: column; gap: .35rem; }
+.pr-bar-row { display: grid; grid-template-columns: minmax(6rem, 14rem) 1fr 3.5rem; align-items: center; gap: .5rem; font-size: .75rem; }
+.pr-bar-l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-weight: 600; }
+.pr-bar-t { height: .8rem; border-radius: 999px; background: var(--surface2); overflow: hidden; }
+.pr-bar-f { display: block; height: 100%; border-radius: 999px; }
+.pr-bar-v { text-align: right; font-weight: 800; color: var(--text); }
+.pr-tbl-wrap { overflow: auto; max-height: 70vh; border-radius: .9rem; border: 1px solid var(--border); }
+.pr-tbl { width: 100%; border-collapse: collapse; font-size: .75rem; }
+.pr-tbl th { position: sticky; top: 0; background: var(--surface2); text-align: left; font-size: .66rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: .5rem .6rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.pr-tbl td { padding: .45rem .6rem; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+.pr-tbl .num { text-align: right; white-space: nowrap; }
+.pr-tbl tr.pr-late td { background: rgba(220, 38, 38, .07); }
+.pr-empty { padding: 1.2rem; text-align: center; color: var(--faint); font-style: italic; font-size: .78rem; }
+.pr-note { font-size: .7rem; color: var(--faint); margin-top: .35rem; }
+.pr-dot { display: inline-block; width: .55rem; height: .55rem; border-radius: 999px; margin-right: .4rem; vertical-align: 1px; }
+.pr-mono { font-family: ui-monospace, Menlo, Consolas, monospace; }
+.pr-faint { color: var(--faint); }
+.pr-station { font-size: .9rem; color: var(--text); }
+.pr-station span { color: var(--muted); font-size: .75rem; }
+.pr-lims { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: .7rem; }
+.pr-lim { padding: .7rem; border-radius: .9rem; border: 1px solid var(--border); background: var(--surface); }
+.pr-lim-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .4rem; font-size: .8rem; color: var(--text); margin-bottom: .3rem; }
+.pr-chip { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .68rem; font-weight: 800; }
+.pr-chip.red { background: rgba(220, 38, 38, .14); color: #dc2626; }
+.pr-chip.amber { background: rgba(217, 119, 6, .16); color: #b45309; }
+.pr-chip.green { background: rgba(22, 163, 74, .14); color: #15803d; }
+@media (max-width: 639px) { .pr-bar-row { grid-template-columns: minmax(5rem, 8rem) 1fr 2.8rem; } .pr-acts { margin-left: 0; } }
+@media print {
+    body.pr-printing * { visibility: hidden !important; }
+    body.pr-printing .pr-printing-this, body.pr-printing .pr-printing-this * { visibility: visible !important; }
+    body.pr-printing .pr-printing-this { position: absolute; left: 0; top: 0; width: 100%; color: #000; }
+    body.pr-printing .pr-printing-this .pr-acts, body.pr-printing .pr-printing-this .pr-back, body.pr-printing .pr-printing-this .pr-filters { display: none !important; }
+    body.pr-printing .pr-tbl-wrap { max-height: none; overflow: visible; }
+}
+/* PESTIS-REPORTS-CSS:END */
 
 
         /* the Admin site */
@@ -1004,6 +1093,25 @@
                 </div>
             </section>
 
+            <section data-admin-tab="limits" class="hidden card p-5 sm:p-6 space-y-4">
+                <div><h3 class="font-black t-strong">Critical limits</h3>
+                    <p class="text-xs t-muted mt-1">For flying insect control and crawling insect monitoring. Each site has its own limits: give a limit a name, then list the pests it watches and how many captures a month are allowed. Insect stations are put on a limit when they're set up (or tick them here). If a technician records more than the limit in a month, they must add a recommendation, the client is alerted and it's highlighted on the service report.</p></div>
+                <div class="flex flex-wrap items-end gap-2">
+                    <div><label class="lbl" for="limSite">Site</label><select id="limSite" class="field !w-auto !py-2 !text-sm min-w-[14rem]" onchange="loadAdminLimits()"></select></div>
+                    <button type="button" id="limAddBtn" class="btn btn-primary !py-2" onclick="editAdminLimit('new')">+ New critical limit</button>
+                </div>
+                <div id="limEditor"></div>
+                <div id="limList" class="space-y-3 text-xs"></div>
+            </section>
+
+            <section data-admin-tab="reports" class="hidden card p-5 sm:p-6 space-y-4">
+                <div class="flex flex-wrap items-end gap-2">
+                    <div><label class="lbl" for="repSite">Site</label><select id="repSite" class="field !w-auto !py-2 !text-sm min-w-[14rem]" onchange="loadAdminReports()"></select></div>
+                    <span id="repMsg" class="text-xs t-muted pb-2"></span>
+                </div>
+                <div id="adminReports"></div>
+            </section>
+
             <section data-admin-tab="lists" class="hidden card p-5 sm:p-6 space-y-4">
                 <div class="space-y-2">
                     <h4 class="eyebrow t-accent">Lists used in the station form</h4>
@@ -1040,10 +1148,12 @@
                     </div>
                     <div class="space-y-3">
                         <h4 class="eyebrow t-accent">Station Types</h4>
-                        <div class="admin-only flex gap-2">
-                            <input type="text" id="newStationTypeInput" placeholder="e.g. External Toxic Rodent Station" class="field" onkeydown="if(event.key==='Enter') addOption('station_type')">
+                        <div class="admin-only flex gap-2 items-center">
+                            <input type="text" id="newStationTypeInput" placeholder="e.g. External Toxic Rodent Station" class="field" oninput="guessTypeColor()" onkeydown="if(event.key==='Enter') addOption('station_type')">
+                            <label class="type-color-pick" title="The colour for this station type"><input type="color" id="newStationTypeColor" value="#f97316" oninput="this.dataset.picked = '1'" aria-label="Colour for the new station type"></label>
                             <button type="button" onclick="addOption('station_type')" class="btn btn-primary">Add</button>
                         </div>
+                        <p class="admin-only text-[11px] t-faint -mt-1">Pick the colour the new type shows in - on cards, the floor plans and reports. Tap a type's colour below to change it.</p>
                         <div id="stationTypeOptionsList" class="space-y-2 text-xs"></div>
                     </div>
                 </div>
@@ -1512,11 +1622,19 @@
 
         const OTHER_STATION_COLOR = { key: 'other', label: 'Other', color: '#f97316' };
 
-        function stationColor(type) {
+        function stationColorBase(type) {
             const t = String(type || '').toLowerCase();
             // a sighting register or inspection point is never treated as a rodent station
             for (const k of ['sighting', 'inspection']) { const c = STATION_COLORS.find(x => x.key === k); if (c.test(t)) return c; }
             return STATION_COLORS.find(c => c.test(t)) || OTHER_STATION_COLOR;
+        }
+
+        // the colour an admin picked for the station type (Admin -> Lists) wins; what the type *is* (rodent, flying...) stays
+        function stationColor(type) {
+            const base = stationColorBase(type);
+            const list = typeof appOptions !== 'undefined' && Array.isArray(appOptions) ? appOptions : [];
+            const o = list.find(x => x.kind === 'station_type' && x.color && String(x.label).toLowerCase() === String(type || '').toLowerCase());
+            return o && /^#[0-9a-f]{6}$/i.test(o.color) ? Object.assign({}, base, { color: o.color, label: o.label }) : base;
         }
 
         function typeDot(type, size) {
@@ -2134,7 +2252,7 @@
         const LIST_TABLES = { prep: 'preparations', species: 'species', station_type: 'station_types' };
 
         // extra details kept with list items: a preparation's safety data sheet, a pest's category, picture and guide
-        const LIST_EXTRA_COLS = { prep: ['sds_path', 'sds_name', 'sds_expires', 'sds_updated_at', 'sds_updated_by'], species: ['category', 'subcategory', 'photo_path', 'photo_source', 'gallery', 'about', 'breeding', 'control', 'updated_at', 'updated_by'] };
+        const LIST_EXTRA_COLS = { prep: ['sds_path', 'sds_name', 'sds_expires', 'sds_updated_at', 'sds_updated_by'], species: ['category', 'subcategory', 'photo_path', 'photo_source', 'gallery', 'about', 'breeding', 'control', 'updated_at', 'updated_by'], station_type: ['color'] };
 
         const PEST_CATEGORIES = ['Rodents', 'Crawling insects', 'Flying insects', 'Stored product pests', 'Birds', 'Other pests'];
 
@@ -2744,8 +2862,370 @@
         //  THE ADMIN PAGES
         // ===================================================================
 
+/* PESTIS-REPORTS:BEGIN - shared reports (identical in the Client Portal and Admin; edit reports_shared.js and run sync_reports.py) */
+// ===================================================================
+//  REPORTS: one report per job, each with only the filters it needs, a chart and a table,
+//  and Download (CSV for Excel) / Print (or save as PDF) on every one.
+//  PR.build(raw) turns a site's records into one shape; PR.render(box, data, opts) draws the reports.
+// ===================================================================
+const PR = (() => {
+    const NONE_P = 'None - Monitoring Only', NONE_S = 'None';
+    const META = new Set(['SITE_VISIT_SUMMARY', 'REC_UPDATE', 'SITE_MAP', 'MAP_PIN', 'BARCODE_CHANGE', 'SITE_CHANGE']);
+    const e = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const parse = p => { if (typeof p === 'string') { try { return JSON.parse(p); } catch (x) { return {}; } } return p || {}; };
+    const DAY = 86400000;
+    const LOC = 'en-NZ';
+    const fmtD = t => t ? new Date(t).toLocaleDateString(LOC, { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+    const fmtDT = t => t ? new Date(t).toLocaleString(LOC, { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '-';
+    const monthKey = t => { const d = new Date(t); return d.getFullYear() * 12 + d.getMonth(); };
+    const monthStart = k => new Date(Math.floor(k / 12), k % 12, 1).getTime();
+    const monthLbl = k => new Date(Math.floor(k / 12), k % 12, 1).toLocaleDateString(LOC, { month: 'short', year: '2-digit' });
+    const monthLong = k => new Date(Math.floor(k / 12), k % 12, 1).toLocaleDateString(LOC, { month: 'long', year: 'numeric' });
+    const pestKey = p => String(p || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/ies$/, 'y').replace(/([^s])s$/, '$1');
+    const PALETTE = ['#2563eb', '#ea580c', '#16a34a', '#9333ea', '#dc2626', '#0891b2', '#ca8a04', '#db2777', '#64748b'];
+    const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+    // ---------- the data, in one shape ----------
+    function build(raw) {
+        const logs = raw.logs || [];
+        const superseded = new Set(logs.map(r => parse(r.payload).supersedes).filter(Boolean));
+        const maps = new Map((raw.maps || []).filter(m => !m.deleted).map(m => [String(m.id), m.name || 'Floor plan']));
+        const st = new Map();
+        (raw.stations || []).forEach(s => st.set(s.barcode, { barcode: s.barcode, name: s.name || s.barcode, type: s.type || '', map: maps.get(String(s.map_id)) || '', limitId: s.limit_id || '', entries: [], table: true }));
+        const entries = [];
+        logs.forEach(r => {
+            const p = parse(r.payload);
+            if (META.has(r.barcode_id) || p.recOnly) return;
+            const key = p.clientRef || (r.barcode_id + '@' + r.created_at);
+            if (superseded.has(key)) return;
+            const at = Date.parse(p.servicedAt) || Date.parse(r.created_at);
+            if (isNaN(at)) return;
+            const species = p.speciesCaught && p.speciesCaught !== NONE_S ? p.speciesCaught : '';
+            const prep = p.prepUsed && p.prepUsed !== NONE_P ? p.prepUsed : '';
+            let s = st.get(r.barcode_id);
+            if (!s) { s = { barcode: r.barcode_id, name: p.locationName || r.barcode_id, type: p.deviceType || '', map: '', limitId: '', entries: [] }; st.set(r.barcode_id, s); }
+            if (!s.table) { s.name = p.locationName || s.name; s.type = p.deviceType || s.type; }
+            const en = { at, barcode: r.barcode_id, stationObj: s, activity: p.activityLevel || 'None', species, count: species ? (Number(p.pestCount) > 0 ? Number(p.pestCount) : 1) : 0,
+                prep, qty: prep && p.quantity != null && !isNaN(p.quantity) ? Number(p.quantity) : null, unit: prep ? (p.quantityUnit || 'each') : '', batch: prep ? (p.batchNumber || '') : '',
+                tech: p.technician || '', notes: p.notes || '' };
+            entries.push(en); s.entries.push(en);
+        });
+        entries.sort((a, b) => a.at - b.at);
+        entries.forEach(en => { en.station = en.stationObj.name; en.type = en.stationObj.type; en.map = en.stationObj.map; });
+        const stations = Array.from(st.values()).map(s => { s.entries.sort((a, b) => a.at - b.at); const last = s.entries[s.entries.length - 1]; return Object.assign(s, { last: last || null, lastAt: last ? last.at : null }); })
+            .sort((a, b) => String(a.name).localeCompare(String(b.name), undefined, { numeric: true, sensitivity: 'base' }));
+        const visits = (raw.visits || []).map(v => {
+            const start = Date.parse(v.signed_in_at || v.started_at) || null, end = Date.parse(v.signed_out_at || v.completed_at) || Date.parse(v.created_at) || null;
+            return { start, end, at: end || start, type: v.visit_type || 'Routine Service', tech: v.technician || '' };
+        }).filter(v => v.at).sort((a, b) => a.at - b.at);
+        let vi = 0;
+        visits.forEach(v => { v.n = 0; });
+        entries.forEach(en => { while (vi < visits.length && en.at > visits[vi].at + 5 * 60000) vi++; if (vi < visits.length) visits[vi].n++; });
+        const recs = (raw.recs || []).map(r => {
+            const s = st.get(r.station_barcode);
+            return { no: r.rec_no, station: (s && s.name) || r.station_name || r.station_barcode || 'Site', text: r.text || '', category: r.category || 'Other',
+                status: r.status === 'new' ? 'open' : (r.status || 'open'), raisedAt: Date.parse(r.raised_at || r.created_at) || null, completedAt: Date.parse(r.completed_at) || null };
+        }).filter(r => r.raisedAt);
+        const limits = (raw.limits || []).filter(l => !l.deleted).map(l => {
+            let rules = l.rules; if (typeof rules === 'string') { try { rules = JSON.parse(rules); } catch (x) { rules = []; } }
+            return { id: String(l.id), name: l.name || 'Critical limit', rules: (Array.isArray(rules) ? rules : []).filter(x => x && x.species).map(x => ({ species: String(x.species), max: Number(x.max) || 0 })) };
+        }).sort((a, b) => a.name.localeCompare(b.name));
+        return { site: raw.siteName || '', entries, stations, visits, recs, limits };
+    }
+
+    // ---------- the reports ----------
+    const REPORTS = [
+        { id: 'trend', icon: '📈', title: 'Pest activity over time', blurb: 'Captures each month, one line per pest - is it going up or down?', f: ['period', 'type', 'pest'] },
+        { id: 'pests', icon: '🐞', title: 'Pests found', blurb: 'Which pests, how many, and the change from the period before.', f: ['period', 'type'] },
+        { id: 'stations', icon: '📍', title: 'Busiest stations', blurb: 'The stations catching the most - where to focus.', f: ['period', 'type', 'pest'] },
+        { id: 'station', icon: '🔎', title: 'One station', blurb: 'A single station: month by month, and every visit to it.', f: ['period', 'station'] },
+        { id: 'scanned', icon: '✅', title: 'Last scanned', blurb: 'Every station and when it was last checked - spot any missed.', f: ['type', 'map', 'gap'] },
+        { id: 'preps', icon: '🧪', title: 'Preparations used', blurb: 'What was used on which station, how much, and the batch numbers.', f: ['period', 'prep', 'station', 'batch'] },
+        { id: 'limits', icon: '⚠️', title: 'Critical limits', blurb: 'Monthly captures against each critical limit, and any breaches.', f: ['months'] },
+        { id: 'recs', icon: '📋', title: 'Recommendations', blurb: 'Raised and completed, by type, and how long they took.', f: ['period'] },
+        { id: 'visits', icon: '🗓️', title: 'Service visits', blurb: 'Visits each month, the technician and the time on site.', f: ['period', 'tech'] }
+    ];
+    const PRESETS = [['30d', 'Last 30 days'], ['3m', 'Last 3 months'], ['12m', 'Last 12 months'], ['ytd', 'This year'], ['ly', 'Last year'], ['all', 'All time'], ['custom', 'Choose dates']];
+    function range(s) {
+        const now = new Date(), end = Date.now() + 60000;
+        if (s.preset === '30d') return [end - 30 * DAY, end];
+        if (s.preset === '3m') return [new Date(now.getFullYear(), now.getMonth() - 2, 1).getTime(), end];
+        if (s.preset === '12m') return [new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime(), end];
+        if (s.preset === 'ytd') return [new Date(now.getFullYear(), 0, 1).getTime(), end];
+        if (s.preset === 'ly') return [new Date(now.getFullYear() - 1, 0, 1).getTime(), new Date(now.getFullYear(), 0, 1).getTime()];
+        if (s.preset === 'custom') return [s.from ? Date.parse(s.from + 'T00:00:00') : 0, s.to ? Date.parse(s.to + 'T23:59:59') : end];
+        return [0, end];
+    }
+    const rangeText = s => { const [a, b] = range(s); return s.preset === 'all' ? 'All time' : `${fmtD(a)} - ${fmtD(Math.min(b, Date.now()))}`; };
+    const months = (a, b) => { const out = []; for (let k = monthKey(a); k <= monthKey(Math.min(b, Date.now())); k++) out.push(k); return out; };
+
+    // ---------- small SVG charts ----------
+    function lineChart(series, keys, opts) {
+        opts = opts || {};
+        const W = 760, H = 260, pl = 40, pr = 12, pt = 14, pb = 34;
+        const max = Math.max(1, ...series.flatMap(s => s.vals), opts.limit || 0);
+        const n = keys.length, x = i => pl + (n <= 1 ? (W - pl - pr) / 2 : i * (W - pl - pr) / (n - 1)), y = v => pt + (H - pt - pb) * (1 - v / max);
+        const ticks = [0, .25, .5, .75, 1].map(f => Math.round(max * f));
+        const every = Math.ceil(n / 12);
+        return `<svg viewBox="0 0 ${W} ${H}" class="pr-svg" role="img" aria-label="${e(opts.label || 'Chart')}">
+            ${ticks.map(t => `<line x1="${pl}" x2="${W - pr}" y1="${y(t)}" y2="${y(t)}" class="pr-grid"/><text x="${pl - 6}" y="${y(t) + 4}" text-anchor="end" class="pr-ax">${t}</text>`).join('')}
+            ${keys.map((k, i) => i % every === 0 || i === n - 1 ? `<text x="${x(i)}" y="${H - 12}" text-anchor="${n > 1 && i === n - 1 ? 'end' : i === 0 && n > 1 ? 'start' : 'middle'}" class="pr-ax">${e(opts.lbl ? opts.lbl(k) : k)}</text>` : '').join('')}
+            ${opts.limit != null ? `<line x1="${pl}" x2="${W - pr}" y1="${y(opts.limit)}" y2="${y(opts.limit)}" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 5"/><text x="${W - pr}" y="${y(opts.limit) - 5}" text-anchor="end" class="pr-ax" fill="#dc2626">Limit ${opts.limit}</text>` : ''}
+            ${series.map(s => `<polyline fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="${s.vals.map((v, i) => `${x(i)},${y(v)}`).join(' ')}"/>
+                ${s.vals.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="${opts.limit != null && v > opts.limit ? 5 : 3.2}" fill="${opts.limit != null && v > opts.limit ? '#dc2626' : s.color}"><title>${e(s.name)} · ${e(opts.lbl ? opts.lbl(keys[i]) : keys[i])}: ${v}</title></circle>`).join('')}`).join('')}
+        </svg>${series.length > 1 ? `<div class="pr-legend">${series.map(s => `<span><i style="background:${s.color}"></i>${e(s.name)}</span>`).join('')}</div>` : ''}`;
+    }
+    function barChart(rows, opts) {
+        opts = opts || {};
+        const max = Math.max(1, ...rows.map(r => r.v));
+        return `<div class="pr-bars">${rows.map(r => `<div class="pr-bar-row"><span class="pr-bar-l" title="${e(r.l)}">${e(r.l)}</span><span class="pr-bar-t"><span class="pr-bar-f" style="width:${Math.max(1.5, r.v / max * 100)}%;background:${r.c || 'var(--pr-accent)'}"></span></span><span class="pr-bar-v">${e(opts.fmt ? opts.fmt(r.v) : r.v)}</span></div>`).join('') || '<div class="pr-empty">Nothing to show for this choice.</div>'}</div>`;
+    }
+    function colBars(vals, keys, opts) {
+        opts = opts || {};
+        const W = 760, H = 220, pl = 36, pb = 30, pt = 10, n = keys.length, max = Math.max(1, ...vals), bw = (W - pl - 8) / Math.max(1, n);
+        const every = Math.ceil(n / 12);
+        return `<svg viewBox="0 0 ${W} ${H}" class="pr-svg" role="img" aria-label="${e(opts.label || 'Chart')}">
+            ${[0, .5, 1].map(f => { const v = Math.round(max * f), yy = pt + (H - pt - pb) * (1 - f); return `<line x1="${pl}" x2="${W - 8}" y1="${yy}" y2="${yy}" class="pr-grid"/><text x="${pl - 5}" y="${yy + 4}" text-anchor="end" class="pr-ax">${v}</text>`; }).join('')}
+            ${vals.map((v, i) => { const h = (H - pt - pb) * v / max; return `<rect x="${pl + i * bw + 3}" y="${H - pb - h}" width="${Math.max(2, bw - 6)}" height="${h}" rx="3" fill="${opts.color || 'var(--pr-accent)'}"><title>${e(opts.lbl ? opts.lbl(keys[i]) : keys[i])}: ${v}</title></rect>${i % every === 0 ? `<text x="${pl + i * bw + bw / 2}" y="${H - 10}" text-anchor="middle" class="pr-ax">${e(opts.lbl ? opts.lbl(keys[i]) : keys[i])}</text>` : ''}`; }).join('')}
+        </svg>`;
+    }
+    const table = (head, rows, opts) => `<div class="pr-tbl-wrap"><table class="pr-tbl"><thead><tr>${head.map(h => `<th class="${h.num ? 'num' : ''}">${e(h.t)}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map(r => `<tr${r._cls ? ` class="${r._cls}"` : ''}>${r.cells.map((c, i) => `<td class="${head[i] && head[i].num ? 'num' : ''}">${c}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${head.length}" class="pr-empty">${e((opts && opts.empty) || 'No records for this choice.')}</td></tr>`}</tbody></table></div>`;
+    const kpis = list => `<div class="pr-kpis">${list.map(k => `<div class="pr-kpi"><div class="pr-kpi-v" ${k.c ? `style="color:${k.c}"` : ''}>${e(k.v)}</div><div class="pr-kpi-l">${e(k.l)}</div></div>`).join('')}</div>`;
+
+    // ---------- state and drawing ----------
+    const ST = new WeakMap();
+    function render(box, data, opts) {
+        opts = opts || {};
+        let s = ST.get(box);
+        if (!s) { s = { report: null, preset: '12m', from: '', to: '', type: '', pest: '', station: '', map: '', prep: '', batch: '', tech: '', gap: '35', month: monthKey(Date.now()) }; ST.set(box, s); }
+        box._pr = { data, opts };
+        draw(box);
+    }
+    function set(btn, k, v) { const box = btn.closest('.pr-root').parentElement, s = ST.get(box); if (!s) return; s[k] = v; if (k === 'report') window.scrollTo && box.scrollIntoView && box.scrollIntoView({ block: 'start', behavior: 'smooth' }); draw(box); }
+    function draw(box) {
+        const s = ST.get(box), { data, opts } = box._pr;
+        if (!s.report) {
+            box.innerHTML = `<div class="pr-root"><div class="pr-head"><div><h3 class="pr-h">Reports</h3><p class="pr-sub">Pick a report. Each one has just the filters it needs, and every report can be downloaded for Excel or printed / saved as a PDF.</p></div></div>
+                <div class="pr-pick">${REPORTS.map(r => `<button type="button" class="pr-card" onclick="PR.set(this, 'report', '${r.id}')"><span class="pr-card-i">${r.icon}</span><span><b>${e(r.title)}</b><span>${e(r.blurb)}</span></span></button>`).join('')}</div></div>`;
+            return;
+        }
+        const R = REPORTS.find(r => r.id === s.report);
+        const out = BUILD[R.id](data, s, opts);
+        box._pr.csv = out.csv;
+        box.innerHTML = `<div class="pr-root pr-print">
+            <div class="pr-head"><button type="button" class="pr-back" onclick="PR.set(this, 'report', null)">‹ All reports</button>
+                <div class="min-w-0"><h3 class="pr-h">${R.icon} ${e(R.title)}</h3><p class="pr-sub">${e(data.site)}${R.f.includes('period') ? ' · ' + e(rangeText(s)) : ''}</p></div>
+                <div class="pr-acts"><button type="button" class="pr-btn" onclick="PR.download(this)">⬇ Download (Excel)</button><button type="button" class="pr-btn" onclick="PR.print(this)">🖨 Print / PDF</button></div></div>
+            <div class="pr-filters">${filtersHtml(R, data, s)}</div>
+            ${out.html}</div>`;
+    }
+    function opt(v, l, cur) { return `<option value="${e(v)}" ${String(cur) === String(v) ? 'selected' : ''}>${e(l)}</option>`; }
+    function filtersHtml(R, d, s) {
+        const sel = (k, label, list, all) => `<label class="pr-f"><span>${e(label)}</span><select onchange="PR.set(this, '${k}', this.value)">${all ? opt('', all, s[k]) : ''}${list.map(x => Array.isArray(x) ? opt(x[0], x[1], s[k]) : opt(x, x, s[k])).join('')}</select></label>`;
+        const uniq = a => Array.from(new Set(a.filter(Boolean))).sort((x, y) => String(x).localeCompare(String(y), undefined, { numeric: true, sensitivity: 'base' }));
+        const parts = [];
+        R.f.forEach(f => {
+            if (f === 'period') {
+                parts.push(sel('preset', 'Period', PRESETS));
+                if (s.preset === 'custom') parts.push(`<label class="pr-f"><span>From</span><input type="date" value="${e(s.from)}" onchange="PR.set(this, 'from', this.value)"></label><label class="pr-f"><span>To</span><input type="date" value="${e(s.to)}" onchange="PR.set(this, 'to', this.value)"></label>`);
+            }
+            if (f === 'type') parts.push(sel('type', 'Station type', uniq(d.stations.map(x => x.type)), 'All types'));
+            if (f === 'pest') parts.push(sel('pest', 'Pest', uniq(d.entries.map(x => x.species)), 'All pests'));
+            if (f === 'map') parts.push(sel('map', 'Floor plan', uniq(d.stations.map(x => x.map)), 'All floor plans'));
+            if (f === 'prep') parts.push(sel('prep', 'Preparation', uniq(d.entries.map(x => x.prep)), 'All preparations'));
+            if (f === 'tech') parts.push(sel('tech', 'Technician', uniq(d.visits.map(x => x.tech).concat(d.entries.map(x => x.tech))), 'Everyone'));
+            if (f === 'station') parts.push(sel('station', 'Station', d.stations.map(x => [x.barcode, x.name]), R.id === 'station' ? '' : 'All stations'));
+            if (f === 'batch') parts.push(`<label class="pr-f"><span>Batch number</span><input type="search" value="${e(s.batch)}" placeholder="Any" onchange="PR.set(this, 'batch', this.value.trim())"></label>`);
+            if (f === 'gap') parts.push(sel('gap', 'Flag stations not scanned for', [['14', '2 weeks'], ['35', '5 weeks'], ['60', '2 months'], ['95', '3 months']]));
+            if (f === 'months') parts.push(sel('month', 'Month', months(Date.now() - 365 * DAY, Date.now()).reverse().map(k => [k, monthLong(k)])));
+        });
+        return parts.join('');
+    }
+    // the records a report looks at
+    function pick(d, s, extra) {
+        const [a, b] = range(s);
+        return d.entries.filter(x => x.at >= a && x.at <= b && (!s.type || x.type === s.type) && (!extra || extra(x)));
+    }
+    const color = (opts, type) => (opts.colorOf ? opts.colorOf(type) : null) || '#64748b';
+    const dot = (opts, type) => `<span class="pr-dot" style="background:${color(opts, type)}"></span>`;
+
+    const BUILD = {
+        trend(d, s) {
+            const [a, b] = range(s), list = pick(d, s, x => x.species && (!s.pest || x.species === s.pest));
+            const ks = months(a || (d.entries[0] ? d.entries[0].at : Date.now()), b);
+            const tot = new Map(); list.forEach(x => tot.set(x.species, (tot.get(x.species) || 0) + x.count));
+            const top = Array.from(tot.entries()).sort((p, q) => q[1] - p[1]);
+            const named = top.slice(0, 6).map(p => p[0]), rest = top.slice(6).map(p => p[0]);
+            const series = named.map((sp, i) => ({ name: sp, color: PALETTE[i], vals: ks.map(k => list.filter(x => x.species === sp && monthKey(x.at) === k).reduce((n, x) => n + x.count, 0)) }));
+            if (rest.length) series.push({ name: `Other (${rest.length})`, color: PALETTE[8], vals: ks.map(k => list.filter(x => rest.includes(x.species) && monthKey(x.at) === k).reduce((n, x) => n + x.count, 0)) });
+            const totals = ks.map(k => list.filter(x => monthKey(x.at) === k).reduce((n, x) => n + x.count, 0));
+            const half = Math.floor(ks.length / 2), first = totals.slice(0, half).reduce((p, q) => p + q, 0), second = totals.slice(half).reduce((p, q) => p + q, 0);
+            const dir = !first && !second ? 'No captures' : second > first * 1.15 ? 'Going up' : second < first * 0.85 ? 'Going down' : 'Steady';
+            const head = [{ t: 'Month' }].concat(series.map(x => ({ t: x.name, num: true })), [{ t: 'Total', num: true }]);
+            const rows = ks.map((k, i) => ({ cells: [e(monthLong(k))].concat(series.map(x => x.vals[i] || ''), [`<b>${totals[i]}</b>`]) })).reverse();
+            return {
+                html: kpis([{ v: list.reduce((n, x) => n + x.count, 0), l: 'captures' }, { v: tot.size, l: 'pests' }, { v: dir, l: 'trend (second half vs first)', c: dir === 'Going up' ? '#dc2626' : dir === 'Going down' ? '#16a34a' : '' }])
+                    + `<div class="pr-chart">${series.length ? lineChart(series, ks, { lbl: monthLbl, label: 'Captures per month' }) : '<div class="pr-empty">No pests were caught in this period.</div>'}</div>` + table(head, rows),
+                csv: [head.map(h => h.t)].concat(ks.map((k, i) => [monthLong(k)].concat(series.map(x => x.vals[i]), [totals[i]])))
+            };
+        },
+        pests(d, s) {
+            const [a, b] = range(s), list = pick(d, s, x => x.species);
+            const prevS = Object.assign({}, s, { preset: 'custom', from: new Date(a - (b - a)).toISOString().slice(0, 10), to: new Date(a - DAY).toISOString().slice(0, 10) });
+            const prev = s.preset === 'all' ? [] : pick(d, prevS, x => x.species);
+            const tot = new Map(), ptot = new Map(), sts = new Map();
+            list.forEach(x => { tot.set(x.species, (tot.get(x.species) || 0) + x.count); const k = sts.get(x.species) || new Set(); k.add(x.barcode); sts.set(x.species, k); });
+            prev.forEach(x => ptot.set(x.species, (ptot.get(x.species) || 0) + x.count));
+            const all = list.reduce((n, x) => n + x.count, 0);
+            const rows = Array.from(tot.entries()).sort((p, q) => q[1] - p[1]);
+            const chg = (now, before) => before ? `${now >= before ? '+' : ''}${Math.round((now - before) / before * 100)}%` : now ? 'new' : '';
+            const head = [{ t: 'Pest' }, { t: 'Captures', num: true }, { t: 'Share', num: true }, { t: 'Stations', num: true }, { t: 'Period before', num: true }, { t: 'Change', num: true }];
+            return {
+                html: kpis([{ v: all, l: 'captures' }, { v: rows.length, l: 'different pests' }, { v: rows[0] ? rows[0][0] : '-', l: 'most common' }])
+                    + `<div class="pr-chart">${barChart(rows.map(([sp, n], i) => ({ l: sp, v: n, c: PALETTE[i % 8] })))}</div>`
+                    + table(head, rows.map(([sp, n]) => ({ cells: [e(sp), n, all ? Math.round(n / all * 100) + '%' : '', sts.get(sp).size, s.preset === 'all' ? '-' : (ptot.get(sp) || 0), s.preset === 'all' ? '' : chg(n, ptot.get(sp) || 0)] }))),
+                csv: [head.map(h => h.t)].concat(rows.map(([sp, n]) => [sp, n, all ? Math.round(n / all * 100) + '%' : '', sts.get(sp).size, ptot.get(sp) || 0, chg(n, ptot.get(sp) || 0)]))
+            };
+        },
+        stations(d, s, opts) {
+            const list = pick(d, s, x => x.species && (!s.pest || x.species === s.pest));
+            const by = new Map();
+            list.forEach(x => { const o = by.get(x.barcode) || { st: x.stationObj, n: 0, recs: 0, last: 0, pests: new Map() }; o.n += x.count; o.recs++; o.last = Math.max(o.last, x.at); o.pests.set(x.species, (o.pests.get(x.species) || 0) + x.count); by.set(x.barcode, o); });
+            const rows = Array.from(by.values()).sort((p, q) => q.n - p.n);
+            const head = [{ t: 'Station' }, { t: 'Type' }, { t: 'Floor plan' }, { t: 'Captures', num: true }, { t: 'Times with pests', num: true }, { t: 'Main pest' }, { t: 'Last found' }];
+            const main = o => Array.from(o.pests.entries()).sort((p, q) => q[1] - p[1])[0][0];
+            return {
+                html: kpis([{ v: rows.length, l: 'stations with pests' }, { v: list.reduce((n, x) => n + x.count, 0), l: 'captures' }, { v: rows[0] ? rows[0].st.name : '-', l: 'busiest station' }])
+                    + `<div class="pr-chart">${barChart(rows.slice(0, 15).map(o => ({ l: o.st.name, v: o.n, c: color(opts, o.st.type) })))}${rows.length > 15 ? `<p class="pr-note">The top 15 are charted; all ${rows.length} are in the table.</p>` : ''}</div>`
+                    + table(head, rows.map(o => ({ cells: [`${dot(opts, o.st.type)}<b>${e(o.st.name)}</b>`, e(o.st.type), e(o.st.map || '-'), o.n, o.recs, e(main(o)), e(fmtD(o.last))] }))),
+                csv: [head.map(h => h.t)].concat(rows.map(o => [o.st.name, o.st.type, o.st.map, o.n, o.recs, main(o), fmtD(o.last)]))
+            };
+        },
+        station(d, s, opts) {
+            if (!s.station || !d.stations.some(x => x.barcode === s.station)) s.station = d.stations[0] ? d.stations[0].barcode : '';
+            const stn = d.stations.find(x => x.barcode === s.station);
+            if (!stn) return { html: '<div class="pr-empty">This site has no stations yet.</div>', csv: [] };
+            const [a, b] = range(s), list = stn.entries.filter(x => x.at >= a && x.at <= b);
+            const ks = months(a || (stn.entries[0] ? stn.entries[0].at : Date.now()), b);
+            const vals = ks.map(k => list.filter(x => monthKey(x.at) === k).reduce((n, x) => n + x.count, 0));
+            const head = [{ t: 'Date' }, { t: 'Activity' }, { t: 'Pest' }, { t: 'Number', num: true }, { t: 'Preparation' }, { t: 'Batch' }, { t: 'Technician' }, { t: 'Notes' }];
+            const rows = list.slice().reverse();
+            return {
+                html: `<div class="pr-station">${dot(opts, stn.type)}<b>${e(stn.name)}</b> <span>${e(stn.type)}${stn.map ? ' · 📍 ' + e(stn.map) : ''} · ${e(stn.barcode)}</span></div>`
+                    + kpis([{ v: list.length, l: 'checks' }, { v: list.reduce((n, x) => n + x.count, 0), l: 'captures' }, { v: stn.lastAt ? fmtD(stn.lastAt) : 'Never', l: 'last scanned' }])
+                    + `<div class="pr-chart">${colBars(vals, ks, { lbl: monthLbl, color: color(opts, stn.type), label: 'Captures per month' })}</div>`
+                    + table(head, rows.map(x => ({ cells: [e(fmtDT(x.at)), e(x.activity), e(x.species || '-'), x.count || '', e(x.prep || '-') + (x.qty != null ? ` <span class="pr-faint">${e(x.qty)} ${e(x.unit)}</span>` : ''), `<span class="pr-mono">${e(x.batch)}</span>`, e(x.tech), e(x.notes)] }))),
+                csv: [head.map(h => h.t)].concat(rows.map(x => [fmtDT(x.at), x.activity, x.species, x.count || '', x.prep, x.batch, x.tech, x.notes]))
+            };
+        },
+        scanned(d, s, opts) {
+            const gap = Number(s.gap) || 35, now = Date.now();
+            const list = d.stations.filter(x => (!s.type || x.type === s.type) && (!s.map || x.map === s.map))
+                .map(x => Object.assign({ days: x.lastAt ? Math.floor((now - x.lastAt) / DAY) : null }, { x })).sort((p, q) => (q.days == null ? 1e9 : q.days) - (p.days == null ? 1e9 : p.days));
+            const late = list.filter(o => o.days == null || o.days > gap);
+            const head = [{ t: 'Station' }, { t: 'Type' }, { t: 'Floor plan' }, { t: 'Last scanned' }, { t: 'Days ago', num: true }, { t: 'Last result' }, { t: 'By' }];
+            return {
+                html: kpis([{ v: list.length, l: 'stations' }, { v: list.length - late.length, l: `scanned in the last ${gap} days`, c: '#16a34a' }, { v: late.length, l: 'not scanned for longer', c: late.length ? '#dc2626' : '' }])
+                    + table(head, list.map(o => ({ _cls: o.days == null || o.days > gap ? 'pr-late' : '', cells: [`${dot(opts, o.x.type)}<b>${e(o.x.name)}</b>`, e(o.x.type), e(o.x.map || '-'), e(o.x.lastAt ? fmtD(o.x.lastAt) : 'Never'), o.days == null ? '-' : o.days, e(o.x.last ? (o.x.last.species ? `${o.x.last.species}${o.x.last.count ? ' ×' + o.x.last.count : ''}` : o.x.last.activity === 'None' ? 'No activity' : o.x.last.activity) : '-'), e(o.x.last ? o.x.last.tech : '')] }))),
+                csv: [head.map(h => h.t)].concat(list.map(o => [o.x.name, o.x.type, o.x.map, o.x.lastAt ? fmtD(o.x.lastAt) : 'Never', o.days == null ? '' : o.days, o.x.last ? (o.x.last.species || o.x.last.activity) : '', o.x.last ? o.x.last.tech : '']))
+            };
+        },
+        preps(d, s) {
+            const q = String(s.batch || '').toLowerCase();
+            const list = pick(d, s, x => x.prep && (!s.prep || x.prep === s.prep) && (!s.station || x.barcode === s.station) && (!q || String(x.batch).toLowerCase().includes(q))).reverse();
+            const byPrep = new Map();
+            list.forEach(x => { const k = x.prep + '|' + x.unit; const o = byPrep.get(k) || { prep: x.prep, unit: x.unit, qty: 0, n: 0, batches: new Set(), stations: new Set() }; o.qty += x.qty || 0; o.n++; if (x.batch) o.batches.add(x.batch); o.stations.add(x.barcode); byPrep.set(k, o); });
+            const sums = Array.from(byPrep.values()).sort((p, q2) => q2.n - p.n);
+            const head = [{ t: 'Date' }, { t: 'Station' }, { t: 'Preparation' }, { t: 'Batch' }, { t: 'Amount', num: true }, { t: 'Technician' }];
+            return {
+                html: kpis([{ v: list.length, l: 'times used' }, { v: sums.length, l: 'preparations' }, { v: new Set(list.map(x => x.batch).filter(Boolean)).size, l: 'batch numbers' }])
+                    + `<div class="pr-sum">${table([{ t: 'Preparation' }, { t: 'Times used', num: true }, { t: 'Total used', num: true }, { t: 'Stations', num: true }, { t: 'Batches' }], sums.map(o => ({ cells: [`<b>${e(o.prep)}</b>`, o.n, `${Math.round(o.qty * 100) / 100} ${e(o.unit)}`, o.stations.size, `<span class="pr-mono">${e(Array.from(o.batches).join(', ') || '-')}</span>`] })), { empty: 'No preparations were used in this period.' })}</div>`
+                    + table(head, list.map(x => ({ cells: [e(fmtDT(x.at)), e(x.station), e(x.prep), `<span class="pr-mono">${e(x.batch || '-')}</span>`, x.qty != null ? `${e(x.qty)} ${e(x.unit)}` : '', e(x.tech)] })), { empty: 'No preparations were used in this period.' }),
+                csv: [head.map(h => h.t)].concat(list.map(x => [fmtDT(x.at), x.station, x.prep, x.batch, x.qty != null ? x.qty : '', x.unit, x.tech]))
+            };
+        },
+        limits(d, s, opts) {
+            if (!d.limits.length) return { html: '<div class="pr-empty">No critical limits are set for this site.</div>', csv: [] };
+            const k = Number(s.month), ks = months(monthStart(k - 11), monthStart(k + 1) - 1).filter(x => x <= k);
+            const inLimit = l => new Set(d.stations.filter(x => String(x.limitId) === l.id).map(x => x.barcode));
+            const total = (l, rule, mk) => { const sts = inLimit(l); return d.entries.filter(x => sts.has(x.barcode) && monthKey(x.at) === mk && pestKey(x.species) === pestKey(rule.species)).reduce((n, x) => n + x.count, 0); };
+            const blocks = [], csv = [['Critical limit', 'Pest', 'Month', 'Captures', 'Limit', 'Over by']];
+            const breaches = [];
+            d.limits.forEach(l => l.rules.forEach(rule => {
+                const vals = ks.map(mk => total(l, rule, mk));
+                ks.forEach((mk, i) => { csv.push([l.name, rule.species, monthLong(mk), vals[i], rule.max, Math.max(0, vals[i] - rule.max)]); if (vals[i] > rule.max) breaches.push({ l, rule, mk, n: vals[i] }); });
+                const now = vals[vals.length - 1];
+                blocks.push(`<div class="pr-lim"><div class="pr-lim-h"><b>${e(l.name)} · ${e(rule.species)}</b><span class="pr-chip ${now > rule.max ? 'red' : now >= rule.max * .8 ? 'amber' : 'green'}">${monthLong(k)}: ${now} of ${rule.max}</span></div>${lineChart([{ name: rule.species, color: '#2563eb', vals }], ks, { lbl: monthLbl, limit: rule.max, label: `${l.name} ${rule.species}` })}<p class="pr-note">${plural(inLimit(l).size, 'station')} on this limit.</p></div>`);
+            }));
+            return {
+                html: kpis([{ v: d.limits.length, l: 'critical limits' }, { v: breaches.filter(x => x.mk === k).length, l: `breached in ${monthLong(k)}`, c: breaches.some(x => x.mk === k) ? '#dc2626' : '#16a34a' }, { v: breaches.length, l: 'breaches in the 12 months' }])
+                    + `<div class="pr-lims">${blocks.join('')}</div>`
+                    + `<h4 class="pr-h4">Breaches</h4>` + table([{ t: 'Month' }, { t: 'Critical limit' }, { t: 'Pest' }, { t: 'Captures', num: true }, { t: 'Limit', num: true }, { t: 'Over by', num: true }],
+                        breaches.sort((p, q) => q.mk - p.mk).map(b => ({ _cls: 'pr-late', cells: [e(monthLong(b.mk)), e(b.l.name), e(b.rule.species), b.n, b.rule.max, b.n - b.rule.max] })), { empty: 'No breaches - every limit was kept. 🎉' }),
+                csv
+            };
+        },
+        recs(d, s) {
+            const [a, b] = range(s), list = d.recs.filter(r => r.raisedAt >= a && r.raisedAt <= b);
+            const done = list.filter(r => r.status === 'complete' && r.completedAt);
+            const avg = done.length ? Math.round(done.reduce((n, r) => n + (r.completedAt - r.raisedAt) / DAY, 0) / done.length) : null;
+            const byCat = new Map(); list.forEach(r => byCat.set(r.category, (byCat.get(r.category) || 0) + 1));
+            const ks = months(a || (list.length ? Math.min(...list.map(r => r.raisedAt)) : Date.now()), b);
+            const head = [{ t: 'Number' }, { t: 'Raised' }, { t: 'Station' }, { t: 'Type' }, { t: 'Recommendation' }, { t: 'Status' }, { t: 'Days open', num: true }];
+            const no = r => r.no != null ? 'R-' + String(r.no).padStart(4, '0') : '';
+            const days = r => Math.max(0, Math.round(((r.completedAt || Date.now()) - r.raisedAt) / DAY));
+            return {
+                html: kpis([{ v: list.length, l: 'raised' }, { v: list.filter(r => r.status !== 'complete').length, l: 'still open or pending', c: '#ea580c' }, { v: done.length, l: 'completed', c: '#16a34a' }, { v: avg == null ? '-' : avg + ' days', l: 'average time to complete' }])
+                    + `<div class="pr-two"><div class="pr-chart"><div class="pr-cap">Raised each month</div>${colBars(ks.map(k => list.filter(r => monthKey(r.raisedAt) === k).length), ks, { lbl: monthLbl, label: 'Recommendations raised per month' })}</div><div class="pr-chart"><div class="pr-cap">By type</div>${barChart(Array.from(byCat.entries()).sort((p, q) => q[1] - p[1]).map(([c, n], i) => ({ l: c, v: n, c: PALETTE[i % 8] })))}</div></div>`
+                    + table(head, list.slice().sort((p, q) => q.raisedAt - p.raisedAt).map(r => ({ cells: [`<span class="pr-mono">${e(no(r))}</span>`, e(fmtD(r.raisedAt)), e(r.station), e(r.category), e(r.text), `<span class="pr-chip ${r.status === 'complete' ? 'green' : r.status === 'pending' ? 'amber' : 'red'}">${e(r.status === 'complete' ? 'Complete' : r.status === 'pending' ? 'Pending' : 'Open')}</span>`, days(r)] }))),
+                csv: [head.map(h => h.t)].concat(list.map(r => [no(r), fmtD(r.raisedAt), r.station, r.category, r.text, r.status, days(r)]))
+            };
+        },
+        visits(d, s) {
+            const [a, b] = range(s), list = d.visits.filter(v => v.at >= a && v.at <= b && (!s.tech || v.tech === s.tech));
+            const ks = months(a || (list[0] ? list[0].at : Date.now()), b);
+            const mins = v => v.start && v.end && v.end > v.start ? Math.round((v.end - v.start) / 60000) : null;
+            const timed = list.map(mins).filter(x => x != null);
+            const avg = timed.length ? Math.round(timed.reduce((p, q) => p + q, 0) / timed.length) : null;
+            const hm = m => m == null ? '-' : m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`;
+            const byTech = new Map(); list.forEach(v => byTech.set(v.tech || 'Not recorded', (byTech.get(v.tech || 'Not recorded') || 0) + 1));
+            const head = [{ t: 'Date' }, { t: 'Visit' }, { t: 'Technician' }, { t: 'Time on site', num: true }, { t: 'Stations checked', num: true }];
+            return {
+                html: kpis([{ v: list.length, l: 'visits' }, { v: hm(avg), l: 'average time on site' }, { v: byTech.size, l: 'technicians' }])
+                    + `<div class="pr-two"><div class="pr-chart"><div class="pr-cap">Visits each month</div>${colBars(ks.map(k => list.filter(v => monthKey(v.at) === k).length), ks, { lbl: monthLbl, label: 'Visits per month' })}</div><div class="pr-chart"><div class="pr-cap">By technician</div>${barChart(Array.from(byTech.entries()).sort((p, q) => q[1] - p[1]).map(([t, n], i) => ({ l: t, v: n, c: PALETTE[i % 8] })))}</div></div>`
+                    + table(head, list.slice().reverse().map(v => ({ cells: [e(fmtDT(v.at)), e(v.type), e(v.tech || '-'), e(hm(mins(v))), v.n] }))),
+                csv: [head.map(h => h.t)].concat(list.map(v => [fmtDT(v.at), v.type, v.tech, mins(v) == null ? '' : mins(v), v.n]))
+            };
+        }
+    };
+
+    // ---------- download and print ----------
+    function download(btn) {
+        const box = btn.closest('.pr-root').parentElement, s = ST.get(box), rows = (box._pr && box._pr.csv) || [];
+        const R = REPORTS.find(r => r.id === s.report);
+        const cell = v => { const t = String(v == null ? '' : v); return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+        const csv = '﻿' + [[box._pr.data.site + ' - ' + R.title], [R.f.includes('period') ? rangeText(s) : ''], []].concat(rows).map(r => r.map(cell).join(',')).join('\r\n');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+        a.download = `${box._pr.data.site || 'Site'} - ${R.title}.csv`.replace(/[\\/:*?"<>|]+/g, '-');
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+    }
+    function print(btn) {
+        const root = btn.closest('.pr-root');
+        document.body.classList.add('pr-printing');
+        root.classList.add('pr-printing-this');
+        const done = () => { document.body.classList.remove('pr-printing'); root.classList.remove('pr-printing-this'); window.removeEventListener('afterprint', done); };
+        window.addEventListener('afterprint', done);
+        window.print();
+        setTimeout(done, 1500);
+    }
+    return { build, render, set, download, print, REPORTS };
+})();
+/* PESTIS-REPORTS:END */
+
         // Tells index.html what loaded, and which version of the hook-up it was written for
-        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.22-a10', api: 0 };
+        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.22-a11', api: 0 };
 
         async function loadAdminPanel() {
             const profList = document.getElementById('adminProfilesList');
@@ -3202,7 +3682,7 @@
         // ===================================================================
         //  ADMIN PAGE: team-wide information and settings in one place (admins only)
         // ===================================================================
-        const ADMIN_TABS = [['overview', 'Overview'], ['team', 'Users'], ['clients', 'Client portal'], ['services', 'Services'], ['documents', 'Documents'], ['lists', 'Lists'], ['days', 'Day log'], ['activity', 'Activity'], ['exports', 'Exports']];
+        const ADMIN_TABS = [['overview', 'Overview'], ['team', 'Users'], ['clients', 'Client portal'], ['services', 'Services'], ['documents', 'Documents'], ['limits', 'Critical limits'], ['reports', 'Reports'], ['lists', 'Lists'], ['days', 'Day log'], ['activity', 'Activity'], ['exports', 'Exports']];
         let adminTab = 'overview';
         function openAdmin(tab) { setAdminTab(tab || adminTab); }
         function closeAdmin() {}
@@ -3225,6 +3705,8 @@
             else if (adminTab === 'clients') { loadClientAdmin(); renderSitesWithoutClients(); }
             else if (adminTab === 'services') renderAdminServices();
             else if (adminTab === 'documents') { renderAdminDocs(); adminDlFillSites(); }
+            else if (adminTab === 'limits') { adminSitePick('limSite'); loadAdminLimits(); }
+            else if (adminTab === 'reports') { adminSitePick('repSite'); loadAdminReports(); }
             else if (adminTab === 'lists') { document.getElementById('newPrepUnit').innerHTML = PREP_UNITS.map(([v, l]) => `<option value="${v}">${l}</option>`).join(''); renderSettingsLists(); if (isOnline) loadOptions(); }
             else if (adminTab === 'settings') renderTeamSettings();
             else if (adminTab === 'days') loadDayLog();
@@ -3417,6 +3899,160 @@
             await queueSiteChange({ client_id: d.client_id, action: 'document', title: `Document "${d.title}" removed`, detail: d.category });
             renderAdminDocs();
         }
+        // ---------- a site to work on (Critical limits, Reports) ----------
+        let adminSiteId = '';
+        function adminSitePick(id) {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            const sites = clientsData.slice().sort((a, b) => String(a.Name || '').localeCompare(String(b.Name || ''), undefined, { sensitivity: 'base' }));
+            sel.innerHTML = '<option value="">Choose a site...</option>' + sites.map(c => `<option value="${esc(String(c.id))}">${esc(c.Name || 'Unnamed site')}</option>`).join('');
+            if (!adminSiteId && sites.length === 1) adminSiteId = String(sites[0].id);
+            sel.value = adminSiteId;
+        }
+        async function adminFetchAll(table, cid, cols) {
+            let out = [];
+            for (let from = 0; from < 200000; from += 1000) {
+                const { data, error } = await _supabase.from(table).select(cols || '*').eq('client_id', String(cid)).range(from, from + 999);
+                if (error) throw error;
+                out = out.concat(data || []);
+                if (!data || data.length < 1000) break;
+            }
+            return out;
+        }
+
+        // ---------- Critical limits (each site's own) ----------
+        const LIM_INSECT = t => /insect|fly|flies|flying|crawl|ilt|moth|beetle|cockroach|midge|monitor|glue|uv/i.test(String(t || ''));
+        let adminLim = { cid: '', list: [], stations: [], editing: null, error: '' };
+        const limRulesOf = l => { let r = l && l.rules; if (typeof r === 'string') { try { r = JSON.parse(r); } catch (e) { r = []; } } return (Array.isArray(r) ? r : []).filter(x => x && x.species); };
+        async function loadAdminLimits() {
+            const cid = document.getElementById('limSite').value;
+            adminSiteId = cid;
+            adminLim = { cid, list: [], stations: [], editing: null, error: '' };
+            document.getElementById('limAddBtn').disabled = !cid;
+            document.getElementById('limEditor').innerHTML = '';
+            const box = document.getElementById('limList');
+            if (!cid) { box.innerHTML = '<div class="row-item p-4 t-faint italic text-center">Choose a site to see and set its critical limits.</div>'; return; }
+            box.innerHTML = '<div class="t-faint italic">Loading...</div>';
+            try {
+                const [list, stations] = await Promise.all([adminFetchAll('site_limits', cid), adminFetchAll('stations', cid, 'id, barcode, name, type, limit_id')]);
+                if (document.getElementById('limSite').value !== cid) return;
+                adminLim.list = list.sort((a, b) => String(a.name).localeCompare(String(b.name), undefined, { sensitivity: 'base' }));
+                adminLim.stations = stations.sort((a, b) => String(a.name).localeCompare(String(b.name), undefined, { numeric: true, sensitivity: 'base' }));
+            } catch (e) { adminLim.error = /site_limits|does not exist|schema cache|limit_id/i.test(e.message || '') ? 'The database needs updating for critical limits: run pestis_client_portal.sql in the Supabase SQL editor.' : (e.message || String(e)); }
+            renderAdminLimits();
+        }
+        function renderAdminLimits() {
+            const box = document.getElementById('limList');
+            if (adminLim.error) { box.innerHTML = `<div class="row-item p-4" style="color:#dc2626;">${esc(adminLim.error)}</div>`; return; }
+            const onLimit = id => adminLim.stations.filter(st => String(st.limit_id) === String(id));
+            const insectFree = adminLim.stations.filter(st => LIM_INSECT(st.type) && !adminLim.list.some(l => String(l.id) === String(st.limit_id)));
+            box.innerHTML = (adminLim.list.map(l => {
+                const rules = limRulesOf(l), sts = onLimit(l.id);
+                return `<div class="row-item p-4 space-y-2">
+                    <div class="flex flex-wrap items-center justify-between gap-2"><b class="text-sm t-strong">⚠ ${esc(l.name)}</b>
+                        <span class="flex gap-2"><button type="button" class="btn btn-secondary !py-1.5 !px-3" data-id="${esc(l.id)}" onclick="editAdminLimit(this.dataset.id)">Edit</button><button type="button" class="btn btn-secondary !py-1.5 !px-3" style="color:#dc2626;" data-id="${esc(l.id)}" onclick="deleteAdminLimit(this.dataset.id)">Remove</button></span></div>
+                    <div class="flex flex-wrap gap-1.5">${rules.map(r => `<span class="chip chip-red">${esc(r.species)}: ${esc(r.max)} a month</span>`).join('') || '<span class="t-faint italic">No pests yet - edit it to add some.</span>'}</div>
+                    <div class="t-muted">${sts.length ? `${sts.length} station${sts.length === 1 ? '' : 's'}: ${sts.map(st => esc(st.name || st.barcode)).join(', ')}` : 'No stations on this limit yet.'}</div></div>`;
+            }).join('') || '<div class="row-item p-4 t-faint italic text-center">This site has no critical limits yet.</div>')
+                + (adminLim.list.length && insectFree.length ? `<p class="text-[11px]" style="color:#d97706;">${insectFree.length} insect station${insectFree.length === 1 ? ' isn\'t' : 's aren\'t'} on a critical limit: ${insectFree.map(st => esc(st.name || st.barcode)).join(', ')}.</p>` : '');
+        }
+        function limRuleRowHtml(r) {
+            const pests = speciesItems().map(o => o.label);
+            return `<div class="lim-rule flex flex-wrap items-center gap-2"><input type="text" class="field !w-auto flex-1 min-w-[10rem] !py-1.5 lim-sp" list="limPestList" placeholder="Pest, e.g. House fly" value="${esc(r ? r.species : '')}">
+                <input type="number" min="0" step="1" class="field !w-24 !py-1.5 lim-max" placeholder="Max" value="${r ? esc(r.max) : ''}"><span class="t-faint text-[11px]">a month</span>
+                <button type="button" class="t-faint font-bold px-1" onclick="this.closest('.lim-rule').remove()" title="Remove this pest" aria-label="Remove this pest">✕</button></div>${pests.length && !document.getElementById('limPestList') ? '' : ''}`;
+        }
+        function editAdminLimit(id) {
+            adminLim.editing = id;
+            const l = id && id !== 'new' ? adminLim.list.find(x => String(x.id) === String(id)) : null;
+            const rules = l ? limRulesOf(l) : [];
+            const insects = adminLim.stations.filter(st => LIM_INSECT(st.type) || (l && String(st.limit_id) === String(l.id)));
+            document.getElementById('limEditor').innerHTML = `<div class="inset p-4 space-y-3" style="border-color:rgb(var(--b500));">
+                <div class="eyebrow t-accent">${l ? 'Edit critical limit' : 'New critical limit'}</div>
+                <div><label class="lbl" for="limName">Name</label><input type="text" id="limName" maxlength="80" class="field" placeholder="e.g. Production floor - flying insects" value="${esc(l ? l.name : '')}"></div>
+                <div class="space-y-2"><div class="lbl !mb-0">Pests and the most captures allowed each month</div>
+                    <datalist id="limPestList">${speciesItems().map(o => `<option value="${esc(o.label)}">`).join('')}</datalist>
+                    <div id="limRules" class="space-y-2">${(rules.length ? rules : [null]).map(limRuleRowHtml).join('')}</div>
+                    <button type="button" class="btn btn-secondary !py-1.5 !px-3 !text-xs" onclick="document.getElementById('limRules').insertAdjacentHTML('beforeend', limRuleRowHtml(null))">+ Add a pest</button></div>
+                ${insects.length ? `<div class="space-y-1.5"><div class="lbl !mb-0">Stations on this limit</div><div class="grid sm:grid-cols-2 gap-1.5 max-h-64 overflow-y-auto scroll-thin">${insects.map(st => `<label class="row-item p-2 flex items-center gap-2 cursor-pointer"><input type="checkbox" class="lim-st w-4 h-4" value="${esc(st.id)}" ${l && String(st.limit_id) === String(l.id) ? 'checked' : ''}><span class="min-w-0"><b class="t-strong">${esc(st.name || st.barcode)}</b> <span class="t-faint">${esc(st.type || '')}${st.limit_id && (!l || String(st.limit_id) !== String(l.id)) ? ' · on another limit' : ''}</span></span></label>`).join('')}</div></div>` : '<p class="text-[11px] t-faint">This site has no insect stations yet - technicians can put stations on this limit when they set them up.</p>'}
+                <div class="flex flex-wrap justify-end gap-2"><button type="button" class="btn btn-secondary" onclick="adminLim.editing = null; document.getElementById('limEditor').innerHTML = ''">Cancel</button><button type="button" id="limSaveBtn" class="btn btn-primary" onclick="saveAdminLimit()">Save</button></div></div>`;
+            document.getElementById('limName').focus();
+        }
+        async function saveAdminLimit() {
+            const cid = adminLim.cid, id = adminLim.editing && adminLim.editing !== 'new' ? adminLim.editing : null;
+            const name = document.getElementById('limName').value.trim().replace(/\s+/g, ' ');
+            if (!name) { alert('Give the critical limit a name.'); document.getElementById('limName').focus(); return; }
+            if (adminLim.list.some(l => String(l.id) !== String(id) && String(l.name).toLowerCase() === name.toLowerCase())) { alert(`This site already has a critical limit called "${name}".`); return; }
+            const rules = [], seen = new Set();
+            for (const row of document.querySelectorAll('#limRules .lim-rule')) {
+                const sp = row.querySelector('.lim-sp').value.trim(), mx = row.querySelector('.lim-max').value.trim();
+                if (!sp && !mx) continue;
+                if (!sp) { alert('Each limit needs the pest name.'); return; }
+                if (mx === '' || !(Number(mx) >= 0) || !Number.isInteger(Number(mx))) { alert(`Enter the most captures a month for ${sp} (a whole number).`); return; }
+                if (seen.has(sp.toLowerCase())) { alert(`${sp} is listed twice.`); return; }
+                seen.add(sp.toLowerCase()); rules.push({ species: sp, max: Number(mx) });
+            }
+            if (!rules.length) { alert('Add at least one pest with its monthly limit.'); return; }
+            const btn = document.getElementById('limSaveBtn'); btn.disabled = true; btn.textContent = 'Saving...';
+            try {
+                const now = new Date().toISOString(), lid = id || uid();
+                const row = Object.assign({ id: lid, client_id: String(cid), name, rules, updated_by: technicianLabel(), updated_at: now }, id ? {} : { created_by: technicianLabel(), created_at: now });
+                const { error } = await _supabase.from('site_limits').upsert([row], { onConflict: 'id' });
+                if (error) throw error;
+                // the stations ticked are on this limit; the ones unticked come off it
+                const ticked = new Set(Array.from(document.querySelectorAll('#limEditor .lim-st:checked')).map(x => x.value));
+                const changes = adminLim.stations.filter(st => document.querySelector(`#limEditor .lim-st[value="${CSS.escape(String(st.id))}"]`))
+                    .filter(st => ticked.has(String(st.id)) !== (String(st.limit_id) === lid));
+                for (const st of changes) {
+                    const v = ticked.has(String(st.id)) ? lid : null;
+                    const { error: e2 } = await _supabase.from('stations').update({ limit_id: v, updated_at: now }).eq('id', st.id);
+                    if (e2) throw e2;
+                }
+                await queueSiteChange({ client_id: cid, action: 'limit', title: `Critical limit ${id ? 'changed' : 'added'}: ${name}`, detail: rules.map(r => `${r.species} ${r.max}/month`).join(', ') });
+                await loadAdminLimits();
+            } catch (e) {
+                alert('Could not save the critical limit: ' + (/site_limits|limit_id|does not exist|schema cache/i.test(e.message || '') ? 'run pestis_client_portal.sql in the Supabase SQL editor first.' : (e.message || e)));
+                btn.disabled = false; btn.textContent = 'Save';
+            }
+        }
+        async function deleteAdminLimit(id) {
+            const l = adminLim.list.find(x => String(x.id) === String(id));
+            if (!l || !confirm(`Remove the critical limit "${l.name}"? Its stations will no longer be checked against it.`)) return;
+            try {
+                const on = adminLim.stations.filter(st => String(st.limit_id) === String(id));
+                for (const st of on) { const { error } = await _supabase.from('stations').update({ limit_id: null, updated_at: new Date().toISOString() }).eq('id', st.id); if (error) throw error; }
+                const { error } = await _supabase.from('site_limits').delete().eq('id', id);
+                if (error) throw error;
+                await queueSiteChange({ client_id: adminLim.cid, action: 'limit', title: `Critical limit removed: ${l.name}`, detail: '' });
+            } catch (e) { alert('Could not remove it: ' + (e.message || e)); }
+            await loadAdminLimits();
+        }
+
+        // ---------- Reports (the same reports as the Client Portal) ----------
+        let adminRepSeq = 0;
+        async function loadAdminReports() {
+            const cid = document.getElementById('repSite').value, box = document.getElementById('adminReports'), msg = document.getElementById('repMsg');
+            adminSiteId = cid;
+            const seq = ++adminRepSeq;
+            if (!cid) { box.innerHTML = '<div class="row-item p-4 t-faint italic text-center">Choose a site to see its reports.</div>'; msg.textContent = ''; return; }
+            msg.textContent = 'Loading the site\'s records...';
+            try {
+                const opt = t => adminFetchAll(t, cid).catch(() => []);
+                const [logs, stations, maps, visits, recs, limits] = await Promise.all([adminFetchAll('service_logs', cid), adminFetchAll('stations', cid), opt('site_maps'), opt('visits'), opt('recommendations'), opt('site_limits')]);
+                if (seq !== adminRepSeq) return;
+                const site = siteById(cid);
+                const data = PR.build({ siteName: site ? site.Name : 'Site', logs, stations, maps, visits, recs, limits });
+                if (box._prSite !== cid) { box.innerHTML = ''; box._prSite = cid; }
+                const holder = box.firstElementChild && box.firstElementChild.classList.contains('pr-holder') ? box.firstElementChild : (() => { const h = document.createElement('div'); h.className = 'pr-holder'; box.innerHTML = ''; box.appendChild(h); return h; })();
+                PR.render(holder, data, { colorOf: t => stationColor(t).color });
+                msg.textContent = `${data.entries.length} service records · ${data.stations.length} stations`;
+            } catch (e) {
+                if (seq !== adminRepSeq) return;
+                msg.textContent = '';
+                box.innerHTML = `<div class="row-item p-4" style="color:#dc2626;">Could not load the site's records: ${esc(e.message || e)}</div>`;
+            }
+        }
+
         // ---------- Download a whole folder of a site as one zip ----------
         let jszipLoading = null;
         function loadJSZip() {
@@ -3774,7 +4410,7 @@
                 }
                 el.innerHTML = warn + (items.map(o => `
                     <div class="row-item p-3 space-y-2"><div class="flex justify-between items-center gap-2">
-                        <div class="min-w-0 t-strong font-semibold break-words flex items-center gap-2">${kind === 'station_type' ? typeDot(o.label) : ''}<span>${esc(o.label)}${pending(o.id) ? ' <span class="t-faint font-normal">(waiting to upload)</span>' : ''}</span></div>
+                        <div class="min-w-0 t-strong font-semibold break-words flex items-center gap-2">${kind === 'station_type' ? (admin ? `<label class="type-color-pick type-color-sm" title="Change the colour"><input type="color" value="${esc(stationColor(o.label).color)}" data-id="${esc(o.id)}" onchange="setTypeColor(this.dataset.id, this.value)" aria-label="Colour for ${esc(o.label)}"></label>` : typeDot(o.label)) : ''}<span>${esc(o.label)}${pending(o.id) ? ' <span class="t-faint font-normal">(waiting to upload)</span>' : ''}</span></div>
                         <div class="flex items-center gap-2 shrink-0">
                             ${kind === 'prep' ? (admin
                                 ? `<select data-id="${esc(o.id)}" onchange="setPrepUnit(this.dataset.id, this.value)" class="field !w-auto !py-1 !px-2 !text-xs cursor-pointer" title="Quantity unit">${PREP_UNITS.map(([v, l]) => `<option value="${v}" ${(o.unit || 'each') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`
@@ -3802,6 +4438,20 @@
             await enqueue({ kind: 'add_option', siteName: 'Settings', label: `Unit for "${o.label}" set to ${unitText(unit)}`, data: row });
             renderSettingsLists();
         }
+        // station types: their colour (asked for when one is added, changeable any time)
+        function guessTypeColor() {
+            const c = document.getElementById('newStationTypeColor');
+            if (c && !c.dataset.picked) c.value = stationColorBase(document.getElementById('newStationTypeInput').value).color;
+        }
+        async function setTypeColor(id, color) {
+            if (!isAdmin()) return;
+            const o = appOptions.find(x => x.id === id);
+            if (!o || !/^#[0-9a-f]{6}$/i.test(color)) return;
+            o.color = color;
+            await cacheSet('app_options', appOptions);
+            await enqueue({ kind: 'add_option', siteName: 'Settings', label: `Colour for "${o.label}" changed`, data: { id: o.id, kind: o.kind, label: o.label, sort: o.sort || 0, color } });
+            renderSettingsLists();
+        }
         async function addOption(kind) {
             if (!isAdmin()) { alert('Only admins can add to this list.'); return; }
             const input = document.getElementById(OPTION_INPUT[kind]);
@@ -3814,6 +4464,11 @@
             }
             const maxSort = Math.max(0, ...appOptions.filter(o => o.kind === kind).map(o => o.sort || 0));
             const row = { id: uid(), kind: kind, label: label, sort: maxSort + 1 };
+            if (kind === 'station_type') {
+                const c = document.getElementById('newStationTypeColor');
+                row.color = c && /^#[0-9a-f]{6}$/i.test(c.value) ? c.value : stationColorBase(label).color;
+                if (c) { delete c.dataset.picked; c.value = '#f97316'; }
+            }
             if (kind === 'prep') {
                 row.unit = document.getElementById('newPrepUnit').value || 'each';
                 // every new preparation needs its safety data sheet and the date it expires

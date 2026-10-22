@@ -272,6 +272,75 @@
 .pg-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .idle-warn { position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(2, 6, 23, .6); backdrop-filter: blur(3px); }
 </style>
+<style id="pestisReportsCss">
+/* PESTIS-REPORTS-CSS:BEGIN */
+.pr-root { --pr-accent: rgb(var(--b500, 249 115 22)); display: flex; flex-direction: column; gap: 1rem; }
+.pr-head { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .75rem; }
+.pr-head > .min-w-0 { flex: 1 1 14rem; min-width: 0; }
+.pr-h { font-weight: 900; font-size: 1.1rem; color: var(--text); }
+.pr-h4 { font-weight: 800; font-size: .85rem; color: var(--text); margin-top: .25rem; }
+.pr-sub { font-size: .75rem; color: var(--muted); margin-top: .15rem; }
+.pr-acts { display: flex; flex-wrap: wrap; gap: .4rem; margin-left: auto; }
+.pr-btn, .pr-back { padding: .5rem .8rem; border-radius: .7rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-weight: 700; font-size: .75rem; cursor: pointer; white-space: nowrap; }
+.pr-btn:hover, .pr-back:hover { border-color: var(--pr-accent); }
+.pr-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .6rem; }
+.pr-card { display: flex; gap: .75rem; align-items: flex-start; text-align: left; padding: .85rem; border-radius: .9rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); cursor: pointer; transition: border-color .15s, transform .15s; }
+.pr-card:hover { border-color: var(--pr-accent); transform: translateY(-1px); }
+.pr-card b { display: block; font-size: .85rem; }
+.pr-card span span { display: block; font-size: .72rem; color: var(--muted); margin-top: .15rem; line-height: 1.35; }
+.pr-card-i { font-size: 1.4rem; line-height: 1; flex-shrink: 0; }
+.pr-filters { display: flex; flex-wrap: wrap; gap: .6rem; padding: .7rem; border-radius: .9rem; background: var(--surface2); border: 1px solid var(--border); }
+.pr-filters:empty { display: none; }
+.pr-f { display: flex; flex-direction: column; gap: .2rem; font-size: .66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.pr-f select, .pr-f input { font-size: .8rem; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: .6rem; padding: .45rem .6rem; min-width: 9rem; max-width: 16rem; }
+.pr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .6rem; }
+.pr-kpi { padding: .7rem .8rem; border-radius: .9rem; border: 1px solid var(--border); background: var(--surface2); }
+.pr-kpi-v { font-size: 1.25rem; font-weight: 900; color: var(--text); line-height: 1.15; word-break: break-word; }
+.pr-kpi-l { font-size: .68rem; color: var(--muted); margin-top: .15rem; }
+.pr-chart { padding: .7rem; border-radius: .9rem; border: 1px solid var(--border); background: var(--surface); }
+.pr-cap { font-size: .7rem; font-weight: 800; color: var(--muted); margin-bottom: .3rem; }
+.pr-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: .7rem; }
+.pr-svg { width: 100%; height: auto; display: block; }
+.pr-svg .pr-grid { stroke: var(--border); stroke-width: 1; }
+.pr-svg .pr-ax { font-size: 11px; fill: var(--muted); font-family: inherit; }
+.pr-legend { display: flex; flex-wrap: wrap; gap: .3rem .9rem; font-size: .72rem; color: var(--text); margin-top: .35rem; }
+.pr-legend i { display: inline-block; width: .7rem; height: .7rem; border-radius: 3px; margin-right: .35rem; vertical-align: -1px; }
+.pr-bars { display: flex; flex-direction: column; gap: .35rem; }
+.pr-bar-row { display: grid; grid-template-columns: minmax(6rem, 14rem) 1fr 3.5rem; align-items: center; gap: .5rem; font-size: .75rem; }
+.pr-bar-l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-weight: 600; }
+.pr-bar-t { height: .8rem; border-radius: 999px; background: var(--surface2); overflow: hidden; }
+.pr-bar-f { display: block; height: 100%; border-radius: 999px; }
+.pr-bar-v { text-align: right; font-weight: 800; color: var(--text); }
+.pr-tbl-wrap { overflow: auto; max-height: 70vh; border-radius: .9rem; border: 1px solid var(--border); }
+.pr-tbl { width: 100%; border-collapse: collapse; font-size: .75rem; }
+.pr-tbl th { position: sticky; top: 0; background: var(--surface2); text-align: left; font-size: .66rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: .5rem .6rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.pr-tbl td { padding: .45rem .6rem; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+.pr-tbl .num { text-align: right; white-space: nowrap; }
+.pr-tbl tr.pr-late td { background: rgba(220, 38, 38, .07); }
+.pr-empty { padding: 1.2rem; text-align: center; color: var(--faint); font-style: italic; font-size: .78rem; }
+.pr-note { font-size: .7rem; color: var(--faint); margin-top: .35rem; }
+.pr-dot { display: inline-block; width: .55rem; height: .55rem; border-radius: 999px; margin-right: .4rem; vertical-align: 1px; }
+.pr-mono { font-family: ui-monospace, Menlo, Consolas, monospace; }
+.pr-faint { color: var(--faint); }
+.pr-station { font-size: .9rem; color: var(--text); }
+.pr-station span { color: var(--muted); font-size: .75rem; }
+.pr-lims { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: .7rem; }
+.pr-lim { padding: .7rem; border-radius: .9rem; border: 1px solid var(--border); background: var(--surface); }
+.pr-lim-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .4rem; font-size: .8rem; color: var(--text); margin-bottom: .3rem; }
+.pr-chip { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .68rem; font-weight: 800; }
+.pr-chip.red { background: rgba(220, 38, 38, .14); color: #dc2626; }
+.pr-chip.amber { background: rgba(217, 119, 6, .16); color: #b45309; }
+.pr-chip.green { background: rgba(22, 163, 74, .14); color: #15803d; }
+@media (max-width: 639px) { .pr-bar-row { grid-template-columns: minmax(5rem, 8rem) 1fr 2.8rem; } .pr-acts { margin-left: 0; } }
+@media print {
+    body.pr-printing * { visibility: hidden !important; }
+    body.pr-printing .pr-printing-this, body.pr-printing .pr-printing-this * { visibility: visible !important; }
+    body.pr-printing .pr-printing-this { position: absolute; left: 0; top: 0; width: 100%; color: #000; }
+    body.pr-printing .pr-printing-this .pr-acts, body.pr-printing .pr-printing-this .pr-back, body.pr-printing .pr-printing-this .pr-filters { display: none !important; }
+    body.pr-printing .pr-tbl-wrap { max-height: none; overflow: visible; }
+}
+/* PESTIS-REPORTS-CSS:END */
+</style>
 </head>
 <body class="font-sans antialiased min-h-screen flex flex-col">
 
@@ -321,9 +390,6 @@
                 </button>
                 <div id="bellPanel" class="hidden absolute right-0 mt-2 w-[min(22rem,calc(100vw-2rem))] card p-3 space-y-2 text-xs z-50 max-h-[70vh] overflow-y-auto scroll-thin" role="menu"></div>
             </div>
-            <button type="button" id="pestGuideBtn" onclick="openPestGuide()" class="icon-btn hidden sm:inline-flex" title="Pest guide" aria-label="Pest guide">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.25v13m0-13C10.83 5.48 9.25 5 7.5 5S4.17 5.48 3 6.25v13C4.17 18.48 5.75 18 7.5 18s3.33.48 4.5 1.25m0-13C13.17 5.48 14.75 5 16.5 5c1.75 0 3.33.48 4.5 1.25v13C19.83 18.48 18.25 18 16.5 18c-1.75 0-3.33.48-4.5 1.25"></path></svg>
-            </button>
             <button type="button" id="settingsBtn" onclick="openSettings()" class="icon-btn" title="Settings" aria-label="Settings">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </button>
@@ -338,7 +404,6 @@
                 </button>
                 <div id="accountMenu" class="hidden absolute right-0 mt-2 w-64 card p-3 space-y-2 text-xs z-50" role="menu">
                     <div id="accountDetail" class="t-muted break-words"></div>
-                    <button type="button" onclick="$('accountMenu').classList.add('hidden'); openPestGuide()" class="btn btn-secondary w-full">📖 Pest guide</button>
                     <button type="button" onclick="$('accountMenu').classList.add('hidden'); openSettings()" class="btn btn-secondary w-full">⚙ Settings</button>
                     <button type="button" id="accountUpdateBtn" onclick="$('accountMenu').classList.add('hidden'); checkForUpdates()" class="btn btn-secondary w-full">⟳ Check for updates</button>
                     <div class="text-[10px] t-faint text-center">Version <span class="portal-version-inline"></span></div>
@@ -537,7 +602,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.22-p25';
+const PORTAL_VERSION = '2026.10.22-p26';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -550,7 +615,7 @@ const FREQUENCIES = { weekly: { label: 'Weekly', days: 7 }, fortnightly: { label
     '6weekly': { label: 'Every 6 weeks', days: 42 }, bimonthly: { label: 'Every 2 months', days: 61 }, quarterly: { label: 'Quarterly', days: 92 },
     '6monthly': { label: 'Every 6 months', days: 183 }, annually: { label: 'Annually', days: 366 }, oneoff: { label: 'One-off / On request' } };
 // Critical limits are switched off while they are rebuilt: no tab, filter, column, alert or notification.
-const LIMITS_ON = !!window.__limitsOn;
+const LIMITS_ON = true;   // critical limits (rebuilt): set up by Pesties, shown here as alerts and on the reports
 const STATUS = { open: { label: 'Open', cls: 'chip-red' }, pending: { label: 'Pending', cls: 'chip-amber' }, complete: { label: 'Complete', cls: 'chip-green' } };
 const DOC_CATEGORIES = ['Service agreement', 'SDS', 'Insurance', 'Site map', 'Certificates', 'Reports', 'Other'];
 const OVERDUE_GRACE_DAYS = 7;
@@ -569,6 +634,8 @@ const STATION_COLORS = [
 ];
 function stationColor(type) {
     const t = String(type || '').toLowerCase();
+    const own = state.typeColors && state.typeColors.get(t);   // the colour picked in Admin -> Lists
+    if (own && /^#[0-9a-f]{6}$/i.test(own)) return own;
     for (const k of ['sighting', 'inspection']) { const c = STATION_COLORS.find(x => x.key === k); if (c.test(t)) return c.color; }
     const c = STATION_COLORS.find(x => x.test(t));
     return c ? c.color : '#f97316';
@@ -1055,15 +1122,12 @@ function renderPicker() {
 //  ONE SITE: load everything once, then each tab is worked out on this device
 // ===================================================================
 const TABS = [
-    ['overview', 'Overview'], ['recs', 'Recommendations'], ['sightings', 'Pest sightings'], ['reports', 'Reports'], ...(LIMITS_ON ? [['limits', 'Critical limits']] : []), ['stations', 'Station register'], ['chemicals', 'Preparations'],
-    ['activity', 'Pest activity'], ['visits', 'Visits'], ['documents', 'Documents'], ['plans', 'Floor plans'], ['techs', 'Technicians']
+    ['overview', 'Overview'], ['recs', 'Recommendations'], ['sightings', 'Pest sightings'], ['reports', 'Reports'], ['chemicals', 'Preparations'],
+    ['visits', 'Visits'], ['documents', 'Documents'], ['plans', 'Floor plans'], ['techs', 'Technicians']
 ];
 // which filters each report tab offers (hidden filters are not applied)
 const TAB_FILTERS = {
-    reports: ['type', 'map', 'zone', 'station', 'species', 'tech'].filter(k => LIMITS_ON || k !== 'zone'),
-    stations: ['type', 'map', 'zone', 'q'].filter(k => LIMITS_ON || k !== 'zone'),
     chemicals: ['station', 'prep', 'batch', 'tech', 'map'],
-    activity: ['type', 'map', 'zone', 'station', 'species'].filter(k => LIMITS_ON || k !== 'zone'),
     visits: ['tech', 'q']
 };
 const FILTER_KEYS = ['type', 'map', 'zone', 'station', 'species', 'prep', 'batch', 'tech', 'q'];
@@ -1073,6 +1137,7 @@ async function openSite(id, tab, fromRoute) {
     const site = state.sites.find(s => String(s.id) === String(id));
     if (!site) { showPicker(); return; }
     const changed = !state.site || String(state.site.id) !== String(site.id);
+    if (changed) state.prBox = null;   // a new site starts at the list of reports
     state.site = site;
     state.tab = TABS.some(t => t[0] === tab) ? tab : 'overview';
     if (!fromRoute) { location.hash = `#/site/${encodeURIComponent(site.id)}/${state.tab}`; return; }
@@ -1179,11 +1244,11 @@ async function loadSiteData(site) {
         step('recs', fetchAll('recommendation_updates', cid)),
         step('docs', fetchAll('site_documents', cid).catch(() => [])),
         step('docs', fetchAll('site_document_folders', cid).catch(() => [])),
-        step('limits', fetchAll('critical_limits', cid).catch(() => [])),
+        step('limits', fetchAll('site_limits', cid).catch(() => [])),
         step('recs', fetchAll('recommendation_views', cid).catch(() => []))
     ]);
     const [types, sightings, species] = await Promise.all([
-        step('limits', sb.from('station_types').select('label').then(r => { if (r.error) throw r.error; return (r.data || []).map(x => x.label); })
+        step('limits', sb.from('station_types').select('*').then(r => { if (r.error) throw r.error; state.typeColors = new Map((r.data || []).filter(x => x.color).map(x => [String(x.label).toLowerCase(), x.color])); return (r.data || []).map(x => x.label); })
             .catch(() => sb.from('app_options').select('label, kind').eq('kind', 'station_type').then(r => (r.data || []).map(x => x.label)).catch(() => []))),
         step('limits', fetchAll('pest_sightings', cid).then(r => { state.sightingsMissing = false; return r; }).catch(() => { state.sightingsMissing = true; return []; })),
         step('limits', state.pestGuide ? Promise.resolve(state.pestGuide) : sb.from('species').select('*').then(r => r.data || []).catch(() => [])),
@@ -1223,7 +1288,8 @@ function buildModel(site, d) {
 
     // stations: the stations table, plus anything only seen in service records
     const st = new Map();
-    d.stations.forEach(s => st.set(s.barcode, { barcode: s.barcode, name: s.name || s.barcode, type: s.type || '', zone: (s.zone || '').trim(), mapId: s.map_id || null, x: s.pin_x, y: s.pin_y, photoPath: s.photo_path || null, entries: [], fromTable: true }));
+    const limitName = new Map((d.limits || []).map(l => [String(l.id), String(l.name || 'Critical limit')]));
+    d.stations.forEach(s => st.set(s.barcode, { barcode: s.barcode, name: s.name || s.barcode, type: s.type || '', limitId: s.limit_id ? String(s.limit_id) : '', zone: s.limit_id ? (limitName.get(String(s.limit_id)) || '') : '', mapId: s.map_id || null, x: s.pin_x, y: s.pin_y, photoPath: s.photo_path || null, entries: [], fromTable: true }));
     entries.forEach(e => {
         let s = st.get(e.barcode);
         if (!s) { s = { barcode: e.barcode, name: e.name, type: e.type, zone: '', mapId: null, entries: [] }; st.set(e.barcode, s); }
@@ -1282,8 +1348,11 @@ function buildModel(site, d) {
 
     const maps = d.maps.slice().sort((a, b) => (a.sort || 0) - (b.sort || 0));
     const docs = d.docs.slice().sort((a, b) => String(a.title).localeCompare(String(b.title), undefined, { sensitivity: 'base' }));
-    const limits = (LIMITS_ON ? (d.limits || []) : []).map(l => ({ id: l.id, zone: String(l.zone || '').trim(), species: l.species || '*', max: Number(l.max_per_month) || 0, notes: l.notes || '', by: l.updated_by || '', at: l.updated_at }))
-        .sort((a, b) => a.zone.localeCompare(b.zone, undefined, { sensitivity: 'base' }) || a.species.localeCompare(b.species));
+    // critical limits: one entry per pest of each limit ("zone" is the limit's name, for the alerts and PDFs)
+    const limits = (d.limits || []).filter(l => !l.deleted).flatMap(l => {
+        let rules = l.rules; if (typeof rules === 'string') { try { rules = JSON.parse(rules); } catch (e) { rules = []; } }
+        return (Array.isArray(rules) ? rules : []).filter(r => r && r.species).map((r, i) => ({ id: l.id + '#' + i, limitId: String(l.id), zone: String(l.name || 'Critical limit').trim(), species: String(r.species), max: Number(r.max) || 0, notes: l.notes || '', by: l.updated_by || '', at: l.updated_at }));
+    }).sort((a, b) => a.zone.localeCompare(b.zone, undefined, { sensitivity: 'base' }) || a.species.localeCompare(b.species));
     const views = new Map();
     (d.views || []).forEach(v => { const l = views.get(v.rec_id) || []; l.push(v); views.set(v.rec_id, l); });
     recs.forEach(r => { r.views = (views.get(r.id) || []).sort((a, b) => String(b.last_seen_at).localeCompare(String(a.last_seen_at))); });
@@ -1386,7 +1455,7 @@ function allStationTypes() {
 const sameType = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 // flying and crawling insect stations are the ones with critical limits
 function isInsectType(type) { const t = String(type || '').toLowerCase(); return STATION_COLORS.filter(c => c.key === 'flying' || c.key === 'crawling').some(c => c.test(t)) && !/rodent|rat|mouse|mice/.test(t); }
-function zoneFilterOn() { return LIMITS_ON && isInsectType(F.type); }
+function zoneFilterOn() { return false; }
 // the Station list (and critical limits areas) only offer what belongs to the station type picked
 function fillStationOptions() {
     const m = state.model;
@@ -1600,7 +1669,7 @@ function monthBounds(t) { const d = new Date(t); return [new Date(d.getFullYear(
 function monthLabel(t) { return new Date(t).toLocaleString('en-NZ', { month: 'long', year: 'numeric' }); }
 function limitStatus(l, t, upTo) {
     const [a, b] = monthBounds(t == null ? Date.now() : t);
-    const es = state.model.entries.filter(e => !e.pending && e.at >= a && e.at < b && (upTo == null || e.at <= upTo) && e.species && zoneKey(e.zone) === zoneKey(l.zone) && (l.species === ANY_PEST || pestKey(e.species) === pestKey(l.species)));
+    const es = state.model.entries.filter(e => !e.pending && e.at >= a && e.at < b && (upTo == null || e.at <= upTo) && e.species && e.station && e.station.limitId === l.limitId && pestKey(e.species) === pestKey(l.species));
     const total = es.reduce((n, e) => n + e.count, 0);
     return { limit: l, total, entries: es, over: total > l.max, near: total <= l.max && l.max > 0 && total >= l.max * 0.8, month: a };
 }
@@ -1662,7 +1731,7 @@ function showBreach(limitId, month) {
             <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Station</th><th>Pest</th><th class="num">Number</th><th>Activity</th><th>Technician</th></tr></thead><tbody>${x.entries.slice().sort((a, b) => b.at - a.at).map(e => `
                 <tr class="clickable" onclick="showStation('${esc(e.barcode)}')"><td class="whitespace-nowrap">${fmtDateTime(e.at)}</td><td>${esc(e.name)}</td><td>${esc(e.species)}</td><td class="num font-bold">${e.count}</td><td>${activityChip(e.activity)}</td><td class="t-muted">${esc(e.tech || '-')}</td></tr>`).join('')}</tbody></table></div></div>`;
     $('modalFoot').classList.remove('hidden');
-    $('modalFoot').innerHTML = `<button type="button" class="btn btn-secondary" onclick="closeModal(true); setTab('limits')">All critical limits</button>`;
+    $('modalFoot').innerHTML = `<button type="button" class="btn btn-secondary" onclick="closeModal(true); setTab('reports')">Reports</button>`;
     openModal();
 }
 let limitStation = null;
@@ -2175,7 +2244,18 @@ function reportTrend(list) {
     if (rest.length) series.push(mk('Other', rest.flatMap(g => g.entries), MAX_SERIES));
     return { periods, unit, series };
 }
+// Reports: the same reports as in Admin (reports_shared.js)
 function renderReports() {
+    const d = state.data || {};
+    const holder = document.createElement('div');
+    holder.className = 'card p-4 sm:p-5';
+    $('tabBody').innerHTML = '';
+    $('tabBody').appendChild(holder);
+    if (!state.prBox) state.prBox = holder; else { holder.replaceWith(state.prBox); }
+    const data = PR.build({ siteName: siteName(state.site), logs: d.logs || [], stations: d.stations || [], maps: d.maps || [], visits: d.visits || [], recs: d.recs || [], limits: d.limits || [] });
+    PR.render(state.prBox, data, { colorOf: t => stationColor(t) });
+}
+function renderReportsOld() {
     const list = reportEntries();
     const isPreset = ([, p]) => p.style === REP.style && p.measure === REP.measure && p.group === REP.group;
     const sel = (id, obj, cur, label) => `<div><label class="lbl" for="${id}">${label}</label><select id="${id}" class="field !w-auto !py-2" onchange="REP.${id.replace('rep', '').toLowerCase()} = this.value; renderReports();">${Object.entries(obj).map(([k, l]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`;
@@ -2266,7 +2346,7 @@ function openSightingForm() {
     $('modalSub').textContent = siteName(state.site);
     $('modalNav').classList.add('hidden');
     $('modalBody').innerHTML = `<form id="sightForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3" onsubmit="event.preventDefault(); saveSighting();">
-        <div><label class="lbl" for="sgPest">Pest seen <span style="color:#ef4444;">*</span></label><input id="sgPest" list="sgPests" required maxlength="80" class="field" placeholder="e.g. Rat, Cockroach, Fly"><button type="button" class="link-btn text-[11px] mt-1" onclick="const v = $('sgPest').value; if (findPest(v)) showPestInfo(v); else openPestGuide();">📖 Not sure? See the pest guide</button><datalist id="sgPests">${pests.map(x => ({ x, c: pestCategoryOf(findPest(x) || { label: x }) })).sort((a, b) => PEST_CATEGORIES.concat('~').indexOf(a.c) - PEST_CATEGORIES.concat('~').indexOf(b.c) || a.x.localeCompare(b.x)).map(({ x, c }) => `<option value="${esc(x)}" label="${esc(c)}">`).join('')}</datalist></div>
+        <div><label class="lbl" for="sgPest">Pest seen <span style="color:#ef4444;">*</span></label><input id="sgPest" list="sgPests" required maxlength="80" class="field" placeholder="e.g. Rat, Cockroach, Fly"><datalist id="sgPests">${pests.map(x => ({ x, c: pestCategoryOf(findPest(x) || { label: x }) })).sort((a, b) => PEST_CATEGORIES.concat('~').indexOf(a.c) - PEST_CATEGORIES.concat('~').indexOf(b.c) || a.x.localeCompare(b.x)).map(({ x, c }) => `<option value="${esc(x)}" label="${esc(c)}">`).join('')}</datalist></div>
         <div><label class="lbl" for="sgEvidence">What was seen</label><select id="sgEvidence" class="field">${EVIDENCE.map(x => `<option>${x}</option>`).join('')}</select></div>
         <div><label class="lbl" for="sgLocation">Where it was seen <span style="color:#ef4444;">*</span></label><input id="sgLocation" type="search" name="sg-where-${Date.now()}" required maxlength="120" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-form-type="other" class="field" placeholder="Type where, e.g. behind the dock fridge"></div>
         <div><label class="lbl" for="sgStation">Nearest station (optional)</label><input id="sgStation" type="search" name="sg-station-${Date.now()}" list="sgStations" autocomplete="off" data-lpignore="true" data-form-type="other" class="field" placeholder="Type to search by station name"><datalist id="sgStations">${sightDraft.stations.map(o => `<option value="${esc(o.label)}">`).join('')}</datalist></div>
@@ -2452,7 +2532,7 @@ const findPest = name => pestItems().find(o => o.id === name) || pestItems().fin
 // a pest's name as a link to its guide (when there is one)
 function pestLink(name) {
     const o = findPest(name);
-    return o ? `<button type="button" class="link-btn" data-pest="${esc(o.id)}" onclick="event.stopPropagation(); showPestInfo(this.dataset.pest)">${esc(name)} <span class="text-[10px]">ⓘ</span></button>` : esc(name);
+    return esc(name);   // the pest guide isn't part of the portal any more
 }
 let pestGuideQ = '';
 function openPestGuide() {
@@ -2693,7 +2773,7 @@ async function linkLimitArea(stationArea, limitArea) {
 }
 async function reloadLimits() {
     const cid = String(state.site.id);
-    [state.data.limits, state.data.stations] = await Promise.all([fetchAll('critical_limits', cid), fetchAll('stations', cid).catch(() => state.data.stations)]);
+    [state.data.limits, state.data.stations] = await Promise.all([fetchAll('site_limits', cid), fetchAll('stations', cid).catch(() => state.data.stations)]);
     state.model = buildModel(state.site, state.data);
     fillFilterOptions();
     renderBell();
@@ -3713,6 +3793,369 @@ async function buildAuditPack() {
 
 window.__boot && (window.__boot.step = "Checking your sign-in");
 init();
+</script>
+<script id="pestisReportsJs">
+/* PESTIS-REPORTS:BEGIN - shared reports (identical in the Client Portal and Admin; edit reports_shared.js and run sync_reports.py) */
+// ===================================================================
+//  REPORTS: one report per job, each with only the filters it needs, a chart and a table,
+//  and Download (CSV for Excel) / Print (or save as PDF) on every one.
+//  PR.build(raw) turns a site's records into one shape; PR.render(box, data, opts) draws the reports.
+// ===================================================================
+const PR = (() => {
+    const NONE_P = 'None - Monitoring Only', NONE_S = 'None';
+    const META = new Set(['SITE_VISIT_SUMMARY', 'REC_UPDATE', 'SITE_MAP', 'MAP_PIN', 'BARCODE_CHANGE', 'SITE_CHANGE']);
+    const e = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const parse = p => { if (typeof p === 'string') { try { return JSON.parse(p); } catch (x) { return {}; } } return p || {}; };
+    const DAY = 86400000;
+    const LOC = 'en-NZ';
+    const fmtD = t => t ? new Date(t).toLocaleDateString(LOC, { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+    const fmtDT = t => t ? new Date(t).toLocaleString(LOC, { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '-';
+    const monthKey = t => { const d = new Date(t); return d.getFullYear() * 12 + d.getMonth(); };
+    const monthStart = k => new Date(Math.floor(k / 12), k % 12, 1).getTime();
+    const monthLbl = k => new Date(Math.floor(k / 12), k % 12, 1).toLocaleDateString(LOC, { month: 'short', year: '2-digit' });
+    const monthLong = k => new Date(Math.floor(k / 12), k % 12, 1).toLocaleDateString(LOC, { month: 'long', year: 'numeric' });
+    const pestKey = p => String(p || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/ies$/, 'y').replace(/([^s])s$/, '$1');
+    const PALETTE = ['#2563eb', '#ea580c', '#16a34a', '#9333ea', '#dc2626', '#0891b2', '#ca8a04', '#db2777', '#64748b'];
+    const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+    // ---------- the data, in one shape ----------
+    function build(raw) {
+        const logs = raw.logs || [];
+        const superseded = new Set(logs.map(r => parse(r.payload).supersedes).filter(Boolean));
+        const maps = new Map((raw.maps || []).filter(m => !m.deleted).map(m => [String(m.id), m.name || 'Floor plan']));
+        const st = new Map();
+        (raw.stations || []).forEach(s => st.set(s.barcode, { barcode: s.barcode, name: s.name || s.barcode, type: s.type || '', map: maps.get(String(s.map_id)) || '', limitId: s.limit_id || '', entries: [], table: true }));
+        const entries = [];
+        logs.forEach(r => {
+            const p = parse(r.payload);
+            if (META.has(r.barcode_id) || p.recOnly) return;
+            const key = p.clientRef || (r.barcode_id + '@' + r.created_at);
+            if (superseded.has(key)) return;
+            const at = Date.parse(p.servicedAt) || Date.parse(r.created_at);
+            if (isNaN(at)) return;
+            const species = p.speciesCaught && p.speciesCaught !== NONE_S ? p.speciesCaught : '';
+            const prep = p.prepUsed && p.prepUsed !== NONE_P ? p.prepUsed : '';
+            let s = st.get(r.barcode_id);
+            if (!s) { s = { barcode: r.barcode_id, name: p.locationName || r.barcode_id, type: p.deviceType || '', map: '', limitId: '', entries: [] }; st.set(r.barcode_id, s); }
+            if (!s.table) { s.name = p.locationName || s.name; s.type = p.deviceType || s.type; }
+            const en = { at, barcode: r.barcode_id, stationObj: s, activity: p.activityLevel || 'None', species, count: species ? (Number(p.pestCount) > 0 ? Number(p.pestCount) : 1) : 0,
+                prep, qty: prep && p.quantity != null && !isNaN(p.quantity) ? Number(p.quantity) : null, unit: prep ? (p.quantityUnit || 'each') : '', batch: prep ? (p.batchNumber || '') : '',
+                tech: p.technician || '', notes: p.notes || '' };
+            entries.push(en); s.entries.push(en);
+        });
+        entries.sort((a, b) => a.at - b.at);
+        entries.forEach(en => { en.station = en.stationObj.name; en.type = en.stationObj.type; en.map = en.stationObj.map; });
+        const stations = Array.from(st.values()).map(s => { s.entries.sort((a, b) => a.at - b.at); const last = s.entries[s.entries.length - 1]; return Object.assign(s, { last: last || null, lastAt: last ? last.at : null }); })
+            .sort((a, b) => String(a.name).localeCompare(String(b.name), undefined, { numeric: true, sensitivity: 'base' }));
+        const visits = (raw.visits || []).map(v => {
+            const start = Date.parse(v.signed_in_at || v.started_at) || null, end = Date.parse(v.signed_out_at || v.completed_at) || Date.parse(v.created_at) || null;
+            return { start, end, at: end || start, type: v.visit_type || 'Routine Service', tech: v.technician || '' };
+        }).filter(v => v.at).sort((a, b) => a.at - b.at);
+        let vi = 0;
+        visits.forEach(v => { v.n = 0; });
+        entries.forEach(en => { while (vi < visits.length && en.at > visits[vi].at + 5 * 60000) vi++; if (vi < visits.length) visits[vi].n++; });
+        const recs = (raw.recs || []).map(r => {
+            const s = st.get(r.station_barcode);
+            return { no: r.rec_no, station: (s && s.name) || r.station_name || r.station_barcode || 'Site', text: r.text || '', category: r.category || 'Other',
+                status: r.status === 'new' ? 'open' : (r.status || 'open'), raisedAt: Date.parse(r.raised_at || r.created_at) || null, completedAt: Date.parse(r.completed_at) || null };
+        }).filter(r => r.raisedAt);
+        const limits = (raw.limits || []).filter(l => !l.deleted).map(l => {
+            let rules = l.rules; if (typeof rules === 'string') { try { rules = JSON.parse(rules); } catch (x) { rules = []; } }
+            return { id: String(l.id), name: l.name || 'Critical limit', rules: (Array.isArray(rules) ? rules : []).filter(x => x && x.species).map(x => ({ species: String(x.species), max: Number(x.max) || 0 })) };
+        }).sort((a, b) => a.name.localeCompare(b.name));
+        return { site: raw.siteName || '', entries, stations, visits, recs, limits };
+    }
+
+    // ---------- the reports ----------
+    const REPORTS = [
+        { id: 'trend', icon: '📈', title: 'Pest activity over time', blurb: 'Captures each month, one line per pest - is it going up or down?', f: ['period', 'type', 'pest'] },
+        { id: 'pests', icon: '🐞', title: 'Pests found', blurb: 'Which pests, how many, and the change from the period before.', f: ['period', 'type'] },
+        { id: 'stations', icon: '📍', title: 'Busiest stations', blurb: 'The stations catching the most - where to focus.', f: ['period', 'type', 'pest'] },
+        { id: 'station', icon: '🔎', title: 'One station', blurb: 'A single station: month by month, and every visit to it.', f: ['period', 'station'] },
+        { id: 'scanned', icon: '✅', title: 'Last scanned', blurb: 'Every station and when it was last checked - spot any missed.', f: ['type', 'map', 'gap'] },
+        { id: 'preps', icon: '🧪', title: 'Preparations used', blurb: 'What was used on which station, how much, and the batch numbers.', f: ['period', 'prep', 'station', 'batch'] },
+        { id: 'limits', icon: '⚠️', title: 'Critical limits', blurb: 'Monthly captures against each critical limit, and any breaches.', f: ['months'] },
+        { id: 'recs', icon: '📋', title: 'Recommendations', blurb: 'Raised and completed, by type, and how long they took.', f: ['period'] },
+        { id: 'visits', icon: '🗓️', title: 'Service visits', blurb: 'Visits each month, the technician and the time on site.', f: ['period', 'tech'] }
+    ];
+    const PRESETS = [['30d', 'Last 30 days'], ['3m', 'Last 3 months'], ['12m', 'Last 12 months'], ['ytd', 'This year'], ['ly', 'Last year'], ['all', 'All time'], ['custom', 'Choose dates']];
+    function range(s) {
+        const now = new Date(), end = Date.now() + 60000;
+        if (s.preset === '30d') return [end - 30 * DAY, end];
+        if (s.preset === '3m') return [new Date(now.getFullYear(), now.getMonth() - 2, 1).getTime(), end];
+        if (s.preset === '12m') return [new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime(), end];
+        if (s.preset === 'ytd') return [new Date(now.getFullYear(), 0, 1).getTime(), end];
+        if (s.preset === 'ly') return [new Date(now.getFullYear() - 1, 0, 1).getTime(), new Date(now.getFullYear(), 0, 1).getTime()];
+        if (s.preset === 'custom') return [s.from ? Date.parse(s.from + 'T00:00:00') : 0, s.to ? Date.parse(s.to + 'T23:59:59') : end];
+        return [0, end];
+    }
+    const rangeText = s => { const [a, b] = range(s); return s.preset === 'all' ? 'All time' : `${fmtD(a)} - ${fmtD(Math.min(b, Date.now()))}`; };
+    const months = (a, b) => { const out = []; for (let k = monthKey(a); k <= monthKey(Math.min(b, Date.now())); k++) out.push(k); return out; };
+
+    // ---------- small SVG charts ----------
+    function lineChart(series, keys, opts) {
+        opts = opts || {};
+        const W = 760, H = 260, pl = 40, pr = 12, pt = 14, pb = 34;
+        const max = Math.max(1, ...series.flatMap(s => s.vals), opts.limit || 0);
+        const n = keys.length, x = i => pl + (n <= 1 ? (W - pl - pr) / 2 : i * (W - pl - pr) / (n - 1)), y = v => pt + (H - pt - pb) * (1 - v / max);
+        const ticks = [0, .25, .5, .75, 1].map(f => Math.round(max * f));
+        const every = Math.ceil(n / 12);
+        return `<svg viewBox="0 0 ${W} ${H}" class="pr-svg" role="img" aria-label="${e(opts.label || 'Chart')}">
+            ${ticks.map(t => `<line x1="${pl}" x2="${W - pr}" y1="${y(t)}" y2="${y(t)}" class="pr-grid"/><text x="${pl - 6}" y="${y(t) + 4}" text-anchor="end" class="pr-ax">${t}</text>`).join('')}
+            ${keys.map((k, i) => i % every === 0 || i === n - 1 ? `<text x="${x(i)}" y="${H - 12}" text-anchor="${n > 1 && i === n - 1 ? 'end' : i === 0 && n > 1 ? 'start' : 'middle'}" class="pr-ax">${e(opts.lbl ? opts.lbl(k) : k)}</text>` : '').join('')}
+            ${opts.limit != null ? `<line x1="${pl}" x2="${W - pr}" y1="${y(opts.limit)}" y2="${y(opts.limit)}" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 5"/><text x="${W - pr}" y="${y(opts.limit) - 5}" text-anchor="end" class="pr-ax" fill="#dc2626">Limit ${opts.limit}</text>` : ''}
+            ${series.map(s => `<polyline fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="${s.vals.map((v, i) => `${x(i)},${y(v)}`).join(' ')}"/>
+                ${s.vals.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="${opts.limit != null && v > opts.limit ? 5 : 3.2}" fill="${opts.limit != null && v > opts.limit ? '#dc2626' : s.color}"><title>${e(s.name)} · ${e(opts.lbl ? opts.lbl(keys[i]) : keys[i])}: ${v}</title></circle>`).join('')}`).join('')}
+        </svg>${series.length > 1 ? `<div class="pr-legend">${series.map(s => `<span><i style="background:${s.color}"></i>${e(s.name)}</span>`).join('')}</div>` : ''}`;
+    }
+    function barChart(rows, opts) {
+        opts = opts || {};
+        const max = Math.max(1, ...rows.map(r => r.v));
+        return `<div class="pr-bars">${rows.map(r => `<div class="pr-bar-row"><span class="pr-bar-l" title="${e(r.l)}">${e(r.l)}</span><span class="pr-bar-t"><span class="pr-bar-f" style="width:${Math.max(1.5, r.v / max * 100)}%;background:${r.c || 'var(--pr-accent)'}"></span></span><span class="pr-bar-v">${e(opts.fmt ? opts.fmt(r.v) : r.v)}</span></div>`).join('') || '<div class="pr-empty">Nothing to show for this choice.</div>'}</div>`;
+    }
+    function colBars(vals, keys, opts) {
+        opts = opts || {};
+        const W = 760, H = 220, pl = 36, pb = 30, pt = 10, n = keys.length, max = Math.max(1, ...vals), bw = (W - pl - 8) / Math.max(1, n);
+        const every = Math.ceil(n / 12);
+        return `<svg viewBox="0 0 ${W} ${H}" class="pr-svg" role="img" aria-label="${e(opts.label || 'Chart')}">
+            ${[0, .5, 1].map(f => { const v = Math.round(max * f), yy = pt + (H - pt - pb) * (1 - f); return `<line x1="${pl}" x2="${W - 8}" y1="${yy}" y2="${yy}" class="pr-grid"/><text x="${pl - 5}" y="${yy + 4}" text-anchor="end" class="pr-ax">${v}</text>`; }).join('')}
+            ${vals.map((v, i) => { const h = (H - pt - pb) * v / max; return `<rect x="${pl + i * bw + 3}" y="${H - pb - h}" width="${Math.max(2, bw - 6)}" height="${h}" rx="3" fill="${opts.color || 'var(--pr-accent)'}"><title>${e(opts.lbl ? opts.lbl(keys[i]) : keys[i])}: ${v}</title></rect>${i % every === 0 ? `<text x="${pl + i * bw + bw / 2}" y="${H - 10}" text-anchor="middle" class="pr-ax">${e(opts.lbl ? opts.lbl(keys[i]) : keys[i])}</text>` : ''}`; }).join('')}
+        </svg>`;
+    }
+    const table = (head, rows, opts) => `<div class="pr-tbl-wrap"><table class="pr-tbl"><thead><tr>${head.map(h => `<th class="${h.num ? 'num' : ''}">${e(h.t)}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map(r => `<tr${r._cls ? ` class="${r._cls}"` : ''}>${r.cells.map((c, i) => `<td class="${head[i] && head[i].num ? 'num' : ''}">${c}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${head.length}" class="pr-empty">${e((opts && opts.empty) || 'No records for this choice.')}</td></tr>`}</tbody></table></div>`;
+    const kpis = list => `<div class="pr-kpis">${list.map(k => `<div class="pr-kpi"><div class="pr-kpi-v" ${k.c ? `style="color:${k.c}"` : ''}>${e(k.v)}</div><div class="pr-kpi-l">${e(k.l)}</div></div>`).join('')}</div>`;
+
+    // ---------- state and drawing ----------
+    const ST = new WeakMap();
+    function render(box, data, opts) {
+        opts = opts || {};
+        let s = ST.get(box);
+        if (!s) { s = { report: null, preset: '12m', from: '', to: '', type: '', pest: '', station: '', map: '', prep: '', batch: '', tech: '', gap: '35', month: monthKey(Date.now()) }; ST.set(box, s); }
+        box._pr = { data, opts };
+        draw(box);
+    }
+    function set(btn, k, v) { const box = btn.closest('.pr-root').parentElement, s = ST.get(box); if (!s) return; s[k] = v; if (k === 'report') window.scrollTo && box.scrollIntoView && box.scrollIntoView({ block: 'start', behavior: 'smooth' }); draw(box); }
+    function draw(box) {
+        const s = ST.get(box), { data, opts } = box._pr;
+        if (!s.report) {
+            box.innerHTML = `<div class="pr-root"><div class="pr-head"><div><h3 class="pr-h">Reports</h3><p class="pr-sub">Pick a report. Each one has just the filters it needs, and every report can be downloaded for Excel or printed / saved as a PDF.</p></div></div>
+                <div class="pr-pick">${REPORTS.map(r => `<button type="button" class="pr-card" onclick="PR.set(this, 'report', '${r.id}')"><span class="pr-card-i">${r.icon}</span><span><b>${e(r.title)}</b><span>${e(r.blurb)}</span></span></button>`).join('')}</div></div>`;
+            return;
+        }
+        const R = REPORTS.find(r => r.id === s.report);
+        const out = BUILD[R.id](data, s, opts);
+        box._pr.csv = out.csv;
+        box.innerHTML = `<div class="pr-root pr-print">
+            <div class="pr-head"><button type="button" class="pr-back" onclick="PR.set(this, 'report', null)">‹ All reports</button>
+                <div class="min-w-0"><h3 class="pr-h">${R.icon} ${e(R.title)}</h3><p class="pr-sub">${e(data.site)}${R.f.includes('period') ? ' · ' + e(rangeText(s)) : ''}</p></div>
+                <div class="pr-acts"><button type="button" class="pr-btn" onclick="PR.download(this)">⬇ Download (Excel)</button><button type="button" class="pr-btn" onclick="PR.print(this)">🖨 Print / PDF</button></div></div>
+            <div class="pr-filters">${filtersHtml(R, data, s)}</div>
+            ${out.html}</div>`;
+    }
+    function opt(v, l, cur) { return `<option value="${e(v)}" ${String(cur) === String(v) ? 'selected' : ''}>${e(l)}</option>`; }
+    function filtersHtml(R, d, s) {
+        const sel = (k, label, list, all) => `<label class="pr-f"><span>${e(label)}</span><select onchange="PR.set(this, '${k}', this.value)">${all ? opt('', all, s[k]) : ''}${list.map(x => Array.isArray(x) ? opt(x[0], x[1], s[k]) : opt(x, x, s[k])).join('')}</select></label>`;
+        const uniq = a => Array.from(new Set(a.filter(Boolean))).sort((x, y) => String(x).localeCompare(String(y), undefined, { numeric: true, sensitivity: 'base' }));
+        const parts = [];
+        R.f.forEach(f => {
+            if (f === 'period') {
+                parts.push(sel('preset', 'Period', PRESETS));
+                if (s.preset === 'custom') parts.push(`<label class="pr-f"><span>From</span><input type="date" value="${e(s.from)}" onchange="PR.set(this, 'from', this.value)"></label><label class="pr-f"><span>To</span><input type="date" value="${e(s.to)}" onchange="PR.set(this, 'to', this.value)"></label>`);
+            }
+            if (f === 'type') parts.push(sel('type', 'Station type', uniq(d.stations.map(x => x.type)), 'All types'));
+            if (f === 'pest') parts.push(sel('pest', 'Pest', uniq(d.entries.map(x => x.species)), 'All pests'));
+            if (f === 'map') parts.push(sel('map', 'Floor plan', uniq(d.stations.map(x => x.map)), 'All floor plans'));
+            if (f === 'prep') parts.push(sel('prep', 'Preparation', uniq(d.entries.map(x => x.prep)), 'All preparations'));
+            if (f === 'tech') parts.push(sel('tech', 'Technician', uniq(d.visits.map(x => x.tech).concat(d.entries.map(x => x.tech))), 'Everyone'));
+            if (f === 'station') parts.push(sel('station', 'Station', d.stations.map(x => [x.barcode, x.name]), R.id === 'station' ? '' : 'All stations'));
+            if (f === 'batch') parts.push(`<label class="pr-f"><span>Batch number</span><input type="search" value="${e(s.batch)}" placeholder="Any" onchange="PR.set(this, 'batch', this.value.trim())"></label>`);
+            if (f === 'gap') parts.push(sel('gap', 'Flag stations not scanned for', [['14', '2 weeks'], ['35', '5 weeks'], ['60', '2 months'], ['95', '3 months']]));
+            if (f === 'months') parts.push(sel('month', 'Month', months(Date.now() - 365 * DAY, Date.now()).reverse().map(k => [k, monthLong(k)])));
+        });
+        return parts.join('');
+    }
+    // the records a report looks at
+    function pick(d, s, extra) {
+        const [a, b] = range(s);
+        return d.entries.filter(x => x.at >= a && x.at <= b && (!s.type || x.type === s.type) && (!extra || extra(x)));
+    }
+    const color = (opts, type) => (opts.colorOf ? opts.colorOf(type) : null) || '#64748b';
+    const dot = (opts, type) => `<span class="pr-dot" style="background:${color(opts, type)}"></span>`;
+
+    const BUILD = {
+        trend(d, s) {
+            const [a, b] = range(s), list = pick(d, s, x => x.species && (!s.pest || x.species === s.pest));
+            const ks = months(a || (d.entries[0] ? d.entries[0].at : Date.now()), b);
+            const tot = new Map(); list.forEach(x => tot.set(x.species, (tot.get(x.species) || 0) + x.count));
+            const top = Array.from(tot.entries()).sort((p, q) => q[1] - p[1]);
+            const named = top.slice(0, 6).map(p => p[0]), rest = top.slice(6).map(p => p[0]);
+            const series = named.map((sp, i) => ({ name: sp, color: PALETTE[i], vals: ks.map(k => list.filter(x => x.species === sp && monthKey(x.at) === k).reduce((n, x) => n + x.count, 0)) }));
+            if (rest.length) series.push({ name: `Other (${rest.length})`, color: PALETTE[8], vals: ks.map(k => list.filter(x => rest.includes(x.species) && monthKey(x.at) === k).reduce((n, x) => n + x.count, 0)) });
+            const totals = ks.map(k => list.filter(x => monthKey(x.at) === k).reduce((n, x) => n + x.count, 0));
+            const half = Math.floor(ks.length / 2), first = totals.slice(0, half).reduce((p, q) => p + q, 0), second = totals.slice(half).reduce((p, q) => p + q, 0);
+            const dir = !first && !second ? 'No captures' : second > first * 1.15 ? 'Going up' : second < first * 0.85 ? 'Going down' : 'Steady';
+            const head = [{ t: 'Month' }].concat(series.map(x => ({ t: x.name, num: true })), [{ t: 'Total', num: true }]);
+            const rows = ks.map((k, i) => ({ cells: [e(monthLong(k))].concat(series.map(x => x.vals[i] || ''), [`<b>${totals[i]}</b>`]) })).reverse();
+            return {
+                html: kpis([{ v: list.reduce((n, x) => n + x.count, 0), l: 'captures' }, { v: tot.size, l: 'pests' }, { v: dir, l: 'trend (second half vs first)', c: dir === 'Going up' ? '#dc2626' : dir === 'Going down' ? '#16a34a' : '' }])
+                    + `<div class="pr-chart">${series.length ? lineChart(series, ks, { lbl: monthLbl, label: 'Captures per month' }) : '<div class="pr-empty">No pests were caught in this period.</div>'}</div>` + table(head, rows),
+                csv: [head.map(h => h.t)].concat(ks.map((k, i) => [monthLong(k)].concat(series.map(x => x.vals[i]), [totals[i]])))
+            };
+        },
+        pests(d, s) {
+            const [a, b] = range(s), list = pick(d, s, x => x.species);
+            const prevS = Object.assign({}, s, { preset: 'custom', from: new Date(a - (b - a)).toISOString().slice(0, 10), to: new Date(a - DAY).toISOString().slice(0, 10) });
+            const prev = s.preset === 'all' ? [] : pick(d, prevS, x => x.species);
+            const tot = new Map(), ptot = new Map(), sts = new Map();
+            list.forEach(x => { tot.set(x.species, (tot.get(x.species) || 0) + x.count); const k = sts.get(x.species) || new Set(); k.add(x.barcode); sts.set(x.species, k); });
+            prev.forEach(x => ptot.set(x.species, (ptot.get(x.species) || 0) + x.count));
+            const all = list.reduce((n, x) => n + x.count, 0);
+            const rows = Array.from(tot.entries()).sort((p, q) => q[1] - p[1]);
+            const chg = (now, before) => before ? `${now >= before ? '+' : ''}${Math.round((now - before) / before * 100)}%` : now ? 'new' : '';
+            const head = [{ t: 'Pest' }, { t: 'Captures', num: true }, { t: 'Share', num: true }, { t: 'Stations', num: true }, { t: 'Period before', num: true }, { t: 'Change', num: true }];
+            return {
+                html: kpis([{ v: all, l: 'captures' }, { v: rows.length, l: 'different pests' }, { v: rows[0] ? rows[0][0] : '-', l: 'most common' }])
+                    + `<div class="pr-chart">${barChart(rows.map(([sp, n], i) => ({ l: sp, v: n, c: PALETTE[i % 8] })))}</div>`
+                    + table(head, rows.map(([sp, n]) => ({ cells: [e(sp), n, all ? Math.round(n / all * 100) + '%' : '', sts.get(sp).size, s.preset === 'all' ? '-' : (ptot.get(sp) || 0), s.preset === 'all' ? '' : chg(n, ptot.get(sp) || 0)] }))),
+                csv: [head.map(h => h.t)].concat(rows.map(([sp, n]) => [sp, n, all ? Math.round(n / all * 100) + '%' : '', sts.get(sp).size, ptot.get(sp) || 0, chg(n, ptot.get(sp) || 0)]))
+            };
+        },
+        stations(d, s, opts) {
+            const list = pick(d, s, x => x.species && (!s.pest || x.species === s.pest));
+            const by = new Map();
+            list.forEach(x => { const o = by.get(x.barcode) || { st: x.stationObj, n: 0, recs: 0, last: 0, pests: new Map() }; o.n += x.count; o.recs++; o.last = Math.max(o.last, x.at); o.pests.set(x.species, (o.pests.get(x.species) || 0) + x.count); by.set(x.barcode, o); });
+            const rows = Array.from(by.values()).sort((p, q) => q.n - p.n);
+            const head = [{ t: 'Station' }, { t: 'Type' }, { t: 'Floor plan' }, { t: 'Captures', num: true }, { t: 'Times with pests', num: true }, { t: 'Main pest' }, { t: 'Last found' }];
+            const main = o => Array.from(o.pests.entries()).sort((p, q) => q[1] - p[1])[0][0];
+            return {
+                html: kpis([{ v: rows.length, l: 'stations with pests' }, { v: list.reduce((n, x) => n + x.count, 0), l: 'captures' }, { v: rows[0] ? rows[0].st.name : '-', l: 'busiest station' }])
+                    + `<div class="pr-chart">${barChart(rows.slice(0, 15).map(o => ({ l: o.st.name, v: o.n, c: color(opts, o.st.type) })))}${rows.length > 15 ? `<p class="pr-note">The top 15 are charted; all ${rows.length} are in the table.</p>` : ''}</div>`
+                    + table(head, rows.map(o => ({ cells: [`${dot(opts, o.st.type)}<b>${e(o.st.name)}</b>`, e(o.st.type), e(o.st.map || '-'), o.n, o.recs, e(main(o)), e(fmtD(o.last))] }))),
+                csv: [head.map(h => h.t)].concat(rows.map(o => [o.st.name, o.st.type, o.st.map, o.n, o.recs, main(o), fmtD(o.last)]))
+            };
+        },
+        station(d, s, opts) {
+            if (!s.station || !d.stations.some(x => x.barcode === s.station)) s.station = d.stations[0] ? d.stations[0].barcode : '';
+            const stn = d.stations.find(x => x.barcode === s.station);
+            if (!stn) return { html: '<div class="pr-empty">This site has no stations yet.</div>', csv: [] };
+            const [a, b] = range(s), list = stn.entries.filter(x => x.at >= a && x.at <= b);
+            const ks = months(a || (stn.entries[0] ? stn.entries[0].at : Date.now()), b);
+            const vals = ks.map(k => list.filter(x => monthKey(x.at) === k).reduce((n, x) => n + x.count, 0));
+            const head = [{ t: 'Date' }, { t: 'Activity' }, { t: 'Pest' }, { t: 'Number', num: true }, { t: 'Preparation' }, { t: 'Batch' }, { t: 'Technician' }, { t: 'Notes' }];
+            const rows = list.slice().reverse();
+            return {
+                html: `<div class="pr-station">${dot(opts, stn.type)}<b>${e(stn.name)}</b> <span>${e(stn.type)}${stn.map ? ' · 📍 ' + e(stn.map) : ''} · ${e(stn.barcode)}</span></div>`
+                    + kpis([{ v: list.length, l: 'checks' }, { v: list.reduce((n, x) => n + x.count, 0), l: 'captures' }, { v: stn.lastAt ? fmtD(stn.lastAt) : 'Never', l: 'last scanned' }])
+                    + `<div class="pr-chart">${colBars(vals, ks, { lbl: monthLbl, color: color(opts, stn.type), label: 'Captures per month' })}</div>`
+                    + table(head, rows.map(x => ({ cells: [e(fmtDT(x.at)), e(x.activity), e(x.species || '-'), x.count || '', e(x.prep || '-') + (x.qty != null ? ` <span class="pr-faint">${e(x.qty)} ${e(x.unit)}</span>` : ''), `<span class="pr-mono">${e(x.batch)}</span>`, e(x.tech), e(x.notes)] }))),
+                csv: [head.map(h => h.t)].concat(rows.map(x => [fmtDT(x.at), x.activity, x.species, x.count || '', x.prep, x.batch, x.tech, x.notes]))
+            };
+        },
+        scanned(d, s, opts) {
+            const gap = Number(s.gap) || 35, now = Date.now();
+            const list = d.stations.filter(x => (!s.type || x.type === s.type) && (!s.map || x.map === s.map))
+                .map(x => Object.assign({ days: x.lastAt ? Math.floor((now - x.lastAt) / DAY) : null }, { x })).sort((p, q) => (q.days == null ? 1e9 : q.days) - (p.days == null ? 1e9 : p.days));
+            const late = list.filter(o => o.days == null || o.days > gap);
+            const head = [{ t: 'Station' }, { t: 'Type' }, { t: 'Floor plan' }, { t: 'Last scanned' }, { t: 'Days ago', num: true }, { t: 'Last result' }, { t: 'By' }];
+            return {
+                html: kpis([{ v: list.length, l: 'stations' }, { v: list.length - late.length, l: `scanned in the last ${gap} days`, c: '#16a34a' }, { v: late.length, l: 'not scanned for longer', c: late.length ? '#dc2626' : '' }])
+                    + table(head, list.map(o => ({ _cls: o.days == null || o.days > gap ? 'pr-late' : '', cells: [`${dot(opts, o.x.type)}<b>${e(o.x.name)}</b>`, e(o.x.type), e(o.x.map || '-'), e(o.x.lastAt ? fmtD(o.x.lastAt) : 'Never'), o.days == null ? '-' : o.days, e(o.x.last ? (o.x.last.species ? `${o.x.last.species}${o.x.last.count ? ' ×' + o.x.last.count : ''}` : o.x.last.activity === 'None' ? 'No activity' : o.x.last.activity) : '-'), e(o.x.last ? o.x.last.tech : '')] }))),
+                csv: [head.map(h => h.t)].concat(list.map(o => [o.x.name, o.x.type, o.x.map, o.x.lastAt ? fmtD(o.x.lastAt) : 'Never', o.days == null ? '' : o.days, o.x.last ? (o.x.last.species || o.x.last.activity) : '', o.x.last ? o.x.last.tech : '']))
+            };
+        },
+        preps(d, s) {
+            const q = String(s.batch || '').toLowerCase();
+            const list = pick(d, s, x => x.prep && (!s.prep || x.prep === s.prep) && (!s.station || x.barcode === s.station) && (!q || String(x.batch).toLowerCase().includes(q))).reverse();
+            const byPrep = new Map();
+            list.forEach(x => { const k = x.prep + '|' + x.unit; const o = byPrep.get(k) || { prep: x.prep, unit: x.unit, qty: 0, n: 0, batches: new Set(), stations: new Set() }; o.qty += x.qty || 0; o.n++; if (x.batch) o.batches.add(x.batch); o.stations.add(x.barcode); byPrep.set(k, o); });
+            const sums = Array.from(byPrep.values()).sort((p, q2) => q2.n - p.n);
+            const head = [{ t: 'Date' }, { t: 'Station' }, { t: 'Preparation' }, { t: 'Batch' }, { t: 'Amount', num: true }, { t: 'Technician' }];
+            return {
+                html: kpis([{ v: list.length, l: 'times used' }, { v: sums.length, l: 'preparations' }, { v: new Set(list.map(x => x.batch).filter(Boolean)).size, l: 'batch numbers' }])
+                    + `<div class="pr-sum">${table([{ t: 'Preparation' }, { t: 'Times used', num: true }, { t: 'Total used', num: true }, { t: 'Stations', num: true }, { t: 'Batches' }], sums.map(o => ({ cells: [`<b>${e(o.prep)}</b>`, o.n, `${Math.round(o.qty * 100) / 100} ${e(o.unit)}`, o.stations.size, `<span class="pr-mono">${e(Array.from(o.batches).join(', ') || '-')}</span>`] })), { empty: 'No preparations were used in this period.' })}</div>`
+                    + table(head, list.map(x => ({ cells: [e(fmtDT(x.at)), e(x.station), e(x.prep), `<span class="pr-mono">${e(x.batch || '-')}</span>`, x.qty != null ? `${e(x.qty)} ${e(x.unit)}` : '', e(x.tech)] })), { empty: 'No preparations were used in this period.' }),
+                csv: [head.map(h => h.t)].concat(list.map(x => [fmtDT(x.at), x.station, x.prep, x.batch, x.qty != null ? x.qty : '', x.unit, x.tech]))
+            };
+        },
+        limits(d, s, opts) {
+            if (!d.limits.length) return { html: '<div class="pr-empty">No critical limits are set for this site.</div>', csv: [] };
+            const k = Number(s.month), ks = months(monthStart(k - 11), monthStart(k + 1) - 1).filter(x => x <= k);
+            const inLimit = l => new Set(d.stations.filter(x => String(x.limitId) === l.id).map(x => x.barcode));
+            const total = (l, rule, mk) => { const sts = inLimit(l); return d.entries.filter(x => sts.has(x.barcode) && monthKey(x.at) === mk && pestKey(x.species) === pestKey(rule.species)).reduce((n, x) => n + x.count, 0); };
+            const blocks = [], csv = [['Critical limit', 'Pest', 'Month', 'Captures', 'Limit', 'Over by']];
+            const breaches = [];
+            d.limits.forEach(l => l.rules.forEach(rule => {
+                const vals = ks.map(mk => total(l, rule, mk));
+                ks.forEach((mk, i) => { csv.push([l.name, rule.species, monthLong(mk), vals[i], rule.max, Math.max(0, vals[i] - rule.max)]); if (vals[i] > rule.max) breaches.push({ l, rule, mk, n: vals[i] }); });
+                const now = vals[vals.length - 1];
+                blocks.push(`<div class="pr-lim"><div class="pr-lim-h"><b>${e(l.name)} · ${e(rule.species)}</b><span class="pr-chip ${now > rule.max ? 'red' : now >= rule.max * .8 ? 'amber' : 'green'}">${monthLong(k)}: ${now} of ${rule.max}</span></div>${lineChart([{ name: rule.species, color: '#2563eb', vals }], ks, { lbl: monthLbl, limit: rule.max, label: `${l.name} ${rule.species}` })}<p class="pr-note">${plural(inLimit(l).size, 'station')} on this limit.</p></div>`);
+            }));
+            return {
+                html: kpis([{ v: d.limits.length, l: 'critical limits' }, { v: breaches.filter(x => x.mk === k).length, l: `breached in ${monthLong(k)}`, c: breaches.some(x => x.mk === k) ? '#dc2626' : '#16a34a' }, { v: breaches.length, l: 'breaches in the 12 months' }])
+                    + `<div class="pr-lims">${blocks.join('')}</div>`
+                    + `<h4 class="pr-h4">Breaches</h4>` + table([{ t: 'Month' }, { t: 'Critical limit' }, { t: 'Pest' }, { t: 'Captures', num: true }, { t: 'Limit', num: true }, { t: 'Over by', num: true }],
+                        breaches.sort((p, q) => q.mk - p.mk).map(b => ({ _cls: 'pr-late', cells: [e(monthLong(b.mk)), e(b.l.name), e(b.rule.species), b.n, b.rule.max, b.n - b.rule.max] })), { empty: 'No breaches - every limit was kept. 🎉' }),
+                csv
+            };
+        },
+        recs(d, s) {
+            const [a, b] = range(s), list = d.recs.filter(r => r.raisedAt >= a && r.raisedAt <= b);
+            const done = list.filter(r => r.status === 'complete' && r.completedAt);
+            const avg = done.length ? Math.round(done.reduce((n, r) => n + (r.completedAt - r.raisedAt) / DAY, 0) / done.length) : null;
+            const byCat = new Map(); list.forEach(r => byCat.set(r.category, (byCat.get(r.category) || 0) + 1));
+            const ks = months(a || (list.length ? Math.min(...list.map(r => r.raisedAt)) : Date.now()), b);
+            const head = [{ t: 'Number' }, { t: 'Raised' }, { t: 'Station' }, { t: 'Type' }, { t: 'Recommendation' }, { t: 'Status' }, { t: 'Days open', num: true }];
+            const no = r => r.no != null ? 'R-' + String(r.no).padStart(4, '0') : '';
+            const days = r => Math.max(0, Math.round(((r.completedAt || Date.now()) - r.raisedAt) / DAY));
+            return {
+                html: kpis([{ v: list.length, l: 'raised' }, { v: list.filter(r => r.status !== 'complete').length, l: 'still open or pending', c: '#ea580c' }, { v: done.length, l: 'completed', c: '#16a34a' }, { v: avg == null ? '-' : avg + ' days', l: 'average time to complete' }])
+                    + `<div class="pr-two"><div class="pr-chart"><div class="pr-cap">Raised each month</div>${colBars(ks.map(k => list.filter(r => monthKey(r.raisedAt) === k).length), ks, { lbl: monthLbl, label: 'Recommendations raised per month' })}</div><div class="pr-chart"><div class="pr-cap">By type</div>${barChart(Array.from(byCat.entries()).sort((p, q) => q[1] - p[1]).map(([c, n], i) => ({ l: c, v: n, c: PALETTE[i % 8] })))}</div></div>`
+                    + table(head, list.slice().sort((p, q) => q.raisedAt - p.raisedAt).map(r => ({ cells: [`<span class="pr-mono">${e(no(r))}</span>`, e(fmtD(r.raisedAt)), e(r.station), e(r.category), e(r.text), `<span class="pr-chip ${r.status === 'complete' ? 'green' : r.status === 'pending' ? 'amber' : 'red'}">${e(r.status === 'complete' ? 'Complete' : r.status === 'pending' ? 'Pending' : 'Open')}</span>`, days(r)] }))),
+                csv: [head.map(h => h.t)].concat(list.map(r => [no(r), fmtD(r.raisedAt), r.station, r.category, r.text, r.status, days(r)]))
+            };
+        },
+        visits(d, s) {
+            const [a, b] = range(s), list = d.visits.filter(v => v.at >= a && v.at <= b && (!s.tech || v.tech === s.tech));
+            const ks = months(a || (list[0] ? list[0].at : Date.now()), b);
+            const mins = v => v.start && v.end && v.end > v.start ? Math.round((v.end - v.start) / 60000) : null;
+            const timed = list.map(mins).filter(x => x != null);
+            const avg = timed.length ? Math.round(timed.reduce((p, q) => p + q, 0) / timed.length) : null;
+            const hm = m => m == null ? '-' : m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`;
+            const byTech = new Map(); list.forEach(v => byTech.set(v.tech || 'Not recorded', (byTech.get(v.tech || 'Not recorded') || 0) + 1));
+            const head = [{ t: 'Date' }, { t: 'Visit' }, { t: 'Technician' }, { t: 'Time on site', num: true }, { t: 'Stations checked', num: true }];
+            return {
+                html: kpis([{ v: list.length, l: 'visits' }, { v: hm(avg), l: 'average time on site' }, { v: byTech.size, l: 'technicians' }])
+                    + `<div class="pr-two"><div class="pr-chart"><div class="pr-cap">Visits each month</div>${colBars(ks.map(k => list.filter(v => monthKey(v.at) === k).length), ks, { lbl: monthLbl, label: 'Visits per month' })}</div><div class="pr-chart"><div class="pr-cap">By technician</div>${barChart(Array.from(byTech.entries()).sort((p, q) => q[1] - p[1]).map(([t, n], i) => ({ l: t, v: n, c: PALETTE[i % 8] })))}</div></div>`
+                    + table(head, list.slice().reverse().map(v => ({ cells: [e(fmtDT(v.at)), e(v.type), e(v.tech || '-'), e(hm(mins(v))), v.n] }))),
+                csv: [head.map(h => h.t)].concat(list.map(v => [fmtDT(v.at), v.type, v.tech, mins(v) == null ? '' : mins(v), v.n]))
+            };
+        }
+    };
+
+    // ---------- download and print ----------
+    function download(btn) {
+        const box = btn.closest('.pr-root').parentElement, s = ST.get(box), rows = (box._pr && box._pr.csv) || [];
+        const R = REPORTS.find(r => r.id === s.report);
+        const cell = v => { const t = String(v == null ? '' : v); return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+        const csv = '﻿' + [[box._pr.data.site + ' - ' + R.title], [R.f.includes('period') ? rangeText(s) : ''], []].concat(rows).map(r => r.map(cell).join(',')).join('\r\n');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+        a.download = `${box._pr.data.site || 'Site'} - ${R.title}.csv`.replace(/[\\/:*?"<>|]+/g, '-');
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+    }
+    function print(btn) {
+        const root = btn.closest('.pr-root');
+        document.body.classList.add('pr-printing');
+        root.classList.add('pr-printing-this');
+        const done = () => { document.body.classList.remove('pr-printing'); root.classList.remove('pr-printing-this'); window.removeEventListener('afterprint', done); };
+        window.addEventListener('afterprint', done);
+        window.print();
+        setTimeout(done, 1500);
+    }
+    return { build, render, set, download, print, REPORTS };
+})();
+/* PESTIS-REPORTS:END */
 </script>
 </body>
 </html>
