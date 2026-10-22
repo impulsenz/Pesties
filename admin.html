@@ -6,7 +6,7 @@
     The Admin site, separate from the Service App (index.html) and the Client Portal (client.html):
     its own page, its own sign-in (admin accounts only) and its own code. They only share the database.
     Open it at  https://<your site>/admin.html  and upload it next to index.html.
-    Version 2026.10.22-a11
+    Version 2026.10.23-a12
 -->
 <head>
     <meta charset="UTF-8">
@@ -268,7 +268,18 @@
         .land-card.lc-resizing { outline: 2px solid rgb(var(--b500) / .6); outline-offset: 3px; }
         body.lc-busy, body.lc-busy * { user-select: none !important; }
         body.lc-busy .lc-move { cursor: grabbing; }
+        /* links between the three Pestis apps; the one you're in is filled */
+        .app-switch { display: flex; flex-wrap: wrap; justify-content: center; gap: .35rem; }
+        .app-switch > a, .app-switch > .on { display: inline-flex; align-items: center; gap: .3rem; padding: .3rem .65rem; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1.3; border: 1px solid var(--border); background: var(--surface2); color: var(--text); text-decoration: none; white-space: nowrap; }
+        .app-switch > a:hover, .app-switch > a:focus-visible { border-color: rgb(var(--b500)); outline: none; }
+        .app-switch > .on { background: rgb(var(--b500)); border-color: transparent; color: #fff; cursor: default; }
+        .app-here { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
         .board-hint { display: flex; align-items: center; justify-content: flex-end; gap: .75rem; font-size: 11px; color: var(--faint); margin: -.75rem 0 -.75rem; }
+        .board-cols { display: none; align-items: center; gap: .3rem; }
+        @media (min-width: 1024px) { .board-cols { display: inline-flex; } }
+        .board-cols button { width: 1.35rem; height: 1.35rem; border-radius: .4rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-weight: 800; line-height: 1; }
+        .board-cols button:hover { border-color: rgb(var(--b500)); }
+        .board-cols input { width: 2.6rem; height: 1.35rem; padding: 0 .2rem; text-align: center; border-radius: .4rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-weight: 700; font-size: 11px; }
         /* open recommendations by age: small donut in the box's top corner */
         .rec-mini { display: flex; align-items: center; gap: .55rem; margin-left: auto; }
         .rec-mini-legend { display: flex; flex-direction: column; gap: .1rem; font-size: 10px; color: var(--muted); line-height: 1.25; }
@@ -292,6 +303,8 @@
         .sh-cover.hidden { display: none !important; }
         .sh-contact { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .9rem; font-size: .78rem; padding: .5rem .75rem; border-radius: .8rem; background: var(--surface2); border: 1px solid var(--border); width: fit-content; max-width: 100%; }
         .sh-contact .eyebrow { font-size: .58rem; }
+        .sh-contact[role=button] { cursor: pointer; transition: border-color .15s; }
+        .sh-contact[role=button]:hover, .sh-contact[role=button]:focus-visible { border-color: rgb(var(--b500)); outline: none; }
         .kpi { background: var(--surface2); border: 1px solid var(--border); border-radius: .9rem; padding: .7rem .85rem; min-width: 0; }
         .kpi-k { font-size: .6rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
         .kpi-v { font-size: 1.6rem; font-weight: 900; line-height: 1.15; margin-top: .15rem; }
@@ -315,7 +328,7 @@
         .station-thumb { width: 3.25rem; height: 3.25rem; border-radius: .6rem; overflow: hidden; background: var(--surface3); display: flex; align-items: center; justify-content: center; font-size: 1rem; opacity: .9; }
         .station-thumb img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
         /* poster cards (Recommendations and Stations boxes): the photo leads */
-        .nf-grid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); gap: .75rem; align-content: start; padding: .2rem; }
+        .nf-grid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); grid-auto-rows: max-content; gap: .75rem; align-content: start; padding: .2rem; }
         .nf-grid > * { margin: 0 !important; }
         .nf-grid > :not(.nf-card) { grid-column: 1 / -1; }
         .nf-card { display: block; width: 100%; text-align: left; border-radius: .9rem; overflow: hidden; background: var(--surface2); border: 1px solid var(--border); cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s; }
@@ -351,6 +364,8 @@
         .nf-foot .chip { flex-shrink: 0; }
         /* computers: every card the same width in every box */
         @media (min-width: 640px) { .land-card .nf-grid { grid-template-columns: repeat(auto-fill, 10.75rem) !important; justify-content: start; gap: .7rem; } }
+        /* a very narrow box (many boxes per row): one card per line, still all the same size */
+        @container (max-width: 200px) { .land-card .nf-grid { grid-template-columns: minmax(0, 1fr) !important; } }
         .nf-foot { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .3rem; margin-top: .22rem; font-size: 10px; color: var(--faint); }
         .nf-foot .chip { padding: 0 .35rem; font-size: 9.5px; line-height: 1.5; }
         .rec-no { color: rgb(var(--b500)) !important; }
@@ -548,7 +563,13 @@
         .sh-synced[data-state="err"] .sh-dot { background: #dc2626; }
         .sh-synced[data-state="off"] .sh-dot { background: #94a3b8; }
         .sh-synced[data-state="live"] .sh-dot { box-shadow: 0 0 0 3px rgba(16, 185, 129, .25); }
-        @media (max-width: 639px) { .site-hero-band { padding-top: 2.4rem; } }
+        @media (max-width: 639px) {
+            .site-hero-band { padding-top: 2.1rem; }
+            .site-hero-band .sh-synced { top: .45rem; }
+            /* phones: the site card sits just under the top bar */
+            #appRoot { padding-top: .5rem; }
+            #appRoot > #siteLandingDashboard, #appRoot > #visitWorkspace { margin-top: 0 !important; }
+        }
         .scan-prog { width: min(21rem, calc(100vw - 2rem)); padding: .9rem; }
         /* settings: theme swatches */
         .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.2rem, 1fr)); gap: .5rem; }
@@ -687,6 +708,7 @@
         .map-tab { display: inline-flex; align-items: center; gap: .4rem; max-width: 15rem; flex-shrink: 0; padding: .45rem .75rem; border-radius: .75rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: .75rem; font-weight: 700; cursor: pointer; }
         .map-tab:hover { border-color: rgb(var(--b500)); }
         .map-tab.on { background: rgb(var(--b500)); border-color: rgb(var(--b500)); color: #fff; }
+        .map-tab-un { flex-shrink: 0; font-size: 9.5px; font-weight: 800; padding: 0 .35rem; border-radius: 999px; color: #b45309; background: rgba(245, 158, 11, .16); }
         .map-tab-n { font-size: .65rem; font-weight: 800; padding: .05rem .4rem; border-radius: 999px; background: rgba(0, 0, 0, .1); }
         .map-tab.on .map-tab-n { background: rgba(255, 255, 255, .25); }
         @media (min-width: 900px) { .map-top { flex-direction: row; align-items: center; } .map-top > .map-top-row:first-child { flex: 1 1 auto; } .map-tools-row { flex: 0 0 auto; flex-wrap: nowrap; } .map-close { order: 9; } }
@@ -913,9 +935,10 @@
                     <svg class="w-5 h-5" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
                     Sign in with Google
                 </button>
-                <p class="text-[11px] t-faint">Technicians use the <a href="index.html" class="underline">Service App</a>. Clients use the <a href="client.html" class="underline">Client Portal</a>.</p>
+                <p class="text-[11px] t-faint">Technicians use the Service App. Clients use the Client Portal.</p>
             </div>
             <p id="loginMessage" class="text-xs hidden leading-relaxed" style="color:#ef4444;"></p>
+            <div class="space-y-1.5 border-t divider pt-4"><div class="app-here">Pestis apps</div><nav class="app-switch" aria-label="Pestis apps"><a href="index.html">🛠 Service App</a><span class="on" aria-current="page">🛡 Admin</span><a href="client.html">🏢 Client Portal</a></nav></div>
         </div>
     </div>
 
@@ -928,7 +951,21 @@
             }
             function esc(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
             window.pestisRepair = async function () {
-                var b = document.getElementById('bootRepairBtn'); if (b) { b.disabled = true; b.textContent = 'Repairing...'; }
+                var b = document.getElementById('bootRepairBtn'); if (b) { b.disabled = true; b.textContent = 'Checking the connection...'; }
+                // never remove the saved app without signal - it couldn't be downloaded again and the app wouldn't open at all
+                var reach = false;
+                try {
+                    var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+                    var t = setTimeout(function () { if (ctrl) ctrl.abort(); }, 6000);
+                    var r = await fetch('sw.js?check=' + Date.now(), { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
+                    clearTimeout(t); reach = !!(r && r.ok);
+                } catch (e) {}
+                if (!navigator.onLine || !reach) {
+                    alert("No internet connection right now, so the app can't be re-downloaded. Repair app needs signal - try Try again, or repair when you're back online.");
+                    if (b) { b.disabled = false; b.textContent = 'Repair app'; }
+                    return;
+                }
+                if (b) b.textContent = 'Repairing...';
                 // removes the saved app files only - anything not uploaded yet stays on this device
                 try { if (navigator.serviceWorker) { var regs = await navigator.serviceWorker.getRegistrations(); for (var i = 0; i < regs.length; i++) await regs[i].unregister(); } } catch (e) {}
                 try { if (window.caches) { var keys = await caches.keys(); for (var k = 0; k < keys.length; k++) await caches.delete(keys[k]); } } catch (e) {}
@@ -976,6 +1013,7 @@
                     <div id="adminMeMenu" class="hidden absolute right-0 mt-2 w-64 card p-3 space-y-2 text-xs z-50" role="menu">
                         <div id="adminMeDetail" class="t-muted break-words"></div>
                         <div class="text-[10px] t-faint">Pestis Admin <span class="addon-version font-mono"></span></div>
+                        <div class="border-t divider pt-2 space-y-1.5"><div class="app-here">Pestis apps · you're in Admin</div><nav class="app-switch" aria-label="Pestis apps"><a href="index.html">🛠 Service App</a><span class="on" aria-current="page">🛡 Admin</span><a href="client.html">🏢 Client Portal</a></nav></div>
                         <button type="button" onclick="signOut()" class="btn btn-secondary w-full">Sign out</button>
                     </div>
                 </div>
@@ -1102,6 +1140,17 @@
                 </div>
                 <div id="limEditor"></div>
                 <div id="limList" class="space-y-3 text-xs"></div>
+            </section>
+
+            <section data-admin-tab="contacts" class="hidden card p-5 sm:p-6 space-y-4">
+                <div><h3 class="font-black t-strong">Site contacts</h3>
+                    <p class="text-xs t-muted mt-1">The people at each site and their roles. The main contact shows on the site page in the Service App with their phone number. Technicians and the site's clients (in the Client Portal) can keep these up to date too.</p></div>
+                <div class="flex flex-wrap items-end gap-2">
+                    <div><label class="lbl" for="ctSite">Site</label><select id="ctSite" class="field !w-auto !py-2 !text-sm min-w-[14rem]" onchange="loadAdminContacts()"></select></div>
+                    <button type="button" id="ctAddBtn" class="btn btn-primary !py-2" onclick="editAdminContact('new')">+ Add contact</button>
+                </div>
+                <div id="ctEditor"></div>
+                <div id="ctList" class="space-y-2 text-xs"></div>
             </section>
 
             <section data-admin-tab="reports" class="hidden card p-5 sm:p-6 space-y-4">
@@ -2648,8 +2697,24 @@
 
         const BAD_PIC = /\b(map|range|distribution|logo|icon|diagram|drawing|illustration|stamp|coat of arms|chart|graph|museum specimen label|svg)\b|\.(svg|gif|tiff?|pdf|webm|ogv)$/i;
 
+        // Wikimedia only serves its photos at standard widths now; other widths (the gallery used to ask for 900) fail.
+        // Every Wikimedia photo is shown at the nearest standard width, which also mends galleries saved before.
+        const WM_STEPS = [120, 250, 330, 500, 960, 1280, 1920];
+
+        function wmPic(u, w) {
+            const m = /^(https?:\/\/upload\.wikimedia\.org\/.+\/thumb\/.+\/)(\d+)px-([^/]+)$/.exec(String(u || ''));
+            if (!m) return u;
+            return m[1] + (WM_STEPS.find(x => x >= (w || 500)) || 1920) + 'px-' + m[3];
+        }
+
+        // a Wikimedia picture that still won't load: try the original file once, then show the pest's icon
+        function wmFallback(img, icon) {
+            if (!img.dataset.wf && /upload\.wikimedia\.org\/.+\/thumb\//.test(img.src)) { img.dataset.wf = '1'; img.src = img.src.replace('/thumb/', '/').replace(/\/[^/]+$/, ''); return; }
+            img.replaceWith(Object.assign(document.createElement('span'), { className: icon ? '' : 't-faint text-xs', textContent: icon || 'Picture unavailable' }));
+        }
+
         async function commonsSearch(term, limit) {
-            const url = `${COMMONS_API}?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=${Math.max(3, (limit || 4) * 2)}&gsrsearch=${encodeURIComponent('filetype:bitmap ' + term)}&prop=imageinfo&iiprop=url&iiurlwidth=900`;
+            const url = `${COMMONS_API}?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=${Math.max(3, (limit || 4) * 2)}&gsrsearch=${encodeURIComponent('filetype:bitmap ' + term)}&prop=imageinfo&iiprop=url&iiurlwidth=960`;
             const r = await fetch(url, { headers: { Accept: 'application/json' } });
             if (!r.ok) throw new Error('Wikimedia ' + r.status);
             const j = await r.json(), pages = Object.values((j.query && j.query.pages) || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
@@ -2698,9 +2763,9 @@
             const list = pgState[pgState.tab], it = list[pgState.i];
             const tab = (k, l) => `<button type="button" class="tab-btn ${pgState.tab === k ? 'active' : ''}" onclick="pgState.tab = '${k}'; pgState.i = 0; drawPestGallery()" ${pgState[k].length ? '' : 'disabled style="opacity:.5"'}>${l} ${pgState[k].length}</button>`;
             return `<div class="flex flex-wrap gap-1.5 mb-2">${tab('pest', '📷 The pest')}${tab('signs', '🔍 Signs of infestation')}</div>
-                <div class="pest-hero pg-stage">${it ? `<img src="${esc(it.u)}" alt="${esc(it.t || pgState.title)}" onclick="pgOpenFull()" onerror="this.replaceWith(Object.assign(document.createElement('span'), { className: 't-faint text-xs', textContent: 'Picture unavailable' }))">` : '<span class="t-faint text-xs">No pictures found.</span>'}
+                <div class="pest-hero pg-stage">${it ? `<img src="${esc(wmPic(it.u, 960))}" alt="${esc(it.t || pgState.title)}" onclick="pgOpenFull()" onerror="wmFallback(this)">` : '<span class="t-faint text-xs">No pictures found.</span>'}
                     ${list.length > 1 ? `<button type="button" class="pg-nav pg-prev" onclick="pgStep(-1)" aria-label="Previous picture">‹</button><button type="button" class="pg-nav pg-next" onclick="pgStep(1)" aria-label="Next picture">›</button><span class="pg-count">${pgState.i + 1} / ${list.length}</span>` : ''}</div>
-                ${list.length > 1 ? `<div class="pg-thumbs">${list.map((x, k) => `<button type="button" class="pg-thumb ${k === pgState.i ? 'on' : ''}" onclick="pgState.i = ${k}; drawPestGallery()"><img src="${esc(x.u)}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
+                ${list.length > 1 ? `<div class="pg-thumbs">${list.map((x, k) => `<button type="button" class="pg-thumb ${k === pgState.i ? 'on' : ''}" onclick="pgState.i = ${k}; drawPestGallery()"><img src="${esc(wmPic(x.u, 120))}" alt="" loading="lazy" onerror="wmFallback(this, '·')"></button>`).join('')}</div>` : ''}
                 ${it && !it.own ? `<p class="text-[10px] t-faint mt-1">${esc(it.t || '')}${it.t ? ' · ' : ''}Photo: <a href="${esc(it.p || 'https://commons.wikimedia.org')}" target="_blank" rel="noopener" class="underline">Wikimedia Commons</a> (see the page for the photographer and licence)</p>` : ''}`;
         }
 
@@ -2708,7 +2773,7 @@
 
         function pgStep(d) { const n = pgState[pgState.tab].length; if (!n) return; pgState.i = (pgState.i + d + n) % n; drawPestGallery(); }
 
-        function pgOpenFull() { const list = pgState[pgState.tab]; if (list.length) viewFullImage(list.map(x => x.u), '', pgState.title + (pgState.tab === 'signs' ? ' · signs of infestation' : ''), '', pgState.i); }
+        function pgOpenFull() { const list = pgState[pgState.tab]; if (list.length) viewFullImage(list.map(x => wmPic(x.u, 1280)), '', pgState.title + (pgState.tab === 'signs' ? ' · signs of infestation' : ''), '', pgState.i); }
 
         let pestGuideQ = '';
 
@@ -2745,7 +2810,7 @@
                     try {
                         const g = await pestGallery(o), it = g.pest[0] || g.signs[0];
                         const box = el.querySelector(`[data-pest-pic="${cssEsc(o.id)}"]`);
-                        if (box && it) box.innerHTML = `<img src="${esc(it.u)}" alt="${esc(o.label)}" loading="lazy">`;
+                        if (box && it) box.innerHTML = `<img src="${esc(wmPic(it.u, 330))}" alt="${esc(o.label)}" loading="lazy" onerror="wmFallback(this, '${PEST_CAT_ICON[pestCategoryOf(o)] || '🐞'}')">`;
                     } catch (e) {}
                 }
             };
@@ -3225,7 +3290,7 @@ const PR = (() => {
 /* PESTIS-REPORTS:END */
 
         // Tells index.html what loaded, and which version of the hook-up it was written for
-        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.22-a11', api: 0 };
+        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.23-a12', api: 0 };
 
         async function loadAdminPanel() {
             const profList = document.getElementById('adminProfilesList');
@@ -3682,7 +3747,7 @@ const PR = (() => {
         // ===================================================================
         //  ADMIN PAGE: team-wide information and settings in one place (admins only)
         // ===================================================================
-        const ADMIN_TABS = [['overview', 'Overview'], ['team', 'Users'], ['clients', 'Client portal'], ['services', 'Services'], ['documents', 'Documents'], ['limits', 'Critical limits'], ['reports', 'Reports'], ['lists', 'Lists'], ['days', 'Day log'], ['activity', 'Activity'], ['exports', 'Exports']];
+        const ADMIN_TABS = [['overview', 'Overview'], ['team', 'Users'], ['clients', 'Client portal'], ['services', 'Services'], ['documents', 'Documents'], ['contacts', 'Site contacts'], ['limits', 'Critical limits'], ['reports', 'Reports'], ['lists', 'Lists'], ['days', 'Day log'], ['activity', 'Activity'], ['exports', 'Exports']];
         let adminTab = 'overview';
         function openAdmin(tab) { setAdminTab(tab || adminTab); }
         function closeAdmin() {}
@@ -3706,6 +3771,7 @@ const PR = (() => {
             else if (adminTab === 'services') renderAdminServices();
             else if (adminTab === 'documents') { renderAdminDocs(); adminDlFillSites(); }
             else if (adminTab === 'limits') { adminSitePick('limSite'); loadAdminLimits(); }
+            else if (adminTab === 'contacts') { adminSitePick('ctSite'); loadAdminContacts(); }
             else if (adminTab === 'reports') { adminSitePick('repSite'); loadAdminReports(); }
             else if (adminTab === 'lists') { document.getElementById('newPrepUnit').innerHTML = PREP_UNITS.map(([v, l]) => `<option value="${v}">${l}</option>`).join(''); renderSettingsLists(); if (isOnline) loadOptions(); }
             else if (adminTab === 'settings') renderTeamSettings();
@@ -3918,6 +3984,83 @@ const PR = (() => {
                 if (!data || data.length < 1000) break;
             }
             return out;
+        }
+
+        // ---------- Site contacts (each site's people and their roles) ----------
+        const CT_ROLES = ['Site manager', 'Facilities manager', 'Health & safety', 'Quality / food safety', 'Operations', 'Maintenance', 'Reception', 'Accounts', 'After hours'];
+        let adminCt = { cid: '', list: [], editing: null, error: '' };
+        async function loadAdminContacts() {
+            const cid = document.getElementById('ctSite').value;
+            adminSiteId = cid;
+            adminCt = { cid, list: [], editing: null, error: '' };
+            document.getElementById('ctAddBtn').disabled = !cid;
+            document.getElementById('ctEditor').innerHTML = '';
+            const box = document.getElementById('ctList');
+            if (!cid) { box.innerHTML = '<div class="row-item p-4 t-faint italic text-center">Choose a site to see and change its contacts.</div>'; return; }
+            box.innerHTML = '<div class="t-faint italic">Loading...</div>';
+            try {
+                const list = await adminFetchAll('site_contacts', cid);
+                if (document.getElementById('ctSite').value !== cid) return;
+                const main = list.filter(x => x.is_primary).sort((a, b) => String(b.updated_at || '').localeCompare(String(a.updated_at || '')))[0] || list[0];
+                list.forEach(x => { x._main = x === main; });
+                adminCt.list = list.sort((a, b) => (b._main - a._main) || String(a.name).localeCompare(String(b.name), undefined, { sensitivity: 'base' }));
+            } catch (e) { adminCt.error = /site_contacts|does not exist|schema cache/i.test(e.message || '') ? 'The database needs updating for site contacts: run pestis_client_portal.sql in the Supabase SQL editor.' : (e.message || String(e)); }
+            renderAdminContacts();
+        }
+        function renderAdminContacts() {
+            const box = document.getElementById('ctList');
+            if (adminCt.error) { box.innerHTML = `<div class="row-item p-4" style="color:#dc2626;">${esc(adminCt.error)}</div>`; return; }
+            const tel = p => 'tel:' + String(p || '').replace(/[^\d+]/g, '');
+            box.innerHTML = adminCt.list.map(x => `<div class="row-item p-3 space-y-1" ${x._main ? 'style="border-color:rgb(var(--b500));"' : ''}>
+                    <div class="flex flex-wrap items-start justify-between gap-2"><div class="min-w-0"><b class="text-sm t-strong">${esc(x.name)}</b>${x._main ? ' <span class="chip chip-orange !py-0 ml-1">Main contact</span>' : ''}${x.role ? `<div class="t-muted">${esc(x.role)}</div>` : ''}</div>
+                        <span class="flex gap-2">${x._main ? '' : `<button type="button" class="btn btn-secondary !py-1.5 !px-3" data-id="${esc(x.id)}" onclick="mainAdminContact(this.dataset.id)">Make main</button>`}<button type="button" class="btn btn-secondary !py-1.5 !px-3" data-id="${esc(x.id)}" onclick="editAdminContact(this.dataset.id)">Edit</button></span></div>
+                    <div class="flex flex-wrap gap-x-4 gap-y-1">${x.phone ? `<a href="${esc(tel(x.phone))}" class="link-btn !no-underline font-mono">📞 ${esc(x.phone)}</a>` : ''}${x.email ? `<a href="mailto:${esc(x.email)}" class="link-btn !no-underline font-mono break-all">✉ ${esc(x.email)}</a>` : ''}${!x.phone && !x.email ? '<span class="t-faint">No phone or email</span>' : ''}</div>
+                    ${x.notes ? `<div class="t-faint whitespace-pre-line">${esc(x.notes)}</div>` : ''}
+                    <div class="text-[10px] t-faint">${x.updated_by ? 'Last changed by ' + esc(x.updated_by) : ''}</div></div>`).join('')
+                || '<div class="row-item p-4 t-faint italic text-center">This site has no contacts yet.</div>';
+        }
+        function editAdminContact(id) {
+            adminCt.editing = id;
+            const e = id && id !== 'new' ? (adminCt.list.find(x => String(x.id) === String(id)) || {}) : {};
+            const f = (k, label, type, ph, extra) => `<div ${extra || ''}><label class="lbl" for="ct_${k}">${label}</label><input id="ct_${k}" type="${type}" class="field" placeholder="${ph}" value="${esc(e[k] || '')}" ${k === 'role' ? 'list="ctRoles"' : ''}></div>`;
+            document.getElementById('ctEditor').innerHTML = `<div class="inset p-4 space-y-3" style="border-color:rgb(var(--b500));">
+                <div class="eyebrow t-accent">${e.id ? 'Change contact' : 'New contact'}</div>
+                <datalist id="ctRoles">${CT_ROLES.map(r => `<option value="${esc(r)}">`).join('')}</datalist>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${f('name', 'Name *', 'text', 'e.g. Jane Smith')}${f('role', 'Role', 'text', 'e.g. Site manager')}${f('phone', 'Phone', 'tel', 'e.g. 021 123 4567')}${f('email', 'Email', 'email', 'name@company.co.nz')}${f('notes', 'Notes', 'text', 'e.g. Call before 9am', 'class="sm:col-span-2"')}</div>
+                ${e._main ? '' : `<label class="flex items-center gap-2 text-xs t-strong"><input type="checkbox" id="ct_main" class="w-4 h-4 accent-orange-500" ${!adminCt.list.length ? 'checked disabled' : ''}> Main contact (shown on the site page)</label>`}
+                <div class="flex flex-wrap justify-end gap-2">${e.id ? `<button type="button" class="btn btn-outline-danger mr-auto" data-id="${esc(e.id)}" onclick="deleteAdminContact(this.dataset.id)">Remove</button>` : ''}<button type="button" class="btn btn-secondary" onclick="adminCt.editing = null; document.getElementById('ctEditor').innerHTML = ''">Cancel</button><button type="button" id="ctSaveBtn" class="btn btn-primary" onclick="saveAdminContact()">Save contact</button></div></div>`;
+            document.getElementById('ct_name').focus();
+        }
+        async function saveAdminContact() {
+            const v = k => (document.getElementById('ct_' + k).value || '').trim();
+            const id = adminCt.editing && adminCt.editing !== 'new' ? adminCt.editing : null, name = v('name'), email = v('email');
+            if (!name) { alert("Enter the contact's name."); return; }
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert("That email address doesn't look right."); return; }
+            const row = { name, role: v('role') || null, phone: v('phone') || null, email: email || null, notes: v('notes') || null, updated_by: technicianLabel() };
+            const m = document.getElementById('ct_main'); if (m && m.checked) row.is_primary = true;
+            const btn = document.getElementById('ctSaveBtn'); btn.disabled = true; btn.textContent = 'Saving...';
+            try {
+                const r = id ? await _supabase.from('site_contacts').update(row).eq('id', id) : await _supabase.from('site_contacts').insert([Object.assign({ id: uid(), client_id: String(adminCt.cid), created_by: technicianLabel() }, row)]);
+                if (r.error) throw r.error;
+                await queueSiteChange({ client_id: adminCt.cid, action: 'site_edit', title: `Site contact ${id ? 'updated' : 'added'}: ${name}${row.role ? ' (' + row.role + ')' : ''}` });
+                await loadAdminContacts();
+            } catch (e) {
+                alert('Could not save the contact: ' + (/site_contacts|does not exist|schema cache/i.test(e.message || '') ? 'run pestis_client_portal.sql in the Supabase SQL editor first.' : (e.message || e)));
+                btn.disabled = false; btn.textContent = 'Save contact';
+            }
+        }
+        async function mainAdminContact(id) {
+            const { error } = await _supabase.from('site_contacts').update({ is_primary: true, updated_by: technicianLabel() }).eq('id', id);
+            if (error) { alert('Could not change the main contact: ' + error.message); return; }
+            await loadAdminContacts();
+        }
+        async function deleteAdminContact(id) {
+            const x = adminCt.list.find(c => String(c.id) === String(id));
+            if (!x || !confirm(`Remove ${x.name} from this site's contacts?`)) return;
+            const { error } = await _supabase.from('site_contacts').delete().eq('id', id);
+            if (error) { alert('Could not remove the contact: ' + error.message); return; }
+            await queueSiteChange({ client_id: adminCt.cid, action: 'site_edit', title: `Site contact removed: ${x.name}` });
+            await loadAdminContacts();
         }
 
         // ---------- Critical limits (each site's own) ----------
@@ -4676,7 +4819,7 @@ const PR = (() => {
         }
         let pestEditGal = { pest: [], signs: [] };
         function drawPestEditGallery() {
-            const row = (k, title) => `<div><div class="text-[10px] font-bold t-faint mb-1">${title} (${pestEditGal[k].length})</div><div class="flex flex-wrap gap-1.5">${pestEditGal[k].map((x, i) => `<span class="relative inline-block w-20 h-14 rounded-lg overflow-hidden border divider"><img src="${esc(x.u)}" alt="" class="w-full h-full object-cover"><button type="button" class="absolute top-0.5 right-0.5 w-5 h-5 rounded-full text-[11px] font-black text-white" style="background:rgba(220,38,38,.9);" onclick="pestEditGal.${k}.splice(${i}, 1); drawPestEditGallery()" title="Remove this photo" aria-label="Remove this photo">✕</button></span>`).join('') || '<span class="t-faint italic">None</span>'}</div></div>`;
+            const row = (k, title) => `<div><div class="text-[10px] font-bold t-faint mb-1">${title} (${pestEditGal[k].length})</div><div class="flex flex-wrap gap-1.5">${pestEditGal[k].map((x, i) => `<span class="relative inline-block w-20 h-14 rounded-lg overflow-hidden border divider"><img src="${esc(typeof wmPic === 'function' ? wmPic(x.u, 250) : x.u)}" alt="" class="w-full h-full object-cover" onerror="typeof wmFallback === 'function' && wmFallback(this, '·')"><button type="button" class="absolute top-0.5 right-0.5 w-5 h-5 rounded-full text-[11px] font-black text-white" style="background:rgba(220,38,38,.9);" onclick="pestEditGal.${k}.splice(${i}, 1); drawPestEditGallery()" title="Remove this photo" aria-label="Remove this photo">✕</button></span>`).join('') || '<span class="t-faint italic">None</span>'}</div></div>`;
             document.getElementById('pestEditGallery').innerHTML = row('pest', 'The pest') + row('signs', 'Signs of infestation');
         }
         async function pestEditRefind() {

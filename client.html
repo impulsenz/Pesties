@@ -271,6 +271,12 @@
 .pg-thumb.on { border-color: rgb(var(--b500)); opacity: 1; }
 .pg-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .idle-warn { position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(2, 6, 23, .6); backdrop-filter: blur(3px); }
+        /* links between the three Pestis apps; the one you're in is filled */
+        .app-switch { display: flex; flex-wrap: wrap; justify-content: center; gap: .35rem; }
+        .app-switch > a, .app-switch > .on { display: inline-flex; align-items: center; gap: .3rem; padding: .3rem .65rem; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1.3; border: 1px solid var(--border); background: var(--surface2); color: var(--text); text-decoration: none; white-space: nowrap; }
+        .app-switch > a:hover, .app-switch > a:focus-visible { border-color: rgb(var(--b500)); outline: none; }
+        .app-switch > .on { background: rgb(var(--b500)); border-color: transparent; color: #fff; cursor: default; }
+        .app-here { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
 </style>
 <style id="pestisReportsCss">
 /* PESTIS-REPORTS-CSS:BEGIN */
@@ -370,7 +376,7 @@
                 </button>
             </div>
             <div id="loginMessage" class="hidden text-xs rounded-xl p-3 text-left" style="background: var(--surface2); border: 1px solid var(--border);"></div>
-            <p class="text-[11px] t-faint">Pesties staff: <a href="index.html" class="link-btn !text-[11px]">open the Pestis field app</a></p>
+            <div class="space-y-1.5 border-t divider pt-4"><div class="app-here">Pestis apps</div><nav class="app-switch" aria-label="Pestis apps"><a href="index.html">🛠 Service App</a><a href="admin.html">🛡 Admin</a><span class="on" aria-current="page">🏢 Client Portal</span></nav></div>
         </div>
     </div>
 
@@ -407,6 +413,7 @@
                     <button type="button" onclick="$('accountMenu').classList.add('hidden'); openSettings()" class="btn btn-secondary w-full">⚙ Settings</button>
                     <button type="button" id="accountUpdateBtn" onclick="$('accountMenu').classList.add('hidden'); checkForUpdates()" class="btn btn-secondary w-full">⟳ Check for updates</button>
                     <div class="text-[10px] t-faint text-center">Version <span class="portal-version-inline"></span></div>
+                    <div class="border-t divider pt-2 space-y-1.5"><div class="app-here text-center">Pestis apps · you're in the Client Portal</div><nav class="app-switch" aria-label="Pestis apps"><a href="index.html">🛠 Service App</a><a href="admin.html">🛡 Admin</a><span class="on" aria-current="page">🏢 Client Portal</span></nav></div>
                     <button type="button" onclick="signOut()" class="btn btn-secondary w-full">Sign out</button>
                 </div>
             </div>
@@ -602,7 +609,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.22-p26';
+const PORTAL_VERSION = '2026.10.23-p27';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -1235,7 +1242,7 @@ async function applyLive(cid) {
 async function loadSiteData(site) {
     const cid = String(site.id);
     const step = (k, pr) => pr.then(v => { loadStep(k); return v; });
-    const [logs, stations, maps, visits, recs, updates, docs, folders, limits, views] = await Promise.all([
+    const [logs, stations, maps, visits, recs, updates, docs, folders, limits, views, contacts] = await Promise.all([
         step('logs', fetchAll('service_logs', cid, 'barcode_id, payload, created_at', 'created_at')),
         step('stations', fetchAll('stations', cid).catch(() => [])),
         step('stations', fetchAll('site_maps', cid).catch(() => [])),
@@ -1245,7 +1252,8 @@ async function loadSiteData(site) {
         step('docs', fetchAll('site_documents', cid).catch(() => [])),
         step('docs', fetchAll('site_document_folders', cid).catch(() => [])),
         step('limits', fetchAll('site_limits', cid).catch(() => [])),
-        step('recs', fetchAll('recommendation_views', cid).catch(() => []))
+        step('recs', fetchAll('recommendation_views', cid).catch(() => [])),
+        fetchAll('site_contacts', cid).then(r => { state.contactsMissing = false; return r; }).catch(() => { state.contactsMissing = true; return []; })
     ]);
     const [types, sightings, species] = await Promise.all([
         step('limits', sb.from('station_types').select('*').then(r => { if (r.error) throw r.error; state.typeColors = new Map((r.data || []).filter(x => x.color).map(x => [String(x.label).toLowerCase(), x.color])); return (r.data || []).map(x => x.label); })
@@ -1257,7 +1265,7 @@ async function loadSiteData(site) {
     state.stationTypes = types || [];
     state.pestGuide = species || [];
     state.speciesList = state.pestGuide.map(x => x.label).filter(Boolean);
-    state.data = { logs, stations, maps, visits, recs, updates, docs, folders, limits, views, sightings };
+    state.data = { logs, stations, maps, visits, recs, updates, docs, folders, limits, views, sightings, contacts };
     startLive(site);
     state.model = buildModel(site, state.data);
     state.links = new Map();
@@ -1559,6 +1567,7 @@ function renderOverview() {
                 ${m.stations.length ? sectionCard('Your stations', '#16a34a', `<div id="ovStations" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">${ovStationCards()}</div>`, `<button type="button" class="link-btn !no-underline" onclick="showStationList()">All ${m.stations.length}</button>`) : ''}
             </div>
             <div class="space-y-5">
+                <div id="contactsCard">${contactsCardHtml()}</div>
                 ${s.Address ? sectionCard('Location', '#16a34a', `<div class="rounded-xl overflow-hidden" style="border:1px solid var(--border);"><iframe title="Map of ${esc(s.Address)}" class="w-full h-56 block" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=${encodeURIComponent(s.Address)}&z=16&hl=en&output=embed"></iframe></div>`, `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.Address)}" target="_blank" rel="noopener" class="link-btn !no-underline">Open in Google Maps ↗</a>`) : ''}
                 <div id="servicesCard">${sectionCard('Services & schedule', '#10b981', (s.services || []).length ? s.services.map(x => `
                     <div class="row-item p-3 space-y-0.5 text-xs">
@@ -1574,6 +1583,78 @@ function renderOverview() {
     if ($('ovStations')) fillStationCardPhotos($('ovStations'));
     renderOverviewChart();
 }
+// ---------- Site contacts: the people at this site and their roles (the client and Pesties staff both keep them up to date) ----------
+const CONTACT_ROLES = ['Site manager', 'Facilities manager', 'Health & safety', 'Quality / food safety', 'Operations', 'Maintenance', 'Reception', 'Accounts', 'After hours'];
+const telHref = p => 'tel:' + String(p || '').replace(/[^\d+]/g, '');
+function siteContactsSorted() {
+    const list = ((state.data && state.data.contacts) || []).filter(x => x && x.name);
+    const main = list.filter(x => x.is_primary).sort((a, b) => String(b.updated_at || '').localeCompare(String(a.updated_at || '')))[0] || list[0];
+    list.forEach(x => { x._main = x === main; });
+    return list.sort((a, b) => (b._main - a._main) || (a.sort || 0) - (b.sort || 0) || String(a.name).localeCompare(String(b.name), undefined, { sensitivity: 'base' }));
+}
+function contactRowHtml(x, editable) {
+    return `<div class="row-item p-3 space-y-1 text-xs" ${x._main ? 'style="border-color:rgb(var(--b500));"' : ''}>
+        <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0"><div class="font-bold t-strong text-sm break-words">${esc(x.name)}${x._main ? ' <span class="chip chip-orange !py-0 ml-1">Main contact</span>' : ''}</div>${x.role ? `<div class="t-muted">${esc(x.role)}</div>` : ''}</div>
+            ${editable ? `<button type="button" class="link-btn !no-underline shrink-0" data-id="${esc(x.id)}" onclick="openContactForm(this.dataset.id)">Edit</button>` : ''}
+        </div>
+        <div class="flex flex-wrap gap-x-4 gap-y-1">${x.phone ? `<a href="${esc(telHref(x.phone))}" class="link-btn !no-underline mono">📞 ${esc(x.phone)}</a>` : ''}${x.email ? `<a href="mailto:${esc(x.email)}" class="link-btn !no-underline mono break-all">✉ ${esc(x.email)}</a>` : ''}</div>
+        ${x.notes ? `<div class="text-[11px] t-faint whitespace-pre-line">${esc(x.notes)}</div>` : ''}
+    </div>`;
+}
+function contactsCardHtml() {
+    if (state.contactsMissing) return '';
+    const list = siteContactsSorted();
+    return sectionCard('Site contacts', '#0891b2', list.length ? `<div class="space-y-2">${list.map(x => contactRowHtml(x, true)).join('')}</div>` : emptyNote('No site contacts yet. Add the people Pesties should contact at this site.'),
+        `<button type="button" class="link-btn !no-underline" onclick="openContactForm('new')">+ Add contact</button>`);
+}
+function openContactForm(id) {
+    const list = siteContactsSorted(), e = id === 'new' ? {} : (list.find(x => x.id === id) || {});
+    $('modalEyebrow').textContent = 'Site contacts';
+    $('modalTitle').textContent = e.id ? `Change ${e.name}` : 'Add a site contact';
+    $('modalSub').textContent = siteName(state.site);
+    $('modalNav').classList.add('hidden');
+    $('modalBody').innerHTML = `<form id="contactForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3" onsubmit="event.preventDefault(); saveContact();">
+        <div><label class="lbl" for="scName">Name <span style="color:#ef4444;">*</span></label><input id="scName" required maxlength="120" class="field" value="${esc(e.name || '')}" placeholder="e.g. Jane Smith"></div>
+        <div><label class="lbl" for="scRole">Role</label><input id="scRole" maxlength="80" list="scRoles" class="field" value="${esc(e.role || '')}" placeholder="e.g. Site manager"><datalist id="scRoles">${CONTACT_ROLES.map(r => `<option value="${esc(r)}">`).join('')}</datalist></div>
+        <div><label class="lbl" for="scPhone">Phone</label><input id="scPhone" type="tel" maxlength="40" class="field" value="${esc(e.phone || '')}" placeholder="e.g. 021 123 4567"></div>
+        <div><label class="lbl" for="scEmail">Email</label><input id="scEmail" type="email" maxlength="160" class="field" value="${esc(e.email || '')}" placeholder="name@company.co.nz"></div>
+        <div class="sm:col-span-2"><label class="lbl" for="scNotes">Notes</label><input id="scNotes" maxlength="500" class="field" value="${esc(e.notes || '')}" placeholder="e.g. Call before 9am"></div>
+        ${e._main ? '<p class="sm:col-span-2 text-[11px] t-faint">This is the main contact. To change that, open another contact and tick "Main contact".</p>' : `<label class="sm:col-span-2 flex items-center gap-2 text-xs t-strong"><input type="checkbox" id="scMain" class="w-4 h-4" ${!list.length ? 'checked disabled' : ''}> Main contact (the first person Pesties calls)</label>`}
+    </form>`;
+    $('modalFoot').innerHTML = `${e.id ? `<button type="button" class="btn btn-secondary" style="color:#dc2626;" data-id="${esc(e.id)}" onclick="deleteContact(this.dataset.id)">Remove</button>` : ''}<button type="button" class="btn btn-secondary ml-auto" onclick="closeModal()">Cancel</button><button type="button" id="scSaveBtn" class="btn btn-primary" onclick="saveContact()">Save contact</button>`;
+    $('modalFoot').classList.remove('hidden');
+    $('modalFoot').dataset.id = e.id || '';
+    openModal();
+    setTimeout(() => { const n = $('scName'); if (n) n.focus(); }, 50);
+}
+async function saveContact() {
+    const v = id => ($(id).value || '').trim(), id = $('modalFoot').dataset.id || null;
+    const name = v('scName'), email = v('scEmail');
+    if (!name) { alert("Enter the contact's name."); return; }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert("That email address doesn't look right."); return; }
+    const row = { name, role: v('scRole') || null, phone: v('scPhone') || null, email: email || null, notes: v('scNotes') || null };
+    const main = $('scMain'); if (main && main.checked) row.is_primary = true;
+    const b = $('scSaveBtn'); if (b) { b.disabled = true; b.textContent = 'Saving...'; }
+    const r = id ? await sb.from('site_contacts').update(row).eq('id', id).select('*')
+                 : await sb.from('site_contacts').insert([Object.assign({ client_id: String(state.site.id) }, row)]).select('*');
+    if (r.error) { if (b) { b.disabled = false; b.textContent = 'Save contact'; } alert('Could not save the contact: ' + r.error.message); return; }
+    await reloadContacts();
+    closeModal(true);
+}
+async function deleteContact(id) {
+    const x = siteContactsSorted().find(c => c.id === id);
+    if (!x || !confirm(`Remove ${x.name} from this site's contacts?`)) return;
+    const r = await sb.from('site_contacts').delete().eq('id', id);
+    if (r.error) { alert('Could not remove the contact: ' + r.error.message); return; }
+    await reloadContacts();
+    closeModal(true);
+}
+async function reloadContacts() {
+    try { state.data.contacts = await fetchAll('site_contacts', String(state.site.id)); } catch (e) {}
+    const el = $('contactsCard'); if (el) el.innerHTML = contactsCardHtml();
+}
+
 // a station's last 12 months: pests per month, the trend, and any critical limit for its zone
 function stationTrendHtml(st) {
     const now = new Date();
@@ -1995,6 +2076,7 @@ function closeModal(force) {
     if (!force && recDraft && recDirty() && !confirm("Discard the changes you haven't saved?")) return;
     recDraft = null;
     $('modal').classList.add('hidden'); document.body.style.overflow = '';
+    $('modalFoot').classList.add('hidden'); $('modalFoot').dataset.id = '';   // the next pop-up shows its own buttons
 }
 document.addEventListener('keydown', e => {
     if (!$('pestModal').classList.contains('hidden') && $('viewer').classList.contains('hidden')) { if (e.key === 'Escape') closePestGuide(); return; }

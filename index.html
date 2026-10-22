@@ -263,7 +263,18 @@
         .land-card.lc-resizing { outline: 2px solid rgb(var(--b500) / .6); outline-offset: 3px; }
         body.lc-busy, body.lc-busy * { user-select: none !important; }
         body.lc-busy .lc-move { cursor: grabbing; }
+        /* links between the three Pestis apps; the one you're in is filled */
+        .app-switch { display: flex; flex-wrap: wrap; justify-content: center; gap: .35rem; }
+        .app-switch > a, .app-switch > .on { display: inline-flex; align-items: center; gap: .3rem; padding: .3rem .65rem; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1.3; border: 1px solid var(--border); background: var(--surface2); color: var(--text); text-decoration: none; white-space: nowrap; }
+        .app-switch > a:hover, .app-switch > a:focus-visible { border-color: rgb(var(--b500)); outline: none; }
+        .app-switch > .on { background: rgb(var(--b500)); border-color: transparent; color: #fff; cursor: default; }
+        .app-here { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
         .board-hint { display: flex; align-items: center; justify-content: flex-end; gap: .75rem; font-size: 11px; color: var(--faint); margin: -.75rem 0 -.75rem; }
+        .board-cols { display: none; align-items: center; gap: .3rem; }
+        @media (min-width: 1024px) { .board-cols { display: inline-flex; } }
+        .board-cols button { width: 1.35rem; height: 1.35rem; border-radius: .4rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-weight: 800; line-height: 1; }
+        .board-cols button:hover { border-color: rgb(var(--b500)); }
+        .board-cols input { width: 2.6rem; height: 1.35rem; padding: 0 .2rem; text-align: center; border-radius: .4rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-weight: 700; font-size: 11px; }
         /* open recommendations by age: small donut in the box's top corner */
         .rec-mini { display: flex; align-items: center; gap: .55rem; margin-left: auto; }
         .rec-mini-legend { display: flex; flex-direction: column; gap: .1rem; font-size: 10px; color: var(--muted); line-height: 1.25; }
@@ -287,6 +298,8 @@
         .sh-cover.hidden { display: none !important; }
         .sh-contact { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .9rem; font-size: .78rem; padding: .5rem .75rem; border-radius: .8rem; background: var(--surface2); border: 1px solid var(--border); width: fit-content; max-width: 100%; }
         .sh-contact .eyebrow { font-size: .58rem; }
+        .sh-contact[role=button] { cursor: pointer; transition: border-color .15s; }
+        .sh-contact[role=button]:hover, .sh-contact[role=button]:focus-visible { border-color: rgb(var(--b500)); outline: none; }
         .kpi { background: var(--surface2); border: 1px solid var(--border); border-radius: .9rem; padding: .7rem .85rem; min-width: 0; }
         .kpi-k { font-size: .6rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
         .kpi-v { font-size: 1.6rem; font-weight: 900; line-height: 1.15; margin-top: .15rem; }
@@ -310,7 +323,7 @@
         .station-thumb { width: 3.25rem; height: 3.25rem; border-radius: .6rem; overflow: hidden; background: var(--surface3); display: flex; align-items: center; justify-content: center; font-size: 1rem; opacity: .9; }
         .station-thumb img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
         /* poster cards (Recommendations and Stations boxes): the photo leads */
-        .nf-grid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); gap: .75rem; align-content: start; padding: .2rem; }
+        .nf-grid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); grid-auto-rows: max-content; gap: .75rem; align-content: start; padding: .2rem; }
         .nf-grid > * { margin: 0 !important; }
         .nf-grid > :not(.nf-card) { grid-column: 1 / -1; }
         .nf-card { display: block; width: 100%; text-align: left; border-radius: .9rem; overflow: hidden; background: var(--surface2); border: 1px solid var(--border); cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s; }
@@ -346,6 +359,8 @@
         .nf-foot .chip { flex-shrink: 0; }
         /* computers: every card the same width in every box */
         @media (min-width: 640px) { .land-card .nf-grid { grid-template-columns: repeat(auto-fill, 10.75rem) !important; justify-content: start; gap: .7rem; } }
+        /* a very narrow box (many boxes per row): one card per line, still all the same size */
+        @container (max-width: 200px) { .land-card .nf-grid { grid-template-columns: minmax(0, 1fr) !important; } }
         .nf-foot { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .3rem; margin-top: .22rem; font-size: 10px; color: var(--faint); }
         .nf-foot .chip { padding: 0 .35rem; font-size: 9.5px; line-height: 1.5; }
         .rec-no { color: rgb(var(--b500)) !important; }
@@ -543,7 +558,13 @@
         .sh-synced[data-state="err"] .sh-dot { background: #dc2626; }
         .sh-synced[data-state="off"] .sh-dot { background: #94a3b8; }
         .sh-synced[data-state="live"] .sh-dot { box-shadow: 0 0 0 3px rgba(16, 185, 129, .25); }
-        @media (max-width: 639px) { .site-hero-band { padding-top: 2.4rem; } }
+        @media (max-width: 639px) {
+            .site-hero-band { padding-top: 2.1rem; }
+            .site-hero-band .sh-synced { top: .45rem; }
+            /* phones: the site card sits just under the top bar */
+            #appRoot { padding-top: .5rem; }
+            #appRoot > #siteLandingDashboard, #appRoot > #visitWorkspace { margin-top: 0 !important; }
+        }
         .scan-prog { width: min(21rem, calc(100vw - 2rem)); padding: .9rem; }
         /* settings: theme swatches */
         .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.2rem, 1fr)); gap: .5rem; }
@@ -682,6 +703,7 @@
         .map-tab { display: inline-flex; align-items: center; gap: .4rem; max-width: 15rem; flex-shrink: 0; padding: .45rem .75rem; border-radius: .75rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: .75rem; font-weight: 700; cursor: pointer; }
         .map-tab:hover { border-color: rgb(var(--b500)); }
         .map-tab.on { background: rgb(var(--b500)); border-color: rgb(var(--b500)); color: #fff; }
+        .map-tab-un { flex-shrink: 0; font-size: 9.5px; font-weight: 800; padding: 0 .35rem; border-radius: 999px; color: #b45309; background: rgba(245, 158, 11, .16); }
         .map-tab-n { font-size: .65rem; font-weight: 800; padding: .05rem .4rem; border-radius: 999px; background: rgba(0, 0, 0, .1); }
         .map-tab.on .map-tab-n { background: rgba(255, 255, 255, .25); }
         @media (min-width: 900px) { .map-top { flex-direction: row; align-items: center; } .map-top > .map-top-row:first-child { flex: 1 1 auto; } .map-tools-row { flex: 0 0 auto; flex-wrap: nowrap; } .map-close { order: 9; } }
@@ -809,6 +831,7 @@
 
         <div class="card p-8 max-w-sm w-full text-center space-y-5">
             <div class="logo-tile mx-auto"><img src="images/pesties-logo.png" alt="Pesties" class="w-52 max-w-full object-contain rounded-lg"></div>
+            <div><div class="eyebrow t-accent">Pestis</div><h1 class="text-2xl font-black t-strong app-mode-title">🛠 Service App</h1><p class="text-[11px] t-muted mt-1">For technicians in the field.</p></div>
 
             <p id="authLoading" class="text-xs t-muted italic">Checking session...</p>
 
@@ -821,6 +844,7 @@
             </div>
 
             <p id="loginMessage" class="text-xs hidden leading-relaxed" style="color:#ef4444;"></p>
+            <div class="space-y-1.5 border-t divider pt-4"><div class="app-here">Pestis apps</div><nav class="app-switch" aria-label="Pestis apps"><span class="on" aria-current="page">🛠 Service App</span><a href="admin.html">🛡 Admin</a><a href="client.html">🏢 Client Portal</a></nav></div>
         </div>
     </div>
 
@@ -1025,15 +1049,15 @@
                             <div id="siteMonogram" class="sh-cover sh-mono" aria-hidden="true"></div>
                             <div class="min-w-0 flex-1">
                                 <h2 class="sh-title t-strong break-words" id="siteLandingTitle">Customer Site Overview</h2>
-                                <p class="text-xs sm:text-sm t-muted mt-1 flex items-start gap-1.5"><span aria-hidden="true">📍</span><span id="siteLandingAddress" class="break-words">Address information</span></p>
+                                <p class="text-xs sm:text-sm t-muted mt-1 flex items-start gap-1.5"><span id="siteLandingAddress" class="break-words">Address information</span></p>
                                 <div id="visitStatusLine" class="hidden mt-2.5"></div>
                             </div>
                             <!-- site contact: under the logo and name, across the full width -->
-                            <div id="siteContactBox" class="sh-contact">
+                            <div id="siteContactBox" class="sh-contact" role="button" tabindex="0" onclick="if (!event.target.closest('a')) openSiteContacts()" onkeydown="if (event.key === 'Enter') openSiteContacts()" title="Show all the site's contacts">
                                 <span class="eyebrow t-faint">Site contact</span>
                                 <span id="siteLandingContact" class="font-bold t-strong break-words">Not specified</span>
                                 <span id="siteLandingEmail" class="break-all">No email on file</span>
-                                <button type="button" onclick="openEditSiteModal('editContact')" class="link-btn !no-underline !text-[11px]">Edit</button>
+                                <span id="siteContactsMore" class="link-btn !no-underline !text-[11px] ml-auto">All contacts ›</span>
                             </div>
                         </div>
                         <div class="st-actions">
@@ -1085,7 +1109,7 @@
                 </div>
             </div>
 
-            <div class="board-hint"><span class="hidden sm:inline">Drag ⠿ to move a box · drag its corner to resize</span><button type="button" class="link-btn !no-underline !text-[11px]" onclick="resetBoardLayout()">Reset layout</button></div>
+            <div class="board-hint"><span class="hidden sm:inline">Drag ⠿ to move a box · drag its corner to resize</span><label class="board-cols"><span>Boxes per row</span><button type="button" onclick="stepBoardCols(-1)" aria-label="Fewer boxes per row">−</button><input type="number" id="boardCols" min="1" max="8" step="1" value="3" inputmode="numeric" onchange="setBoardCols(this.value)" aria-label="Boxes per row"><button type="button" onclick="stepBoardCols(1)" aria-label="More boxes per row">+</button></label><button type="button" class="link-btn !no-underline !text-[11px]" onclick="resetBoardLayout()">Reset layout</button></div>
             <!-- The site boxes: pest sightings first (top box on a phone), then recommendations and stations.
                  Each person can move and resize them; the layout is saved for them. -->
             <div id="landBoard" class="land-board">
@@ -1326,7 +1350,6 @@
                         </div>
                     </div>
                     </div>
-                    </div>
 
                     <div class="sm:col-span-2 inset p-4 space-y-3">
                         <span class="eyebrow t-accent">Pests</span>
@@ -1490,7 +1513,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div><label class="lbl">Customer / Business Name</label><input type="text" id="editName" class="field"></div>
                 <div><label class="lbl">Physical Address</label><div class="addr-wrap"><input type="text" id="editAddress" class="field" autocomplete="off" data-addr-search placeholder="Start typing the address..."></div></div>
-                <div><label class="lbl">Site Contact & Phone</label><input type="text" id="editContact" placeholder="e.g. Jane Smith 021 123 4567" class="field"></div>
+                <div><label class="lbl">Site contacts</label><input type="hidden" id="editContact"><button type="button" onclick="openSiteContacts()" class="btn btn-secondary w-full justify-between !py-2.5"><span id="editContactsSummary" class="truncate">Site contacts</span><span aria-hidden="true">›</span></button></div>
                 <div><label class="lbl">Client Email for Reports</label><input type="email" id="editEmail" class="field"></div>
                 <div class="sm:col-span-2"><label class="lbl">Safety & Site Access Instructions</label><textarea id="editNotes" rows="4" placeholder="Gate codes, sign-in requirements, PPE, hazards..." class="field"></textarea></div>
                 <div class="sm:col-span-2 border-t divider pt-4 mt-1"><span class="eyebrow" style="color:#7c3aed;">Contract & Technician</span></div>
@@ -1498,7 +1521,7 @@
                 <div><label class="lbl">Contract end / renewal date</label><input type="date" id="editContractEnd" class="field"></div>
                 <div class="sm:col-span-2"><label class="lbl">Contract notes</label><input type="text" id="editContractNotes" placeholder="e.g. 12-month agreement, price review at renewal" class="field"></div>
                 <div class="sm:col-span-2"><label class="lbl">Assigned technician</label><select id="editAssignedTo" class="field cursor-pointer"></select></div>
-                <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+                <div id="editImageSection" class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                     <div class="space-y-2">
                         <label class="lbl">Site Photo (shown on the site card)</label>
                         <input type="file" id="editImageInput" accept="image/*" class="field !p-2 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-brand-500 file:text-white cursor-pointer">
@@ -1599,6 +1622,9 @@
                 <p class="text-xs t-muted">Staff, client logins, lists, team settings and documents are managed on the Admin page.</p>
                 <button type="button" onclick="closeProfileModal(); openAdmin('overview')" class="btn btn-secondary">🛡 Open Admin</button>
             </div>
+
+            <!-- the three Pestis apps: you're in the Service App -->
+            <div class="border-t divider pt-4 space-y-2"><div class="app-here">Pestis apps · you're in the Service App</div><nav class="app-switch" aria-label="Pestis apps"><span class="on" aria-current="page">🛠 Service App</span><a href="admin.html" class="app-switch-admin hidden">🛡 Admin</a><a href="client.html">🏢 Client Portal</a></nav></div>
 
             <div class="flex justify-end pt-2">
                 <button type="button" onclick="signOut()" class="btn btn-danger !px-6 !py-3">Sign Out</button>
@@ -1936,6 +1962,7 @@
                         <button type="button" onclick="openMapEdit('image')" class="map-menu-item">Replace with a picture</button>
                         <button type="button" onclick="markMapChecked()" class="map-menu-item">✓ Mark as checked (still correct)</button>
                         <button type="button" onclick="exportMapImage()" class="map-menu-item">Download plan with pins</button>
+                        <button type="button" onclick="unpinAllOnMap()" class="map-menu-item">Unpin all stations (place them again)</button>
                         <button type="button" onclick="deleteCurrentMap()" class="map-menu-item" style="color:#ef4444;">Delete this plan</button>
                     </div>
                 </div>
@@ -2219,7 +2246,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.22-r66';
+        const APP_VERSION = '2026.10.23-r67';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = true;   // critical limits (rebuilt in r65)
         // after Check for updates, tidy the address bar
@@ -3118,6 +3145,7 @@
         function openProfileModal(tab) {
             document.getElementById('profileModal').classList.remove('hidden');
             document.getElementById('profileAdminLink').classList.toggle('hidden', !isAdmin());
+            document.querySelectorAll('.app-switch-admin').forEach(a => a.classList.toggle('hidden', !(currentProfile && currentProfile.role === 'admin')));
             renderProfileMonth();
             renderDayBar();
             setProfileTab(tab === 'settings' ? 'settings' : 'me');
@@ -5941,6 +5969,7 @@
             document.getElementById('editName').value = c.Name || '';
             document.getElementById('editAddress').value = c.Address || '';
             document.getElementById('editContact').value = c.Contact || '';
+            document.getElementById('editContactsSummary').textContent = siteContacts.length ? `${siteContacts[0].name}${siteContacts.length > 1 ? ` + ${siteContacts.length - 1} more` : ''}` : (c.Contact || 'Add site contacts');
             document.getElementById('editEmail').value = c.Email || '';
             document.getElementById('editNotes').value = c.Notes || '';
             document.getElementById('editContractStart').value = c.contract_start ? String(c.contract_start).slice(0, 10) : '';
@@ -5962,6 +5991,8 @@
                 document.getElementById('editImagePlaceholder').classList.remove('hidden');
             }
             document.getElementById('editImageRemoveBtn').classList.toggle('hidden', !cover);
+            // only admin accounts change a site's picture (technicians don't see it)
+            document.getElementById('editImageSection').classList.toggle('hidden', !(currentProfile && currentProfile.role === 'admin'));
 
             document.getElementById('editSiteModal').classList.remove('hidden');
             if (focusId) setTimeout(() => document.getElementById(focusId).focus(), 60);
@@ -6617,7 +6648,7 @@
         // ---------- Site sync progress: each part of the site with its own bar (shown in Sync Data) ----------
         const SYNC_LABELS = { upload: 'Sending anything waiting on this device', details: 'Site details', records: 'Service records', recommendations: 'Recommendations',
             stations: 'Stations', site_maps: 'Floor plans', visits: 'Visits', recommendation_updates: 'Recommendation updates', site_events: 'Activity log',
-            site_limits: 'Critical limits', pest_sightings: 'Pest sightings', save: 'Saving to this device', screen: 'Updating the screen' };
+            site_limits: 'Critical limits', pest_sightings: 'Pest sightings', site_contacts: 'Site contacts', save: 'Saving to this device', screen: 'Updating the screen' };
         let siteSyncTrack = null;   // { clientId, siteName, items: [{ key, label, state, pct, note }], running, startedAt, endedAt, error }
         function sstStart(clientId, siteName, keys) {
             siteSyncTrack = { clientId: String(clientId), siteName: siteName || '', running: true, startedAt: Date.now(), endedAt: 0, error: null,
@@ -6861,9 +6892,10 @@
         let recTableMissing = false;    // the database has no recommendations table yet
         let splitTablesMissing = false; // the database doesn't have the stations / plans / visits tables yet
         let siteStations = new Map();   // barcode -> row in the stations table
-        const SITE_TABLES = ['stations', 'site_maps', 'visits', 'recommendation_updates', 'site_events', 'site_limits', 'pest_sightings'];
-        const OPTIONAL_SITE_TABLES = ['site_limits', 'pest_sightings'];   // added by pestis_client_portal.sql: missing just means none yet
+        const SITE_TABLES = ['stations', 'site_maps', 'visits', 'recommendation_updates', 'site_events', 'site_limits', 'pest_sightings', 'site_contacts'];
+        const OPTIONAL_SITE_TABLES = ['site_limits', 'pest_sightings', 'site_contacts'];   // added by pestis_client_portal.sql: missing just means none yet
         let siteSightings = [];         // pest sightings the client reported in the Client Portal
+        let siteContacts = [];          // the site's contacts (main contact first): [{ id, name, role, phone, email, notes, is_primary }]
         let siteLimits = [];            // critical limits: [{ id, name, rules: [{ species, max }] }]
 
         // A site table as this device sees it: the saved copy plus changes still waiting to upload
@@ -6974,6 +7006,7 @@
             rows.push(...tableLogs);
             const stationRows = effectiveTable(saved, 'stations', clientId);
             siteSightings = effectiveTable(saved, 'pest_sightings', clientId).sort((a, b) => sightRank(a) - sightRank(b) || String(b.seen_at || '').localeCompare(String(a.seen_at || '')));
+            siteContacts = sortContacts(effectiveTable(saved, 'site_contacts', clientId));
             siteLimits = effectiveTable(saved, 'site_limits', clientId).filter(l => !l.deleted).sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }));
 
             const refs = new Set(rows.map(r => r.payload && r.payload.clientRef).filter(Boolean));
@@ -7711,12 +7744,15 @@
             document.getElementById('siteLandingAddress').textContent = c.Address || 'No address specified';
             renderSiteLocation();
             loadSiteDocs().catch(e => console.warn('Documents', e));   // never stops the site opening
-            // site contact: the name, a phone number to tap (if one is given) and the email
+            renderSiteContactCard();
+            // (older sites with no contacts list yet: the name, a phone number to tap and the email from the site details)
             const contact = String(c.Contact || '').trim(), phone = (contact.match(/(\+?\d[\d\s()-]{6,}\d)/) || [])[1];
+            if (!siteContacts.length) {
             document.getElementById('siteLandingContact').innerHTML = contact
                 ? `👤 ${esc(phone ? contact.replace(phone, '').replace(/[\s,·|-]+$/, '').trim() || 'Phone' : contact)}${phone ? ` <a href="tel:${esc(phone.replace(/[^\d+]/g, ''))}" class="link-btn !no-underline font-mono text-xs ml-1">📞 ${esc(phone.trim())}</a>` : ''}`
                 : '<span class="t-faint font-normal">No site contact on file</span>';
             document.getElementById('siteLandingEmail').innerHTML = c.Email ? `<a href="mailto:${esc(c.Email)}" class="t-accent font-mono">✉ ${esc(c.Email)}</a>` : '<span class="t-faint">No email on file</span>';
+            }
             document.getElementById('siteLandingNotes').textContent = c.Notes || 'No site-specific safety instructions on file.';
 
             const ci = contractInfo(c);
@@ -7763,7 +7799,7 @@
             hideStationForm();
             ['mapModal', 'mapEditDialog', 'stationOverviewModal', 'visitModal', 'barcodeModal'].forEach(id => document.getElementById(id).classList.add('hidden'));
             mapPlacing = null; mapFocus = null; currentMapId = null; ovBarcode = null; openVisitIndex = null; visitEditing = false; scanTypeFilter = new Set();
-            siteMaps = []; sitePins = new Map(); siteEvents = []; currentVisitEntries = []; lastVisitStats = null; barcodeAliases = new Map(); siteLimits = [];
+            siteMaps = []; sitePins = new Map(); siteEvents = []; currentVisitEntries = []; lastVisitStats = null; barcodeAliases = new Map(); siteLimits = []; siteContacts = [];
             stationTypeFilter = 'all'; activityFilter = 'all';
             const ss = document.getElementById('siteStationSearch');
             if (ss) ss.value = '';
@@ -9536,12 +9572,27 @@
             if (!st) { row.name = name; row.type = stationTypeFor(barcode) || null; row.created_by = technicianLabel(); }
             await queueTableRow('stations', row, label);
             siteStations.set(barcode, Object.assign({}, st || {}, row));
-            await queueSiteChange({ action: 'pin', title: mapId == null ? 'Removed from floor plan' : x == null ? `Assigned to ${mapName}` : `Pin ${extra && extra.moved ? 'moved' : 'placed'} on ${mapName}`, station: name }, label + ' · log');
+            if (!(extra && extra.quiet)) await queueSiteChange({ action: 'pin', title: mapId == null ? 'Removed from floor plan' : x == null ? `Assigned to ${mapName}` : `Pin ${extra && extra.moved ? 'moved' : 'placed'} on ${mapName}`, station: name }, label + ' · log');
             sitePins.set(barcode, { mapId: mapId || null, x: round(x), y: round(y), at: Date.now(), by: technicianLabel() });
             renderSiteMapsList();
             if (!document.getElementById('mapModal').classList.contains('hidden')) selectMapOptionsRefresh();
         }
 
+        // takes every pin off the open plan: the stations stay with this plan as "not placed yet", ready to place again
+        async function unpinAllOnMap() {
+            document.getElementById('mapMenu').classList.add('hidden');
+            const m = currentMap();
+            if (!m) return;
+            const placed = pinsOn(m.id).filter(([, p]) => p.x != null).map(([b]) => b);
+            if (!placed.length) { alert('No stations are placed on this plan.'); return; }
+            if (!confirm(`Unpin all ${placed.length} station${placed.length === 1 ? '' : 's'} on "${m.name}"?\n\nThey stay with this plan under "not placed yet", ready to place again. Nothing else changes.`)) return;
+            for (const b of placed) await queuePin(b, m.id, null, null, { quiet: true });
+            await queueSiteChange({ action: 'pin', title: `All pins removed from ${m.name} (${placed.length} station${placed.length === 1 ? '' : 's'}) to place again` });
+            hideMapPopover();
+            renderMapPins();
+            renderMapSidebar();
+            renderMapHint();
+        }
         function openMapModal(opts) {
             opts = opts || {};
             if (!selectedClient) return;
@@ -9570,12 +9621,15 @@
             if (selectedClient) refreshSiteStateFromCache().catch(e => logAppError('Refreshing site', e));
         }
 
+        // "Ground floor (12 · 3 unplaced)": stations on the plan, and those given this plan but not placed yet (only when there are some)
+        function mapPinCounts(id) { const all = pinsOn(id); const placed = all.filter(([, p]) => p.x != null).length; return { placed, unplaced: all.length - placed }; }
+        function mapOptionLabel(m) { const c = mapPinCounts(m.id); return `${m.drawing ? '✏️' : '🗺️'} ${m.name} (${c.placed}${c.unplaced ? ` · ${c.unplaced} unplaced` : ''})`; }
         function selectMap(id) {
             currentMapId = id || null;
             hideMapPopover();
             const sel = document.getElementById('mapSelect');
             sel.innerHTML = siteMaps.length
-                ? siteMaps.map(m => `<option value="${esc(m.id)}">${m.drawing ? '✏️' : '🗺️'} ${esc(m.name)} (${pinsOn(m.id).filter(([, p]) => p.x != null).length})</option>`).join('')
+                ? siteMaps.map(m => `<option value="${esc(m.id)}">${esc(mapOptionLabel(m))}</option>`).join('')
                 : '<option value="">No floor plans yet</option>';
             sel.value = currentMapId || '';
             renderMapTabs();
@@ -9589,8 +9643,8 @@
             const el = document.getElementById('mapTabs');
             if (!el) return;
             el.innerHTML = siteMaps.length ? siteMaps.map(m => {
-                const n = pinsOn(m.id).filter(([, p]) => p.x != null).length;
-                return `<button type="button" role="tab" aria-selected="${m.id === currentMapId}" data-id="${esc(m.id)}" onclick="selectMap(this.dataset.id)" class="map-tab ${m.id === currentMapId ? 'on' : ''}" title="${esc(m.name)}${m.drawing ? ' (drawn)' : ''}">${m.drawing ? '<span aria-hidden="true">✏️</span>' : '<span aria-hidden="true">🗺️</span>'}<span class="truncate">${esc(m.name)}</span><span class="map-tab-n">${n}</span></button>`;
+                const { placed: n, unplaced: un } = mapPinCounts(m.id);
+                return `<button type="button" role="tab" aria-selected="${m.id === currentMapId}" data-id="${esc(m.id)}" onclick="selectMap(this.dataset.id)" class="map-tab ${m.id === currentMapId ? 'on' : ''}" title="${esc(m.name)}${m.drawing ? ' (drawn)' : ''}">${m.drawing ? '<span aria-hidden="true">✏️</span>' : '<span aria-hidden="true">🗺️</span>'}<span class="truncate">${esc(m.name)}</span><span class="map-tab-n">${n}</span>${un ? `<span class="map-tab-un" title="${un} station${un === 1 ? '' : 's'} on this plan not placed yet">${un} unplaced</span>` : ''}</button>`;
             }).join('') : '<span class="text-xs t-faint px-1">No floor plans yet</span>';
             const on = el.querySelector('.map-tab.on');
             if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
@@ -9749,7 +9803,7 @@
         }
         function selectMapOptionsRefresh() {
             const sel = document.getElementById('mapSelect');
-            Array.from(sel.options).forEach(o => { const m = siteMaps.find(x => x.id === o.value); if (m) o.textContent = `${m.drawing ? '✏️' : '🗺️'} ${m.name} (${pinsOn(m.id).filter(([, p]) => p.x != null).length})`; });
+            Array.from(sel.options).forEach(o => { const m = siteMaps.find(x => x.id === o.value); if (m) o.textContent = mapOptionLabel(m); });
             renderMapTabs();
         }
 
@@ -9774,7 +9828,7 @@
                 ${used.size ? `<div class="flex flex-wrap gap-x-3 gap-y-1">${Array.from(used.values()).map(u => `<span class="inline-flex items-center gap-1.5"><span class="type-dot" style="background:${u.c.color};width:.6rem;height:.6rem;"></span>${esc(u.c.label)} ${u.n}</span>`).join('')}</div>` : ''}
                 ${waiting.length ? `<div class="space-y-1.5"><div class="eyebrow" style="color:#d97706;">On this plan - not placed yet (${waiting.length})</div>${waiting.map(s => row(s, `<button type="button" data-b="${esc(s.barcode)}" onclick="startPlacing(this.dataset.b)" class="btn btn-primary !px-2.5 !py-1 shrink-0">Place</button>`)).join('')}</div>` : ''}
                 <div class="space-y-1.5"><div class="eyebrow t-faint">On this plan (${here.length})</div>${here.map(s => row(s, `<button type="button" data-b="${esc(s.barcode)}" onclick="startPlacing(this.dataset.b)" class="btn btn-secondary !px-2.5 !py-1 shrink-0" title="Move pin">Move</button>`)).join('') || '<div class="t-faint italic">No pins yet.</div>'}</div>
-                ${none.length ? `<div class="space-y-1.5"><div class="eyebrow t-faint">Not on any plan (${none.length})</div>${none.map(s => row(s, `<button type="button" data-b="${esc(s.barcode)}" onclick="startPlacing(this.dataset.b)" class="btn btn-secondary !px-2.5 !py-1 shrink-0">Place here</button>`)).join('')}</div>` : ''}`;
+                ${none.length ? `<div class="space-y-1.5"><div class="eyebrow t-faint">Not on any plan (${none.length})</div>${none.map(s => row(s, `<button type="button" data-b="${esc(s.barcode)}" onclick="startPlacing(this.dataset.b)" class="btn btn-secondary !px-2.5 !py-1 shrink-0">Place</button>`)).join('')}</div>` : ''}`;
         }
 
         function focusMapStation(barcode) {
@@ -11720,12 +11774,115 @@
             const placed = siteDevices.filter(d => { const p = sitePins.get(d.barcode_id); return p && p.mapId && p.x != null; }).length;
             el.innerHTML = (siteMaps.length ? '<div class="maps-scroll space-y-2 overflow-y-auto scroll-thin pr-1" style="max-height:8.6rem;">' + siteMaps.map(m => {
                 const n = pinsOn(m.id).filter(([b, p]) => p.x != null && siteDevices.some(d => d.barcode_id === b)).length;
+                const un = pinsOn(m.id).filter(([b, p]) => p.x == null && siteDevices.some(d => d.barcode_id === b)).length;
                 const due = mapReviewDue(m);
                 return `<button type="button" data-id="${esc(m.id)}" onclick="openMapModal({ mapId: this.dataset.id })" class="row-item clickable w-full text-left p-2.5 flex justify-between items-center gap-2" ${due ? 'style="border-color:#d97706;"' : ''}>
-                    <span class="min-w-0"><span class="block font-bold t-strong truncate">🗺️ ${esc(m.name)}</span><span class="block text-[10px] ${due ? 'font-bold' : 't-faint'}" ${due ? 'style="color:#d97706;"' : ''}>${m.editedAt ? `${due ? 'Check due · ' : ''}Updated ${esc(fmtDay(String(m.editedAt).slice(0, 10)))}` : 'Date not recorded'}</span></span><span class="t-muted shrink-0">${n} pin${n === 1 ? '' : 's'}${m.pending ? ' · uploading' : ''}</span></button>`;
+                    <span class="min-w-0"><span class="block font-bold t-strong truncate">🗺️ ${esc(m.name)}</span><span class="block text-[10px] ${due ? 'font-bold' : 't-faint'}" ${due ? 'style="color:#d97706;"' : ''}>${m.editedAt ? `${due ? 'Check due · ' : ''}Updated ${esc(fmtDay(String(m.editedAt).slice(0, 10)))}` : 'Date not recorded'}</span></span><span class="t-muted shrink-0 text-right">${n} pin${n === 1 ? '' : 's'}${m.pending ? ' · uploading' : ''}${un ? `<span class="block text-[10px] font-bold" style="color:#b45309;">${un} unplaced</span>` : ''}</span></button>`;
             }).join('') + '</div>'
                 : '<div class="t-faint italic">No floor plans yet.</div>') +
                 `<button type="button" onclick="openMapModal({ add: true })" class="btn btn-secondary w-full !py-2">+ Add floor plan</button>`;
+        }
+
+        // ---------- Site contacts: any number per site with their roles; the main contact shows on the site page ----------
+        const CONTACT_ROLES = ['Site manager', 'Facilities manager', 'Health & safety', 'Quality / food safety', 'Operations', 'Maintenance', 'Reception', 'Accounts', 'After hours'];
+        function sortContacts(list) {
+            list = (list || []).filter(x => x && !x.deleted && x.name);
+            // one main contact: the most recently chosen one if the device has an older copy too
+            const mains = list.filter(x => x.is_primary).sort((a, b) => String(b.updated_at || '').localeCompare(String(a.updated_at || '')));
+            const main = mains[0] || null;
+            list.forEach(x => { x._main = x === main; });
+            if (!main && list.length) list.sort((a, b) => (a.sort || 0) - (b.sort || 0) || String(a.created_at || '').localeCompare(String(b.created_at || '')))[0]._main = true;
+            return list.sort((a, b) => (b._main - a._main) || (a.sort || 0) - (b.sort || 0) || String(a.name).localeCompare(String(b.name), LOCALE, { sensitivity: 'base' }));
+        }
+        const telHref = p => 'tel:' + String(p || '').replace(/[^\d+]/g, '');
+        function renderSiteContactCard() {
+            const main = siteContacts[0], more = document.getElementById('siteContactsMore');
+            if (more) more.textContent = siteContacts.length > 1 ? `All ${siteContacts.length} contacts ›` : siteContacts.length ? 'Contacts ›' : '+ Add contact';
+            if (!main) return;
+            document.getElementById('siteLandingContact').innerHTML = `👤 ${esc(main.name)}${main.role ? ` <span class="t-muted font-semibold text-[11px]">· ${esc(main.role)}</span>` : ''}`
+                + (main.phone ? ` <a href="${esc(telHref(main.phone))}" class="link-btn !no-underline font-mono text-xs ml-1">📞 ${esc(main.phone)}</a>` : '');
+            document.getElementById('siteLandingEmail').innerHTML = main.email ? `<a href="mailto:${esc(main.email)}" class="t-accent font-mono">✉ ${esc(main.email)}</a>` : '';
+        }
+        let contactEdit = null;   // the contact being added / changed in the pop-up ({} for a new one)
+        function openSiteContacts(editId) {
+            if (!selectedClient) return;
+            contactEdit = editId === 'new' ? {} : editId ? Object.assign({}, siteContacts.find(x => x.id === editId) || {}) : null;
+            // an older site with only the site details' contact: offer it as the first contact
+            if (contactEdit && !contactEdit.id && !siteContacts.length && selectedClient.Contact) {
+                const t = String(selectedClient.Contact).trim(), ph = (t.match(/(\+?\d[\d\s()-]{6,}\d)/) || [])[1];
+                contactEdit = { name: ph ? t.replace(ph, '').replace(/[\s,·|-]+$/, '').trim() : t, phone: ph ? ph.trim() : '', email: selectedClient.Email || '' };
+            }
+            const card = x => `<div class="row-item p-3 space-y-1.5" ${x._main ? 'style="border-color:rgb(var(--b500));"' : ''}>
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0"><div class="font-bold t-strong break-words">${esc(x.name)} ${x._main ? '<span class="chip chip-orange !py-0 ml-1">Main contact</span>' : ''}${x._pending ? '<span class="chip chip-amber !py-0 ml-1">Not uploaded yet</span>' : ''}</div>
+                            ${x.role ? `<div class="text-xs t-muted">${esc(x.role)}</div>` : ''}</div>
+                        <div class="flex gap-1.5 shrink-0">${!x._main ? `<button type="button" class="btn btn-secondary !py-1 !px-2 !text-[11px]" data-id="${esc(x.id)}" onclick="makeMainContact(this.dataset.id)">Make main</button>` : ''}<button type="button" class="btn btn-secondary !py-1 !px-2 !text-[11px]" data-id="${esc(x.id)}" onclick="openSiteContacts(this.dataset.id)">Edit</button></div>
+                    </div>
+                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs">${x.phone ? `<a href="${esc(telHref(x.phone))}" class="link-btn !no-underline font-mono">📞 ${esc(x.phone)}</a>` : ''}${x.email ? `<a href="mailto:${esc(x.email)}" class="t-accent font-mono break-all">✉ ${esc(x.email)}</a>` : ''}${!x.phone && !x.email ? '<span class="t-faint">No phone or email</span>' : ''}</div>
+                    ${x.notes ? `<div class="text-[11px] t-faint whitespace-pre-line">${esc(x.notes)}</div>` : ''}
+                </div>`;
+            const e = contactEdit;
+            const form = e ? `<div class="inset p-4 space-y-3" style="border-color:rgb(var(--b500));">
+                    <div class="eyebrow t-accent">${e.id ? 'Change contact' : 'New contact'}</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div><label class="lbl" for="scName">Name <span style="color:#ef4444;">*</span></label><input id="scName" class="field" maxlength="120" value="${esc(e.name || '')}" placeholder="e.g. Jane Smith"></div>
+                        <div><label class="lbl" for="scRole">Role</label><input id="scRole" class="field" maxlength="80" list="scRoles" value="${esc(e.role || '')}" placeholder="e.g. Site manager"><datalist id="scRoles">${CONTACT_ROLES.map(r => `<option value="${esc(r)}">`).join('')}</datalist></div>
+                        <div><label class="lbl" for="scPhone">Phone</label><input id="scPhone" class="field" type="tel" maxlength="40" value="${esc(e.phone || '')}" placeholder="e.g. 021 123 4567"></div>
+                        <div><label class="lbl" for="scEmail">Email</label><input id="scEmail" class="field" type="email" maxlength="160" value="${esc(e.email || '')}" placeholder="name@company.co.nz"></div>
+                        <div class="sm:col-span-2"><label class="lbl" for="scNotes">Notes</label><input id="scNotes" class="field" maxlength="500" value="${esc(e.notes || '')}" placeholder="e.g. Call before 9am, ask for keys at reception"></div>
+                    </div>
+                    ${e._main ? '' : `<label class="flex items-center gap-2 text-xs t-strong"><input type="checkbox" id="scMain" class="w-4 h-4 accent-orange-500" ${!siteContacts.length ? 'checked disabled' : ''}> Main contact (shown on the site page)</label>`}
+                    <div class="flex flex-wrap gap-2">${e.id ? `<button type="button" class="btn btn-outline-danger !py-2" data-id="${esc(e.id)}" onclick="deleteSiteContact(this.dataset.id)">Remove</button>` : ''}<button type="button" class="btn btn-secondary !py-2 ml-auto" onclick="openSiteContacts()">Cancel</button><button type="button" id="scSaveBtn" class="btn btn-primary !py-2" onclick="saveSiteContact()">Save contact</button></div>
+                </div>` : '';
+            openInfoModal(`Site contacts · ${selectedClient.Name}`, `<div class="space-y-2.5 text-sm">
+                    ${form}
+                    ${siteContacts.map(card).join('') || (e ? '' : '<p class="text-xs t-faint italic">No contacts yet for this site.</p>')}
+                </div>`, e ? '' : `<button type="button" class="btn btn-secondary" onclick="openSiteContacts('new')">+ Add contact</button>`, { wide: true });
+            if (e) setTimeout(() => { const n = document.getElementById('scName'); if (n) n.focus(); }, 50);
+        }
+        async function saveSiteContact() {
+            const v = id => (document.getElementById(id).value || '').trim();
+            const name = v('scName');
+            if (!name) { alert('Enter the contact\'s name.'); return; }
+            const email = v('scEmail');
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('That email address doesn\'t look right.'); return; }
+            const e = contactEdit || {}, mainBox = document.getElementById('scMain');
+            const now = new Date().toISOString();
+            const row = { id: e.id || uid(), name, role: v('scRole') || null, phone: v('scPhone') || null, email: email || null, notes: v('scNotes') || null,
+                is_primary: !!(e._main || !siteContacts.length || (mainBox && mainBox.checked)), sort: e.sort || 0, updated_at: now, updated_by: technicianLabel() };
+            if (!e.id) { row.created_at = now; row.created_by = technicianLabel(); }
+            const b = document.getElementById('scSaveBtn'); if (b) b.disabled = true;
+            try {
+                await queueTableRow('site_contacts', row, `Site contact ${e.id ? 'updated' : 'added'} · ${name}`);
+                await queueSiteChange({ action: 'site_edit', title: `Site contact ${e.id ? 'updated' : 'added'}: ${name}${row.role ? ' (' + row.role + ')' : ''}` });
+            } catch (err) { if (b) b.disabled = false; alert('Could not save the contact: ' + ((err && err.message) || err)); return; }
+            await afterContactChange();
+            openSiteContacts();
+        }
+        async function makeMainContact(id) {
+            const x = siteContacts.find(c => c.id === id);
+            if (!x) return;
+            await queueTableRow('site_contacts', Object.assign(contactRow(x), { is_primary: true, updated_at: new Date().toISOString(), updated_by: technicianLabel() }), `Main site contact · ${x.name}`);
+            await afterContactChange();
+            openSiteContacts();
+        }
+        async function deleteSiteContact(id) {
+            const x = siteContacts.find(c => c.id === id);
+            if (!x || !confirm(`Remove ${x.name} from this site's contacts?`)) return;
+            // the next contact becomes the main one (the database does the same)
+            if (x._main) { const next = siteContacts.find(c => c.id !== id); if (next) await queueTableRow('site_contacts', Object.assign(contactRow(next), { is_primary: true, updated_at: new Date().toISOString() }), `Main site contact · ${next.name}`); }
+            await queueTableDelete('site_contacts', id, `Site contact removed · ${x.name}`);
+            await queueSiteChange({ action: 'site_edit', title: `Site contact removed: ${x.name}` });
+            await afterContactChange();
+            contactEdit = null;
+            openSiteContacts();
+        }
+        const contactRow = x => { const r = {}; ['id', 'name', 'role', 'phone', 'email', 'notes', 'is_primary', 'sort'].forEach(k => { if (x[k] !== undefined) r[k] = x[k]; }); return r; };
+        async function afterContactChange() {
+            await refreshSiteStateFromCache();
+            renderSiteContactCard();
+            const sum = document.getElementById('editContactsSummary');
+            if (sum) sum.textContent = siteContacts.length ? `${siteContacts[0].name}${siteContacts.length > 1 ? ` + ${siteContacts.length - 1} more` : ''}` : 'Add site contacts';
         }
 
         // ---------- Site page boxes: move (⠿) and resize (corner), remembered for each person ----------
@@ -11739,6 +11896,31 @@
             return [local, remote].filter(x => x && typeof x === 'object' && Array.isArray(x.order)).sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0))[0]
                 || { order: BOARD_IDS.slice(), boxes: {} };
         }
+        const BOARD_MIN_F = 0.1;
+        const boardF = f => Math.floor(Math.min(1, Math.max(BOARD_MIN_F, Number(f))) * 10000) / 10000;   // rounded down, so n boxes of 1/n always fit a row
+        function showBoardCols(pr) {
+            const inp = document.getElementById('boardCols');
+            if (!inp || document.activeElement === inp) return;
+            let n = pr && pr.cols;
+            if (!n) {   // older saved layouts: the most common box width
+                const fs = boardCards().map(c => parseFloat(c.style.getPropertyValue('--lc-f')) || 0.3333);
+                const counts = new Map(); fs.forEach(f => { const k = Math.max(1, Math.round(1 / f)); counts.set(k, (counts.get(k) || 0) + 1); });
+                n = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+                n = n ? n[0] : 3;
+            }
+            inp.value = n;
+        }
+        // every box the same width, n to a row (any number from 1 to 8)
+        function setBoardCols(v) {
+            const n = Math.round(Math.min(8, Math.max(1, Number(v) || 3)));
+            const f = boardF(1 / n);
+            boardCards().forEach(c => c.style.setProperty('--lc-f', f.toFixed(4)));
+            boardColsN = n;
+            const inp = document.getElementById('boardCols'); if (inp) inp.value = n;
+            saveBoardLayout(); equalizeLandHeads();
+        }
+        function stepBoardCols(d) { const inp = document.getElementById('boardCols'); setBoardCols((Number(inp && inp.value) || 3) + d); }
+        let boardColsN = null;
         const boardCards = () => { const b = document.getElementById('landBoard'); return b && b.children ? Array.from(b.children).filter(c => c.classList && c.classList.contains('land-card')) : []; };
         function applyBoardLayout() {
             const board = document.getElementById('landBoard');
@@ -11751,13 +11933,15 @@
             order.forEach(id => board.appendChild(cards.get(id)));
             cards.forEach((c, id) => {
                 const b = (pr.boxes || {})[id] || {};
-                const f = b.f ? Math.min(1, Math.max(0.2, Number(b.f))) : b.span > 1 ? (b.span >= 3 ? 1 : 0.6667) : null;
+                const f = b.f ? boardF(b.f) : b.span > 1 ? (b.span >= 3 ? 1 : 0.6667) : null;
                 if (c.style && c.style.setProperty) {
                     if (f) c.style.setProperty('--lc-f', f.toFixed(4)); else c.style.removeProperty('--lc-f');
                     if (b.h) c.style.setProperty('--lc-h', b.h + 'px'); else c.style.removeProperty('--lc-h');
                     if (b.hm) c.style.setProperty('--lc-hm', b.hm + 'px'); else c.style.removeProperty('--lc-hm');
                 }
             });
+            boardColsN = pr.cols || null;
+            showBoardCols(pr);
             equalizeLandHeads();
         }
         let boardSaveTimer = null;
@@ -11767,7 +11951,7 @@
                 const h = parseInt(c.style.getPropertyValue('--lc-h')) || null, hm = parseInt(c.style.getPropertyValue('--lc-hm')) || null, f = parseFloat(c.style.getPropertyValue('--lc-f')) || null;
                 if (h || hm || f) boxes[c.dataset.box] = { f, h, hm };
             });
-            const v = { order: boardCards().map(c => c.dataset.box), boxes, savedAt: Date.now() };
+            const v = { order: boardCards().map(c => c.dataset.box), boxes, cols: boardColsN || undefined, savedAt: Date.now() };
             try { localStorage.setItem(boardKey(), JSON.stringify(v)); } catch (e) {}
             if (currentProfile) currentProfile.ui_prefs = Object.assign({}, currentProfile.ui_prefs || {}, { siteBoard: v });
             // also kept on the person's profile, so it follows them to other devices
@@ -11784,6 +11968,8 @@
             if (!board) return;
             const cards = new Map(boardCards().map(c => [c.dataset.box, c]));
             BOARD_IDS.forEach(id => { const c = cards.get(id); if (!c) return; board.appendChild(c); c.style.removeProperty('--lc-f'); c.style.removeProperty('--lc-h'); c.style.removeProperty('--lc-hm'); });
+            boardColsN = null;
+            const inp = document.getElementById('boardCols'); if (inp) inp.value = 3;
             saveBoardLayout();
             equalizeLandHeads();
         }
@@ -11877,11 +12063,11 @@
                 const h = Math.round(Math.min(2400, Math.max(256, r0.height + e.clientY - e0.clientY)));
                 card.style.setProperty(wide ? '--lc-h' : '--lc-hm', h + 'px');
                 if (wide) {
-                    // any width; it settles on exactly a third, half, two thirds or full when it's very close, so rows line up
+                    // any width; it settles on exactly a fifth, quarter, third, half... when it's very close, so rows line up
                     let f = (r0.width + e.clientX - e0.clientX + gap) / full;
-                    f = Math.min(1, Math.max(0.2, f));
-                    const near = [1 / 4, 1 / 3, 1 / 2, 2 / 3, 3 / 4, 1].find(x => Math.abs(x - f) < 0.008);
-                    card.style.setProperty('--lc-f', (near || f).toFixed(4));
+                    f = Math.min(1, Math.max(BOARD_MIN_F, f));
+                    const near = [1 / 8, 1 / 7, 1 / 6, 1 / 5, 1 / 4, 1 / 3, 2 / 5, 1 / 2, 3 / 5, 2 / 3, 3 / 4, 4 / 5, 1].find(x => Math.abs(x - f) < 0.006);
+                    card.style.setProperty('--lc-f', boardF(near || f).toFixed(4));
                 }
             };
             const up = () => {
@@ -14003,8 +14189,21 @@
         // ---------- photo galleries: pictures of the pest, and of the signs of an infestation (Wikimedia Commons) ----------
         const COMMONS_API = 'https://commons.wikimedia.org/w/api.php';
         const BAD_PIC = /\b(map|range|distribution|logo|icon|diagram|drawing|illustration|stamp|coat of arms|chart|graph|museum specimen label|svg)\b|\.(svg|gif|tiff?|pdf|webm|ogv)$/i;
+        // Wikimedia only serves its photos at standard widths now; other widths (the gallery used to ask for 900) fail.
+        // Every Wikimedia photo is shown at the nearest standard width, which also mends galleries saved before.
+        const WM_STEPS = [120, 250, 330, 500, 960, 1280, 1920];
+        function wmPic(u, w) {
+            const m = /^(https?:\/\/upload\.wikimedia\.org\/.+\/thumb\/.+\/)(\d+)px-([^/]+)$/.exec(String(u || ''));
+            if (!m) return u;
+            return m[1] + (WM_STEPS.find(x => x >= (w || 500)) || 1920) + 'px-' + m[3];
+        }
+        // a Wikimedia picture that still won't load: try the original file once, then show the pest's icon
+        function wmFallback(img, icon) {
+            if (!img.dataset.wf && /upload\.wikimedia\.org\/.+\/thumb\//.test(img.src)) { img.dataset.wf = '1'; img.src = img.src.replace('/thumb/', '/').replace(/\/[^/]+$/, ''); return; }
+            img.replaceWith(Object.assign(document.createElement('span'), { className: icon ? '' : 't-faint text-xs', textContent: icon || 'Picture unavailable' }));
+        }
         async function commonsSearch(term, limit) {
-            const url = `${COMMONS_API}?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=${Math.max(3, (limit || 4) * 2)}&gsrsearch=${encodeURIComponent('filetype:bitmap ' + term)}&prop=imageinfo&iiprop=url&iiurlwidth=900`;
+            const url = `${COMMONS_API}?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=${Math.max(3, (limit || 4) * 2)}&gsrsearch=${encodeURIComponent('filetype:bitmap ' + term)}&prop=imageinfo&iiprop=url&iiurlwidth=960`;
             const r = await fetch(url, { headers: { Accept: 'application/json' } });
             if (!r.ok) throw new Error('Wikimedia ' + r.status);
             const j = await r.json(), pages = Object.values((j.query && j.query.pages) || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
@@ -14048,14 +14247,14 @@
             const list = pgState[pgState.tab], it = list[pgState.i];
             const tab = (k, l) => `<button type="button" class="tab-btn ${pgState.tab === k ? 'active' : ''}" onclick="pgState.tab = '${k}'; pgState.i = 0; drawPestGallery()" ${pgState[k].length ? '' : 'disabled style="opacity:.5"'}>${l} ${pgState[k].length}</button>`;
             return `<div class="flex flex-wrap gap-1.5 mb-2">${tab('pest', '📷 The pest')}${tab('signs', '🔍 Signs of infestation')}</div>
-                <div class="pest-hero pg-stage">${it ? `<img src="${esc(it.u)}" alt="${esc(it.t || pgState.title)}" onclick="pgOpenFull()" onerror="this.replaceWith(Object.assign(document.createElement('span'), { className: 't-faint text-xs', textContent: 'Picture unavailable' }))">` : '<span class="t-faint text-xs">No pictures found.</span>'}
+                <div class="pest-hero pg-stage">${it ? `<img src="${esc(wmPic(it.u, 960))}" alt="${esc(it.t || pgState.title)}" onclick="pgOpenFull()" onerror="wmFallback(this)">` : '<span class="t-faint text-xs">No pictures found.</span>'}
                     ${list.length > 1 ? `<button type="button" class="pg-nav pg-prev" onclick="pgStep(-1)" aria-label="Previous picture">‹</button><button type="button" class="pg-nav pg-next" onclick="pgStep(1)" aria-label="Next picture">›</button><span class="pg-count">${pgState.i + 1} / ${list.length}</span>` : ''}</div>
-                ${list.length > 1 ? `<div class="pg-thumbs">${list.map((x, k) => `<button type="button" class="pg-thumb ${k === pgState.i ? 'on' : ''}" onclick="pgState.i = ${k}; drawPestGallery()"><img src="${esc(x.u)}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
+                ${list.length > 1 ? `<div class="pg-thumbs">${list.map((x, k) => `<button type="button" class="pg-thumb ${k === pgState.i ? 'on' : ''}" onclick="pgState.i = ${k}; drawPestGallery()"><img src="${esc(wmPic(x.u, 120))}" alt="" loading="lazy" onerror="wmFallback(this, '·')"></button>`).join('')}</div>` : ''}
                 ${it && !it.own ? `<p class="text-[10px] t-faint mt-1">${esc(it.t || '')}${it.t ? ' · ' : ''}Photo: <a href="${esc(it.p || 'https://commons.wikimedia.org')}" target="_blank" rel="noopener" class="underline">Wikimedia Commons</a> (see the page for the photographer and licence)</p>` : ''}`;
         }
         function drawPestGallery() { const el = document.getElementById('pestHeroBox'); if (el) el.innerHTML = pestGalleryHtml(); }
         function pgStep(d) { const n = pgState[pgState.tab].length; if (!n) return; pgState.i = (pgState.i + d + n) % n; drawPestGallery(); }
-        function pgOpenFull() { const list = pgState[pgState.tab]; if (list.length) viewFullImage(list.map(x => x.u), '', pgState.title + (pgState.tab === 'signs' ? ' · signs of infestation' : ''), '', pgState.i); }
+        function pgOpenFull() { const list = pgState[pgState.tab]; if (list.length) viewFullImage(list.map(x => wmPic(x.u, 1280)), '', pgState.title + (pgState.tab === 'signs' ? ' · signs of infestation' : ''), '', pgState.i); }
 
         let pestGuideQ = '';
         function openPestGuide() {
@@ -14089,7 +14288,7 @@
                     try {
                         const g = await pestGallery(o), it = g.pest[0] || g.signs[0];
                         const box = el.querySelector(`[data-pest-pic="${cssEsc(o.id)}"]`);
-                        if (box && it) box.innerHTML = `<img src="${esc(it.u)}" alt="${esc(o.label)}" loading="lazy">`;
+                        if (box && it) box.innerHTML = `<img src="${esc(wmPic(it.u, 330))}" alt="${esc(o.label)}" loading="lazy" onerror="wmFallback(this, '${PEST_CAT_ICON[pestCategoryOf(o)] || '🐞'}')">`;
                     } catch (e) {}
                 }
             };
