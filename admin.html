@@ -6,7 +6,7 @@
     The Admin site, separate from the Service App (index.html) and the Client Portal (client.html):
     its own page, its own sign-in (admin accounts only) and its own code. They only share the database.
     Open it at  https://<your site>/admin.html  and upload it next to index.html.
-    Version 2026.10.22-a9
+    Version 2026.10.22-a10
 -->
 <head>
     <meta charset="UTF-8">
@@ -980,6 +980,15 @@
                         <div class="md:col-span-2"><label class="lbl" for="adminDocFolder">Folder</label><select id="adminDocFolder" class="field !py-2 !text-xs" onchange="if (this.value === '__new') newDocFolder(document.getElementById('adminDocSite').value, 'adminDocFolder')"><option value="">No folder</option></select></div>
                         <div class="md:col-span-4 flex justify-end"><button type="submit" id="adminDocUploadBtn" class="btn btn-primary !py-2.5 w-full md:w-auto">Upload</button></div>
                     </form>
+                </div>
+                <div class="card p-5 space-y-3">
+                    <div><span class="eyebrow" style="color:#0891b2;">Download a folder</span>
+                        <p class="text-[11px] t-faint mt-1">Everything in one of a site's folders, as it is right now, in one zip file. Maps includes the site's floor plans.</p></div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select id="adminDlSite" class="field !w-auto !py-2 !text-xs flex-1 min-w-[10rem]" onchange="adminDlSiteChanged()"><option value="">Choose a site...</option></select>
+                        <select id="adminDlFolder" class="field !w-auto !py-2 !text-xs flex-1 min-w-[8rem]" disabled><option value="">Choose a folder...</option></select>
+                        <button type="button" id="adminDlBtn" class="btn btn-primary !py-2" onclick="adminDownloadFolder()" disabled>⬇ Download all</button>
+                    </div>
                 </div>
                 <div class="card p-5 space-y-3">
                     <div class="flex flex-wrap items-center justify-between gap-2">
@@ -2736,7 +2745,7 @@
         // ===================================================================
 
         // Tells index.html what loaded, and which version of the hook-up it was written for
-        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.22-a9', api: 0 };
+        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.22-a10', api: 0 };
 
         async function loadAdminPanel() {
             const profList = document.getElementById('adminProfilesList');
@@ -3215,7 +3224,7 @@
             else if (adminTab === 'team') loadAdminPanel();
             else if (adminTab === 'clients') { loadClientAdmin(); renderSitesWithoutClients(); }
             else if (adminTab === 'services') renderAdminServices();
-            else if (adminTab === 'documents') renderAdminDocs();
+            else if (adminTab === 'documents') { renderAdminDocs(); adminDlFillSites(); }
             else if (adminTab === 'lists') { document.getElementById('newPrepUnit').innerHTML = PREP_UNITS.map(([v, l]) => `<option value="${v}">${l}</option>`).join(''); renderSettingsLists(); if (isOnline) loadOptions(); }
             else if (adminTab === 'settings') renderTeamSettings();
             else if (adminTab === 'days') loadDayLog();
@@ -3407,6 +3416,83 @@
             adminData.docs = adminData.docs.filter(x => x.id !== id);
             await queueSiteChange({ client_id: d.client_id, action: 'document', title: `Document "${d.title}" removed`, detail: d.category });
             renderAdminDocs();
+        }
+        // ---------- Download a whole folder of a site as one zip ----------
+        let jszipLoading = null;
+        function loadJSZip() {
+            if (window.JSZip) return Promise.resolve(window.JSZip);
+            return jszipLoading = jszipLoading || new Promise((res, rej) => {
+                const sc = document.createElement('script');
+                sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                sc.onload = () => window.JSZip ? res(window.JSZip) : rej(new Error('the zip tool did not load'));
+                sc.onerror = () => { jszipLoading = null; rej(new Error('the zip tool could not be loaded')); };
+                document.head.appendChild(sc);
+            });
+        }
+        let adminDlMaps = [];
+        function adminDlFillSites() {
+            const sel = document.getElementById('adminDlSite');
+            if (!sel) return;
+            const keep = sel.value;
+            sel.innerHTML = '<option value="">Choose a site...</option>' + clientsData.slice().sort((a, b) => String(a.Name || '').localeCompare(String(b.Name || ''), undefined, { sensitivity: 'base' })).map(c => `<option value="${esc(String(c.id))}">${esc(c.Name || 'Unnamed site')}</option>`).join('');
+            sel.value = keep;
+        }
+        async function adminDlSiteChanged() {
+            const cid = document.getElementById('adminDlSite').value, fs = document.getElementById('adminDlFolder'), btn = document.getElementById('adminDlBtn');
+            fs.disabled = btn.disabled = !cid;
+            fs.innerHTML = '<option value="">Choose a folder...</option>';
+            adminDlMaps = [];
+            if (!cid) return;
+            const docs = adminData.docs.filter(d => String(d.client_id) === String(cid));
+            const [{ data: rows }, { data: maps }] = await Promise.all([
+                _supabase.from('site_document_folders').select('name').eq('client_id', String(cid)),
+                _supabase.from('site_maps').select('*').eq('client_id', String(cid))]);
+            adminDlMaps = (maps || []).filter(m => m.image_path && !m.deleted);
+            const names = folderNames(rows || [], docs);
+            fs.innerHTML = '<option value="">Choose a folder...</option>' + names.map(f => {
+                const n = docs.filter(d => docFolderOf(d) === f).length + (/^maps?$/i.test(f) ? adminDlMaps.length : 0);
+                return `<option value="${esc(f)}" ${n ? '' : 'disabled'}>${esc(f)} (${n} file${n === 1 ? '' : 's'})</option>`;
+            }).join('');
+        }
+        async function adminDownloadFolder() {
+            const cid = document.getElementById('adminDlSite').value, folder = document.getElementById('adminDlFolder').value, btn = document.getElementById('adminDlBtn');
+            if (!cid || !folder) { alert('Choose a site and a folder first.'); return; }
+            const extOf = p => ((String(p || '').match(/\.([a-z0-9]{2,5})(?:\?|$)/i) || [])[1] || 'pdf').toLowerCase();
+            const files = adminData.docs.filter(d => String(d.client_id) === String(cid) && docFolderOf(d) === folder && d.file_path).map(d => ({ name: `${d.title || 'Document'}.${extOf(d.file_path)}`, bucket: DOC_BUCKET, path: d.file_path }));
+            if (/^maps?$/i.test(folder)) adminDlMaps.forEach(m => files.push({ name: `Floor plan - ${m.name}.${extOf(m.image_path)}`, bucket: PHOTO_BUCKET, path: m.image_path }));
+            if (!files.length) { alert('There is nothing in this folder to download yet.'); return; }
+            const label = btn.textContent, say = t => { btn.textContent = t; };
+            btn.disabled = true;
+            try {
+                say('Preparing...');
+                const JSZip = await loadJSZip();
+                const zip = new JSZip(), used = new Set();
+                let n = 0, failed = 0;
+                for (const f of files) {
+                    say(`${++n} of ${files.length}...`);
+                    try {
+                        const { data, error } = await _supabase.storage.from(f.bucket).createSignedUrl(f.path, 600);
+                        if (error || !data) throw error || new Error('not found');
+                        const r = await fetch(data.signedUrl);
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        const base = f.name.replace(/[\\/:*?"<>|]+/g, '-').trim();
+                        let name = base, k = 2;
+                        while (used.has(name.toLowerCase())) name = base.replace(/(\.[^.]+)$/, ` (${k++})$1`);
+                        used.add(name.toLowerCase());
+                        zip.file(name, await r.blob());
+                    } catch (e) { failed++; }
+                }
+                if (failed === files.length) throw new Error('none of the files could be downloaded');
+                say('Zipping...');
+                const blob = await zip.generateAsync({ type: 'blob' });
+                const site = siteById(cid), a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `${(site && site.Name) || 'Site'} - ${folder}.zip`.replace(/[\\/:*?"<>|]+/g, '-');
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+                if (failed) alert(`${failed} of ${files.length} files couldn't be downloaded and are missing from the zip.`);
+            } catch (e) { alert('Could not download the folder: ' + (e.message || e)); }
+            finally { btn.disabled = false; btn.textContent = label; }
         }
         async function adminOpenDoc(id) {
             const d = adminData.docs.find(x => x.id === id);
