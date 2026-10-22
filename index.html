@@ -324,6 +324,11 @@
         .nf-cat { display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #fdba74; margin-bottom: .1rem; }
         .nf-dot { width: .55rem; height: .55rem; border-radius: 999px; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255, 255, 255, .7); }
         .nf-meta { padding: .5rem .6rem .55rem; font-size: 11px; }
+        .nf-card { border-left: 5px solid var(--tc, var(--border)); }
+        .nf-card:hover, .nf-card:focus-visible { border-left-color: var(--tc, var(--accent, rgb(var(--b500)))); }
+        .nf-name { font-weight: 800; font-size: .8rem; line-height: 1.2; color: var(--text); }
+        .nf-sub { display: flex; align-items: center; gap: .3rem; min-width: 0; margin-top: .15rem; font-weight: 700; }
+        .nf-sub .nf-dot { box-shadow: none; }
         .rec-no { color: rgb(var(--b500)) !important; }
         .sight-card.sight-new { border-color: rgba(220, 38, 38, .6); }
         .sight-card.sight-new .nf-meta { background: rgba(220, 38, 38, .10); }
@@ -343,7 +348,8 @@
         .ws-card.ws-done .nf-meta { background: rgba(16, 185, 129, .12); }
         .ws-card:hover, .ws-card:focus-visible { box-shadow: 0 12px 28px rgba(0, 0, 0, .28), 0 0 18px rgba(245, 158, 11, .45); }
         .ws-card.ws-done:hover, .ws-card.ws-done:focus-visible { box-shadow: 0 12px 28px rgba(0, 0, 0, .28), 0 0 18px rgba(16, 185, 129, .45); }
-        .ws-card .nf-title { font-size: .82rem; }
+        .ws-card .nf-name { font-size: .84rem; }
+        .ws-card, .ws-card.ws-done { border-left: 5px solid var(--tc); }
         .sign-pad { width: 100%; height: 11rem; background: #fff; border-radius: .8rem; border: 2px dashed rgba(148,163,184,.7); touch-action: none; display: block; cursor: crosshair; }
         .sign-img { background: #fff; border-radius: .6rem; padding: .25rem; max-height: 6rem; }
         .role-toggle { font-size: .7rem; font-weight: 800; padding: .3rem .65rem; border-radius: 999px; border: 1.5px solid var(--border); color: var(--muted); background: transparent; cursor: pointer; }
@@ -665,6 +671,21 @@
         .pe-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .35rem .6rem; border-radius: .6rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: .72rem; font-weight: 700; cursor: pointer; }
         .pe-chip.on { border-color: rgb(var(--b500)); background: rgb(var(--b500) / .12); color: rgb(var(--b600)); }
         .pe-swatch { width: 1.7rem; height: 1.7rem; border-radius: .5rem; border: 2px solid var(--border); cursor: pointer; }
+        .pe-grow { display: grid; grid-template-areas: ". t ." "l c r" ". b ."; grid-template-columns: 1fr 1fr 1fr; gap: .35rem; align-items: center; }
+        .pe-grow-page { display: block; height: 2.2rem; border-radius: .4rem; background: #ffffff; border: 1.5px solid var(--border); box-shadow: inset 0 0 0 3px var(--surface2); }
+        .pm-wrap { position: absolute; inset: 0; z-index: 8; display: flex; align-items: center; justify-content: center; padding: .75rem; background: rgba(15, 23, 42, .45); }
+        .pm-wrap.hidden { display: none; }
+        .pm-card { width: 100%; max-width: 64rem; height: min(46rem, 100%); display: flex; flex-direction: column; gap: .6rem; padding: .9rem; }
+        .pm-view { position: relative; flex: 1 1 auto; min-height: 12rem; border-radius: .8rem; overflow: hidden; background: #1e293b; touch-action: none; cursor: grab; user-select: none; }
+        .pm-view:active { cursor: grabbing; }
+        .pm-tiles { position: absolute; inset: 0; }
+        .pm-tiles img { position: absolute; width: 256px; height: 256px; max-width: none; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+        .pm-zoom { position: absolute; right: .5rem; top: .5rem; display: flex; flex-direction: column; gap: .3rem; }
+        .pm-zoom button { width: 2.2rem; height: 2.2rem; border-radius: .6rem; background: #ffffff; color: #0f172a; font-weight: 900; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(0, 0, 0, .3); }
+        .pm-credit { position: absolute; right: 0; bottom: 0; padding: .1rem .4rem; font-size: 9.5px; background: rgba(255, 255, 255, .8); color: #334155; border-top-left-radius: .4rem; pointer-events: none; }
+        #confirmModal { z-index: 66; }   /* above the floor plan editor */
+        .pe-swatch-custom { position: relative; overflow: hidden; display: inline-block; }
+        .pe-swatch-custom input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
         .pe-swatch.on { border-color: rgb(var(--b500)); box-shadow: 0 0 0 2px rgb(var(--b500) / .35); }
         .pe-objects { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
         .pe-obj { display: flex; flex-direction: column; align-items: center; gap: .15rem; padding: .4rem .2rem; border-radius: .7rem; border: 1px solid var(--border); background: #ffffff; color: #0f172a; font-size: .6rem; font-weight: 700; cursor: pointer; text-align: center; line-height: 1.15; }
@@ -674,7 +695,7 @@
         @media (max-width: 767px) {
             .pe-body { flex-direction: column-reverse; }
             .pe-tools { flex-direction: row; width: auto; border-right: 0; border-top: 1px solid var(--border); overflow-x: auto; overflow-y: hidden; padding: .35rem; padding-bottom: max(.35rem, env(safe-area-inset-bottom)); justify-content: space-between; }
-            .pe-tool { flex: 1 1 0; min-width: 2.9rem; padding: .4rem .1rem; }
+            .pe-tool { flex: 1 1 0; min-width: 2.55rem; padding: .4rem 0; font-size: .58rem; }
             .pe-panel { position: absolute; left: 0; right: 0; bottom: 4.1rem; width: auto; max-height: 46%; border-left: 0; border-top: 1px solid var(--border); border-radius: 1rem 1rem 0 0; box-shadow: 0 -10px 30px rgba(0, 0, 0, .2); z-index: 5; padding-bottom: 1rem; }
             .pe-finish { bottom: 1rem; }
             .planEditor-panel-open .pe-finish { bottom: 48%; }
@@ -691,6 +712,7 @@
         .map-pin.focus .map-pin-ring { animation: pinRing 2.6s cubic-bezier(.25, .1, .25, 1) infinite; }
         .map-pin.focus .map-pin-ring.two { animation-delay: 1.3s; }
         .map-pin.dim { opacity: .25; }
+        .map-pin.pop-open .map-pin-label { display: none; }
         .map-pin .badge { position: absolute; top: -6px; right: -8px; min-width: 15px; height: 15px; border-radius: 999px; background: #dc2626; color: #fff; font-size: 9px; font-weight: 900; display: flex; align-items: center; justify-content: center; border: 1.5px solid #fff; transform: rotate(45deg); }
         @keyframes pinRing { 0% { transform: scale(.6); opacity: .55; } 70% { opacity: .12; } 100% { transform: scale(2.6); opacity: 0; } }
         #mapViewport.placing { cursor: crosshair; }
@@ -1890,7 +1912,7 @@
             <div class="pe-checks">
                 <label class="pe-check"><input type="checkbox" id="peGrid" checked onchange="peSet('grid', this.checked)"> Grid</label>
                 <label class="pe-check"><input type="checkbox" id="peSnap" checked onchange="peSet('snap', this.checked)"> Snap</label>
-                <label class="pe-check"><input type="checkbox" id="peSizes" checked onchange="peSet('sizes', this.checked)"> Measurements</label>
+                <label class="pe-check"><input type="checkbox" id="peSizes" checked onchange="peSet('sizes', this.checked)"> Room sizes</label>
                 <label class="pe-check"><input type="checkbox" id="pePinsOn" checked onchange="peSet('pins', this.checked)"> Stations</label>
             </div>
             <div class="flex items-center gap-1 ml-auto shrink-0">
@@ -1926,15 +1948,37 @@
                         <div class="grid gap-2">
                             <button type="button" class="pe-start" onclick="peWelcomeGo('room')"><span class="pe-start-i">▭</span><span><b>Draw the building or a room</b><span>Drag from corner to corner. Add more rooms the same way.</span></span></button>
                             <button type="button" class="pe-start" onclick="peWelcomeGo('wall')"><span class="pe-start-i">⟋</span><span><b>Draw walls corner by corner</b><span>For odd shapes, fences and outdoor areas.</span></span></button>
-                            <button type="button" class="pe-start" onclick="peWelcomeGo('photo')"><span class="pe-start-i">📷</span><span><b>Trace over a photo</b><span>Put a photo or old plan underneath and draw over it.</span></span></button>
+                            <button type="button" class="pe-start" onclick="peWelcomeGo('map')"><span class="pe-start-i">🛰️</span><span><b>Start from a map of the site</b><span>A satellite or street map of the address, at real scale. Place stations straight onto it.</span></span></button>
+                            <button type="button" class="pe-start" onclick="peWelcomeGo('photo')"><span class="pe-start-i">📷</span><span><b>Trace over a photo</b><span>A photo, an old plan, or a screenshot of Google Maps.</span></span></button>
                         </div>
-                        <p class="text-[11px] t-faint">Then add doors, racking, bins and labels with <b>Objects</b> and <b>Text</b>. Station pins are placed after saving, the same as before.</p>
+                        <p class="text-[11px] t-faint">Then add doors, racking and labels with <b>Objects</b> and <b>Text</b>, and draw anything else with <b>Shapes</b>. Station pins are placed after saving, the same as before.</p>
                     </div>
                 </div>
             </div>
             <aside id="pePanel" class="pe-panel hidden"></aside>
         </div>
         <input type="file" id="peBgFile" accept="image/*" class="hidden">
+        <!-- a satellite or street map of the site, captured under the plan at real scale -->
+        <div id="peMapPick" class="pm-wrap hidden" role="dialog" aria-modal="true" aria-label="Map of the site">
+            <div class="card pm-card">
+                <div class="flex items-center justify-between gap-2"><div><div class="eyebrow t-accent">Map of the site</div><div class="text-[11px] t-faint">Find the site, zoom in until it fills the frame, then use this view.</div></div><button type="button" class="pe-x" onclick="pmClose()" aria-label="Close">✕</button></div>
+                <form class="flex gap-1.5" onsubmit="event.preventDefault(); pmFind(document.getElementById('pmSearch').value)">
+                    <input type="search" id="pmSearch" class="field !py-1.5 !text-sm flex-1 min-w-0" placeholder="Street address or place">
+                    <button type="submit" class="btn btn-secondary !py-1.5 !px-3 !text-xs shrink-0">Find</button>
+                    <button type="button" class="btn btn-secondary !py-1.5 !px-2.5 !text-xs shrink-0" onclick="pmLocate()" title="Where I am now">📍<span class="sm-inline">&nbsp;Here</span></button>
+                </form>
+                <div class="flex flex-wrap items-center gap-1.5"><span id="pmLayers" class="flex gap-1.5"></span><span id="pmMsg" class="text-[11px] t-faint"></span></div>
+                <div id="pmView" class="pm-view">
+                    <div id="pmTiles" class="pm-tiles"></div>
+                    <div class="pm-zoom"><button type="button" onclick="pmZoom(1)" aria-label="Zoom in">+</button><button type="button" onclick="pmZoom(-1)" aria-label="Zoom out">−</button></div>
+                    <div id="pmCredit" class="pm-credit"></div>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <a id="pmGoogle" href="#" target="_blank" rel="noopener" class="link-btn !text-[11px]">Compare with Google Maps ↗</a>
+                    <div class="flex gap-2 ml-auto"><button type="button" class="btn btn-secondary !py-2" onclick="pmClose()">Cancel</button><button type="button" id="pmUseBtn" class="btn btn-primary !py-2" onclick="pmUse()">Use this view</button></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Add / rename / replace a floor plan -->
@@ -2088,7 +2132,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.22-r54';
+        const APP_VERSION = '2026.10.22-r55';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -6054,17 +6098,16 @@
                 box.innerHTML = (siteSightings.length && !shown.length ? '<span class="t-faint italic">No sightings match these filters.</span>' : '') + shown.map(x => {
                     const done = x.status !== 'new', f = fmtDateTimeLong(x.seen_at);
                     return `
-                    <button type="button" class="nf-card sight-card ${done ? 'sight-done' : 'sight-new'}" data-id="${esc(x.id)}" onclick="openSighting(this.dataset.id)">
-                        <div class="nf-hero" style="--tc:${done ? '#10b981' : '#dc2626'};">
+                    <button type="button" class="nf-card sight-card ${done ? 'sight-done' : 'sight-new'}" style="--tc:${done ? '#10b981' : '#dc2626'};" data-id="${esc(x.id)}" onclick="openSighting(this.dataset.id)">
+                        <div class="nf-hero">
                             <div class="nf-img" data-sight-hero="${esc(x.id)}">${(x.photos || []).length ? '' : '<span class="nf-ph">🐀</span>'}</div>
                             <div class="nf-shade"></div>
                             <div class="nf-top">${x.urgency === 'Urgent' ? '<span class="chip chip-red">Urgent</span>' : ''}${x._pending ? '<span class="chip chip-amber">Saved on device</span>' : ''}</div>
-                            <div class="nf-title"><span class="line-clamp-2">${esc(x.pest)}</span></div>
                         </div>
                         <div class="nf-meta">
-                            <div class="flex items-center justify-between gap-1.5"><span class="rec-no font-black font-mono">${esc(fmtSightNo(x.sighting_no))}</span>${sightChip(x)}</div>
-                            <div class="t-muted truncate mt-1">${esc(x.location)}</div>
-                            <div class="t-faint text-[10px] truncate">${esc(f.date)} · ${esc(x.reported_by || 'client')}</div>
+                            <div class="nf-name line-clamp-2">${esc(x.pest)}</div>
+                            <div class="nf-sub"><span class="rec-no font-black font-mono shrink-0">${esc(fmtSightNo(x.sighting_no))}</span><span class="t-muted font-semibold truncate">${esc(x.location)}</span></div>
+                            <div class="flex flex-wrap items-center gap-1 mt-1">${sightChip(x)}<span class="t-faint text-[10px]">${esc(f.date)} · ${esc(x.reported_by || 'client')}</span></div>
                         </div>
                     </button>`;
                 }).join('') || '<span class="t-faint italic">No pest sightings reported by the client.</span>';
@@ -8065,15 +8108,15 @@
             const dateStr = item.date ? new Date(item.date).toLocaleDateString(LOCALE, NZ_DATE) : '';
             const col = stationColor(item.stationType).color;
             return `
-                <button type="button" data-rec="${esc(item.id)}" onclick="openRecModal(this.dataset.rec, this)" class="nf-card ${item.status === 'complete' ? 'nf-done' : ''}">
-                    <div class="nf-hero" style="--tc:${col};">
+                <button type="button" data-rec="${esc(item.id)}" onclick="openRecModal(this.dataset.rec, this)" class="nf-card ${item.status === 'complete' ? 'nf-done' : ''}" style="--tc:${col};">
+                    <div class="nf-hero">
                         <div class="nf-img" data-rec-hero="${esc(item.id)}">${(item.allSlots || []).length ? '' : `<span class="nf-ph">📋</span>`}</div>
                         <div class="nf-shade"></div>
-                        <div class="nf-title">${item.category ? `<span class="nf-cat">${esc(item.category)}</span>` : ''}<span class="line-clamp-2">${esc(item.recommendation)}</span></div>
                     </div>
                     <div class="nf-meta">
-                        <div class="flex items-center gap-1.5 min-w-0">${recNumberHtml(item, 'text-xs rec-no shrink-0')}<span class="flex items-center gap-1 t-accent font-semibold min-w-0 flex-1" title="${esc(item.station)}">${typeDot(item.stationType, '.5rem')}<span class="truncate">${esc(item.station)}</span></span>${item.status === 'complete' ? '<span class="chip chip-green !py-0 shrink-0">Complete</span>' : item.status === 'pending' ? '<span class="chip chip-amber !py-0 shrink-0">Pending</span>' : ''}</div>
-                        <div class="flex flex-wrap items-center gap-1 mt-1">${recAgeChip(item)}<span class="t-faint text-[10px]">${esc(dateStr)}${item.photoCount > 1 ? ' · ' + mediaIcon(item.allSlots) + ' ' + item.photoCount : ''}</span></div>
+                        ${item.category ? `<div class="nf-cat" style="color:rgb(var(--b600));">${esc(item.category)}</div>` : ''}<div class="nf-name line-clamp-2">${esc(item.recommendation)}</div>
+                        <div class="nf-sub">${recNumberHtml(item, 'text-xs rec-no shrink-0')}<span class="flex items-center gap-1 t-accent font-semibold min-w-0 flex-1" title="${esc(item.station)}">${typeDot(item.stationType, '.5rem')}<span class="truncate">${esc(item.station)}</span></span></div>
+                        <div class="flex flex-wrap items-center gap-1 mt-1">${item.status === 'complete' ? '<span class="chip chip-green !py-0">Complete</span>' : item.status === 'pending' ? '<span class="chip chip-amber !py-0">Pending</span>' : ''}${recAgeChip(item)}<span class="t-faint text-[10px]">${esc(dateStr)}${item.photoCount > 1 ? ' · ' + mediaIcon(item.allSlots) + ' ' + item.photoCount : ''}</span></div>
                     </div>
                 </button>`;
         }
@@ -8193,10 +8236,16 @@
             if (sitePastVisits.length === 0) {
                 visitsContainer.innerHTML = '<span class="t-faint italic">No past visit history recorded yet.</span>';
             } else {
+                const monthOf = v => new Date(v.date).toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
+                const perMonth = new Map();
+                sitePastVisits.forEach(v => { const k = monthOf(v); perMonth.set(k, (perMonth.get(k) || 0) + 1); });
+                let lastMonth = '';
                 visitsContainer.innerHTML = sitePastVisits.map((v, index) => {
                     const dt = fmtDateTimeLong(v.date);
                     const n = new Set(v.entries.filter(e => !e.recOnly).map(e => e.barcode)).size;
-                    return `
+                    const mk = monthOf(v), head = mk !== lastMonth ? `<div class="visit-month eyebrow t-faint pt-2 pb-0.5 flex items-center justify-between gap-2"><span>${esc(mk)}</span><span class="normal-case tracking-normal font-semibold">${perMonth.get(mk)} visit${perMonth.get(mk) === 1 ? '' : 's'}</span></div>` : '';
+                    lastMonth = mk;
+                    return `${head}
                         <div class="row-item p-3.5 flex justify-between items-center gap-3">
                             <div class="min-w-0">
                                 <div class="font-bold t-strong">${esc(dt.date)}</div>
@@ -8323,14 +8372,15 @@
                     const last = lastServiceOf(d), lt = last ? fmtDateTimeLong(last.at) : null, openN = openRecCount(d), col = stationColor(d.deviceType).color;
                     const pin = sitePins.get(d.barcode_id), plan = pin && pin.mapId ? (siteMaps.find(m => m.id === pin.mapId) || {}).name : '';
                     return `
-                    <div data-barcode="${esc(d.barcode_id)}" onclick="openStationOverview(this.dataset.barcode)" onkeydown="if (event.key === 'Enter') this.click()" role="button" tabindex="0" class="nf-card">
-                        <div class="nf-hero" style="--tc:${col};">
+                    <div data-barcode="${esc(d.barcode_id)}" onclick="openStationOverview(this.dataset.barcode)" onkeydown="if (event.key === 'Enter') this.click()" role="button" tabindex="0" class="nf-card st-card" style="--tc:${col};">
+                        <div class="nf-hero">
                             <div class="nf-img" data-st-photo="${esc(d.barcode_id)}">${(siteStations.get(d.barcode_id) || {}).photo_path ? '' : `<span class="nf-ph">📍</span>`}</div>
                             <div class="nf-shade"></div>
-                            <div class="nf-title flex items-center gap-1.5"><span class="nf-dot" style="background:${col};"></span><span class="line-clamp-2">${esc(d.locationName)}</span></div>
                         </div>
                         <div class="nf-meta">
-                            <div class="truncate"><span class="font-mono t-accent">${esc(d.barcode_id)}</span></div>
+                            <div class="nf-name line-clamp-2">${esc(d.locationName)}</div>
+                            <div class="nf-sub"><span class="nf-dot" style="background:${col};"></span><span class="truncate" style="color:${col};">${esc(d.deviceType)}</span></div>
+                            <div class="truncate mt-0.5"><span class="font-mono t-accent">${esc(d.barcode_id)}</span>${openN ? ` <span class="chip chip-orange !py-0">${openN} open</span>` : ''}${plan ? ` <span class="t-faint">· 📍 ${esc(plan)}</span>` : ''}</div>
                             <div class="t-faint text-[10px] mt-0.5 truncate">${lt ? `Serviced ${esc(lt.date)} · ${esc(last.activity === 'Caught' ? 'insects caught' : last.activity === 'None' ? 'no activity' : last.activity + ' activity')}` : 'Not serviced yet'}</div>
                         </div>
                     </div>`;
@@ -9621,7 +9671,7 @@
                 const match = !q || st.name.toLowerCase().includes(q) || b.toLowerCase().includes(q);
                 const scanned = visitOn && scannedBarcodesThisVisit.has(b);
                 const openN = st.dev ? openRecCount(st.dev) : 0;
-                return `<div class="map-pin ${mapFocus === b ? 'focus' : ''} ${match ? '' : 'dim'}" style="left:${p.x * 100}%;top:${p.y * 100}%;">
+                return `<div class="map-pin ${mapFocus === b ? 'focus' : ''} ${match ? '' : 'dim'} ${mapPopoverBarcode === b ? 'pop-open' : ''}" data-pin="${esc(b)}" style="left:${p.x * 100}%;top:${p.y * 100}%;">
                     <div class="map-pin-inner" data-b="${esc(b)}" title="${esc(st.name)} · ${esc(st.type)}" style="--pin-color:${col.color}; transform: translate(-50%, -100%) scale(var(--pin-scale, 1));">
                         ${mapFocus === b ? '<span class="map-pin-ring"></span><span class="map-pin-ring two"></span>' : ''}
                         <div class="map-pin-head" style="background:${col.color};"><span>${scanned ? '✓' : ''}</span>${openN ? `<span class="badge">${openN}</span>` : ''}</div>
@@ -9723,6 +9773,7 @@
             const st = mapStations().find(x => x.barcode === barcode);
             if (!st) return;
             mapPopoverBarcode = barcode;
+            markPopPin();
             const d = st.dev;
             const last = d ? lastServiceOf(d) : null;
             const pop = document.getElementById('mapPopover');
@@ -9771,6 +9822,11 @@
             const pop = document.getElementById('mapPopover');
             if (pop) pop.classList.add('hidden');
             mapPopoverBarcode = null;
+            markPopPin();
+        }
+        // the station whose pop-up is open: its name label steps aside while the pop-up shows
+        function markPopPin() {
+            document.querySelectorAll('#mapPins .map-pin').forEach(el => el.classList.toggle('pop-open', !!mapPopoverBarcode && el.dataset.pin === mapPopoverBarcode));
         }
         async function mapServiceStation(barcode) {
             closeMapModal();
@@ -9879,14 +9935,16 @@
         const PE_OBJECTS = [
             { k: 'door', label: 'Door', w: .9, h: .9 }, { k: 'door2', label: 'Double door', w: 1.8, h: .9 },
             { k: 'roller', label: 'Roller door', w: 3, h: .5 }, { k: 'window', label: 'Window', w: 1.2, h: .3 },
-            { k: 'stairs', label: 'Stairs', w: 1.2, h: 3 }, { k: 'exit', label: 'Exit', w: 1.4, h: .7 },
+            { k: 'stairs', label: 'Stairs', w: 1.2, h: 3 },
             { k: 'bench', label: 'Bench', w: 2, h: .7 }, { k: 'rack', label: 'Racking', w: 4, h: 1 },
-            { k: 'fridge', label: 'Fridge', w: .9, h: .9 }, { k: 'sink', label: 'Sink', w: .7, h: .5 },
-            { k: 'toilet', label: 'Toilet', w: .5, h: .75 }, { k: 'bin', label: 'Bin', w: .9, h: .9 },
-            { k: 'post', label: 'Post', w: .4, h: .4 }, { k: 'drain', label: 'Drain', w: .6, h: .6 },
-            { k: 'tree', label: 'Tree / garden', w: 3, h: 3 }, { k: 'car', label: 'Car park', w: 2.5, h: 5 },
+            { k: 'drain', label: 'Drain', w: .6, h: .6 },
+            { k: 'car', label: 'Car park', w: 2.5, h: 5 },
             { k: 'north', label: 'North arrow', w: 1.6, h: 1.6 }
         ];
+        // shapes you draw yourself, colour in and name
+        const PE_SHAPES = [['rect', 'Rectangle'], ['round', 'Rounded'], ['ellipse', 'Circle / oval'], ['triangle', 'Triangle'], ['diamond', 'Diamond'], ['hex', 'Hexagon'], ['line', 'Line'], ['arrow', 'Arrow']];
+        const PE_FILLS = ['#fde68a', '#fed7aa', '#fecaca', '#e9d5ff', '#bfdbfe', '#a5f3fc', '#bbf7d0', '#e2e8f0', '#facc15', '#f97316', '#ef4444', '#a855f7', '#3b82f6', '#22c55e', '#64748b', '#0f172a'];
+        const peIsLine = sh => sh === 'line' || sh === 'arrow';
         const PE_WALL_MOUNT = new Set(['door', 'door2', 'roller', 'window']);
         const PE_TOOLS = [
             ['select', 'Select', 'V', '<path d="M5 3l14 8-6 1.5L10 19z"/>'],
@@ -9894,6 +9952,7 @@
             ['wall', 'Wall', 'W', '<circle cx="5" cy="18" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="14" r="2"/><path d="M6.5 16.5L10.8 7.7M13.6 7.3l4 5.4"/>'],
             ['room', 'Room', 'R', '<rect x="4" y="5" width="16" height="14" rx="1"/><path d="M4 12h7v7"/>'],
             ['stamp', 'Objects', 'O', '<path d="M4 20V5a1 1 0 011-1h7v16"/><path d="M12 4a8 8 0 018 8h-8"/>'],
+            ['shape', 'Shapes', 'S', '<rect x="3" y="11" width="9" height="9" rx="1"/><circle cx="16" cy="8" r="5"/>'],
             ['text', 'Text', 'T', '<path d="M5 6V4h14v2M12 4v16M9 20h6"/>'],
             ['erase', 'Erase', 'E', '<path d="M8 20h12M5.5 13.5l7-7a2 2 0 012.8 0l3.2 3.2a2 2 0 010 2.8L12 19H8.5L5.5 16a1.8 1.8 0 010-2.5z"/>']
         ];
@@ -9923,11 +9982,12 @@
             } else doc = peNewDoc(opts.size);
             ['nodes', 'walls', 'rooms', 'items'].forEach(k => { if (!Array.isArray(doc[k])) doc[k] = []; });
             pe = {
-                doc, mapId: m ? m.id : null, name: opts.name || (m ? m.name : ''), tool: 'select', wallKind: 'wall', straight: true, stampKind: 'door',
+                doc, mapId: m ? m.id : null, name: opts.name || (m ? m.name : ''), tool: 'select', wallKind: 'wall', straight: true, stampKind: 'door', shapeKind: 'rect', shapeFill: '#bfdbfe',
                 sel: null, chain: null, view: { z: 1, x: 0, y: 0 }, op: null, hover: null, pointers: new Map(), undo: [], redo: [], last: '',
                 dirty: false, bgUrl: null, bgBlob: null, show: { grid: true, snap: true, pins: true }, panel: 'tool', space: false, sizeKey: opts.size || null
             };
             pe.last = peDocJson();
+            pe.w0 = doc.w - (doc._ox || 0); pe.h0 = doc.h - (doc._oy || 0);   // the page size the station pins were placed on
             document.getElementById('peName').value = pe.name;
             document.getElementById('planEditor').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -10017,12 +10077,13 @@
             if (!pe) return;
             const st = PE_OBJECTS.find(o => o.k === pe.stampKind);
             const t = {
-                select: pe.sel ? 'Drag to move it · drag the white dots to reshape · Delete to remove' : 'Tap something to select it · drag empty space to move around · pinch or scroll to zoom',
+                select: pe.sel && pe.sel.type === 'multi' ? 'Drag any of them to move them together · tap one on its own to move just that one' : pe.sel ? 'Drag to move it · drag the white dots to reshape · Delete to remove' : 'Tap something to select it · drag a box around things to select several · two fingers or the Move tool to move around',
                 pan: 'Drag to move around · pinch or scroll to zoom',
                 wall: pe.chain ? 'Tap to add the next corner · tap the first corner to close it, or tap ✓ Finish' : 'Tap where the wall starts (it snaps to the grid and to other corners)',
                 room: 'Drag from one corner of the room to the opposite corner',
                 stamp: `Tap where the ${st ? st.label.toLowerCase() : 'object'} goes${st && PE_WALL_MOUNT.has(st.k) ? ' - it fits itself onto the nearest wall' : ''}`,
                 text: 'Tap where the label goes',
+                shape: `Drag to draw a ${((PE_SHAPES.find(x => x[0] === pe.shapeKind) || [, 'shape'])[1]).toLowerCase()} · tap for a standard size`,
                 erase: 'Tap anything to remove it (Undo brings it back)'
             }[pe.tool] || '';
             document.getElementById('peHint').textContent = t;
@@ -10155,12 +10216,49 @@
             return n;
         }
         function pePointNode(p, from) {
-            // reuse a corner, or split a wall the point lands on, or add a new corner
+            // a corner of the wall being drawn is reused (that closes the shape); anything else only lines up with
+            // other corners and walls - it doesn't join them, so each room or wall can still be moved on its own
             const s = peSnap(p, from);
-            if (s.node) return peNode(s.node);
-            const hit = peWallNear(s, 10 / pe.view.z);
-            if (hit) return peSplitWall(hit.wall, hit.q);
+            if (s.node && pe.chain && pe.chain.ids.includes(s.node)) return peNode(s.node);
             return peAddNode(s.x, s.y);
+        }
+        // the nodes a selection moves, made its own first (corners it shares with anything not selected are copied)
+        function peSelParts(list) {
+            const rooms = list.filter(x => x.type === 'room').map(x => pe.doc.rooms.find(r => r.id === x.id)).filter(Boolean);
+            const walls = list.filter(x => x.type === 'wall').map(x => pe.doc.walls.find(w => w.id === x.id)).filter(Boolean);
+            const items = list.filter(x => x.type === 'item').map(x => pe.doc.items.find(i => i.id === x.id)).filter(Boolean);
+            const nodes = list.filter(x => x.type === 'node').map(x => x.id);
+            return { rooms, walls, items, nodes };
+        }
+        const peEdgeOf = (r, w) => r.nodes.some((id, i) => { const n = r.nodes[(i + 1) % r.nodes.length]; return (w.a === id && w.b === n) || (w.b === id && w.a === n); });
+        function peDetach(list) {
+            const { rooms, walls } = peSelParts(list);
+            const selRooms = new Set(rooms.map(r => r.id));
+            const selWalls = new Set(walls.map(w => w.id));
+            pe.doc.walls.forEach(w => { if (rooms.some(r => peEdgeOf(r, w))) selWalls.add(w.id); });
+            const N = new Set();
+            rooms.forEach(r => r.nodes.forEach(id => N.add(id)));
+            pe.doc.walls.filter(w => selWalls.has(w.id)).forEach(w => { N.add(w.a); N.add(w.b); });
+            const outside = new Set();
+            pe.doc.rooms.filter(r => !selRooms.has(r.id)).forEach(r => r.nodes.forEach(id => outside.add(id)));
+            pe.doc.walls.filter(w => !selWalls.has(w.id)).forEach(w => { outside.add(w.a); outside.add(w.b); });
+            const map = new Map();
+            N.forEach(id => { if (outside.has(id)) { const n = peNode(id); if (n) map.set(id, peAddNode(n.x, n.y).id); } });
+            if (map.size) {
+                const swap = id => map.get(id) || id;
+                rooms.forEach(r => { r.nodes = r.nodes.map(swap); });
+                pe.doc.walls.filter(w => selWalls.has(w.id)).forEach(w => {
+                    // a wall that's also the edge of a room left behind stays with that room; the selection gets its own copy
+                    const shared = pe.doc.rooms.some(r => !selRooms.has(r.id) && peEdgeOf(r, w));
+                    if (shared && (map.has(w.a) || map.has(w.b))) pe.doc.walls.push({ id: uid(), a: swap(w.a), b: swap(w.b), kind: w.kind });
+                    else { w.a = swap(w.a); w.b = swap(w.b); }
+                });
+            }
+            const ids = new Set();
+            rooms.forEach(r => r.nodes.forEach(id => ids.add(id)));
+            walls.forEach(w => { ids.add(w.a); ids.add(w.b); });
+            list.filter(x => x.type === 'node').forEach(x => ids.add(x.id));
+            return Array.from(ids);
         }
         function peDropOrphans() {
             const used = new Set();
@@ -10186,6 +10284,16 @@
         }
         function peDeleteSel() {
             if (!pe || !pe.sel) return;
+            if (pe.sel.type === 'multi') {
+                const list = pe.sel.list;
+                list.filter(x => x.type === 'item').forEach(x => { pe.doc.items = pe.doc.items.filter(i => i.id !== x.id); });
+                list.filter(x => x.type === 'wall').forEach(x => { pe.doc.walls = pe.doc.walls.filter(w => w.id !== x.id); });
+                list.filter(x => x.type === 'room').forEach(x => peDeleteRoom(x.id));
+                peDropOrphans();
+                pe.sel = null;
+                peCommit(); peRender(); peRenderPanel(); peHint();
+                return;
+            }
             const { type, id } = pe.sel;
             if (type === 'node') peDeleteNode(id);
             else if (type === 'wall') { pe.doc.walls = pe.doc.walls.filter(w => w.id !== id); peDropOrphans(); }
@@ -10243,10 +10351,43 @@
                 case 'car': g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" stroke="#475569" stroke-width="${sw}" fill="none" stroke-dasharray="${sw * 4} ${sw * 2}"/>${txt('P', Math.min(w, h) * 0.45, '#475569')}`; break;
                 case 'north': g = `<circle r="${w / 2}" stroke="#0f172a" stroke-width="${sw}" fill="#ffffff"/><path d="M 0 ${-w * 0.42} L ${w * 0.16} ${w * 0.2} L 0 ${w * 0.08} L ${-w * 0.16} ${w * 0.2} Z" fill="#0f172a"/>${txt('N', w * 0.24, '#dc2626', -w * 0.62)}`; break;
                 case 'text': g = txt(it.text || 'Label', it.size || ppm * 0.6, it.color || '#0f172a'); break;
+                case 'shape': g = peShapeSvg(it, ppm); break;
             }
-            const hit = it.kind === 'text' ? peTextBox(it) : { w: w, h: PE_WALL_MOUNT.has(it.kind) && it.kind.startsWith('door') ? (it.kind === 'door' ? w : w / 2) : h, y: it.kind === 'door' ? -w / 2 : it.kind === 'door2' ? -w / 4 : 0 };
+            const hit = peItemBox(it, ppm);
             const hitRect = editing ? `<rect class="pe-hit" x="${-hit.w / 2}" y="${(hit.y || 0) - hit.h / 2}" width="${hit.w}" height="${hit.h}" fill="transparent"/>` : '';
             return `<g ${editing ? `data-item="${esc(it.id)}"` : ''} transform="translate(${it.x} ${it.y}) rotate(${it.rot || 0})">${g}${hitRect}</g>`;
+        }
+        // the area an object takes up (for tapping it and for the selection box)
+        function peItemBox(it, ppm) {
+            if (it.kind === 'text') return peTextBox(it);
+            if (it.kind === 'door') return { w: it.w, h: it.w, y: -it.w / 2 };
+            if (it.kind === 'door2') return { w: it.w, h: it.w / 2, y: -it.w / 4 };
+            if (it.kind === 'shape' && peIsLine(it.shape)) return { w: it.w, h: Math.max(it.h, ppm * 0.6), y: 0 };
+            return { w: it.w, h: it.h, y: 0 };
+        }
+        function peShapeSvg(it, ppm) {
+            const w = it.w, h = it.h, fill = it.fill || '#bfdbfe', op = it.alpha == null ? 0.8 : it.alpha;
+            const sw = Math.max(1.5, ppm * 0.05), edge = it.edge === false ? 'none' : '#334155';
+            const S = `fill="${esc(fill)}" fill-opacity="${op}" stroke="${edge}" stroke-width="${sw}" stroke-linejoin="round"`;
+            const pts = a => `points="${a.map(q => q.join(',')).join(' ')}"`;
+            let g = '';
+            switch (it.shape) {
+                case 'round': g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="${Math.min(w, h) * 0.22}" ${S}/>`; break;
+                case 'ellipse': g = `<ellipse rx="${w / 2}" ry="${h / 2}" ${S}/>`; break;
+                case 'triangle': g = `<polygon ${pts([[0, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]])} ${S}/>`; break;
+                case 'diamond': g = `<polygon ${pts([[0, -h / 2], [w / 2, 0], [0, h / 2], [-w / 2, 0]])} ${S}/>`; break;
+                case 'hex': g = `<polygon ${pts([[-w / 2, 0], [-w / 4, -h / 2], [w / 4, -h / 2], [w / 2, 0], [w / 4, h / 2], [-w / 4, h / 2]])} ${S}/>`; break;
+                case 'line': g = `<line x1="${-w / 2}" y1="0" x2="${w / 2}" y2="0" stroke="${esc(fill)}" stroke-opacity="${Math.max(op, .6)}" stroke-width="${Math.max(h, sw * 2)}" stroke-linecap="round"/>`; break;
+                case 'arrow': { const t = Math.max(h, sw * 2), hl = Math.min(w * 0.4, t * 4 + ppm * 0.3);
+                    g = `<line x1="${-w / 2}" y1="0" x2="${w / 2 - hl * 0.8}" y2="0" stroke="${esc(fill)}" stroke-opacity="${Math.max(op, .6)}" stroke-width="${t}" stroke-linecap="round"/><polygon ${pts([[w / 2, 0], [w / 2 - hl, -hl * 0.55], [w / 2 - hl, hl * 0.55]])} fill="${esc(fill)}" fill-opacity="${Math.max(op, .6)}"/>`; break; }
+                default: g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" ${S}/>`;
+            }
+            if (it.name) {
+                const line = peIsLine(it.shape), fs = Math.max(ppm * 0.35, Math.min(ppm * 0.9, (line ? ppm * 0.6 : Math.min(w, h) * 0.28)));
+                const y = line ? -Math.max(h, sw * 2) / 2 - fs * 0.75 : 0;
+                g += `<text x="0" y="${y}" font-size="${fs}" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-weight="800" fill="#0f172a" stroke="#ffffff" stroke-width="${fs * 0.16}" paint-order="stroke" stroke-linejoin="round" text-anchor="middle" dominant-baseline="central">${esc(it.name)}</text>`;
+            }
+            return g;
         }
         function peTextBox(it) { const s = it.size || pe.doc.ppm * 0.6; return { w: Math.max(s, String(it.text || 'Label').length * s * 0.62), h: s * 1.3, y: 0 }; }
         // everything drawn on the page (rooms, walls, objects, labels)
@@ -10258,6 +10399,7 @@
                 if (p.length < 3) return;
                 out += `<polygon ${editing ? `data-room="${esc(r.id)}"` : ''} points="${p.map(q => q.x + ',' + q.y).join(' ')}" fill="${esc(r.color || '#e2e8f0')}" fill-opacity=".55"/>`;
             });
+            doc.items.filter(it => it.kind === 'shape').forEach(it => { out += peItemSvg(it, ppm, editing); });
             doc.walls.forEach(w => {
                 const a = nodes.get(w.a), b = nodes.get(w.b);
                 if (!a || !b) return;
@@ -10265,19 +10407,8 @@
                 out += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${s.c}" stroke-width="${s.w}" stroke-linecap="${s.dash ? 'butt' : 'round'}" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''}/>`;
                 if (editing) out += `<line data-wall="${esc(w.id)}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="transparent" stroke-width="${Math.max(s.w, 16 / (pe ? pe.view.z : 1))}"/>`;
             });
-            doc.items.forEach(it => { out += peItemSvg(it, ppm, editing); });
+            doc.items.filter(it => it.kind !== 'shape').forEach(it => { out += peItemSvg(it, ppm, editing); });
             const font = 'font-family="system-ui, -apple-system, Segoe UI, sans-serif"';
-            if (doc.sizes) doc.walls.forEach(w => {
-                const a = nodes.get(w.a), b = nodes.get(w.b);
-                if (!a || !b || w.kind === 'line') return;
-                const L = Math.hypot(b.x - a.x, b.y - a.y);
-                if (L < ppm * 0.8) return;
-                let ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
-                if (ang > 90) ang -= 180; if (ang < -90) ang += 180;
-                const nx = -(b.y - a.y) / L, ny = (b.x - a.x) / L, off = peWallStyle(w.kind, ppm).w / 2 + ppm * 0.32;
-                const mx = (a.x + b.x) / 2 + nx * off, my = (a.y + b.y) / 2 + ny * off;
-                out += `<text x="${mx}" y="${my}" transform="rotate(${ang} ${mx} ${my})" font-size="${Math.max(9, ppm * 0.4)}" ${font} font-weight="600" fill="#64748b" text-anchor="middle" dominant-baseline="central" pointer-events="none">${peFmtM(L / ppm)}</text>`;
-            });
             doc.rooms.forEach(r => {
                 const p = r.nodes.map(id => nodes.get(id)).filter(Boolean);
                 if (p.length < 3) return;
@@ -10312,12 +10443,15 @@
             const img = document.getElementById('peBg');
             const bg = pe && pe.doc.bg;
             if (bg && pe.bgUrl) {
+                const r = peBgRect(pe.doc);
                 img.setAttribute('href', pe.bgUrl);
-                img.setAttribute('width', pe.doc.w); img.setAttribute('height', pe.doc.h);
+                img.setAttribute('x', r.x); img.setAttribute('y', r.y);
+                img.setAttribute('width', r.w); img.setAttribute('height', r.h);
                 img.setAttribute('opacity', bg.opacity == null ? 1 : bg.opacity);
                 img.style.display = '';
             } else { img.removeAttribute('href'); img.style.display = 'none'; }
         }
+        const peBgRect = d => (d.bg && d.bg.rect) || { x: 0, y: 0, w: d.w, h: d.h };
         function peRenderGrid() {
             if (!pe) return;
             const g = document.getElementById('peGridRect'), d = pe.doc, z = pe.view.z;
@@ -10336,6 +10470,9 @@
             const z = pe.view.z, d = pe.doc, ov = document.getElementById('peOverlay');
             let out = '';
             const sel = pe.sel;
+            if (sel && sel.type === 'multi') {
+                sel.list.forEach(x => { out += peSelOutline(x, d, z); });
+            }
             if (sel && sel.type === 'wall') {
                 const w = d.walls.find(x => x.id === sel.id), a = w && peNode(w.a), b = w && peNode(w.b);
                 if (a && b) out += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#f97316" stroke-opacity=".55" stroke-width="${peWallStyle(w.kind, d.ppm).w + 8 / z}" stroke-linecap="round" pointer-events="none"/>`;
@@ -10344,13 +10481,17 @@
                 const r = d.rooms.find(x => x.id === sel.id);
                 if (r) out += `<polygon points="${peRoomPts(r).map(q => q.x + ',' + q.y).join(' ')}" fill="rgba(249,115,22,.08)" stroke="#f97316" stroke-width="${2.5 / z}" stroke-dasharray="${8 / z} ${5 / z}" pointer-events="none"/>`;
             }
-            if (sel && sel.type === 'item') {
-                const it = d.items.find(x => x.id === sel.id);
-                if (it) {
-                    const hb = it.kind === 'text' ? peTextBox(it) : { w: it.w, h: it.kind === 'door' ? it.w : it.kind === 'door2' ? it.w / 2 : it.h, y: it.kind === 'door' ? -it.w / 2 : it.kind === 'door2' ? -it.w / 4 : 0 };
-                    const pad = 6 / z;
-                    out += `<g transform="translate(${it.x} ${it.y}) rotate(${it.rot || 0})" pointer-events="none"><rect x="${-hb.w / 2 - pad}" y="${(hb.y || 0) - hb.h / 2 - pad}" width="${hb.w + pad * 2}" height="${hb.h + pad * 2}" fill="none" stroke="#f97316" stroke-width="${2 / z}" stroke-dasharray="${6 / z} ${4 / z}"/></g>`;
-                }
+            if (sel && sel.type === 'item') out += peSelOutline(sel, d, z);
+            // the box being dragged to select several things
+            if (pe.op && pe.op.type === 'marquee' && pe.op.moved) {
+                const a = pe.op.p, b = pe.op.b || a;
+                out += `<rect x="${Math.min(a.x, b.x)}" y="${Math.min(a.y, b.y)}" width="${Math.abs(b.x - a.x)}" height="${Math.abs(b.y - a.y)}" fill="rgba(59,130,246,.10)" stroke="#3b82f6" stroke-width="${1.5 / z}" stroke-dasharray="${6 / z} ${4 / z}" pointer-events="none"/>`;
+            }
+            // the shape being drawn
+            if (pe.op && pe.op.type === 'shapeDraw' && pe.op.moved && pe.op.b) {
+                const it = peShapeFrom(pe.op.a, pe.op.b);
+                out += `<g opacity=".75" pointer-events="none">${peItemSvg(it, d.ppm, false)}</g>`;
+                out += peTag((pe.op.a.x + pe.op.b.x) / 2, Math.min(pe.op.a.y, pe.op.b.y) - 16 / z, peIsLine(it.shape) ? peFmtM(it.w / d.ppm) : `${peFmtM(it.w / d.ppm)} × ${peFmtM(it.h / d.ppm)}`);
             }
             // corner dots (select and wall tools)
             if (pe.tool === 'select' || pe.tool === 'wall' || pe.tool === 'erase') {
@@ -10380,6 +10521,23 @@
                 out += peTag(x + w / 2, y - 16 / z, `${peFmtM(w / d.ppm)} × ${peFmtM(h / d.ppm)}`);
             }
             ov.innerHTML = out;
+        }
+        function peSelOutline(x, d, z) {
+            if (x.type === 'item') {
+                const it = d.items.find(i => i.id === x.id);
+                if (!it) return '';
+                const hb = peItemBox(it, d.ppm), pad = 6 / z;
+                return `<g transform="translate(${it.x} ${it.y}) rotate(${it.rot || 0})" pointer-events="none"><rect x="${-hb.w / 2 - pad}" y="${(hb.y || 0) - hb.h / 2 - pad}" width="${hb.w + pad * 2}" height="${hb.h + pad * 2}" fill="none" stroke="#f97316" stroke-width="${2 / z}" stroke-dasharray="${6 / z} ${4 / z}"/></g>`;
+            }
+            if (x.type === 'room') {
+                const r = d.rooms.find(q => q.id === x.id);
+                return r ? `<polygon points="${peRoomPts(r).map(q => q.x + ',' + q.y).join(' ')}" fill="rgba(249,115,22,.08)" stroke="#f97316" stroke-width="${2.5 / z}" stroke-dasharray="${8 / z} ${5 / z}" pointer-events="none"/>` : '';
+            }
+            if (x.type === 'wall') {
+                const w = d.walls.find(q => q.id === x.id), a = w && peNode(w.a), b = w && peNode(w.b);
+                return a && b ? `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#f97316" stroke-opacity=".55" stroke-width="${peWallStyle(w.kind, d.ppm).w + 8 / z}" stroke-linecap="round" pointer-events="none"/>` : '';
+            }
+            return '';
         }
         function peTag(x, y, text) {
             const z = pe.view.z, fs = 12 / z, w = (String(text).length * 6.6 + 14) / z, h = 20 / z;
@@ -10418,6 +10576,17 @@
                 const base = { sx: e.clientX, sy: e.clientY, p, moved: false, v: Object.assign({}, pe.view), hit };
                 if (e.button === 1 || e.button === 2 || pe.space || pe.tool === 'pan') { pe.op = Object.assign(base, { type: 'pan' }); return; }
                 if (pe.tool === 'select') {
+                    const multi = pe.sel && pe.sel.type === 'multi' ? pe.sel.list : null;
+                    const inMulti = h => multi && h && multi.some(x => x.type === h.type && x.id === h.id);
+                    if (hit && hit.type !== 'node' && e.shiftKey) {   // Shift-click adds or removes one thing
+                        const list = (multi || (pe.sel && pe.sel.type !== 'node' ? [pe.sel] : [])).slice();
+                        const i = list.findIndex(x => x.type === hit.type && x.id === hit.id);
+                        if (i >= 0) list.splice(i, 1); else list.push(hit);
+                        peSelect(list.length > 1 ? { type: 'multi', list } : list[0] || null);
+                        return;
+                    }
+                    if (hit && inMulti(hit)) { pe.op = Object.assign(base, { type: 'group', list: multi.slice() }); return; }
+                    if (hit && hit.type === 'room') { pe.op = Object.assign(base, { type: 'group', list: [hit] }); peSelect(hit); return; }
                     if (hit && hit.type === 'node') { const n = peNode(hit.id); pe.op = Object.assign(base, { type: 'node', id: hit.id, o: { x: n.x, y: n.y } }); peSelect(hit); return; }
                     if (hit && hit.type === 'item') { const it = pe.doc.items.find(i => i.id === hit.id); pe.op = Object.assign(base, { type: 'item', id: hit.id, o: { x: it.x, y: it.y } }); peSelect(hit); return; }
                     if (hit && (hit.type === 'wall' || hit.type === 'room')) {
@@ -10425,11 +10594,11 @@
                         pe.op = Object.assign(base, { type: 'shape', o: ids.map(id => { const n = peNode(id); return n ? { id, x: n.x, y: n.y } : null; }).filter(Boolean) });
                         peSelect(hit); return;
                     }
-                    if (pe.sel) peSelect(null);
-                    pe.op = Object.assign(base, { type: 'pan' });
+                    pe.op = Object.assign(base, { type: 'marquee', b: p });   // drag a box around things to select them
                     return;
                 }
                 if (pe.tool === 'room') { pe.op = Object.assign(base, { type: 'room', a: peSnap(p) }); return; }
+                if (pe.tool === 'shape') { pe.op = Object.assign(base, { type: 'shapeDraw', a: peGridPt(p) }); return; }
                 pe.op = Object.assign(base, { type: 'tap' });   // wall, stamp, text, erase: a tap acts, a drag pans
             });
             svg.addEventListener('pointermove', e => {
@@ -10479,6 +10648,20 @@
                     peRender(); return;
                 }
                 if (op.type === 'room') { op.b = peSnap(p); peRenderOverlay(); }
+                if (op.type === 'marquee') { op.b = p; peRenderOverlay(); }
+                if (op.type === 'shapeDraw') { op.b = peGridPt(p); peRenderOverlay(); }
+                if (op.type === 'group') {
+                    if (!op.o) {   // first move: the selection gets its own corners, then remember where everything was
+                        const ids = peDetach(op.list);
+                        op.o = ids.map(id => { const n = peNode(id); return n ? { id, x: n.x, y: n.y } : null; }).filter(Boolean);
+                        op.io = peSelParts(op.list).items.map(it => ({ it, x: it.x, y: it.y }));
+                    }
+                    let ddx = dx / pe.view.z, ddy = dy / pe.view.z;
+                    if (pe.show.snap) { const g = pe.doc.ppm / 2; ddx = Math.round(ddx / g) * g; ddy = Math.round(ddy / g) * g; }
+                    op.o.forEach(o => { const n = peNode(o.id); if (n) { n.x = o.x + ddx; n.y = o.y + ddy; } });
+                    op.io.forEach(o => { o.it.x = Math.round((o.x + ddx) * 10) / 10; o.it.y = Math.round((o.y + ddy) * 10) / 10; });
+                    peRender(); return;
+                }
             });
             const end = e => {
                 if (!pe || !pe.pointers.has(e.pointerId)) return;
@@ -10489,10 +10672,18 @@
                 if (!op) return;
                 const p = peToPlan(e);
                 if (op.type === 'node') {
-                    if (op.moved) { const n = peNode(op.id), tgt = n && peNodeNear(n, 14, op.id); if (tgt && peDist(tgt, n) < 0.5) peMergeNode(op.id, tgt.id), peSelect({ type: 'node', id: tgt.id }); pe.hover = null; peCommit(); peRender(); peRenderPanel(); }
+                    if (op.moved) { pe.hover = null; peCommit(); peRender(); peRenderPanel(); }
                     return;
                 }
-                if (op.type === 'item' || op.type === 'shape') { if (op.moved) { peCommit(); peRenderPanel(); } return; }
+                if (op.type === 'group' && !op.moved && op.list.length > 1 && op.hit) { peSelect(op.hit); return; }   // a tap on one of several: just that one
+                if (op.type === 'item' || op.type === 'shape' || op.type === 'group') { if (op.moved) { peDropOrphans(); peCommit(); peRender(); peRenderPanel(); } return; }
+                if (op.type === 'marquee') {
+                    if (!op.moved) { if (pe.sel) peSelect(null); return; }
+                    const found = peInBox(op.p, op.b || op.p);
+                    peSelect(found.length > 1 ? { type: 'multi', list: found } : found[0] || null);
+                    return;
+                }
+                if (op.type === 'shapeDraw') { pePlaceShape(op.a, op.moved ? op.b : null); return; }
                 if (op.type === 'room') {
                     const a = op.a, b = op.b || a;
                     if (Math.abs(b.x - a.x) >= pe.doc.ppm * 0.5 && Math.abs(b.y - a.y) >= pe.doc.ppm * 0.5) peMakeRoom(a, b);
@@ -10522,6 +10713,7 @@
             window.addEventListener('resize', () => { if (pe) peApplyView(); });
             document.addEventListener('keydown', e => {
                 if (!pe || document.getElementById('planEditor').classList.contains('hidden')) return;
+                if (pm) { if (e.key === 'Escape') pmClose(); return; }   // the map picker is open
                 if (!document.getElementById('confirmModal').classList.contains('hidden')) return;
                 const typing = /INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || '');
                 const k = e.key, mod = e.ctrlKey || e.metaKey;
@@ -10545,15 +10737,54 @@
         })();
 
         // ---------- actions ----------
+        function peGridPt(p) {
+            let x = p.x, y = p.y;
+            if (pe.show.snap) { const g = pe.doc.ppm / 4; x = Math.round(x / g) * g; y = Math.round(y / g) * g; }
+            return { x, y };
+        }
+        // everything inside a dragged box: rooms and walls whose corners are all inside, objects whose middle is inside
+        function peInBox(a, b) {
+            const x1 = Math.min(a.x, b.x), x2 = Math.max(a.x, b.x), y1 = Math.min(a.y, b.y), y2 = Math.max(a.y, b.y);
+            const inside = n => n && n.x >= x1 && n.x <= x2 && n.y >= y1 && n.y <= y2;
+            const out = [];
+            const roomEdge = w => pe.doc.rooms.some(r => peEdgeOf(r, w) && r.nodes.every(id => inside(peNode(id))));
+            pe.doc.rooms.forEach(r => { if (r.nodes.length && r.nodes.every(id => inside(peNode(id)))) out.push({ type: 'room', id: r.id }); });
+            pe.doc.walls.forEach(w => { if (inside(peNode(w.a)) && inside(peNode(w.b)) && !roomEdge(w)) out.push({ type: 'wall', id: w.id }); });
+            pe.doc.items.forEach(it => { if (inside(it)) out.push({ type: 'item', id: it.id }); });
+            return out;
+        }
+        function peShapeFrom(a, b) {
+            const sh = pe.shapeKind, ppm = pe.doc.ppm;
+            if (peIsLine(sh)) {
+                const L = Math.max(peDist(a, b), ppm * 0.3);
+                return { kind: 'shape', shape: sh, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, w: L, h: Math.max(2, ppm * 0.12), rot: Math.round(Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI), fill: pe.shapeFill };
+            }
+            return { kind: 'shape', shape: sh, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, w: Math.max(Math.abs(b.x - a.x), ppm * 0.3), h: Math.max(Math.abs(b.y - a.y), ppm * 0.3), rot: 0, fill: pe.shapeFill };
+        }
+        function pePlaceShape(a, b) {
+            const ppm = pe.doc.ppm;
+            if (!b || peDist(a, b) < ppm * 0.3) b = peIsLine(pe.shapeKind) ? { x: a.x + ppm * 3, y: a.y } : { x: a.x + ppm * 3, y: a.y + ppm * 2 };   // a tap: a standard size
+            const it = Object.assign(peShapeFrom(a, b), { id: uid(), name: '' });
+            pe.doc.items.push(it);
+            peCommit();
+            pe.tool = 'select';
+            document.querySelectorAll('#peTools .pe-tool').forEach(btn => btn.classList.toggle('on', btn.dataset.tool === 'select'));
+            document.getElementById('peStage').dataset.tool = 'select';
+            pe.backTo = 'shape';
+            pe.sel = { type: 'item', id: it.id };
+            peRender(); peRenderPanel(); peHint();
+            if (window.innerWidth >= 1024) setTimeout(() => { const f = document.getElementById('peShapeName'); if (f) f.focus(); }, 30);
+        }
         function peWallTap(p) {
             const from = pe.chain ? peNode(pe.chain.last) : null;
             const n = pePointNode(p, from);
-            if (!pe.chain) { pe.chain = { first: n.id, last: n.id, n: 0 }; }
+            if (!pe.chain) { pe.chain = { first: n.id, last: n.id, n: 0, ids: [n.id] }; }
             else if (n.id !== pe.chain.last) {
                 peAddWall(pe.chain.last, n.id);
                 pe.chain.n++;
                 if (n.id === pe.chain.first && pe.chain.n >= 2) { pe.chain = null; peCommit(); peRender(); peHint(); return; }
                 pe.chain.last = n.id;
+                if (!pe.chain.ids.includes(n.id)) pe.chain.ids.push(n.id);
             }
             peCommit();
             pe.hover = peSnap(p, peNode(pe.chain.last));
@@ -10567,7 +10798,7 @@
         }
         function peMakeRoom(a, b) {
             const x1 = Math.min(a.x, b.x), y1 = Math.min(a.y, b.y), x2 = Math.max(a.x, b.x), y2 = Math.max(a.y, b.y);
-            const corner = (x, y) => { const near = peNodeNear({ x, y }, 6); return near || peAddNode(x, y); };
+            const corner = (x, y) => peAddNode(x, y);   // a room always has its own corners, so it can be dragged away on its own
             const ns = [corner(x1, y1), corner(x2, y1), corner(x2, y2), corner(x1, y2)];
             ns.forEach((n, i) => peAddWall(n.id, ns[(i + 1) % 4].id));
             const r = { id: uid(), nodes: ns.map(n => n.id), name: `Room ${pe.doc.rooms.length + 1}`, color: PE_ROOM_COLORS[pe.doc.rooms.length % PE_ROOM_COLORS.length] };
@@ -10592,6 +10823,7 @@
             pe.doc.items.push(it);
             peCommit();
             peSetTool('select', true);
+            pe.backTo = 'stamp';
             peSelect({ type: 'item', id: it.id });
             peRender();
         }
@@ -10611,8 +10843,14 @@
         }
         function peNudge(k, n) {
             const s = pe.doc.ppm / 10 * n, dx = k === 'ArrowLeft' ? -s : k === 'ArrowRight' ? s : 0, dy = k === 'ArrowUp' ? -s : k === 'ArrowDown' ? s : 0;
-            const { type, id } = pe.sel;
             const move = n => { if (n) { n.x += dx; n.y += dy; } };
+            if (pe.sel.type === 'multi' || pe.sel.type === 'room') {
+                const list = pe.sel.type === 'multi' ? pe.sel.list : [pe.sel];
+                peDetach(list).forEach(id => move(peNode(id)));
+                peSelParts(list).items.forEach(move);
+                peCommit(); peRender(); return;
+            }
+            const { type, id } = pe.sel;
             if (type === 'node') move(peNode(id));
             else if (type === 'item') move(pe.doc.items.find(i => i.id === id));
             else if (type === 'wall') { const w = pe.doc.walls.find(x => x.id === id); if (w) { move(peNode(w.a)); move(peNode(w.b)); } }
@@ -10622,6 +10860,18 @@
         function peDuplicate() {
             if (!pe || !pe.sel) return;
             const off = pe.doc.ppm;
+            if (pe.sel.type === 'multi') {
+                const out = [], { rooms, items } = peSelParts(pe.sel.list);
+                items.forEach(it => { const c = Object.assign(peClone(it), { id: uid(), x: it.x + off, y: it.y + off }); pe.doc.items.push(c); out.push({ type: 'item', id: c.id }); });
+                rooms.forEach(r => {
+                    const map = new Map(r.nodes.map(id => { const n = peNode(id); return [id, peAddNode(n.x + off, n.y + off).id]; }));
+                    pe.doc.walls.filter(w => peEdgeOf(r, w)).forEach(w => peAddWall(map.get(w.a), map.get(w.b), w.kind));
+                    const c = { id: uid(), nodes: r.nodes.map(id => map.get(id)), name: r.name, color: r.color };
+                    pe.doc.rooms.push(c); out.push({ type: 'room', id: c.id });
+                });
+                peCommit(); peSelect(out.length > 1 ? { type: 'multi', list: out } : out[0] || null); peRender();
+                return;
+            }
             if (pe.sel.type === 'item') {
                 const it = pe.doc.items.find(i => i.id === pe.sel.id); if (!it) return;
                 const c = Object.assign(peClone(it), { id: uid(), x: it.x + off, y: it.y + off });
@@ -10649,10 +10899,22 @@
                 const bg = d.bg;
                 html = `${head('Plan options')}
                     <div class="space-y-2"><div class="lbl !mb-0">Photo underneath</div>
-                        <p class="text-[11px] t-faint">Trace over a photo, screenshot or old plan. ${bg ? '' : 'It sits under your drawing.'}</p>
-                        <div class="flex flex-wrap gap-2"><button type="button" class="btn btn-secondary !py-1.5 !px-3 !text-xs" onclick="document.getElementById('peBgFile').click()">${bg ? 'Change photo' : '📷 Choose photo'}</button>${bg ? '<button type="button" class="btn btn-outline-danger !py-1.5 !px-3 !text-xs" onclick="peRemoveBg()">Remove</button>' : ''}</div>
+                        <p class="text-[11px] t-faint">Trace over a photo, screenshot or old plan, or a satellite map of the site. ${bg ? '' : 'It sits under your drawing.'}</p>
+                        <div class="flex flex-wrap gap-2"><button type="button" class="btn btn-secondary !py-1.5 !px-3 !text-xs" onclick="document.getElementById('peBgFile').click()">${bg ? 'Change photo' : '📷 Choose photo'}</button><button type="button" class="btn btn-secondary !py-1.5 !px-3 !text-xs" onclick="pmOpen()">🛰️ Map of the site</button>${bg ? '<button type="button" class="btn btn-outline-danger !py-1.5 !px-3 !text-xs" onclick="peRemoveBg()">Remove</button>' : ''}</div>
                         ${bg ? `<label class="lbl !mb-0">Photo strength</label><input type="range" min="10" max="100" value="${Math.round((bg.opacity == null ? 1 : bg.opacity) * 100)}" oninput="peBgOpacity(this.value)" class="w-full accent-orange-500">
                         <label class="pe-check"><input type="checkbox" ${bg.include ? 'checked' : ''} onchange="peBgInclude(this.checked)"> Keep the photo in the saved plan</label>` : ''}
+                    </div>
+                    <div class="space-y-2 border-t divider pt-3"><div class="lbl !mb-0">Make the page bigger</div>
+                        <p class="text-[11px] t-faint">Now ${peFmtM(d.w / d.ppm)} × ${peFmtM(d.h / d.ppm)}. Adds empty space on that side - everything already drawn, and the station pins, stay where they are.</p>
+                        <div class="flex items-center gap-2 text-xs"><span>Add</span><select id="peGrowBy" class="field !w-auto !py-1 !text-xs">${[2, 5, 10, 20, 50].map(m => `<option value="${m}" ${m === (pe.growBy || 5) ? 'selected' : ''}>${m} m</option>`).join('')}</select><span>on the</span></div>
+                        <div class="pe-grow">
+                            <button type="button" class="pe-chip justify-center" style="grid-area:t;" onclick="peGrow('top')">↑ Top</button>
+                            <button type="button" class="pe-chip justify-center" style="grid-area:l;" onclick="peGrow('left')">← Left</button>
+                            <span class="pe-grow-page" style="grid-area:c;"></span>
+                            <button type="button" class="pe-chip justify-center" style="grid-area:r;" onclick="peGrow('right')">Right →</button>
+                            <button type="button" class="pe-chip justify-center" style="grid-area:b;" onclick="peGrow('bottom')">↓ Bottom</button>
+                        </div>
+                        <button type="button" class="pe-chip w-full justify-center" onclick="peGrow('all')">⤢ All four sides</button>
                     </div>
                     <div class="space-y-1.5 border-t divider pt-3"><div class="lbl !mb-0">Scale</div>
                         <div class="flex items-center gap-2 text-xs"><span>1 grid square = 1 m =</span><input type="number" min="4" max="200" step="1" value="${d.ppm}" onchange="peSetScale(this.value)" class="field !w-20 !py-1 !text-xs"><span>px</span></div>
@@ -10660,9 +10922,17 @@
                     <div class="space-y-1.5 border-t divider pt-3"><div class="lbl !mb-0">Show</div>
                         <label class="pe-check"><input type="checkbox" ${pe.show.grid ? 'checked' : ''} onchange="peSet('grid', this.checked)"> Grid</label>
                         <label class="pe-check"><input type="checkbox" ${pe.show.snap ? 'checked' : ''} onchange="peSet('snap', this.checked)"> Snap to grid and corners</label>
-                        <label class="pe-check"><input type="checkbox" ${d.sizes ? 'checked' : ''} onchange="document.getElementById('peSizes').checked = this.checked; peSet('sizes', this.checked)"> Measurements (also on the saved plan)</label>
+                        <label class="pe-check"><input type="checkbox" ${d.sizes ? 'checked' : ''} onchange="document.getElementById('peSizes').checked = this.checked; peSet('sizes', this.checked)"> Room sizes in m² (also on the saved plan)</label>
                         <label class="pe-check"><input type="checkbox" ${pe.show.pins ? 'checked' : ''} onchange="peSet('pins', this.checked)"> Station pins</label></div>
                     <div class="border-t divider pt-3"><button type="button" class="btn btn-outline-danger !py-1.5 !px-3 !text-xs" onclick="peClearAll()">Clear the drawing</button></div>`;
+            } else if (sel && sel.type === 'multi') {
+                const n = sel.list.length, kinds = { room: 0, wall: 0, item: 0 };
+                sel.list.forEach(x => { kinds[x.type] = (kinds[x.type] || 0) + 1; });
+                const parts = [[kinds.room, 'room'], [kinds.wall, 'wall'], [kinds.item, 'object']].filter(([c]) => c).map(([c, l]) => `${c} ${l}${c === 1 ? '' : 's'}`).join(', ');
+                html = `${head(`${n} selected`)}
+                    <p class="text-xs t-muted">${esc(parts)}.</p>
+                    <p class="text-[11px] t-faint">Drag any of them to move them together, or use the arrow keys. Tap one on its own to move just that one. Shift-click adds or removes one.</p>
+                    <div class="grid grid-cols-2 gap-1.5"><button type="button" class="btn btn-secondary !py-1.5 !text-xs" onclick="peDuplicate()">Duplicate</button><button type="button" class="btn btn-outline-danger !py-1.5 !text-xs" onclick="peDeleteSel()">Delete all</button></div>`;
             } else if (sel) {
                 if (sel.type === 'wall') {
                     const w = d.walls.find(x => x.id === sel.id), a = w && peNode(w.a), b = w && peNode(w.b);
@@ -10675,7 +10945,7 @@
                 } else if (sel.type === 'node') {
                     const n = peNode(sel.id), links = d.walls.filter(w => w.a === sel.id || w.b === sel.id).length;
                     if (!n) { pe.sel = null; return peRenderPanel(); }
-                    html = `${head('Corner')}<p class="text-xs t-muted">Joins ${links} wall${links === 1 ? '' : 's'}. Drag it to reshape; drop it on another corner to join them.</p>
+                    html = `${head('Corner')}<p class="text-xs t-muted">Joins ${links} wall${links === 1 ? '' : 's'}. Drag it to reshape. It lines up with other corners but stays separate.</p>
                         <button type="button" class="btn btn-outline-danger !py-1.5 !text-xs w-full" onclick="peDeleteSel()">Delete corner and its walls</button>`;
                 } else if (sel.type === 'room') {
                     const r = d.rooms.find(x => x.id === sel.id);
@@ -10691,9 +10961,9 @@
                 } else if (sel.type === 'item') {
                     const it = d.items.find(x => x.id === sel.id);
                     if (!it) { pe.sel = null; return peRenderPanel(); }
-                    const o = PE_OBJECTS.find(x => x.k === it.kind);
+                    const o = PE_OBJECTS.find(x => x.k === it.kind) || { label: it.kind === 'shape' ? 'Shape' : 'Object' };
                     const rot = `<div class="lbl !mb-0">Turn</div><div class="grid grid-cols-4 gap-1.5">${[[-90, '↺ 90°'], [-15, '↺ 15°'], [15, '↻ 15°'], [90, '↻ 90°']].map(([a, l]) => `<button type="button" class="pe-chip justify-center" onclick="peRotate(${a})">${l}</button>`).join('')}</div>`;
-                    html = it.kind === 'text'
+                    html = it.kind === 'shape' ? peShapePanel(it, head, btn, rot) : it.kind === 'text'
                         ? `${head('Label')}<label class="lbl !mb-0" for="peItemText">Text</label>
                             <input type="text" id="peItemText" maxlength="60" value="${esc(it.text || '')}" oninput="peItemSet('text', this.value)" onchange="peCommit()" class="field !py-1.5 !text-sm">
                             <div class="lbl !mb-0">Size</div><div class="flex flex-wrap gap-1.5">${[['S', 0.4], ['M', 0.6], ['L', 0.9], ['XL', 1.4]].map(([l, f]) => btn(Math.abs((it.size || 0) - Math.round(d.ppm * f)) < 1, `peItemSet('size', ${Math.round(d.ppm * f)}); peCommit(); peRenderPanel()`, l)).join('')}</div>
@@ -10708,10 +10978,15 @@
                 }
             } else if (pe.tool === 'wall' || pe.tool === 'room') {
                 html = `${head(pe.tool === 'wall' ? 'Walls' : 'Rooms')}
-                    <p class="text-[11px] t-faint">${pe.tool === 'wall' ? 'Tap corner by corner. Walls join up automatically, and tapping on an existing wall joins onto it.' : 'Drag across the page to draw a room. You can name it and change its colour afterwards.'}</p>
+                    <p class="text-[11px] t-faint">${pe.tool === 'wall' ? 'Tap corner by corner, and tap the first corner again to close the shape. New walls line up with what is already there but stay separate, so each piece can be moved on its own.' : 'Drag across the page to draw a room. Rooms can sit against each other and still be dragged away on their own. Name it and change its colour afterwards.'}</p>
                     <div class="lbl !mb-0">Draw as</div>
                     <div class="flex flex-wrap gap-1.5">${Object.entries(PE_WALLS).map(([k, l]) => btn(pe.wallKind === k, `pe.wallKind = '${k}'; peRenderPanel()`, l)).join('')}</div>
                     ${pe.tool === 'wall' ? `<label class="pe-check"><input type="checkbox" ${pe.straight ? 'checked' : ''} onchange="pe.straight = this.checked"> Straight lines (level, upright or 45°)</label>` : ''}`;
+            } else if (pe.tool === 'shape') {
+                html = `${head('Shapes')}<p class="text-[11px] t-faint">Pick a shape and colour, then drag on the plan to draw it. Give it a name afterwards - e.g. Garden bed, Skip bin, Loading zone.</p>
+                    <div class="pe-objects">${PE_SHAPES.map(([k, l]) => `<button type="button" class="pe-obj ${pe.shapeKind === k ? 'on' : ''}" onclick="pe.shapeKind = '${k}'; peRenderPanel(); peHint()" title="${l}">
+                        <svg viewBox="-34 -34 68 68">${peShapeSvg({ shape: k, w: peIsLine(k) ? 54 : 50, h: peIsLine(k) ? 5 : k === 'ellipse' || k === 'hex' || k === 'diamond' ? 44 : 36, fill: pe.shapeFill }, 40)}</svg><span>${l}</span></button>`).join('')}</div>
+                    <div class="lbl !mb-0">Colour</div>${peFillPicker(pe.shapeFill, "pe.shapeFill = '%c'; peRenderPanel()", "pe.shapeFill = this.value; peRenderPanel()")}`;
             } else if (pe.tool === 'stamp') {
                 html = `${head('Objects')}<p class="text-[11px] t-faint">Pick one, then tap the plan. Doors and windows fit themselves onto a wall.</p>
                     <div class="pe-objects">${PE_OBJECTS.map(o => `<button type="button" class="pe-obj ${pe.stampKind === o.k ? 'on' : ''}" onclick="pe.stampKind = '${o.k}'; peRenderPanel(); peHint()" title="${o.label}">
@@ -10722,7 +10997,35 @@
             el.classList.toggle('hidden', !html);
             document.getElementById('planEditor').classList.toggle('pe-has-panel', !!html);
         }
-        function peClosePanel() { if (!pe) return; if (pe.panel === 'more') pe.panel = 'tool'; else if (pe.sel) pe.sel = null; else { pe.panel = 'none'; document.getElementById('pePanel').classList.add('hidden'); document.getElementById('planEditor').classList.remove('pe-has-panel'); return; } peRenderPanel(); peRenderOverlay(); peHint(); }
+        // the shape's own options: name, kind, colour, size, turn
+        function peFillPicker(cur, js, customJs) {
+            return `<div class="flex flex-wrap gap-1.5 items-center">${PE_FILLS.map(c => `<button type="button" class="pe-swatch ${String(cur).toLowerCase() === c ? 'on' : ''}" style="background:${c};" onclick="${js.split('%c').join(c)}" aria-label="Colour ${c}"></button>`).join('')}
+                <label class="pe-swatch pe-swatch-custom ${PE_FILLS.includes(String(cur).toLowerCase()) ? '' : 'on'}" title="Any colour" style="background:${PE_FILLS.includes(String(cur).toLowerCase()) ? 'conic-gradient(#ef4444, #facc15, #22c55e, #3b82f6, #a855f7, #ef4444)' : esc(cur)};"><input type="color" value="${esc(cur)}" onchange="${customJs}" aria-label="Pick any colour"></label></div>`;
+        }
+        function peShapePanel(it, head, btn, rot) {
+            const d = pe.doc, line = peIsLine(it.shape);
+            return `${head((PE_SHAPES.find(x => x[0] === it.shape) || [, 'Shape'])[1])}
+                <label class="lbl !mb-0" for="peShapeName">Name</label>
+                <input type="text" id="peShapeName" maxlength="40" value="${esc(it.name || '')}" oninput="peItemSet('name', this.value)" onchange="peCommit()" class="field !py-1.5 !text-sm" placeholder="e.g. Garden bed, Skip bin, Loading zone">
+                <div class="lbl !mb-0">Shape</div>
+                <div class="flex flex-wrap gap-1.5">${PE_SHAPES.filter(([k]) => peIsLine(k) === line).map(([k, l]) => btn(it.shape === k, `peItemSet('shape', '${k}'); peCommit(); peRenderPanel()`, l)).join('')}</div>
+                <div class="lbl !mb-0">Colour</div>${peFillPicker(it.fill || '#bfdbfe', "peItemSet('fill', '%c'); pe.shapeFill = '%c'; peCommit(); peRenderPanel()", "peItemSet('fill', this.value); pe.shapeFill = this.value; peCommit(); peRenderPanel()")}
+                ${line ? '' : `<label class="lbl !mb-0">See-through</label><input type="range" min="15" max="100" value="${Math.round((it.alpha == null ? 0.8 : it.alpha) * 100)}" oninput="peItemSet('alpha', this.value / 100)" onchange="peCommit()" class="w-full accent-orange-500">
+                <label class="pe-check"><input type="checkbox" ${it.edge === false ? '' : 'checked'} onchange="peItemSet('edge', this.checked); peCommit()"> Outline</label>`}
+                <div class="grid grid-cols-2 gap-2"><div><label class="lbl !mb-0">${line ? 'Length' : 'Width'} (m)</label><input type="number" min="0.1" step="0.1" value="${Math.round(peM(it.w) * 100) / 100}" onchange="peItemSize('w', this.value)" class="field !py-1.5 !text-sm"></div>
+                ${line ? `<div><label class="lbl !mb-0">Thickness</label><select class="field !py-1.5 !text-sm" onchange="peItemSet('h', Math.max(2, pe.doc.ppm * this.value)); peCommit()">${[['Thin', 0.06], ['Medium', 0.12], ['Thick', 0.25]].map(([l, f]) => `<option value="${f}" ${Math.abs(it.h - Math.max(2, d.ppm * f)) < 0.6 ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`
+                    : `<div><label class="lbl !mb-0">Height (m)</label><input type="number" min="0.1" step="0.1" value="${Math.round(peM(it.h) * 100) / 100}" onchange="peItemSize('h', this.value)" class="field !py-1.5 !text-sm"></div>`}</div>
+                ${rot}`;
+        }
+        function peClosePanel() {
+            if (!pe) return;
+            // closing what was just placed goes back to the list it came from (Objects or Shapes)
+            if (!pe.panel || pe.panel === 'tool') {
+                const it = pe.sel && pe.sel.type === 'item' ? pe.doc.items.find(x => x.id === pe.sel.id) : null;
+                const back = it ? (it.kind === 'shape' ? 'shape' : it.kind === 'text' ? null : 'stamp') : null;
+                if (back) { pe.sel = null; pe.backTo = null; peSetTool(back); return; }
+            }
+            if (pe.panel === 'more') pe.panel = 'tool'; else if (pe.sel) pe.sel = null; else { pe.panel = 'none'; document.getElementById('pePanel').classList.add('hidden'); document.getElementById('planEditor').classList.remove('pe-has-panel'); return; } peRenderPanel(); peRenderOverlay(); peHint(); }
         function peWallKind(k) { const w = pe.doc.walls.find(x => x.id === pe.sel.id); if (w) { w.kind = k; pe.wallKind = k; peCommit(); peRender(); peRenderPanel(); } }
         function peSetWallLength(v) {
             const L = parseFloat(v) * pe.doc.ppm, w = pe.doc.walls.find(x => x.id === pe.sel.id);
@@ -10742,6 +11045,44 @@
         function peItemSize(k, v) { const it = pe.doc.items.find(x => x.id === pe.sel.id), m = parseFloat(v); if (it && m > 0) { it[k] = m * pe.doc.ppm; if (it.kind === 'door' || it.kind === 'door2') it.h = it.w; peCommit(); peRender(); } }
         function peRotate(a) { const it = pe.doc.items.find(x => x.id === pe.sel.id); if (it) { it.rot = (((it.rot || 0) + a) % 360 + 360) % 360; peCommit(); peRender(); } }
         function peFlipDoor() { const it = pe.doc.items.find(x => x.id === pe.sel.id); if (it) { it.rot = ((it.rot || 0) + 180) % 360; peCommit(); peRender(); } }
+        const PE_MAX_PX = 12000;   // the biggest page a phone can still turn into a picture
+        function peGrow(side) {
+            if (!pe) return;
+            const sel = document.getElementById('peGrowBy');
+            const m = parseFloat(sel ? sel.value : 5) || 5;
+            pe.growBy = m;
+            const d = pe.doc, px = Math.round(m * d.ppm);
+            const sides = side === 'all' ? ['left', 'right', 'top', 'bottom'] : [side];
+            const addW = px * sides.filter(x => x === 'left' || x === 'right').length, addH = px * sides.filter(x => x === 'top' || x === 'bottom').length;
+            if (d.w + addW > PE_MAX_PX || d.h + addH > PE_MAX_PX) { peToast(`That would make the page too big for a picture - try a smaller amount, or lower the scale (px per metre) first`); return; }
+            if (d.bg && !d.bg.rect) d.bg.rect = { x: 0, y: 0, w: d.w, h: d.h };   // the photo or map keeps its place
+            const dx = sides.includes('left') ? px : 0, dy = sides.includes('top') ? px : 0;
+            if (dx || dy) {
+                d.nodes.forEach(n => { n.x += dx; n.y += dy; });
+                d.items.forEach(it => { it.x += dx; it.y += dy; });
+                if (d.bg && d.bg.rect) { d.bg.rect.x += dx; d.bg.rect.y += dy; }
+                d._ox = (d._ox || 0) + dx; d._oy = (d._oy || 0) + dy;   // how far the pins have to move when it's saved
+            }
+            d.w += addW; d.h += addH;
+            peCommit(); peFit(); peRender(); peRenderPanel();
+            peToast(`Page is now ${peFmtM(d.w / d.ppm)} × ${peFmtM(d.h / d.ppm)}`);
+        }
+        // pins are kept as a share of the page, so a bigger page moves them back over the same spot
+        async function peShiftPins(mapId, d, w0, h0) {
+            const ox = d._ox || 0, oy = d._oy || 0;
+            if (!mapId || (d.w === w0 && d.h === h0 && !ox && !oy)) return;
+            const round = v => Math.round(v * 10000) / 10000;
+            const moved = pinsOn(mapId).filter(([, p]) => p.x != null);
+            for (const [b, p] of moved) {
+                const nx = round((p.x * w0 + ox) / d.w), ny = round((p.y * h0 + oy) / d.h);
+                const st = siteStations.get(b);
+                const row = { id: st ? st.id : uid(), barcode: b, map_id: mapId, pin_x: nx, pin_y: ny, updated_at: new Date().toISOString() };
+                if (!st) { row.name = stationNameFor(b); row.type = stationTypeFor(b) || null; row.created_by = technicianLabel(); }
+                await queueTableRow('stations', row, `Pin kept in place (plan made bigger) · ${stationNameFor(b)}`);
+                siteStations.set(b, Object.assign({}, st || {}, row));
+                sitePins.set(b, Object.assign({}, p, { x: nx, y: ny }));
+            }
+        }
         function peSetScale(v) {
             const n = Math.round(parseFloat(v));
             if (!(n >= 4 && n <= 200)) return;
@@ -10768,7 +11109,7 @@
             // the photo is stretched to the page; a drawing that's still empty takes the photo's shape instead
             const empty = !pe.doc.nodes.length && !pe.doc.items.length && !(pe.mapId && pinsOn(pe.mapId).length);
             if (empty) { const k = Math.max(pe.doc.w, pe.doc.h) / Math.max(dims.w, dims.h); pe.doc.w = Math.round(dims.w * k); pe.doc.h = Math.round(dims.h * k); }
-            pe.doc.bg = { path: null, include: false, opacity: 0.6 };
+            pe.doc.bg = { path: null, include: false, opacity: 0.6 };   // no rect: it fills the page
             document.getElementById('peWelcome').classList.add('hidden');
             peCommit(); peFit(); peRender(); peRenderPanel();
         });
@@ -10778,7 +11119,176 @@
         function peWelcomeGo(what) {
             document.getElementById('peWelcome').classList.add('hidden');
             if (what === 'photo') { pePanel('more'); document.getElementById('peBgFile').click(); }
+            else if (what === 'map') { pe.panel = 'tool'; peSetTool('select', true); pmOpen(); }
             else peSetTool(what);
+        }
+
+        // ---------- a map of the site underneath (satellite or street map, captured at real scale) ----------
+        const PM_LAYERS = {
+            sat: { label: '🛰️ Satellite', max: 19, url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`, credit: 'Imagery © Esri, Maxar, Earthstar Geographics' },
+            street: { label: '🗺️ Street map', max: 19, url: (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`, credit: '© OpenStreetMap contributors' }
+        };
+        const PM_MIN_USE = 17;   // closer than this and a site is too small to draw on
+        let pm = null;
+        const pmWorld = z => 256 * Math.pow(2, z);
+        function pmProj(lat, lon, z) {
+            const s = Math.sin(Math.max(-85, Math.min(85, lat)) * Math.PI / 180), W = pmWorld(z);
+            return { x: (lon + 180) / 360 * W, y: (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * W };
+        }
+        function pmUnproj(x, y, z) {
+            const W = pmWorld(z), n = Math.PI - 2 * Math.PI * y / W;
+            return { lat: 180 / Math.PI * Math.atan(Math.sinh(n)), lon: x / W * 360 - 180 };
+        }
+        function pmOpen() {
+            if (!pe) return;
+            if (!isOnline) { peToast("The map needs a connection - try again when you're back online"); return; }
+            const g = pe.doc.geo;
+            pm = { lat: g ? g.lat : -41.2, lon: g ? g.lon : 174.0, z: g ? Math.max(3, g.z - 1) : 5, layer: (g && g.layer) || 'sat', pointers: new Map() };
+            document.getElementById('peMapPick').classList.remove('hidden');
+            const q = siteMapQuery(selectedClient);
+            document.getElementById('pmSearch').value = q;
+            pmDraw();
+            if (!g && q) pmFind(q);
+            else if (!g) pmMsg('Search for the address, or tap 📍 Here when you are on site.');
+        }
+        function pmClose() { pm = null; document.getElementById('peMapPick').classList.add('hidden'); }
+        function pmMsg(t) { const el = document.getElementById('pmMsg'); if (el) el.textContent = t || ''; }
+        function pmSetLayer(k) { if (pm) { pm.layer = k; pmDraw(); } }
+        function pmDraw() {
+            if (!pm) return;
+            const L = PM_LAYERS[pm.layer], view = document.getElementById('pmView'), W = view.clientWidth || 600, H = view.clientHeight || 400;
+            pm.z = Math.max(2, Math.min(L.max, pm.z));
+            const c = pmProj(pm.lat, pm.lon, pm.z), x0 = c.x - W / 2, y0 = c.y - H / 2, n = Math.pow(2, pm.z);
+            let html = '';
+            for (let ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + H) / 256); ty++) {
+                if (ty < 0 || ty >= n) continue;
+                for (let tx = Math.floor(x0 / 256); tx <= Math.floor((x0 + W) / 256); tx++) {
+                    const wx = ((tx % n) + n) % n;
+                    html += `<img src="${L.url(pm.z, wx, ty)}" alt="" draggable="false" style="left:${Math.round(tx * 256 - x0)}px;top:${Math.round(ty * 256 - y0)}px;">`;
+                }
+            }
+            document.getElementById('pmTiles').innerHTML = html;
+            document.getElementById('pmCredit').textContent = L.credit;
+            document.getElementById('pmLayers').innerHTML = Object.entries(PM_LAYERS).map(([k, v]) => `<button type="button" class="pe-chip ${pm.layer === k ? 'on' : ''}" onclick="pmSetLayer('${k}')">${v.label}</button>`).join('');
+            document.getElementById('pmGoogle').href = `https://www.google.com/maps/@${pm.lat.toFixed(6)},${pm.lon.toFixed(6)},${Math.round(pm.z * 10) / 10 + 0.5}z/data=!3m1!1e3`;
+            const ok = pm.z >= PM_MIN_USE;
+            document.getElementById('pmUseBtn').disabled = !ok;
+            document.getElementById('pmUseBtn').title = ok ? '' : 'Zoom in closer to the site first';
+            if (!pm.busy) pmMsg(ok ? '' : 'Zoom in closer to use this view.');
+        }
+        function pmZoom(d) { if (pm) { pm.z = Math.max(2, Math.min(PM_LAYERS[pm.layer].max, pm.z + d)); pmDraw(); } }
+        async function pmFind(q) {
+            q = String(q || '').trim();
+            if (!pm || !q) return;
+            pmMsg('Finding ' + q + '...');
+            try {
+                const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } });
+                const a = r.ok ? await r.json() : [];
+                if (!pm) return;
+                if (!a.length) { pmMsg("Couldn't find that address - try a shorter one, or drag the map there."); return; }
+                pm.lat = parseFloat(a[0].lat); pm.lon = parseFloat(a[0].lon); pm.z = 18;
+                pmMsg(''); pmDraw();
+            } catch (e) { pmMsg("Couldn't search right now - drag and zoom the map there instead."); }
+        }
+        function pmLocate() {
+            if (!pm) return;
+            if (!navigator.geolocation) { pmMsg("This device can't share its location."); return; }
+            pmMsg('Finding where you are...');
+            navigator.geolocation.getCurrentPosition(pos => {
+                if (!pm) return;
+                pm.lat = pos.coords.latitude; pm.lon = pos.coords.longitude; pm.z = 19; pmMsg(''); pmDraw();
+            }, () => pmMsg("Location isn't available - allow it in the browser, or search the address."), { enableHighAccuracy: true, timeout: 12000 });
+        }
+        (function bindMapPick() {
+            const v = document.getElementById('pmView');
+            if (!v) return;
+            v.addEventListener('pointerdown', e => {
+                if (!pm || e.target.closest('.pm-zoom')) return;
+                try { v.setPointerCapture(e.pointerId); } catch (x) {}
+                pm.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                const c = pmProj(pm.lat, pm.lon, pm.z);
+                pm.drag = { sx: e.clientX, sy: e.clientY, cx: c.x, cy: c.y };
+                if (pm.pointers.size === 2) { const [a, b] = Array.from(pm.pointers.values()); pm.pinch = Math.hypot(a.x - b.x, a.y - b.y); }
+            });
+            v.addEventListener('pointermove', e => {
+                if (!pm || !pm.pointers.has(e.pointerId)) return;
+                pm.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                if (pm.pointers.size === 1 && pm.drag) {
+                    const g = pmUnproj(pm.drag.cx - (e.clientX - pm.drag.sx), pm.drag.cy - (e.clientY - pm.drag.sy), pm.z);
+                    pm.lat = g.lat; pm.lon = g.lon; pmDraw();
+                }
+            });
+            const end = e => {
+                if (!pm || !pm.pointers.has(e.pointerId)) return;
+                if (pm.pointers.size === 2 && pm.pinch) {
+                    const [a, b] = Array.from(pm.pointers.values()), steps = Math.round(Math.log2(Math.hypot(a.x - b.x, a.y - b.y) / pm.pinch));
+                    if (steps) pmZoom(steps);
+                    pm.pinch = null;
+                }
+                pm.pointers.delete(e.pointerId);
+                pm.drag = null;
+            };
+            v.addEventListener('pointerup', end);
+            v.addEventListener('pointercancel', end);
+            v.addEventListener('dblclick', () => pmZoom(1));
+            v.addEventListener('wheel', e => { if (!pm) return; e.preventDefault(); clearTimeout(pm.wt); pm.wd = (pm.wd || 0) + e.deltaY; pm.wt = setTimeout(() => { if (pm) { pmZoom(pm.wd < 0 ? 1 : -1); pm.wd = 0; } }, 60); }, { passive: false });
+            window.addEventListener('resize', () => { if (pm) pmDraw(); });
+        })();
+        // the view becomes the picture under the plan, sharper (one zoom step closer) and at real scale
+        async function pmUse() {
+            if (!pm || !pe || pm.busy) return;
+            const L = PM_LAYERS[pm.layer], view = document.getElementById('pmView');
+            const zc = Math.min(L.max, pm.z + 1), k = Math.pow(2, zc - pm.z);
+            const CW = Math.min(4096, Math.round((view.clientWidth || 600) * k)), CH = Math.min(4096, Math.round((view.clientHeight || 400) * k));
+            const btn = document.getElementById('pmUseBtn');
+            pm.busy = true; btn.disabled = true; btn.textContent = 'Getting the map...';
+            try {
+                const c = pmProj(pm.lat, pm.lon, zc), x0 = c.x - CW / 2, y0 = c.y - CH / 2, n = Math.pow(2, zc);
+                const cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
+                const g = cv.getContext('2d');
+                g.fillStyle = '#e2e8f0'; g.fillRect(0, 0, CW, CH);
+                const jobs = [];
+                for (let ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + CH) / 256); ty++) {
+                    if (ty < 0 || ty >= n) continue;
+                    for (let tx = Math.floor(x0 / 256); tx <= Math.floor((x0 + CW) / 256); tx++) {
+                        const wx = ((tx % n) + n) % n;
+                        jobs.push(new Promise(res => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => { g.drawImage(i, Math.round(tx * 256 - x0), Math.round(ty * 256 - y0), 256, 256); res(true); }; i.onerror = () => res(false); i.src = L.url(zc, wx, ty); }));
+                    }
+                }
+                const got = await Promise.all(jobs);
+                if (!got.some(Boolean)) throw new Error("the map pictures didn't load");
+                const fs = Math.max(11, Math.round(CW / 110));
+                g.font = `600 ${fs}px system-ui, sans-serif`;
+                const tw = g.measureText(L.credit).width;
+                g.fillStyle = 'rgba(255,255,255,.8)'; g.fillRect(CW - tw - fs, CH - fs * 1.6, tw + fs, fs * 1.6);
+                g.fillStyle = '#334155'; g.textBaseline = 'middle'; g.fillText(L.credit, CW - tw - fs / 2, CH - fs * 0.8);
+                const blob = await new Promise((res, rej) => { try { cv.toBlob(b => b ? res(b) : rej(new Error('no picture')), 'image/jpeg', 0.86); } catch (e) { rej(new Error("this browser won't let the map be copied - take a screenshot of the map and use 'Trace over a photo' instead")); } });
+                // metres the picture covers
+                const mpp = 156543.03392 * Math.cos(pm.lat * Math.PI / 180) / Math.pow(2, zc), mW = CW * mpp, mH = CH * mpp;
+                const d = pe.doc, empty = !d.nodes.length && !d.items.length && !(pe.mapId && pinsOn(pe.mapId).length);
+                let rect = null;
+                if (empty) {
+                    const ppm = Math.max(4, Math.min(40, Math.round(4000 / Math.max(mW, mH))));
+                    d.ppm = ppm; d.w = Math.round(mW * ppm); d.h = Math.round(mH * ppm); d.sizes = false;
+                    pe.w0 = d.w; pe.h0 = d.h; delete d._ox; delete d._oy;
+                } else {
+                    const w = mW * d.ppm, h = mH * d.ppm;
+                    rect = { x: Math.round((d.w - w) / 2), y: Math.round((d.h - h) / 2), w: Math.round(w), h: Math.round(h) };
+                }
+                if (pe.bgUrl && pe.bgBlob) URL.revokeObjectURL(pe.bgUrl);
+                pe.bgBlob = blob; pe.bgUrl = URL.createObjectURL(blob);
+                d.bg = { path: null, include: true, opacity: 1, src: 'map' };
+                if (rect) d.bg.rect = rect;
+                d.geo = { lat: Math.round(pm.lat * 1e6) / 1e6, lon: Math.round(pm.lon * 1e6) / 1e6, z: zc, layer: pm.layer };
+                pmClose();
+                document.getElementById('peWelcome').classList.add('hidden');
+                peCommit(); peFit(); peRender(); peRenderPanel();
+                peToast(empty ? 'Map added at real scale - each grid square is 1 m. Draw on it, or save it and place the stations.' : 'Map added under your drawing at the same scale - change "Photo strength" in Options to fade it.');
+            } catch (e) {
+                pmMsg("Couldn't use the map: " + (e.message || e));
+            } finally {
+                if (pm) { pm.busy = false; btn.textContent = 'Use this view'; pmDraw(); } else { btn.textContent = 'Use this view'; btn.disabled = false; }
+            }
         }
 
         let peToastTimer = null;
@@ -10798,7 +11308,8 @@
             if (d.bg && d.bg.include && pe.bgUrl) {
                 const img = await new Promise(res => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => res(null); i.src = pe.bgUrl; });
                 if (!img) throw new Error("the photo under the plan couldn't be loaded");
-                g.globalAlpha = d.bg.opacity == null ? 1 : d.bg.opacity; g.drawImage(img, 0, 0, d.w, d.h); g.globalAlpha = 1;
+                const br = peBgRect(d);
+                g.globalAlpha = d.bg.opacity == null ? 1 : d.bg.opacity; g.drawImage(img, br.x, br.y, br.w, br.h); g.globalAlpha = 1;
             }
             const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${d.w}" height="${d.h}" viewBox="0 0 ${d.w} ${d.h}">${peContentSvg(d, false)}</svg>`;
             const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
@@ -10821,6 +11332,7 @@
             try {
                 const png = await peRenderPng();
                 const drawing = peClone(d);
+                delete drawing._ox; delete drawing._oy;
                 if (drawing.bg && !drawing.bg.path && !pe.bgBlob) drawing.bg = null;   // a photo that never reached this device again
                 const blobs = [png];
                 if (pe.bgBlob) blobs.push(pe.bgBlob);
@@ -10833,6 +11345,7 @@
                     blobs, photoField: 'image_path', prefix: 'SITE_MAP',
                     rowPaths: paths => { if (pe.bgBlob && row.drawing.bg) row.drawing.bg.path = paths[1]; }
                 });
+                if (!isNew) await peShiftPins(id, d, pe.w0, pe.h0);
                 await queueSiteChange({ action: 'floor_plan', title: isNew ? `Floor plan "${name}" drawn` : old && old.name !== name ? `Floor plan "${old.name}" redrawn and renamed to "${name}"` : `Floor plan "${name}" redrawn` }, 'Floor plan · log');
                 try { localStorage.removeItem(peDraftKey(pe.mapId)); } catch (e) {}
                 pe.dirty = false;
@@ -11326,14 +11839,15 @@
             const col = stationColor(d.deviceType).color;
             const hasPhoto = !!(siteStations.get(d.barcode_id) || {}).photo_path;
             return `
-                <div data-barcode="${esc(d.barcode_id)}" data-scanned="${isScanned ? '1' : '0'}" onclick="openDeviceFromEl(this)" onkeydown="if (event.key === 'Enter') this.click()" role="button" tabindex="0" class="nf-card ws-card ${isScanned ? 'ws-done' : ''}">
-                    <div class="nf-hero" style="--tc:${col};">
+                <div data-barcode="${esc(d.barcode_id)}" data-scanned="${isScanned ? '1' : '0'}" onclick="openDeviceFromEl(this)" onkeydown="if (event.key === 'Enter') this.click()" role="button" tabindex="0" class="nf-card ws-card ${isScanned ? 'ws-done' : ''}" style="--tc:${col};">
+                    <div class="nf-hero">
                         <div class="nf-img" data-st-photo="${esc(d.barcode_id)}">${hasPhoto ? '' : '<span class="nf-ph">📍</span>'}</div>
                         <div class="nf-shade"></div>
-                                                <div class="nf-title flex items-center gap-1.5"><span class="nf-dot" style="background:${col};"></span><span class="line-clamp-2">${esc(d.locationName)}</span></div>
                     </div>
                     <div class="nf-meta">
-                        <div class="t-muted truncate">${esc(d.deviceType)} · <span class="font-mono t-accent">${esc(d.barcode_id)}</span></div>
+                        <div class="nf-name line-clamp-2">${esc(d.locationName)}</div>
+                        <div class="nf-sub"><span class="nf-dot" style="background:${col};"></span><span class="truncate" style="color:${col};">${esc(d.deviceType)}</span></div>
+                        <div class="truncate mt-0.5"><span class="font-mono t-accent">${esc(d.barcode_id)}</span></div>
                         <div class="t-faint text-[10px] mt-0.5 line-clamp-2">${esc(lastServicedText(d, isScanned))}</div>
                     </div>
                 </div>`;
