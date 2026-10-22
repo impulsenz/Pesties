@@ -6,7 +6,7 @@
     The Admin site, separate from the Service App (index.html) and the Client Portal (client.html):
     its own page, its own sign-in (admin accounts only) and its own code. They only share the database.
     Open it at  https://<your site>/admin.html  and upload it next to index.html.
-    Version 2026.10.22-a8
+    Version 2026.10.22-a9
 -->
 <head>
     <meta charset="UTF-8">
@@ -547,6 +547,24 @@
         .seg-set { display: inline-flex; flex-wrap: wrap; gap: .3rem; }
         /* ================= PHONES: less on screen at once ================= */
         .m-only { display: none !important; }
+        /* phones: the station form packed tighter - the same fields, less scrolling */
+        @media (max-width: 639px) {
+            #stationFormContainer .sf-head { padding: .55rem .75rem .5rem; gap: .5rem; align-items: center; }
+            #stationFormContainer .sf-back { display: none; }
+            #stationFormContainer #formTitle { font-size: 1rem; line-height: 1.2; }
+            #stationFormContainer .sf-head h4 { gap: .4rem; }
+            #stationFormContainer .sf-head .icon-btn { width: 2.1rem; height: 2.1rem; }
+            #stationFormContainer #baitLastChanged { margin-top: .2rem; font-size: 10.5px; }
+            #stationSheetBody { padding: .6rem .7rem; }
+            #stationSheetBody.space-y-5 > :not([hidden]) ~ :not([hidden]) { margin-top: .6rem; }
+            #stationSheetBody .grid.gap-4 { gap: .6rem; }
+            #stationSheetBody .inset { padding: .6rem .7rem; }
+            #stationSheetBody .inset.space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: .4rem; }
+            #stationSheetBody .lbl { margin-bottom: .2rem; font-size: .66rem; }
+            #stationSheetBody .field { padding-top: .5rem; padding-bottom: .5rem; }
+            #stationSheetBody .sf-pests, #stationSheetBody .sf-prep { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .5rem; }
+            #stationSheetBody .sf-pests > :first-child, #stationSheetBody .sf-prep > :first-child { grid-column: 1 / -1; }
+        }
         .fold-head { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: .5rem; padding: .55rem .1rem .2rem; text-align: left; cursor: pointer; }
         .fold-pm { width: 1.3rem; height: 1.3rem; border-radius: .4rem; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: .9rem; line-height: 1; background: var(--surface3); color: var(--text); border: 1px solid var(--border); }
         .fold-head:hover .fold-pm { border-color: rgb(var(--b500)); color: rgb(var(--b500)); }
@@ -642,11 +660,10 @@
         .map-top-row { display: flex; align-items: center; gap: .45rem; min-width: 0; }
         .map-tools-row { flex-wrap: wrap; }
         /* phones: the plans are a drop-down (tabs don't fit); computers keep the tabs */
-        .map-select { display: none; }
-        @media (max-width: 639px) {
-            .map-select { display: block; flex: 1 1 auto; min-width: 0; width: auto; font-weight: 700; }
-            #mapTabs { display: none !important; }
-        }
+        /* the plans are a drop-down on every screen */
+        .map-select { display: block; flex: 0 1 22rem; min-width: 0; width: auto; font-weight: 700; }
+        #mapTabs { display: none !important; }
+        @media (max-width: 639px) { .map-select { flex: 1 1 auto; } }
         .map-tabs { display: flex; gap: .35rem; overflow-x: auto; flex: 1 1 auto; min-width: 0; padding: .1rem; scrollbar-width: thin; }
         .map-tab { display: inline-flex; align-items: center; gap: .4rem; max-width: 15rem; flex-shrink: 0; padding: .45rem .75rem; border-radius: .75rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: .75rem; font-weight: 700; cursor: pointer; }
         .map-tab:hover { border-color: rgb(var(--b500)); }
@@ -2719,7 +2736,7 @@
         // ===================================================================
 
         // Tells index.html what loaded, and which version of the hook-up it was written for
-        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.22-a8', api: 0 };
+        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.22-a9', api: 0 };
 
         async function loadAdminPanel() {
             const profList = document.getElementById('adminProfilesList');
