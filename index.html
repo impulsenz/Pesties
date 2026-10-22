@@ -627,6 +627,12 @@
         .map-top { background: var(--surface); border-bottom: 1px solid var(--border); padding: .5rem .6rem; display: flex; flex-direction: column; gap: .45rem; }
         .map-top-row { display: flex; align-items: center; gap: .45rem; min-width: 0; }
         .map-tools-row { flex-wrap: wrap; }
+        /* phones: the plans are a drop-down (tabs don't fit); computers keep the tabs */
+        .map-select { display: none; }
+        @media (max-width: 639px) {
+            .map-select { display: block; flex: 1 1 auto; min-width: 0; width: auto; font-weight: 700; }
+            #mapTabs { display: none !important; }
+        }
         .map-tabs { display: flex; gap: .35rem; overflow-x: auto; flex: 1 1 auto; min-width: 0; padding: .1rem; scrollbar-width: thin; }
         .map-tab { display: inline-flex; align-items: center; gap: .4rem; max-width: 15rem; flex-shrink: 0; padding: .45rem .75rem; border-radius: .75rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: .75rem; font-weight: 700; cursor: pointer; }
         .map-tab:hover { border-color: rgb(var(--b500)); }
@@ -1868,7 +1874,7 @@
             <div class="map-top-row">
                 <span class="eyebrow t-accent hidden lg:inline shrink-0">Floor Plans</span>
                 <div id="mapTabs" class="map-tabs scroll-thin" role="tablist" aria-label="Floor plans"></div>
-                <select id="mapSelect" onchange="selectMap(this.value)" class="hidden" aria-hidden="true" tabindex="-1"></select>
+                <select id="mapSelect" onchange="selectMap(this.value)" class="field map-select !py-2 !text-sm" aria-label="Floor plan"></select>
                 <button type="button" onclick="openMapEdit('new')" class="btn btn-secondary !py-2 !px-3 shrink-0" title="Add a floor plan">＋<span class="sm-inline">&nbsp;New plan</span></button>
                 <button type="button" id="mapDrawBtn" onclick="peOpenForCurrent()" class="btn btn-primary !py-2 !px-3 shrink-0 hidden" title="Draw on this plan">✏️<span class="sm-inline" id="mapDrawLabel">&nbsp;Draw</span></button>
                 <div class="relative shrink-0">
@@ -1967,7 +1973,6 @@
                         <div class="grid gap-2">
                             <button type="button" class="pe-start" onclick="peWelcomeGo('room')"><span class="pe-start-i">▭</span><span><b>Draw the building or a room</b><span>Drag from corner to corner. Add more rooms the same way.</span></span></button>
                             <button type="button" class="pe-start" onclick="peWelcomeGo('wall')"><span class="pe-start-i">⟋</span><span><b>Draw walls corner by corner</b><span>For odd shapes, fences and outdoor areas.</span></span></button>
-                            <button type="button" class="pe-start" onclick="peWelcomeGo('map')"><span class="pe-start-i">🛰️</span><span><b>Start from a map of the site</b><span>A satellite or street map of the address, at real scale. Place stations straight onto it.</span></span></button>
                             <button type="button" class="pe-start" onclick="peWelcomeGo('photo')"><span class="pe-start-i">📷</span><span><b>Trace over a photo</b><span>A photo, an old plan, or a screenshot of Google Maps.</span></span></button>
                         </div>
                         <p class="text-[11px] t-faint">Then add doors, racking and labels with <b>Objects</b> and <b>Text</b>, and draw anything else with <b>Shapes</b>. Station pins are placed after saving, the same as before.</p>
@@ -2020,9 +2025,10 @@
             </div>
             <div id="mapEditHowRow" class="space-y-2">
                 <label class="lbl">How do you want to make it?</label>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-3 gap-2">
                     <button type="button" class="map-how on" data-how="draw" onclick="setMapHow('draw')"><span class="text-2xl">✏️</span><b>Draw it</b><span>Walls, rooms, doors and more</span></button>
                     <button type="button" class="map-how" data-how="upload" onclick="setMapHow('upload')"><span class="text-2xl">📷</span><b>Upload a picture</b><span>A photo, screenshot or scan</span></button>
+                    <button type="button" class="map-how" data-how="map" onclick="setMapHow('map')"><span class="text-2xl">🛰️</span><b>Satellite map</b><span>The site from above, at real scale</span></button>
                 </div>
             </div>
             <div id="mapEditSizeRow" class="space-y-1.5">
@@ -2160,7 +2166,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.22-r58';
+        const APP_VERSION = '2026.10.22-r60';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -9609,7 +9615,7 @@
             hideMapPopover();
             const sel = document.getElementById('mapSelect');
             sel.innerHTML = siteMaps.length
-                ? siteMaps.map(m => `<option value="${esc(m.id)}">${esc(m.name)} (${pinsOn(m.id).filter(([, p]) => p.x != null).length})</option>`).join('')
+                ? siteMaps.map(m => `<option value="${esc(m.id)}">${m.drawing ? '✏️' : '🗺️'} ${esc(m.name)} (${pinsOn(m.id).filter(([, p]) => p.x != null).length})</option>`).join('')
                 : '<option value="">No floor plans yet</option>';
             sel.value = currentMapId || '';
             renderMapTabs();
@@ -9783,7 +9789,7 @@
         }
         function selectMapOptionsRefresh() {
             const sel = document.getElementById('mapSelect');
-            Array.from(sel.options).forEach(o => { const m = siteMaps.find(x => x.id === o.value); if (m) o.textContent = `${m.name} (${pinsOn(m.id).filter(([, p]) => p.x != null).length})`; });
+            Array.from(sel.options).forEach(o => { const m = siteMaps.find(x => x.id === o.value); if (m) o.textContent = `${m.drawing ? '✏️' : '🗺️'} ${m.name} (${pinsOn(m.id).filter(([, p]) => p.x != null).length})`; });
             renderMapTabs();
         }
 
@@ -11206,7 +11212,10 @@
             if (!g && q) pmGoText(q);
             else if (!g) pmMsg('Start typing the address of the site.');
         }
-        function pmClose() { pm = null; document.getElementById('peMapPick').classList.add('hidden'); pmSugHide(); }
+        function pmClose() {
+            pmSugHide(); pm = null; document.getElementById('peMapPick').classList.add('hidden');
+            if (pe && !pe.doc.nodes.length && !pe.doc.items.length && !pe.doc.bg) { document.getElementById('peWelcome').classList.remove('hidden'); pe.panel = 'none'; peRenderPanel(); }
+        }
         function pmMsg(t) { const el = document.getElementById('pmMsg'); if (el) el.textContent = t || ''; }
         function pmTilesHtml(z, cx, cy, D) {
             const x0 = cx - D / 2, y0 = cy - D / 2, n = Math.pow(2, z), out = [];
@@ -11493,7 +11502,7 @@
             document.getElementById('mapEditHowRow').classList.toggle('hidden', !isNew);
             document.getElementById('mapEditSizeRow').classList.toggle('hidden', !isNew || h !== 'draw');
             document.getElementById('mapEditImageRow').classList.toggle('hidden', mapEditMode === 'rename' || (isNew && h !== 'upload'));
-            document.getElementById('mapEditSaveBtn').textContent = isNew && h === 'draw' ? 'Start drawing' : 'Save';
+            document.getElementById('mapEditSaveBtn').textContent = isNew && h === 'draw' ? 'Start drawing' : isNew && h === 'map' ? 'Find the site' : 'Save';
         }
         function openMapEdit(mode) {
             document.getElementById('mapMenu').classList.add('hidden');
@@ -11536,6 +11545,16 @@
                 const size = document.getElementById('mapEditSize').value;
                 closeMapEdit();
                 peOpen({ name, size });
+                return;
+            }
+            if (mode === 'new' && mapHow === 'map') {
+                if (siteMaps.some(x => x.name.toLowerCase() === name.toLowerCase())) { alert(`There's already a plan called "${name}".`); return; }
+                if (!isOnline) { alert("The satellite map needs a connection - try again when you're back online."); return; }
+                closeMapEdit();
+                await peOpen({ name, size: 'medium' });
+                document.getElementById('peWelcome').classList.add('hidden');
+                pe.panel = 'tool'; peSetTool('select', true);
+                pmOpen();
                 return;
             }
             if ((mode === 'new' || mode === 'image') && !mapEditBlob) { alert('Choose the plan image.'); return; }
