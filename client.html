@@ -124,9 +124,9 @@
         .site-cover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
         .site-card:hover .site-cover { transform: scale(1.06); }
         .site-initials { position: absolute; right: .8rem; top: .2rem; font-size: 4.5rem; font-weight: 900; color: rgba(255, 255, 255, .15); line-height: 1; pointer-events: none; }
-        .site-overlay { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.6rem .95rem .85rem; background: linear-gradient(to top, rgba(2, 6, 23, .94), rgba(2, 6, 23, 0)); display: flex; flex-direction: column; gap: .15rem; }
-        .site-name { color: #fff; font-weight: 800; font-size: 1rem; line-height: 1.2; }
-        .site-addr { color: rgba(255, 255, 255, .78); font-size: .72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .site-overlay { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.6rem .95rem .85rem; display: flex; flex-direction: column; gap: .15rem; }
+        .site-name { color: #fff; font-weight: 800; font-size: 1rem; line-height: 1.2; text-shadow: 0 1px 2px rgba(0, 0, 0, .95), 0 0 10px rgba(0, 0, 0, .75), 0 0 22px rgba(0, 0, 0, .5); }
+        .site-addr { color: rgba(255, 255, 255, .78); font-size: .72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(0, 0, 0, .95), 0 0 8px rgba(0, 0, 0, .7); }
         .site-badges { position: absolute; top: .6rem; left: .6rem; display: flex; flex-wrap: wrap; gap: .3rem; }
         .site-badge { font-size: .62rem; font-weight: 800; padding: .18rem .5rem; border-radius: .45rem; color: #fff; background: rgba(2, 6, 23, .72); border: 1px solid rgba(255, 255, 255, .15); }
         .site-badge.warn { background: rgb(var(--b700)); border-color: rgb(var(--b400)); }
@@ -527,7 +527,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.21-p22';
+const PORTAL_VERSION = '2026.10.22-p23';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -1293,6 +1293,9 @@ function buildModel(site, d) {
 // ---------- signed links for photos and documents ----------
 async function signPaths(paths, bucket) {
     bucket = bucket || PHOTO_BUCKET;
+    // pictures that are web addresses (e.g. the pest guide's Wikipedia pictures) are used as they are
+    const web = p => /^https?:\/\//i.test(String(p || ''));
+    if (paths.some(web)) { const rest = paths.filter(p => p && !web(p)), signed = rest.length ? await signPaths(rest, bucket) : []; return paths.map(p => web(p) ? p : signed[rest.indexOf(p)] || null); }
     const need = Array.from(new Set(paths.filter(p => p && !state.links.has(bucket + ':' + p))));
     if (need.length) {
         try {
@@ -2409,7 +2412,7 @@ async function showPestInfo(key) {
     $('pestModalBack').classList.remove('hidden');
     $('pestModalBody').innerHTML = `<div class="pest-hero" id="pestHero">${o.photo_path ? '<span class="t-faint text-xs">Loading picture...</span>' : `<span class="text-5xl">${PEST_CAT_ICON[c] || '🐞'}</span>`}</div>
         <div><span class="chip chip-grey">${PEST_CAT_ICON[c] || '🐞'} ${esc(c)}</span></div>
-        ${(sec('About this pest', o.about) + sec('Breeding habits', o.breeding) + sec('How we deal with it', o.control)) || emptyNote("Pesties hasn't written the guide for this pest yet.")}`;
+        ${(sec('About this pest', o.about) + sec('Breeding habits', o.breeding) + sec('Control strategy', o.control)) || emptyNote("Pesties hasn't written the guide for this pest yet.")}`;
     $('pestModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
     if (o.photo_path) {
