@@ -328,9 +328,15 @@
         .nf-meta { padding: .5rem .6rem .55rem; font-size: 11px; }
         .nf-card { border-left: 5px solid var(--tc, var(--border)); }
         .nf-card:hover, .nf-card:focus-visible { border-left-color: var(--tc, var(--accent, rgb(var(--b500)))); }
-        .nf-name { font-weight: 800; font-size: .8rem; line-height: 1.2; color: var(--text); }
-        .nf-sub { display: flex; align-items: center; gap: .3rem; min-width: 0; margin-top: .15rem; font-weight: 700; }
-        .nf-sub .nf-dot { box-shadow: none; }
+        /* the info strip under every photo card: title / number · what it is / status and date - kept as small as it can be */
+        .nf-meta { padding: .38rem .5rem .42rem !important; font-size: 10.5px; line-height: 1.25; }
+        .nf-name { font-weight: 800; font-size: .78rem; line-height: 1.18; color: var(--text); }
+        .nf-sub { display: flex; align-items: flex-start; gap: .3rem; min-width: 0; margin-top: .12rem; font-weight: 700; }
+        .nf-sub .nf-dot { box-shadow: none; width: .5rem; height: .5rem; margin-top: .2rem; }
+        .nf-id { flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; color: rgb(var(--b500)); }
+        .nf-subtxt { min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .nf-foot { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .3rem; margin-top: .22rem; font-size: 10px; color: var(--faint); }
+        .nf-foot .chip { padding: 0 .35rem; font-size: 9.5px; line-height: 1.5; }
         .rec-no { color: rgb(var(--b500)) !important; }
         .sight-card.sight-new { border-color: rgba(220, 38, 38, .6); }
         .sight-card.sight-new .nf-meta { background: rgba(220, 38, 38, .10); }
@@ -536,6 +542,9 @@
         .seg-set { display: inline-flex; flex-wrap: wrap; gap: .3rem; }
         /* ================= PHONES: less on screen at once ================= */
         .m-only { display: none !important; }
+        .fold-head { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: .5rem; padding: .55rem .1rem .2rem; text-align: left; cursor: pointer; }
+        .fold-pm { width: 1.3rem; height: 1.3rem; border-radius: .4rem; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: .9rem; line-height: 1; background: var(--surface3); color: var(--text); border: 1px solid var(--border); }
+        .fold-head:hover .fold-pm { border-color: rgb(var(--b500)); color: rgb(var(--b500)); }
         .bell-tabs .bell-n:empty, .bell-tabs .bell-t:empty { display: none; }
         .bell-tabs .bell-n, .bell-tabs .bell-t { margin-left: .25rem; padding: 0 .35rem; border-radius: 999px; background: rgb(var(--b500) / .18); font-size: .65rem; }
         @media (max-width: 639px) {
@@ -2166,7 +2175,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.22-r60';
+        const APP_VERSION = '2026.10.22-r61';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = !!window.__limitsOn;
         // after Check for updates, tidy the address bar
@@ -3192,6 +3201,7 @@
                     const empty = !open && !inside.length && !extra.length;
                     return `<div class="space-y-1.5${empty ? ' doc-empty' : ''}"><div class="row-item p-2 flex items-center justify-between gap-2">
                         <button type="button" data-folder="${esc(f)}" onclick="toggleDocFolder(this.dataset.folder)" class="text-left flex-1 min-w-0 font-bold t-strong flex items-center gap-2"><span>${open ? '📂' : '📁'}</span><span class="truncate">${esc(f)}</span><span class="t-faint font-normal text-[11px] shrink-0">${inside.length + extra.length} file${inside.length + extra.length === 1 ? '' : 's'}</span></button>
+                        ${isOnline && inside.length + extra.length ? `<button type="button" data-folder="${esc(f)}" onclick="downloadDocFolder(this.dataset.folder, this)" class="link-btn !no-underline !text-[11px] shrink-0" title="Download everything in ${esc(f)} as one zip file">⬇ All</button>` : ''}
                         ${admin && isOnline && siteDocsError !== 'missing' ? `<button type="button" data-folder="${esc(f)}" onclick="toggleDocForm(true, this.dataset.folder)" class="link-btn !no-underline !text-[11px]" title="Upload into ${esc(f)}">⬆</button>` : ''}
                         ${admin && !isStandardFolder(f) ? `<button type="button" data-folder="${esc(f)}" onclick="deleteDocFolder(this.dataset.folder)" class="t-faint hover:opacity-70 font-bold" title="Remove folder" aria-label="Remove folder">✕</button>` : ''}</div>
                         ${open ? `<div class="pl-4 space-y-1.5 border-l-2 divider ml-2">${(extra.join('') + inside.map(docRow).join('')) || '<span class="t-faint italic">Empty folder.</span>'}</div>` : ''}</div>`;
@@ -3294,6 +3304,65 @@
                 names = folderNames(data || [], adminData.docs.filter(d => String(d.client_id) === String(cid)));
             }
             if (document.getElementById('adminDocSite').value === cid) fillFolderSelect('adminDocFolder', names, pick);
+        }
+        // Download all: everything in the folder right now (documents, plus floor plans in Maps and the SDSs in SDS) as one zip
+        let jszipLoading = null;
+        function loadJSZip() {
+            if (window.JSZip) return Promise.resolve(window.JSZip);
+            return jszipLoading = jszipLoading || new Promise((res, rej) => {
+                const sc = document.createElement('script');
+                sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                sc.onload = () => window.JSZip ? res(window.JSZip) : rej(new Error('the zip tool did not load'));
+                sc.onerror = () => { jszipLoading = null; rej(new Error('the zip tool could not be loaded')); };
+                document.head.appendChild(sc);
+            });
+        }
+        async function downloadDocFolder(folder, btn) {
+            if (!isOnline) { alert('Downloading needs a connection.'); return; }
+            const c = selectedClient;
+            const files = [];   // { name, url | getUrl }
+            const extOf = p => ((String(p || '').match(/\.([a-z0-9]{2,5})(?:\?|$)/i) || [])[1] || 'pdf').toLowerCase();
+            siteDocs.filter(d => docFolderOf(d) === folder && d.file_path).forEach(d => files.push({ name: `${d.title || 'Document'}.${extOf(d.file_path)}`, bucket: DOC_BUCKET, path: d.file_path }));
+            if (/^maps?$/i.test(folder)) siteMaps.filter(m => m.path).forEach(m => files.push({ name: `Floor plan - ${m.name}.${extOf(m.path)}`, photo: true, path: m.path }));
+            if (/^sds$/i.test(folder)) { const used = sitePrepsUsed(); appOptions.filter(o => o.kind === 'prep' && o.sds_path && used.has(o.label)).forEach(o => files.push({ name: `${o.label} - SDS.${extOf(o.sds_path)}`, bucket: DOC_BUCKET, path: o.sds_path })); }
+            if (!files.length) { alert('There is nothing in this folder to download yet.'); return; }
+            const label = btn ? btn.textContent : '';
+            const say = t => { if (btn) btn.textContent = t; };
+            if (btn) btn.disabled = true;
+            try {
+                say('Preparing...');
+                const JSZip = await loadJSZip();
+                const zip = new JSZip(), used = new Set();
+                const photoUrls = await getSignedUrls(files.filter(f => f.photo).map(f => f.path)).catch(() => new Map());
+                let n = 0, failed = 0;
+                for (const f of files) {
+                    say(`${++n} of ${files.length}...`);
+                    try {
+                        let url = f.photo ? photoUrls.get(f.path) : null;
+                        if (!f.photo) { const { data, error } = await _supabase.storage.from(f.bucket).createSignedUrl(f.path, 600); if (error || !data) throw error || new Error('not found'); url = data.signedUrl; }
+                        if (!url) throw new Error('not found');
+                        const r = await fetch(url);
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        let name = f.name.replace(/[\\/:*?"<>|]+/g, '-').trim(), k = 2;
+                        while (used.has(name.toLowerCase())) name = f.name.replace(/(\.[^.]+)$/, ` (${k++})$1`);
+                        used.add(name.toLowerCase());
+                        zip.file(name, await r.blob());
+                    } catch (e) { failed++; }
+                }
+                if (failed === files.length) throw new Error('none of the files could be downloaded');
+                say('Zipping...');
+                const blob = await zip.generateAsync({ type: 'blob' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `${(c && c.Name) || 'Site'} - ${folder}.zip`.replace(/[\\/:*?"<>|]+/g, '-');
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+                if (failed) alert(`${failed} of ${files.length} file${files.length === 1 ? '' : 's'} couldn't be downloaded and ${failed === 1 ? 'is' : 'are'} missing from the zip.`);
+            } catch (e) {
+                alert('Could not download the folder: ' + (e.message || e));
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = label; }
+            }
         }
         async function openSiteDoc(id) {
             const d = siteDocs.find(x => x.id === id);
@@ -6168,11 +6237,7 @@
                             <div class="nf-shade"></div>
                             <div class="nf-top">${x.urgency === 'Urgent' ? '<span class="chip chip-red">Urgent</span>' : ''}${x._pending ? '<span class="chip chip-amber">Saved on device</span>' : ''}</div>
                         </div>
-                        <div class="nf-meta">
-                            <div class="nf-name line-clamp-2">${esc(x.pest)}</div>
-                            <div class="nf-sub"><span class="rec-no font-black font-mono shrink-0">${esc(fmtSightNo(x.sighting_no))}</span><span class="t-muted font-semibold truncate">${esc(x.location)}</span></div>
-                            <div class="flex flex-wrap items-center gap-1 mt-1">${sightChip(x)}<span class="t-faint text-[10px]">${esc(f.date)} · ${esc(x.reported_by || 'client')}</span></div>
-                        </div>
+                        ${nfMetaHtml({ title: esc(x.pest), id: esc(fmtSightNo(x.sighting_no)), sub: esc(x.location), chips: sightChip(x), foot: `${esc(nfDate(x.seen_at))} · ${esc(x.reported_by || 'client')}` })}
                     </button>`;
                 }).join('') || '<span class="t-faint italic">No pest sightings reported by the client.</span>';
                 streamSightHeroes(box, shown);
@@ -8167,6 +8232,20 @@
                 </button>`;
         }
 
+        // the info strip under a photo card (all values already escaped): the same three lines on every card
+        // short dates on cards: "1 Oct" this year, "1 Oct 2025" before that
+        function nfDate(at) {
+            const d = new Date(at);
+            if (isNaN(d)) return '';
+            return d.toLocaleDateString(LOCALE, d.getFullYear() === new Date().getFullYear() ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+        function nfMetaHtml(o) {
+            return `<div class="nf-meta">
+                        <div class="nf-name line-clamp-2">${o.title}</div>
+                        <div class="nf-sub">${o.id ? `<span class="nf-id">${o.id}</span>` : ''}${o.dot ? `<span class="nf-dot" style="background:${o.dot};"></span>` : ''}<span class="nf-subtxt" ${o.subColor ? `style="color:${o.subColor};"` : ''}>${o.sub || ''}</span></div>
+                        ${o.chips || o.foot ? `<div class="nf-foot">${o.chips || ''}${o.foot ? `<span>${o.foot}</span>` : ''}</div>` : ''}
+                    </div>`;
+        }
         // A recommendation as a poster card: its photo first, the title over it
         function recCardHtml(item) {
             const dateStr = item.date ? new Date(item.date).toLocaleDateString(LOCALE, NZ_DATE) : '';
@@ -8177,11 +8256,9 @@
                         <div class="nf-img" data-rec-hero="${esc(item.id)}">${(item.allSlots || []).length ? '' : `<span class="nf-ph">📋</span>`}</div>
                         <div class="nf-shade"></div>
                     </div>
-                    <div class="nf-meta">
-                        ${item.category ? `<div class="nf-cat" style="color:rgb(var(--b600));">${esc(item.category)}</div>` : ''}<div class="nf-name line-clamp-2">${esc(item.recommendation)}</div>
-                        <div class="nf-sub">${recNumberHtml(item, 'text-xs rec-no shrink-0')}<span class="flex items-center gap-1 t-accent font-semibold min-w-0 flex-1" title="${esc(item.station)}">${typeDot(item.stationType, '.5rem')}<span class="truncate">${esc(item.station)}</span></span></div>
-                        <div class="flex flex-wrap items-center gap-1 mt-1">${item.status === 'complete' ? '<span class="chip chip-green !py-0">Complete</span>' : item.status === 'pending' ? '<span class="chip chip-amber !py-0">Pending</span>' : ''}${recAgeChip(item)}<span class="t-faint text-[10px]">${esc(dateStr)}${item.photoCount > 1 ? ' · ' + mediaIcon(item.allSlots) + ' ' + item.photoCount : ''}</span></div>
-                    </div>
+                    ${nfMetaHtml({ title: esc(item.recommendation), id: esc(fmtRecNo(item.recNo) || 'R-····'), dot: col, sub: esc(item.station), subColor: col,
+                        chips: (item.status === 'complete' ? '<span class="chip chip-green">Complete</span>' : item.status === 'pending' ? '<span class="chip chip-amber">Pending</span>' : '') + recAgeChip(item),
+                        foot: [esc(item.date ? nfDate(item.date) : ''), item.category ? esc(item.category) : '', item.photoCount > 1 ? mediaIcon(item.allSlots) + ' ' + item.photoCount : ''].filter(Boolean).join(' · ') })}
                 </button>`;
         }
         async function streamRecHeroes(container, recs) {
@@ -8278,6 +8355,39 @@
                 </div>`;
         }
 
+        function renderLandingVisitsOnly() {
+            const visitsContainer = document.getElementById('siteLandingVisitsList');
+            if (!visitsContainer) return;
+            if (sitePastVisits.length === 0) {
+                visitsContainer.innerHTML = '<span class="t-faint italic">No past visit history recorded yet.</span>';
+            } else {
+                const monthOf = v => new Date(v.date).toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
+                const perMonth = new Map();
+                sitePastVisits.forEach(v => { const k = monthOf(v); perMonth.set(k, (perMonth.get(k) || 0) + 1); });
+                let lastMonth = '';
+                visitsContainer.innerHTML = sitePastVisits.map((v, index) => {
+                    const dt = fmtDateTimeLong(v.date);
+                    const n = new Set(v.entries.filter(e => !e.recOnly).map(e => e.barcode)).size;
+                    const mk = monthOf(v), shut = foldShut.has('v:' + mk);
+                    const head = mk !== lastMonth ? foldHeadHtml('v:' + mk, esc(mk), `${perMonth.get(mk)} visit${perMonth.get(mk) === 1 ? '' : 's'}`, 'visit-month') : '';
+                    lastMonth = mk;
+                    if (shut) return head;
+                    return `${head}
+                        <div class="row-item p-3.5 flex justify-between items-center gap-3">
+                            <div class="min-w-0">
+                                <div class="font-bold t-strong">${esc(dt.date)}</div>
+                                <div class="t-strong text-[11px] font-semibold">${esc(visitTypeOf(v))}${v.edited ? ' <span class="t-faint font-normal">· corrected</span>' : ''}</div>
+                                <div class="t-muted truncate">Closed ${esc(dt.time)} · ${esc(v.technician || 'Technician not recorded')} · ${n} station${n === 1 ? '' : 's'}</div>
+                            </div>
+                            <div class="flex gap-2 shrink-0">
+                                <button type="button" onclick="openVisitModal(${index})" class="btn btn-secondary !px-3.5 !py-2">View</button>
+                                <button type="button" onclick="downloadVisitReport(${index})" class="btn btn-blue !px-3.5 !py-2">Download</button>
+                            </div>
+                        </div>`;
+                }).join('');
+            }
+
+        }
         function renderLandingRecommendationsAndVisits() {
             const recsContainer = document.getElementById('siteLandingRecsList');
             const visitsContainer = document.getElementById('siteLandingVisitsList');
@@ -8297,32 +8407,7 @@
                 : `<span class="t-faint italic">${emptyText[recFilter]}</span>`;
             if (showRecPhotos && shown.length) streamRecHeroes(recsContainer, shown);
 
-            if (sitePastVisits.length === 0) {
-                visitsContainer.innerHTML = '<span class="t-faint italic">No past visit history recorded yet.</span>';
-            } else {
-                const monthOf = v => new Date(v.date).toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
-                const perMonth = new Map();
-                sitePastVisits.forEach(v => { const k = monthOf(v); perMonth.set(k, (perMonth.get(k) || 0) + 1); });
-                let lastMonth = '';
-                visitsContainer.innerHTML = sitePastVisits.map((v, index) => {
-                    const dt = fmtDateTimeLong(v.date);
-                    const n = new Set(v.entries.filter(e => !e.recOnly).map(e => e.barcode)).size;
-                    const mk = monthOf(v), head = mk !== lastMonth ? `<div class="visit-month eyebrow t-faint pt-2 pb-0.5 flex items-center justify-between gap-2"><span>${esc(mk)}</span><span class="normal-case tracking-normal font-semibold">${perMonth.get(mk)} visit${perMonth.get(mk) === 1 ? '' : 's'}</span></div>` : '';
-                    lastMonth = mk;
-                    return `${head}
-                        <div class="row-item p-3.5 flex justify-between items-center gap-3">
-                            <div class="min-w-0">
-                                <div class="font-bold t-strong">${esc(dt.date)}</div>
-                                <div class="t-strong text-[11px] font-semibold">${esc(visitTypeOf(v))}${v.edited ? ' <span class="t-faint font-normal">· corrected</span>' : ''}</div>
-                                <div class="t-muted truncate">Closed ${esc(dt.time)} · ${esc(v.technician || 'Technician not recorded')} · ${n} station${n === 1 ? '' : 's'}</div>
-                            </div>
-                            <div class="flex gap-2 shrink-0">
-                                <button type="button" onclick="openVisitModal(${index})" class="btn btn-secondary !px-3.5 !py-2">View</button>
-                                <button type="button" onclick="downloadVisitReport(${index})" class="btn btn-blue !px-3.5 !py-2">Download</button>
-                            </div>
-                        </div>`;
-                }).join('');
-            }
+            renderLandingVisitsOnly();
 
             renderLandingStats();
             renderSiteStationList();
@@ -8441,12 +8526,9 @@
                             <div class="nf-img" data-st-photo="${esc(d.barcode_id)}">${(siteStations.get(d.barcode_id) || {}).photo_path ? '' : `<span class="nf-ph">📍</span>`}</div>
                             <div class="nf-shade"></div>
                         </div>
-                        <div class="nf-meta">
-                            <div class="nf-name line-clamp-2">${esc(d.locationName)}</div>
-                            <div class="nf-sub"><span class="nf-dot" style="background:${col};"></span><span class="truncate" style="color:${col};">${esc(d.deviceType)}</span></div>
-                            <div class="truncate mt-0.5"><span class="font-mono t-accent">${esc(d.barcode_id)}</span>${openN ? ` <span class="chip chip-orange !py-0">${openN} open</span>` : ''}${plan ? ` <span class="t-faint">· 📍 ${esc(plan)}</span>` : ''}</div>
-                            <div class="t-faint text-[10px] mt-0.5 truncate">${lt ? `Serviced ${esc(lt.date)} · ${esc(last.activity === 'Caught' ? 'insects caught' : last.activity === 'None' ? 'no activity' : last.activity + ' activity')}` : 'Not serviced yet'}</div>
-                        </div>
+                        ${nfMetaHtml({ title: esc(d.locationName), id: esc(d.barcode_id), dot: col, sub: esc(d.deviceType), subColor: col,
+                            chips: openN ? `<span class="chip chip-orange">${openN} open</span>` : '',
+                            foot: [last ? `Serviced ${esc(nfDate(last.at))} · ${esc(last.activity === 'Caught' ? 'caught' : last.activity === 'None' ? 'no activity' : last.activity.toLowerCase())}` : 'Not serviced yet', plan ? `📍 ${esc(plan)}` : ''].filter(Boolean).join(' · ') })}
                     </div>`;
                 }).join('');
             return list.map(d => {
@@ -8517,6 +8599,18 @@
             const t = e && activityTarget(e);
             if (t) t.open();
         }
+        // month (past visits) and day (activity log) headings fold their entries away with − / +
+        const foldShut = new Set();
+        let actDayCount = 0;
+        function foldHeadHtml(key, title, count, cls) {
+            const shut = foldShut.has(key);
+            return `<button type="button" class="fold-head ${cls || ''}" data-fold="${esc(key)}" onclick="toggleFold(this.dataset.fold)" aria-expanded="${!shut}" title="${shut ? 'Show' : 'Hide'} these">
+                <span class="eyebrow t-faint">${title}</span><span class="flex items-center gap-2"><span class="text-[11px] t-faint font-semibold">${count}</span><span class="fold-pm" aria-hidden="true">${shut ? '+' : '−'}</span></span></button>`;
+        }
+        function toggleFold(key) {
+            if (foldShut.has(key)) foldShut.delete(key); else foldShut.add(key);
+            if (key.startsWith('v:')) renderLandingVisitsOnly(); else renderActivityLog();
+        }
         function renderActivityLog() {
             const el = document.getElementById('siteActivityLog');
             if (!el) return;
@@ -8532,8 +8626,10 @@
                 const k = ACT_KIND[e.kind] || ACT_KIND.change;
                 const go = activityTarget(e);
                 const t = fmtDateTimeLong(e.at);
-                const day = t.date !== lastDay ? `<div class="eyebrow t-faint pt-2 pb-0.5">${esc(t.date)}</div>` : '';
+                if (t.date !== lastDay) actDayCount = list.slice(0, activityLimit).filter(x => fmtDateTimeLong(x.at).date === t.date).length;
+                const day = t.date !== lastDay ? foldHeadHtml('a:' + t.date, esc(t.date), `${actDayCount} item${actDayCount === 1 ? '' : 's'}`, 'act-day') : '';
                 lastDay = t.date;
+                if (foldShut.has('a:' + t.date)) return day;
                 return `${day}
                     <${go ? `button type="button" onclick="openActivity(${idx})" title="${esc(go.hint)}"` : 'div'} class="act-row${go ? ' act-link' : ''}">
                         <span class="act-icon font-black" style="background:${k.bg};color:${k.fg};">${k.icon}</span>
@@ -10429,6 +10525,28 @@
             if (it.kind === 'shape' && peIsLine(it.shape)) return { w: it.w, h: Math.max(it.h, ppm * 0.6), y: 0 };
             return { w: it.w, h: it.h, y: 0 };
         }
+        // text sizes are plain numbers you can type: 24 is the normal label size (0.6 m tall on the plan)
+        const PE_FONT_K = 0.025;
+        const peFontNum = px => Math.max(1, Math.round(px / (pe.doc.ppm * PE_FONT_K)));
+        function peShapeFs(it, ppm) {
+            if (it.fs) return it.fs;
+            const w = it.w, h = it.h;
+            return Math.max(ppm * 0.35, Math.min(ppm * 0.9, (peIsLine(it.shape) ? ppm * 0.6 : Math.min(w, h) * 0.28)));
+        }
+        function peFontSizeHtml(label, n, js) {
+            const go = v => js.split('%n').join(v);
+            return `<div class="flex items-center gap-1.5"><label class="lbl !mb-0 mr-auto whitespace-nowrap" for="peFontNum">${label}</label>
+                <button type="button" class="pe-chip justify-center !px-2.5" onclick="${go(`Math.max(1, (parseInt(document.getElementById('peFontNum').value) || ${n}) - 2)`)}" aria-label="Smaller">−</button>
+                <input type="number" id="peFontNum" min="1" max="999" step="1" value="${n}" onchange="${go('Math.max(1, parseInt(this.value) || ' + n + ')')}" class="field !py-1.5 !text-sm text-center" style="width:5rem;flex:none;" inputmode="numeric">
+                <button type="button" class="pe-chip justify-center !px-2.5" onclick="${go(`Math.min(999, (parseInt(document.getElementById('peFontNum').value) || ${n}) + 2)`)}" aria-label="Bigger">+</button></div>`;
+        }
+        function peSetFont(k, n) {
+            const it = pe && pe.sel && pe.doc.items.find(x => x.id === pe.sel.id);
+            if (!it) return;
+            it[k] = Math.round(n * pe.doc.ppm * PE_FONT_K * 100) / 100;
+            peCommit(); peRender();
+            const f = document.getElementById('peFontNum'); if (f) f.value = n;
+        }
         function peShapeSvg(it, ppm) {
             const w = it.w, h = it.h, fill = it.fill || '#bfdbfe', op = it.alpha == null ? 0.8 : it.alpha;
             const sw = Math.max(1.5, ppm * 0.05), edge = it.edge === false ? 'none' : '#334155';
@@ -10447,7 +10565,7 @@
                 default: g = `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" ${S}/>`;
             }
             if (it.name) {
-                const line = peIsLine(it.shape), fs = Math.max(ppm * 0.35, Math.min(ppm * 0.9, (line ? ppm * 0.6 : Math.min(w, h) * 0.28)));
+                const line = peIsLine(it.shape), fs = peShapeFs(it, ppm);
                 const y = line ? -Math.max(h, sw * 2) / 2 - fs * 0.75 : 0;
                 g += `<text x="0" y="${y}" font-size="${fs}" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-weight="800" fill="#0f172a" stroke="#ffffff" stroke-width="${fs * 0.16}" paint-order="stroke" stroke-linejoin="round" text-anchor="middle" dominant-baseline="central">${esc(it.name)}</text>`;
             }
@@ -11030,7 +11148,7 @@
                     html = it.kind === 'shape' ? peShapePanel(it, head, btn, rot) : it.kind === 'text'
                         ? `${head('Label')}<label class="lbl !mb-0" for="peItemText">Text</label>
                             <input type="text" id="peItemText" maxlength="60" value="${esc(it.text || '')}" oninput="peItemSet('text', this.value)" onchange="peCommit()" class="field !py-1.5 !text-sm">
-                            <div class="lbl !mb-0">Size</div><div class="flex flex-wrap gap-1.5">${[['S', 0.4], ['M', 0.6], ['L', 0.9], ['XL', 1.4]].map(([l, f]) => btn(Math.abs((it.size || 0) - Math.round(d.ppm * f)) < 1, `peItemSet('size', ${Math.round(d.ppm * f)}); peCommit(); peRenderPanel()`, l)).join('')}</div>
+                            ${peFontSizeHtml('Text size', peFontNum(it.size || d.ppm * 0.6), "peSetFont('size', %n)")}
                             <div class="lbl !mb-0">Colour</div><div class="flex flex-wrap gap-1.5">${['#0f172a', '#dc2626', '#ea580c', '#16a34a', '#2563eb'].map(c => `<button type="button" class="pe-swatch ${(it.color || '#0f172a') === c ? 'on' : ''}" style="background:${c};" onclick="peItemSet('color', '${c}'); peCommit(); peRenderPanel()" aria-label="Colour"></button>`).join('')}</div>
                             ${rot}`
                         : `${head(o ? o.label : 'Object')}
@@ -11071,6 +11189,7 @@
             return `${head((PE_SHAPES.find(x => x[0] === it.shape) || [, 'Shape'])[1])}
                 <label class="lbl !mb-0" for="peShapeName">Name</label>
                 <input type="text" id="peShapeName" maxlength="40" value="${esc(it.name || '')}" oninput="peItemSet('name', this.value)" onchange="peCommit()" class="field !py-1.5 !text-sm" placeholder="e.g. Garden bed, Skip bin, Loading zone">
+                ${peFontSizeHtml('Name size', peFontNum(peShapeFs(it, d.ppm)), "peSetFont('fs', %n)")}
                 <div class="lbl !mb-0">Shape</div>
                 <div class="flex flex-wrap gap-1.5">${PE_SHAPES.filter(([k]) => peIsLine(k) === line).map(([k, l]) => btn(it.shape === k, `peItemSet('shape', '${k}'); peCommit(); peRenderPanel()`, l)).join('')}</div>
                 <div class="lbl !mb-0">Colour</div>${peFillPicker(it.fill || '#bfdbfe', "peItemSet('fill', '%c'); pe.shapeFill = '%c'; peCommit(); peRenderPanel()", "peItemSet('fill', this.value); pe.shapeFill = this.value; peCommit(); peRenderPanel()")}
@@ -11985,12 +12104,8 @@
                         <div class="nf-img" data-st-photo="${esc(d.barcode_id)}">${hasPhoto ? '' : '<span class="nf-ph">📍</span>'}</div>
                         <div class="nf-shade"></div>
                     </div>
-                    <div class="nf-meta">
-                        <div class="nf-name line-clamp-2">${esc(d.locationName)}</div>
-                        <div class="nf-sub"><span class="nf-dot" style="background:${col};"></span><span class="truncate" style="color:${col};">${esc(d.deviceType)}</span></div>
-                        <div class="truncate mt-0.5"><span class="font-mono t-accent">${esc(d.barcode_id)}</span></div>
-                        <div class="t-faint text-[10px] mt-0.5 line-clamp-2">${esc(lastServicedText(d, isScanned))}</div>
-                    </div>
+                    ${nfMetaHtml({ title: esc(d.locationName), id: esc(d.barcode_id), dot: col, sub: esc(d.deviceType), subColor: col,
+                        foot: esc(lastServicedText(d, isScanned)) })}
                 </div>`;
         }
 
