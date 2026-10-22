@@ -190,7 +190,8 @@
         /* site header */
         .site-hero-band { position: relative; isolation: isolate; padding: 1rem; background: linear-gradient(135deg, rgb(var(--b500) / .10), transparent 55%); }
         .sh-topline { display: flex; align-items: center; justify-content: space-between; gap: .75rem; font-size: 11px; margin-bottom: .8rem; }
-        .sh-id { display: flex; align-items: flex-start; gap: .9rem; min-width: 0; }
+        .sh-id { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .9rem; min-width: 0; }
+        .sh-id > .sh-contact { flex: 1 1 100%; margin-top: 0; width: auto; }
         .sh-id > .min-w-0 { min-width: 0; flex: 1; }
         .sh-title { font-size: 1.45rem; font-weight: 900; line-height: 1.15; }
         .sh-contact { margin-top: .75rem; }
@@ -225,7 +226,7 @@
         .kpi-click .kpi-k::after { content: ' ›'; opacity: .6; }
         /* the boxes under the header: one column on phones, three across from laptop width */
         /* the site boxes: fixed height with their own scroll bar; drag ⠿ to move, the corner to resize (saved per person) */
-        .land-board { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; }
+        .land-board { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; min-height: 4rem; }
         .land-board > .land-card { flex: 0 0 auto; width: 100%; }
         /* each box's width is its share of the row (any value, set by dragging its corner); three boxes fit a row by default */
         @media (min-width: 1024px) { .land-board > .land-card { width: calc((100% + 1.5rem) * var(--lc-f, .3333) - 1.5rem); } }
@@ -256,6 +257,8 @@
         .lc-resize { position: absolute; right: 3px; bottom: 3px; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none; border-radius: 0 0 .7rem 0; opacity: .55;
             background: linear-gradient(135deg, transparent 0 55%, var(--faint) 55% 61%, transparent 61% 72%, var(--faint) 72% 78%, transparent 78%); }
         .lc-resize:hover { opacity: 1; }
+        .lc-drop-mark { position: fixed; z-index: 80; width: 4px; border-radius: 4px; background: rgb(var(--b500)); box-shadow: 0 0 0 3px rgb(var(--b500) / .25); pointer-events: none; }
+        .lc-drop-mark.hidden { display: none; }
         .land-card.lc-dragging { outline: 2px dashed rgb(var(--b500)); outline-offset: 3px; opacity: .85; }
         .land-card.lc-resizing { outline: 2px solid rgb(var(--b500) / .6); outline-offset: 3px; }
         body.lc-busy, body.lc-busy * { user-select: none !important; }
@@ -334,7 +337,15 @@
         .nf-sub { display: flex; align-items: flex-start; gap: .3rem; min-width: 0; margin-top: .12rem; font-weight: 700; }
         .nf-sub .nf-dot { box-shadow: none; width: .5rem; height: .5rem; margin-top: .2rem; }
         .nf-id { flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; color: rgb(var(--b500)); }
-        .nf-subtxt { min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .nf-subtxt { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* every card the same height: two lines of title, one line of detail, one line of status */
+        .nf-name { min-height: 2.36em; }
+        .nf-meta { height: 5.5rem; overflow: hidden; box-sizing: border-box; }
+        .nf-foot { flex-wrap: nowrap; overflow: hidden; white-space: nowrap; }
+        .nf-foot > span:last-child { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+        .nf-foot .chip { flex-shrink: 0; }
+        /* computers: every card the same width in every box */
+        @media (min-width: 640px) { .land-card .nf-grid { grid-template-columns: repeat(auto-fill, 10.75rem) !important; justify-content: start; gap: .7rem; } }
         .nf-foot { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .3rem; margin-top: .22rem; font-size: 10px; color: var(--faint); }
         .nf-foot .chip { padding: 0 .35rem; font-size: 9.5px; line-height: 1.5; }
         .rec-no { color: rgb(var(--b500)) !important; }
@@ -542,6 +553,14 @@
         .seg-set { display: inline-flex; flex-wrap: wrap; gap: .3rem; }
         /* ================= PHONES: less on screen at once ================= */
         .m-only { display: none !important; }
+        @media (max-width: 639px) {
+            .ws-fold-head { cursor: pointer; user-select: none; }
+            .ws-fold-head h4::after { content: '▾'; margin-left: .2rem; font-size: .8rem; color: var(--faint); }
+            .ws-fold.ws-folded .ws-fold-head h4::after { content: '▸'; }
+            .ws-fold.ws-folded > :not(.ws-fold-head) { display: none !important; }
+            .ws-fold.ws-folded .ws-fold-head { border-bottom: 0; padding-bottom: 0; }
+            .ws-fold.ws-folded { padding-top: .9rem; padding-bottom: .9rem; }
+        }
         /* phones: the station form packed tighter - the same fields, less scrolling */
         @media (max-width: 639px) {
             #stationFormContainer .sf-head { padding: .55rem .75rem .5rem; gap: .5rem; align-items: center; }
@@ -715,7 +734,7 @@
         .pm-view { position: relative; flex: 1 1 auto; min-height: 12rem; border-radius: .8rem; overflow: hidden; background: #1e293b; touch-action: none; cursor: grab; user-select: none; }
         .pm-view:active { cursor: grabbing; }
         .pm-tiles { position: absolute; transform-origin: 50% 50%; }
-        .pm-search { position: relative; }
+        .pm-search, .addr-wrap { position: relative; }
         .pm-sug { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + .25rem); max-height: 16rem; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: .8rem; box-shadow: 0 12px 28px rgba(0, 0, 0, .25); padding: .25rem; }
         .pm-sug.hidden { display: none; }
         .pm-sug button { display: block; width: 100%; text-align: left; padding: .5rem .6rem; border-radius: .55rem; font-size: .8rem; color: var(--text); }
@@ -986,7 +1005,7 @@
                     <button type="button" onclick="syncSiteNow()" class="sh-synced site-sync-btn" title="Saved on this device. Tap to check for changes."><span class="sh-dot"></span><span class="site-sync-text"></span></button>
                     <div class="sh-grid">
                         <div class="sh-id">
-                            <div id="siteLandingImageWrap" class="hidden sh-cover cursor-pointer" onclick="viewFullImage(document.getElementById('siteLandingImage').src, selectedClient ? selectedClient.Address : '', selectedClient ? selectedClient.Name : '')">
+                            <div id="siteLandingImageWrap" class="hidden sh-cover">
                                 <img id="siteLandingImage" class="w-full h-full object-cover" alt="">
                             </div>
                             <div id="siteMonogram" class="sh-cover sh-mono" aria-hidden="true"></div>
@@ -994,13 +1013,13 @@
                                 <h2 class="sh-title t-strong break-words" id="siteLandingTitle">Customer Site Overview</h2>
                                 <p class="text-xs sm:text-sm t-muted mt-1 flex items-start gap-1.5"><span aria-hidden="true">📍</span><span id="siteLandingAddress" class="break-words">Address information</span></p>
                                 <div id="visitStatusLine" class="hidden mt-2.5"></div>
-                                <!-- site contact, right under the name -->
-                                <div id="siteContactBox" class="sh-contact">
-                                    <span class="eyebrow t-faint">Site contact</span>
-                                    <span id="siteLandingContact" class="font-bold t-strong break-words">Not specified</span>
-                                    <span id="siteLandingEmail" class="break-all">No email on file</span>
-                                    <button type="button" onclick="openEditSiteModal('editContact')" class="link-btn !no-underline !text-[11px]">Edit</button>
-                                </div>
+                            </div>
+                            <!-- site contact: under the logo and name, across the full width -->
+                            <div id="siteContactBox" class="sh-contact">
+                                <span class="eyebrow t-faint">Site contact</span>
+                                <span id="siteLandingContact" class="font-bold t-strong break-words">Not specified</span>
+                                <span id="siteLandingEmail" class="break-all">No email on file</span>
+                                <button type="button" onclick="openEditSiteModal('editContact')" class="link-btn !no-underline !text-[11px]">Edit</button>
                             </div>
                         </div>
                         <div class="st-actions">
@@ -1061,7 +1080,7 @@
                     <div class="lc-head">
                         <div class="lc-bar">
                             <h3 class="eyebrow flex items-center gap-2 min-w-0" style="color:#db2777;"><button type="button" class="lc-move" title="Drag to move this box (or use the arrow keys)" aria-label="Move box">⠿</button><span class="w-2 h-2 rounded-full shrink-0" style="background:#db2777;"></span>Pest sightings</h3>
-                            <span class="lc-tools"><span id="sightPhotoToggle"></span><button type="button" onclick="openPestGuide()" class="lc-refresh" title="Pest guide" aria-label="Pest guide">📖</button><button type="button" id="sightRefreshBtn" onclick="refreshBox(this)" class="lc-refresh" title="Check for new sightings" aria-label="Refresh">⟳</button></span>
+                            <span class="lc-tools"><span id="sightPhotoToggle"></span><button type="button" id="sightRefreshBtn" onclick="refreshBox(this)" class="lc-refresh" title="Check for new sightings" aria-label="Refresh">⟳</button></span>
                         </div>
                         <div id="siteSightingsCount" class="text-[11px] t-faint -mb-1"></div>
                         <div id="sightFilters" class="flex flex-wrap gap-1.5 text-[11px]"></div>
@@ -1132,6 +1151,7 @@
                             <h3 class="eyebrow flex items-center gap-2 min-w-0" style="color:#2563eb;"><button type="button" class="lc-move" title="Drag to move this box (or use the arrow keys)" aria-label="Move box">⠿</button><span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>Past Visits</h3>
                             <span class="lc-tools"><span id="visitTypeChart" class="viz-root"></span><button type="button" class="lc-refresh" onclick="refreshBox(this)" title="Check for changes" aria-label="Refresh">⟳</button></span>
                         </div>
+                        <div id="visitTechFilter"></div>
                     </div>
                     <div class="lc-scroll scroll-thin space-y-3">
                         <div id="siteLandingVisitsList" class="space-y-2.5 text-xs">
@@ -1154,14 +1174,6 @@
                     <span class="lc-resize" title="Drag to resize" aria-hidden="true"></span>
                 </div>
             </div>
-            <!-- Critical limits (switched off while they are rebuilt) -->
-                    <div id="siteLimitsCard" class="card p-5 space-y-3 hidden">
-                        <div class="flex justify-between items-center gap-2">
-                            <span class="eyebrow flex items-center gap-2" style="color:#dc2626;"><span class="w-2 h-2 rounded-full" style="background:#dc2626;"></span>Critical limits</span>
-                            <button type="button" id="siteLimitAddBtn" onclick="editSiteLimit('new')" class="link-btn !no-underline">+ Add</button>
-                        </div>
-                        <div id="siteLimitsBox" class="space-y-2 text-xs"></div>
-                    </div>
             <!-- (contract, technician and access notes are kept in Edit Site; not shown on this page) -->
                     <div class="hidden" aria-hidden="true"><div id="siteContractChip"></div><p id="siteContractDates"></p><p id="siteContractNotes"></p><span id="siteAssignedTech"></span><p id="siteLandingNotes"></p></div>
         </section>
@@ -1195,8 +1207,8 @@
             <!-- Station lists: pending first, serviced underneath -->
             <div class="space-y-5">
                 <!-- Unscanned -->
-                <div class="card p-5 space-y-3">
-                    <div class="flex justify-between items-center border-b divider pb-3">
+                <div class="card p-5 space-y-3 ws-fold" data-ws="unscanned">
+                    <div class="ws-fold-head flex justify-between items-center border-b divider pb-3">
                         <h4 class="eyebrow flex items-center gap-2" style="color:#d97706;">
                             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                             Unscanned Devices
@@ -1209,8 +1221,8 @@
                 </div>
 
                 <!-- Scanned -->
-                <div class="card p-5 space-y-3">
-                    <div class="flex justify-between items-center border-b divider pb-3">
+                <div class="card p-5 space-y-3 ws-fold" data-ws="scanned">
+                    <div class="ws-fold-head flex justify-between items-center border-b divider pb-3">
                         <h4 class="eyebrow flex items-center gap-2" style="color:#059669;">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             Scanned Devices
@@ -1251,7 +1263,8 @@
                 <div class="min-w-0">
                     <button type="button" onclick="requestCloseStation()" class="sf-back link-btn !no-underline inline-flex items-center gap-1 mb-1.5">← Back to stations</button>
                     <h4 class="font-black text-lg t-strong break-words flex items-center gap-2"><span id="formTypeDot" class="type-dot shrink-0"></span><span id="formTitle">Servicing Device</span>
-                        <button type="button" id="stationMapBtn" onclick="showCurrentStationOnMap()" class="chip chip-blue cursor-pointer shrink-0 !text-[11px]" title="Show this station on the floor plan" aria-label="Show on map">📍 Map</button></h4>
+                        <button type="button" id="stationMapBtn" onclick="showCurrentStationOnMap()" class="chip chip-blue cursor-pointer shrink-0 !text-[11px]" title="Show this station on the floor plan" aria-label="Show on map">📍 Map</button>
+                        <button type="button" id="changeBarcodeBtn" onclick="openBarcodeChange(currentBarcode)" class="chip chip-purple cursor-pointer shrink-0 !text-[11px]" title="Change this station's barcode">▣ Change barcode</button></h4>
                     <div id="baitLastChanged" class="hidden text-[11px] font-semibold mt-1.5"></div>
                 </div>
                 <button type="button" onclick="requestCloseStation()" class="icon-btn shrink-0" title="Close">✕</button>
@@ -1273,6 +1286,10 @@
                             <label class="lbl">Station Type</label>
                             <select id="newDeviceType" class="field cursor-pointer" onchange="updateFormTypeDot()"></select>
                         </div>
+                        <div>
+                            <label class="lbl">Barcode</label>
+                            <div id="scannedBarcodeBadge" class="field font-mono !cursor-default" style="background:var(--surface2);"></div>
+                        </div>
                         <div class="sm:col-span-2">
                             <label class="lbl">Floor plan location</label>
                             <select id="stationMapSelect" class="field cursor-pointer" onchange="stationMapChosen(this.value)"></select>
@@ -1289,15 +1306,11 @@
                             <input type="file" id="stationPhotoCamera" accept="image/*" capture="environment" class="hidden" onchange="stationPhotoChosen(this)">
                             <input type="file" id="stationPhotoGallery" accept="image/*" class="hidden" onchange="stationPhotoChosen(this)">
                         </div>
-                        <div id="stationZoneRow" class="sm:col-span-2 hidden">
-                            <label class="lbl" for="stationZone">Critical limits <span class="t-faint font-normal normal-case tracking-normal">- the area this station counts towards, e.g. Dispatch or Kitchen</span></label>
-                            <input type="text" id="stationZone" list="zoneOptions" maxlength="60" placeholder="e.g. Dispatch" autocomplete="off" class="field">
-                            <datalist id="zoneOptions"></datalist>
+                        <div id="stationLimitRow" class="sm:col-span-2 hidden">
+                            <label class="lbl" for="stationLimit">Critical limit</label>
+                            <select id="stationLimit" class="field cursor-pointer"></select>
                         </div>
                     </div>
-                    <div id="stationBarcodeRow" class="flex flex-wrap items-center gap-2 px-1">
-                        <span id="scannedBarcodeBadge" class="chip chip-orange font-mono"></span>
-                        <button type="button" id="changeBarcodeBtn" onclick="openBarcodeChange(currentBarcode)" class="chip chip-purple cursor-pointer">Change barcode</button>
                     </div>
                     </div>
 
@@ -1423,7 +1436,7 @@
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div><label class="lbl">Customer / Business Name</label><input type="text" id="newClientName" placeholder="Customer / Business Name" class="field"></div>
-                <div><label class="lbl">Physical Address</label><input type="text" id="newClientAddress" placeholder="Physical Address" class="field"></div>
+                <div><label class="lbl">Physical Address</label><div class="addr-wrap"><input type="text" id="newClientAddress" placeholder="Start typing the address..." class="field" autocomplete="off" data-addr-search></div></div>
                 <div><label class="lbl">Site Contact & Phone</label><input type="text" id="newClientContact" placeholder="Site Contact & Phone" class="field"></div>
                 <div><label class="lbl">Client Email for Reports</label><input type="email" id="newClientEmail" placeholder="Client Email for Reports" class="field"></div>
                 <div class="sm:col-span-2"><label class="lbl">Safety & Site Access Instructions</label><textarea id="newClientNotes" rows="2" placeholder="Access / Safety Notes" class="field"></textarea></div>
@@ -1435,7 +1448,7 @@
                 <div class="sm:col-span-2 border-t divider pt-4 mt-1 flex flex-wrap justify-between items-center gap-2">
                     <span class="eyebrow" style="color:#10b981;">Contracted Services & Schedule</span>
                     <button type="button" id="newClientServicesBtn" onclick="openServicesModal('new')" class="btn btn-secondary !py-2">Add / Edit Services</button>
-                    <span id="newClientServicesNote" class="hidden text-[11px] t-faint">An admin adds the services.</span>
+
                 </div>
                 <div id="newClientServicesList" class="sm:col-span-2 space-y-2 text-xs"></div>
                 <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
@@ -1462,7 +1475,7 @@
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div><label class="lbl">Customer / Business Name</label><input type="text" id="editName" class="field"></div>
-                <div><label class="lbl">Physical Address</label><input type="text" id="editAddress" class="field"></div>
+                <div><label class="lbl">Physical Address</label><div class="addr-wrap"><input type="text" id="editAddress" class="field" autocomplete="off" data-addr-search placeholder="Start typing the address..."></div></div>
                 <div><label class="lbl">Site Contact & Phone</label><input type="text" id="editContact" placeholder="e.g. Jane Smith 021 123 4567" class="field"></div>
                 <div><label class="lbl">Client Email for Reports</label><input type="email" id="editEmail" class="field"></div>
                 <div class="sm:col-span-2"><label class="lbl">Safety & Site Access Instructions</label><textarea id="editNotes" rows="4" placeholder="Gate codes, sign-in requirements, PPE, hazards..." class="field"></textarea></div>
@@ -1907,6 +1920,7 @@
                     <div id="mapMenu" class="hidden absolute right-0 top-full mt-1 z-10 card p-1.5 w-56 text-xs">
                         <button type="button" onclick="openMapEdit('rename')" class="map-menu-item">Rename this plan</button>
                         <button type="button" onclick="openMapEdit('image')" class="map-menu-item">Replace with a picture</button>
+                        <button type="button" onclick="markMapChecked()" class="map-menu-item">✓ Mark as checked (still correct)</button>
                         <button type="button" onclick="exportMapImage()" class="map-menu-item">Download plan with pins</button>
                         <button type="button" onclick="deleteCurrentMap()" class="map-menu-item" style="color:#ef4444;">Delete this plan</button>
                     </div>
@@ -2191,15 +2205,15 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.22-r64';
+        const APP_VERSION = '2026.10.22-r65';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
-        const LIMITS_ON = !!window.__limitsOn;
+        const LIMITS_ON = true;   // critical limits (rebuilt in r65)
         // after Check for updates, tidy the address bar
         try { if (/[?&]fresh=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
         // New Zealand date style everywhere: day/month/year
         const LOCALE = 'en-NZ';
         const NZ_DATE = { day: '2-digit', month: '2-digit', year: 'numeric' };
-        const REQUIRED_IDS = ["loginScreen", "pestGuideBtn", "profileMonth", "headerSite", "siteSightingsList", "siteSightingsCount", "sightFilters", "sightPhotoToggle", "siteContactBox", "siteMonogram", "siteHeroBand", "statNextService", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "adminBtn", "profileAdminLink", "settingsAdminNote", "siteDocsList", "siteDocForm", "sitePortalAccess", "recType", "recTitle", "closeTabJob", "closePaneJob", "closePaneSign", "signBox", "reasonBox", "activityRow", "pestCountRow", "saveNextBtn", "stationDetailsTop", "stationDetailsBottom", "qtyRequired", "infoModal", "infoTitle", "infoBody", "infoFoot", "siteServicesManageBtn", "stationPhotoPreview", "stationPhotoToggle", "recPhotoToggle", "signOffReview", "signPad", "signName", "signReason", "signOffStatus", "signOffBtn", "actionsModal", "actionsBtn", "actionsCount", "actionsList", "newClientServicesBtn", "siteDocsFolderBtn", "docFolder", "siteLimitsBox", "siteLimitAddBtn", "stationZoneRow", "stationZone", "zoneOptions", "recModalSeen", "recModalNoteReq", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
+        const REQUIRED_IDS = ["loginScreen", "pestGuideBtn", "profileMonth", "headerSite", "siteSightingsList", "siteSightingsCount", "sightFilters", "sightPhotoToggle", "siteContactBox", "siteMonogram", "siteHeroBand", "statNextService", "authLoading", "loginPanel", "loginMessage", "appHeader", "notifBtn", "notifCount", "syncStatusBadge", "syncDot", "syncText", "queueCountBadge", "headerAvatarFallback", "headerName", "updateBanner", "offlineBanner", "appRoot", "siteSelectorSection", "siteFilterSelect", "dueRangeSelect", "siteSearchInput", "siteSortSelect", "cardSizeLabel", "renewalNotice", "siteCardsGrid", "siteLandingDashboard", "siteLandingImageWrap", "siteLandingImage", "siteLandingTitle", "siteLandingAddress", "visitStatusLine", "startServiceLabel", "siteLocation", "siteMapsLink", "adminBtn", "profileAdminLink", "settingsAdminNote", "siteDocsList", "siteDocForm", "sitePortalAccess", "recType", "recTitle", "closeTabJob", "closePaneJob", "closePaneSign", "signBox", "reasonBox", "activityRow", "pestCountRow", "saveNextBtn", "stationDetailsTop", "stationDetailsBottom", "qtyRequired", "infoModal", "infoTitle", "infoBody", "infoFoot", "siteServicesManageBtn", "stationPhotoPreview", "stationPhotoToggle", "recPhotoToggle", "signOffReview", "signPad", "signName", "signReason", "signOffStatus", "signOffBtn", "actionsModal", "actionsBtn", "actionsCount", "actionsList", "newClientServicesBtn", "siteDocsFolderBtn", "docFolder", "stationLimitRow", "stationLimit", "recModalSeen", "recModalNoteReq", "statStations", "statLastVisitPct", "statIssues", "statLastVisitNote", "stationTypeList", "siteServicesList", "siteMapsList", "siteLandingContact", "siteLandingEmail", "siteContractChip", "siteContractDates", "siteContractNotes", "siteAssignedTech", "siteLandingNotes", "recFilterTabs", "recAgeChart", "siteLandingRecsList", "siteStationSearch", "stationTypeTabs", "siteStationList", "visitTypeChart", "siteLandingVisitsList", "activityLogTabs", "siteActivityLog", "visitWorkspace", "stationSearchInput", "scanTypeTabs", "unscannedCount", "unscannedList", "scannedCount", "scannedList", "scanFab", "stationFormContainer", "formTypeDot", "formTitle", "scannedBarcodeBadge", "changeBarcodeBtn", "baitLastChanged", "stationSheetBody", "visitEditNote", "newStationFields", "stationDetailsHeading", "newLocName", "newDeviceType", "stationMapSelect", "activityLevel", "speciesCaught", "pestCount", "repeatPrepBtn", "autoRepeatPrep", "prepUsed", "batchRequired", "batchNumber", "qtyCount", "qtyUnit", "serviceNotes", "loadPastHistoryBtn", "recEditor", "recEditorHead", "recEditorCancel", "recommendationNote", "photoPreviewGrid", "addRecBtn", "recSaveHint", "pastRecommendationsList", "stationHistorySection", "deleteStationBtn", "saveServiceBtn", "settingsModal", "notifDueSelect", "diagSummary", "diagList", "addClientModal", "newClientName", "newClientAddress", "newClientContact", "newClientEmail", "newClientNotes", "newContractNotes", "newAssignedTo", "newClientServicesList", "newClientImageInput", "newClientImagePreview", "newClientImagePlaceholder", "saveNewClientBtn", "editSiteModal", "editName", "editAddress", "editContact", "editEmail", "editNotes", "editContractStart", "editContractEnd", "editContractNotes", "editAssignedTo", "editImageInput", "editImageRemoveBtn", "editImagePreview", "editImagePlaceholder", "servicesModal", "svcQuickAdd", "svcEditorList", "svcTypeOptions", "checkUpdatesBtn", "visitActions", "queueModal", "queueStatusLine", "exportUnsentBtn", "syncTabs", "queueList", "profileModal", "profileAvatarLargeFallback", "profileNameLarge", "profileEmailLarge", "profileRoleBadge", "fullscreenScannerModal", "scannerTitle", "flashToggleBtn", "scannerHelp", "manualScanModal", "manualBarcodeEntryInput", "completeVisitModal", "completeUnscannedNote", "closingVisitType", "completeServicesSection", "completeServicesList", "closingSiteNotes", "recModal", "recModalNumber", "recModalStatusChip", "recModalAge", "recModalStation", "recModalTitle", "recModalMeta", "recModalPhotos", "recModalPhotoNote", "recModalHistory", "recModalStatus", "recModalNote", "recPhotoPreview", "recModalSaveBtn", "visitTypeModal", "visitTypeSite", "visitTypeOptions", "notifModal", "notifScope", "notifList", "choiceModal", "choiceTitle", "choiceMessage", "confirmModal", "confirmTitle", "confirmMessage", "confirmCancelBtn", "confirmOkBtn", "mapModal", "mapSelect", "mapMenu", "mapSearch", "mapShowLabels", "mapEditPins", "mapViewport", "mapStage", "mapImage", "mapPins", "mapHint", "mapEmpty", "mapPopover", "mapSidebar", "mapEditDialog", "mapEditTitle", "mapEditNameRow", "mapEditName", "mapEditImageRow", "mapEditFile", "mapEditPreview", "mapEditPlaceholder", "mapEditSaveBtn", "stationOverviewModal", "ovTypeDot", "ovTitle", "ovSub", "ovFacts", "ovRecs", "ovHistory", "visitModal", "visitModalTitle", "visitModalSub", "visitModalBody", "visitSaveBtn", "barcodeModal", "barcodeModalInfo", "barcodeNewInput", "recNav", "videoRecModal", "videoRecLive", "videoRecReview", "imageModal", "viewerPrev", "zoomStage", "fullImageDisplay", "fullVideoDisplay", "viewerNext", "viewerThumbs", "modalTitleDisplay", "modalTextDisplay", "modalPhotoNote"];
 
         const SERVICE_TYPES = [
             'Internal Rodent Control',
@@ -2308,11 +2322,18 @@
             { key: 'inspection', label: 'Inspection point', color: '#6b7280', test: t => /inspection/.test(t) }
         ];
         const OTHER_STATION_COLOR = { key: 'other', label: 'Other', color: '#f97316' };
-        function stationColor(type) {
+        function stationColorBase(type) {
             const t = String(type || '').toLowerCase();
             // a sighting register or inspection point is never treated as a rodent station
             for (const k of ['sighting', 'inspection']) { const c = STATION_COLORS.find(x => x.key === k); if (c.test(t)) return c; }
             return STATION_COLORS.find(c => c.test(t)) || OTHER_STATION_COLOR;
+        }
+        // the colour an admin picked for the station type (Admin -> Lists) wins; what the type *is* (rodent, flying...) stays
+        function stationColor(type) {
+            const base = stationColorBase(type);
+            const list = typeof appOptions !== 'undefined' && Array.isArray(appOptions) ? appOptions : [];
+            const o = list.find(x => x.kind === 'station_type' && x.color && String(x.label).toLowerCase() === String(type || '').toLowerCase());
+            return o && /^#[0-9a-f]{6}$/i.test(o.color) ? Object.assign({}, base, { color: o.color, label: o.label }) : base;
         }
         function isToxicRodent(type) { return stationColor(type).key === 'toxic'; }
         function typeDot(type, size) {
@@ -3370,12 +3391,15 @@
                 if (!s.clients && clientAdminReadyOrUnknown()) add('client', 'No client login for the Client Portal', isAdmin() ? 'clients' : 'site');
                 if (all && !c.assigned_to) add('tech', 'No technician assigned', 'edit');
                 if (!String(c.Address || '').trim()) add('address', 'No address (the map and directions need one)', 'edit');
-                if (LIMITS_ON && s.limits && s.insectNoZone) add('zone', `${s.insectNoZone} insect station${s.insectNoZone === 1 ? ' has' : 's have'} no critical limits area`, 'site');
+                const ci = contractInfo(c);
+                if (ci && ci.days <= RENEWAL_WARN_DAYS) add('contract', ci.days < 0 ? `Contract ended - ${ci.text}` : `Contract ends soon - ${ci.text}`, 'edit');
+                (s.oldMaps || []).forEach(m => add('mapcheck', `Floor plan "${m.name}" hasn't been checked for over a year (last updated ${fmtDay(String(m.at).slice(0, 10))})`, 'plans'));
+                if (s.limits && s.insectNoZone) add('zone', `${s.insectNoZone} insect station${s.insectNoZone === 1 ? ' has' : 's have'} no critical limit chosen`, 'site');
             });
             return out;
         }
         const clientAdminReadyOrUnknown = () => siteSetup && siteSetup.clientsKnown;
-        const ACTION_KINDS = { plan: ['🗺', 'Floor plans'], pins: ['📍', 'Stations to place'], stations: ['▣', 'No stations'], services: ['📅', 'Services'], client: ['👥', 'Client Portal'], tech: ['🧭', 'Technician'], address: ['🏠', 'Address'], zone: ['🏷', 'Critical limits'] };
+        const ACTION_KINDS = { contract: ['📝', 'Contract'], mapcheck: ['🗺', 'Check plan'], plan: ['🗺', 'Floor plans'], pins: ['📍', 'Stations to place'], stations: ['▣', 'No stations'], services: ['📅', 'Services'], client: ['👥', 'Client Portal'], tech: ['🧭', 'Technician'], address: ['🏠', 'Address'], zone: ['🏷', 'Critical limits'] };
         function renderActions() {
             const list = buildActions();
             const badge = document.getElementById('actionsCount');
@@ -3426,9 +3450,9 @@
             const [docs, breaches, maps, access, limits] = await Promise.all([
                 grab(_supabase.from('site_documents').select('id, client_id, title, category, expires_on')),
                 grab(_supabase.from('site_events').select('id, client_id, title, detail, technician, at').eq('action', 'limit_breach').gte('at', monthStart).order('at', { ascending: false }).limit(100)),
-                grab(_supabase.from('site_maps').select('client_id')),
+                grab(_supabase.from('site_maps').select('*')),
                 grab(_supabase.from('client_access').select('client_id')),
-                grab(_supabase.from('critical_limits').select('client_id'))
+                grab(_supabase.from('site_limits').select('client_id'))
             ]);
             if (docs) notifDocs = docs.filter(d => d.expires_on);
             if (breaches) notifBreaches = breaches;
@@ -3437,7 +3461,7 @@
                 const stations = [];
                 let stationsOk = true;
                 for (let page = 0; page < 20; page++) {
-                    const rows = await grab(_supabase.from('stations').select('client_id, map_id, pin_x, type, zone').range(page * 1000, page * 1000 + 999));
+                    const rows = await grab(_supabase.from('stations').select('client_id, map_id, pin_x, type, limit_id').range(page * 1000, page * 1000 + 999));
                     if (!rows) { stationsOk = false; break; }
                     stations.push(...rows);
                     if (rows.length < 1000) break;
@@ -3453,8 +3477,12 @@
                 if (stationsOk) {
                     const setup = new Map();
                     const g = k => { k = String(k); if (!setup.has(k)) setup.set(k, { stations: 0, unplaced: 0, maps: 0, clients: 0, limits: 0, insectNoZone: 0 }); return setup.get(k); };
-                    maps.forEach(m => g(m.client_id).maps++);
-                    stations.forEach(st => { const o = g(st.client_id); o.stations++; if (!st.map_id || st.pin_x == null) o.unplaced++; if (isInsectType(st.type) && !String(st.zone || '').trim()) o.insectNoZone++; });
+                    maps.filter(m => !m.deleted).forEach(m => {
+                        const o = g(m.client_id); o.maps++;
+                        const at = m.updated_at || m.created_at;
+                        if (at && Date.now() - Date.parse(at) > MAP_REVIEW_DAYS * 86400000) (o.oldMaps = o.oldMaps || []).push({ name: m.name || 'Floor plan', at });
+                    });
+                    stations.forEach(st => { const o = g(st.client_id); o.stations++; if (!st.map_id || st.pin_x == null) o.unplaced++; if (isInsectType(st.type) && !st.limit_id) o.insectNoZone++; });
                     (access || []).forEach(a => g(a.client_id).clients++);
                     (limits || []).forEach(l => g(l.client_id).limits++);
                     setup.clientsKnown = !!access;
@@ -5368,7 +5396,7 @@
                     <span class="font-bold t-strong">${esc(s.type)}</span>
                     <span class="t-muted">${esc(freqLabel(s.frequency))}${s.nextDue ? ' · next due ' + esc(fmtDay(s.nextDue)) : ''}</span>
                 </div>`).join('')
-                : '<div class="t-faint italic">No services added yet. Tap "Add / Edit Services" to choose what this site pays for.</div>';
+                : '';
         }
 
         function dateOrNull(id) { const v = document.getElementById(id).value; return v ? v : null; }
@@ -5445,8 +5473,6 @@
                     if (d.days < 0) missed.push({ c, sv, days: d.days });
                     else if (d.days <= notifDueDays()) dueSoon.push({ c, sv, days: d.days });
                 });
-                const ci = contractInfo(c);
-                if (ci && ci.days <= RENEWAL_WARN_DAYS) contracts.push({ c, ci });
             });
             missed.sort((a, b) => a.days - b.days);
             dueSoon.sort((a, b) => a.days - b.days);
@@ -5457,7 +5483,7 @@
             const docsDue = docsNeedingAttention(notifDocs || adminData.docs).filter(d => inScope(d.client_id)).sort((a, b) => (a.expires_on > b.expires_on ? 1 : -1));
             // one line per site and limit: the newest breach logged this month
             const seenB = new Set();
-            const breaches = (LIMITS_ON ? notifBreaches : []).filter(b => inScope(b.client_id) && !seenB.has(b.client_id + '|' + b.title) && seenB.add(b.client_id + '|' + b.title));
+            const breaches = notifBreaches.filter(b => inScope(b.client_id) && !seenB.has(b.client_id + '|' + b.title) && seenB.add(b.client_id + '|' + b.title));
             const unplaced = [];   // stations not placed on a plan are listed under Needs action
             // sightings actioned on this device leave the list straight away
             const doneHere = new Set(queueItems.filter(i => i.kind === 'table_upsert' && i.data.table === 'pest_sightings' && i.data.row.status === 'actioned' && !i.cancelled).map(i => i.data.row.id));
@@ -5517,7 +5543,6 @@
                     <button type="button" data-id="${esc(o.cid)}" onclick="closeNotifModal(); startSiteVisit(this.dataset.id).then(() => openMapModal())" class="row-item clickable w-full text-left p-3 flex justify-between items-center gap-3">
                         <div class="min-w-0"><div class="font-bold t-strong truncate">${esc(siteById(o.cid).Name || 'Unnamed site')}</div><div class="t-muted">${o.n} of ${o.total} station${o.total === 1 ? '' : 's'} not placed on a floor plan yet</div></div>
                         <span class="chip chip-blue shrink-0">${o.n} to place</span></button>`)),
-                section('Contracts to renegotiate', '#7c3aed', n.contracts.map(x => row(x.c, x.ci.text, x.ci.days < 0 ? 'chip-red' : 'chip-purple', x.ci.days < 0 ? 'Expired' : `${x.ci.days}d left`)))
             ].join('');
             list.innerHTML = html || '<div class="row-item p-4 t-faint italic text-center">Nothing needs attention right now.</div>';
         }
@@ -5817,7 +5842,6 @@
 
         function openAddClientModal() {
             document.getElementById('newClientServicesBtn').classList.toggle('hidden', !isAdmin());
-            document.getElementById('newClientServicesNote').classList.toggle('hidden', isAdmin());
             newClientImageBlob = null;
             newSiteServices = [];
             renderNewClientServices();
@@ -6570,7 +6594,7 @@
         // ---------- Site sync progress: each part of the site with its own bar (shown in Sync Data) ----------
         const SYNC_LABELS = { upload: 'Sending anything waiting on this device', details: 'Site details', records: 'Service records', recommendations: 'Recommendations',
             stations: 'Stations', site_maps: 'Floor plans', visits: 'Visits', recommendation_updates: 'Recommendation updates', site_events: 'Activity log',
-            critical_limits: 'Critical limits', pest_sightings: 'Pest sightings', save: 'Saving to this device', screen: 'Updating the screen' };
+            site_limits: 'Critical limits', pest_sightings: 'Pest sightings', save: 'Saving to this device', screen: 'Updating the screen' };
         let siteSyncTrack = null;   // { clientId, siteName, items: [{ key, label, state, pct, note }], running, startedAt, endedAt, error }
         function sstStart(clientId, siteName, keys) {
             siteSyncTrack = { clientId: String(clientId), siteName: siteName || '', running: true, startedAt: Date.now(), endedAt: 0, error: null,
@@ -6814,10 +6838,10 @@
         let recTableMissing = false;    // the database has no recommendations table yet
         let splitTablesMissing = false; // the database doesn't have the stations / plans / visits tables yet
         let siteStations = new Map();   // barcode -> row in the stations table
-        const SITE_TABLES = ['stations', 'site_maps', 'visits', 'recommendation_updates', 'site_events', 'critical_limits', 'pest_sightings'].filter(t => LIMITS_ON || t !== 'critical_limits');
-        const OPTIONAL_SITE_TABLES = ['critical_limits', 'pest_sightings'];   // added by pestis_client_portal.sql: missing just means none yet
+        const SITE_TABLES = ['stations', 'site_maps', 'visits', 'recommendation_updates', 'site_events', 'site_limits', 'pest_sightings'];
+        const OPTIONAL_SITE_TABLES = ['site_limits', 'pest_sightings'];   // added by pestis_client_portal.sql: missing just means none yet
         let siteSightings = [];         // pest sightings the client reported in the Client Portal
-        let siteLimits = [];            // critical limits: [{ id, zone, species ('*' = any pest), max_per_month, notes }]
+        let siteLimits = [];            // critical limits: [{ id, name, rules: [{ species, max }] }]
 
         // A site table as this device sees it: the saved copy plus changes still waiting to upload
         function effectiveTable(cache, name, clientId) {
@@ -6846,7 +6870,7 @@
             const t = name => effectiveTable(cache, name, clientId);
             const base = (barcode, at, payload, r, extra) => Object.assign({ barcode_id: barcode, created_at: at, payload: payload, _fromTable: true, _pending: !!r._pending, _blobKeys: r._blobKeys || undefined }, extra || {});
             t('site_maps').forEach(r => out.push(base('SITE_MAP', r.created_at || r.updated_at, {
-                clientRef: r.id, mapId: r.id, name: r.name, w: r.width, h: r.height, order: r.sort, drawing: r.drawing || null,
+                clientRef: r.id, mapId: r.id, name: r.name, w: r.width, h: r.height, order: r.sort, drawing: r.drawing || null, editedAt: r.updated_at || r.created_at || null,
                 photos: r.image_path ? [r.image_path] : [], servicedAt: r.created_at || r.updated_at
             }, r, { _noEvent: true })));
             t('stations').forEach(r => { if (r.map_id) out.push(base('MAP_PIN', r.updated_at || r.created_at, {
@@ -6861,7 +6885,7 @@
             t('recommendation_updates').forEach(r => out.push(base(REC_UPDATE_ID, r.created_at || r.at, {
                 clientRef: r.id, recRef: r.rec_id, status: r.status, note: r.note || '', photos: r.photos || [], technician: r.technician, servicedAt: r.at
             }, r)));
-            t('site_events').filter(r => LIMITS_ON || !/^limit/.test(r.action || '')).forEach(r => out.push(base('SITE_CHANGE', r.created_at || r.at, {
+            t('site_events').forEach(r => out.push(base('SITE_CHANGE', r.created_at || r.at, {
                 clientRef: r.id, action: r.action, title: r.title, detail: r.detail, station: r.station, technician: r.technician, servicedAt: r.at
             }, r)));
             return out;
@@ -6927,7 +6951,7 @@
             rows.push(...tableLogs);
             const stationRows = effectiveTable(saved, 'stations', clientId);
             siteSightings = effectiveTable(saved, 'pest_sightings', clientId).sort((a, b) => sightRank(a) - sightRank(b) || String(b.seen_at || '').localeCompare(String(a.seen_at || '')));
-            siteLimits = (LIMITS_ON ? effectiveTable(saved, 'critical_limits', clientId) : []).sort((a, b) => String(a.zone).localeCompare(String(b.zone), undefined, { sensitivity: 'base' }) || String(a.species).localeCompare(String(b.species)));
+            siteLimits = effectiveTable(saved, 'site_limits', clientId).filter(l => !l.deleted).sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }));
 
             const refs = new Set(rows.map(r => r.payload && r.payload.clientRef).filter(Boolean));
             queueItems
@@ -7014,6 +7038,7 @@
                         local: slot ? slot.local : prev.local || null,
                         w: p.w || prev.w || 0, h: p.h || prev.h || 0,
                         drawing: p.drawing !== undefined ? p.drawing : (prev.drawing || null),
+                        editedAt: p.editedAt || prev.editedAt || null,
                         order: p.order != null ? p.order : (prev.order != null ? prev.order : recTime(r)),
                         pending: !!r._pending
                     });
@@ -7532,16 +7557,22 @@
 
 
         // ===================================================================
-        //  CRITICAL LIMITS: how many of a pest a zone may have in a month.
-        //  Set here or by the client in the Client Portal. Over the limit: the technician is asked to
-        //  double-check, and the visit report, notifications and the Client Portal show an alert.
+        //  CRITICAL LIMITS (flying insect control and crawling insect monitoring).
+        //  An admin gives each site its own limits in Admin: a name, and pests each with how many captures a month are allowed.
+        //  Insect stations are linked to a limit by its id, so renaming a limit never unlinks anything.
+        //  Over a limit: the technician must add a recommendation, the breach is logged (the client is alerted in the
+        //  Client Portal) and it is highlighted on the service report.
         // ===================================================================
-        const ANY_PEST = '*';
-        const zoneKey = z => String(z || '').trim().toLowerCase().replace(/\s+/g, ' ');
         const pestKey = p => String(p || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/ies$/, 'y').replace(/([^s])s$/, '$1');
-        const limitMatches = (l, species) => l.species === ANY_PEST || pestKey(l.species) === pestKey(species);
-        const limitPest = l => !l.species || l.species === ANY_PEST ? 'Any pest' : l.species;
-        let limitEditing = null;     // null | 'new' | limit id
+        function limitRules(l) {
+            let r = l && l.rules;
+            if (typeof r === 'string') { try { r = JSON.parse(r); } catch (e) { r = []; } }
+            return (Array.isArray(r) ? r : []).filter(x => x && String(x.species || '').trim() && Number(x.max) >= 0).map(x => ({ species: String(x.species).trim(), max: Number(x.max) }));
+        }
+        const limitById = id => id ? siteLimits.find(l => String(l.id) === String(id)) || null : null;
+        const stationLimitId = bc => { const st = siteStations.get(bc); return (st && st.limit_id) || ''; };
+        const stationLimitName = bc => { const l = limitById(stationLimitId(bc)); return l ? l.name : ''; };
+        const limitLabel = x => `${x.limit.name} · ${x.rule.species}`;
         function monthBounds(t) { const d = new Date(t); return [new Date(d.getFullYear(), d.getMonth(), 1).getTime(), new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime()]; }
         const monthName = t => new Date(t).toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
         const pestN = (species, count) => species && species !== NONE_SPECIES ? (parseFloat(count) > 0 ? parseFloat(count) : 1) : 0;
@@ -7551,33 +7582,31 @@
             siteDevices.forEach(d => (d.history || []).forEach(h => { const n = pestN(h.species, h.count); if (n) out.push({ barcode: d.barcode_id, at: h.at, species: h.species, n, thisVisit: !!h.thisVisit }); }));
             return out;
         }
-        const stationZoneOf = bc => { const st = siteStations.get(bc); return (st && st.zone) || ''; };
-        // a limit's total for the month containing t (records up to upTo)
-        function limitTotal(l, t, upTo, recs, zoneOf) {
+        // one pest of one limit, for the month containing t (records up to upTo)
+        function limitTotal(l, rule, t, upTo, recs, limitOf) {
             const [a, b] = monthBounds(t == null ? Date.now() : t);
-            const zf = zoneOf || stationZoneOf;
-            const list = (recs || sitePestRecords()).filter(r => r.at >= a && r.at < b && (upTo == null || r.at <= upTo) && zoneKey(zf(r.barcode)) === zoneKey(l.zone) && limitMatches(l, r.species));
-            return { limit: l, total: list.reduce((n, r) => n + r.n, 0), records: list, month: a };
+            const lf = limitOf || stationLimitId;
+            const list = (recs || sitePestRecords()).filter(r => r.at >= a && r.at < b && (upTo == null || r.at <= upTo) && String(lf(r.barcode)) === String(l.id) && pestKey(r.species) === pestKey(rule.species));
+            return { limit: l, rule, total: list.reduce((n, r) => n + r.n, 0), records: list, month: a };
         }
-        // limits a station record would take over the limit (its earlier record on this visit is replaced)
-        function limitsHitBy(barcode, zone, species, count) {
-            const n = pestN(species, count);
-            if (!n || !zone || !siteLimits.length) return [];
+        const allLimitTotals = (t, upTo, recs, limitOf) => siteLimits.flatMap(l => limitRules(l).map(rule => limitTotal(l, rule, t, upTo, recs, limitOf)));
+        // the limits a station record would take over (its earlier record on this visit is replaced)
+        function limitsHitBy(barcode, limitId, species, count) {
+            const n = pestN(species, count), l = limitById(limitId);
+            if (!n || !l) return [];
             const now = Date.now();
             const recs = sitePestRecords().filter(r => !(r.barcode === barcode && r.thisVisit)).concat([{ barcode, at: now, species, n, thisVisit: true }]);
-            const zoneOf = bc => bc === barcode ? zone : stationZoneOf(bc);
-            return siteLimits.filter(l => zoneKey(l.zone) === zoneKey(zone) && limitMatches(l, species))
-                .map(l => limitTotal(l, now, null, recs, zoneOf)).filter(x => x.total > Number(x.limit.max_per_month));
+            const limitOf = bc => bc === barcode ? limitId : stationLimitId(bc);
+            return limitRules(l).filter(rule => pestKey(rule.species) === pestKey(species)).map(rule => limitTotal(l, rule, now, null, recs, limitOf)).filter(x => x.total > x.rule.max);
         }
-        function limitBreachesNow() { const recs = sitePestRecords(); return siteLimits.map(l => limitTotal(l, null, null, recs)).filter(x => x.total > Number(x.limit.max_per_month)); }
+        function limitBreachesNow() { return allLimitTotals(null, null, sitePestRecords()).filter(x => x.total > x.rule.max); }
         // limits a visit went over: that month's records up to the end of the visit, with this visit adding to it
         function visitLimitBreaches(v) {
             if (!siteLimits.length || !v) return [];
             const endAt = v.inProgress ? Date.now() : Date.parse(v.endedAt || v.date);
             const end = (isNaN(endAt) ? Date.now() : endAt) + 5 * 60000;
             const mine = new Set((v.entries || []).filter(e => !e.recOnly && pestN(e.species, e.count)).map(e => e.barcode + '@' + e.at));
-            const recs = sitePestRecords();
-            return siteLimits.map(l => limitTotal(l, end - 5 * 60000, end, recs)).filter(x => x.total > Number(x.limit.max_per_month) && x.records.some(r => mine.has(r.barcode + '@' + r.at)));
+            return allLimitTotals(end - 5 * 60000, end, sitePestRecords()).filter(x => x.total > x.rule.max && x.records.some(r => mine.has(r.barcode + '@' + r.at)));
         }
         function breachStations(x) {
             const by = new Map();
@@ -7585,161 +7614,11 @@
             return Array.from(by.values()).sort((a, b) => b.n - a.n);
         }
         const limitAlertHtml = (list, title) => list.length ? `<div class="limit-alert space-y-2" role="alert"><div class="limit-alert-head">⚠ ${esc(title)}</div>${list.map(x => {
-            const max = Number(x.limit.max_per_month), over = x.total - max;
-            return `<div class="limit-alert-row"><div class="flex flex-wrap items-baseline justify-between gap-2"><b class="text-sm">${esc(x.limit.zone)} · ${esc(limitPest(x.limit))}</b><span class="chip chip-red">${x.total} of ${esc(max)} allowed${max ? ` · ${Math.round(x.total / max * 100)}%` : ''}</span></div>
+            const max = x.rule.max, over = x.total - max;
+            return `<div class="limit-alert-row"><div class="flex flex-wrap items-baseline justify-between gap-2"><b class="text-sm">${esc(limitLabel(x))}</b><span class="chip chip-red">${x.total} of ${esc(max)} allowed${max ? ` · ${Math.round(x.total / max * 100)}%` : ''}</span></div>
                 <div class="text-[11px] mt-0.5">${over} over the monthly limit in ${esc(monthName(x.month))}. Caught at: ${breachStations(x).map(b => `${esc(b.name)} (${b.n})`).join(', ')}</div></div>`;
         }).join('')}</div>` : '';
-
-        function renderSiteLimits() {
-            const box = document.getElementById('siteLimitsBox');
-            const card = document.getElementById('siteLimitsCard');
-            if (card) card.classList.toggle('hidden', !LIMITS_ON);
-            if (!box || !LIMITS_ON) return;
-            const canEdit = isOnline && !splitTablesMissing && isAdmin();
-            document.getElementById('siteLimitAddBtn').classList.toggle('hidden', !canEdit || limitEditing === 'new');
-            const recs = sitePestRecords();
-            const editing = limitEditing && limitEditing !== 'new' ? siteLimits.find(x => x.id === limitEditing) : null;
-            const sorted = siteLimits.slice().sort((a, b) => String(a.zone).localeCompare(String(b.zone)) || (a.species === ANY_PEST ? -1 : b.species === ANY_PEST ? 1 : String(a.species).localeCompare(String(b.species))));
-            const row = l => {
-                const x = limitTotal(l, null, null, recs), max = Number(l.max_per_month);
-                const over = x.total > max, near = !over && max > 0 && x.total >= max * 0.8;
-                if (editing && l.zone === editing.zone) return l.id === editing.id ? limitFormHtml(l) : '';   // the whole area is in the form
-                return `<div class="row-item p-2.5 space-y-1" ${over ? 'style="border-color:#dc2626;"' : ''}>
-                    <div class="flex justify-between items-start gap-2"><div class="min-w-0"><div class="font-bold t-strong">${esc(l.zone)} · ${esc(limitPest(l))}</div>
-                    <div class="t-faint text-[11px]">Limit ${esc(max)} a month · ${x.total} so far in ${esc(monthName(Date.now()))}${l.notes ? ' · ' + esc(l.notes) : ''}${l.updated_by ? ' · set by ' + esc(l.updated_by) : ''}</div></div>
-                    <span class="chip ${over ? 'chip-red' : near ? 'chip-amber' : 'chip-green'} shrink-0">${over ? 'Over limit' : near ? 'Near limit' : 'Within'}</span></div>
-                    ${canEdit ? `<div class="flex gap-3 text-[11px]"><button type="button" class="link-btn" data-id="${esc(l.id)}" onclick="editSiteLimit(this.dataset.id)">Edit</button><button type="button" class="font-bold" style="color:#ef4444;" data-id="${esc(l.id)}" onclick="deleteSiteLimit(this.dataset.id)">Remove</button></div>` : ''}
-                </div>`;
-            };
-            // areas with limits but no stations (e.g. renamed before stations followed): link them to the stations' area
-            const stationAreas = new Map(); siteStations.forEach(st => { const z = String(st.zone || '').trim(); if (z) stationAreas.set(zoneKey(z), z); });
-            const limitAreas = new Map(); siteLimits.forEach(l => limitAreas.set(zoneKey(l.zone), l.zone));
-            const unlinkedStations = Array.from(stationAreas.entries()).filter(([k]) => !limitAreas.has(k)).map(([, z]) => z);
-            const orphans = Array.from(limitAreas.entries()).filter(([k]) => !stationAreas.has(k)).map(([, z]) => z);
-            const linkHtml = canEdit && orphans.length ? orphans.map(z => `<div class="inset p-2.5 space-y-1.5" style="border-color:#d97706;"><div class="font-bold" style="color:#d97706;">⚠ No stations are in "${esc(z)}"</div>
-                ${unlinkedStations.length ? `<div class="flex flex-wrap items-center gap-1.5"><span class="t-muted">Its stations are in:</span><select class="field !w-auto !py-1 !text-[11px]" data-area="${esc(z)}" onchange="if (this.value) linkLimitArea(this.value, this.dataset.area)"><option value="">Pick their area...</option>${unlinkedStations.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('')}</select></div>` : '<div class="t-faint">Give its stations this area in their station details.</div>'}</div>`).join('') : '';
-            box.innerHTML = linkHtml + (limitEditing === 'new' ? limitFormHtml(null) : '') + (sorted.map(row).join('') ||
-                (limitEditing ? '' : `<span class="t-faint italic">No critical limits yet.${isAdmin() ? ' Give insect stations a critical limits area, then set how many of a pest each area may have in a month.' : ' An admin (or the client) sets them.'}</span>`)) +
-                (!isAdmin() && siteLimits.length ? '<div class="t-faint text-[11px]">Only an admin can change critical limits.</div>' : '') +
-                (!isOnline && siteLimits.length ? '<div class="t-faint text-[11px]">Limits can be changed when you\'re online.</div>' : '');
-        }
-        // one row of the limits form: a pest and its own monthly limit
-        function limitPestRowHtml(l, first) {
-            return `<div class="lim-row flex gap-2 items-center" data-id="${l && l.id ? esc(l.id) : ''}">
-                <input ${first ? 'id="limPest"' : ''} list="limPestList" maxlength="80" class="field !py-2 !text-xs lim-pest flex-1 min-w-0" aria-label="Pest" value="${esc(l && l.species !== ANY_PEST ? l.species : '')}" placeholder="Any pest">
-                <input ${first ? 'id="limMax"' : ''} type="number" min="0" step="1" class="field !py-2 !text-xs lim-max !w-24 shrink-0" aria-label="Most a month" value="${l ? esc(l.max_per_month) : ''}" placeholder="e.g. 5">
-                <button type="button" class="t-faint font-black text-base px-1.5 shrink-0" title="Remove this pest" aria-label="Remove this pest" onclick="removeLimitRow(this)">×</button>
-            </div>`;
-        }
-        function limitFormHtml(l) {
-            const zones = siteZones(), pests = optionLabels('species').filter(x => x !== NONE_SPECIES);
-            const area = l ? [l, ...siteLimits.filter(x => x.zone === l.zone && x.id !== l.id)] : [null];
-            return `<form class="inset p-3 space-y-2" onsubmit="event.preventDefault(); saveSiteLimit();">
-                <div class="grid grid-cols-2 gap-2">
-                    <div><label class="lbl" for="limZone">Critical limits area</label><input id="limZone" list="limZoneList" required maxlength="60" class="field !py-2 !text-xs" value="${esc(l ? l.zone : '')}" placeholder="e.g. Dispatch"><datalist id="limZoneList">${zones.map(z => `<option value="${esc(z)}"></option>`).join('')}</datalist></div>
-                    <div><label class="lbl" for="limNotes">Note</label><input id="limNotes" maxlength="200" class="field !py-2 !text-xs" value="${esc(l && l.notes ? l.notes : '')}"></div>
-                </div>
-                <div class="flex gap-2 text-[10px] font-bold uppercase tracking-wider t-faint"><span class="flex-1">Pest <span class="normal-case tracking-normal font-normal">(blank = any pest)</span></span><span class="w-24 shrink-0">Most a month</span><span class="w-6 shrink-0"></span></div>
-                <datalist id="limPestList">${pests.map(z => `<option value="${esc(z)}"></option>`).join('')}</datalist>
-                <div id="limRows" class="space-y-2">${area.map((x, i) => limitPestRowHtml(x, i === 0)).join('')}</div>
-                <button type="button" class="link-btn !text-[11px]" onclick="addLimitRow()">+ Add another pest</button>
-                ${zones.length ? '' : '<div class="t-faint text-[11px]">No areas yet: give insect stations a critical limits area in their station details.</div>'}
-                <div class="flex justify-end gap-2"><button type="button" class="btn btn-secondary !py-1.5" onclick="editSiteLimit(null)">Cancel</button><button type="submit" id="limSaveBtn" class="btn btn-primary !py-1.5">Save limits</button></div>
-            </form>`;
-        }
-        function addLimitRow() {
-            const box = document.getElementById('limRows');
-            box.insertAdjacentHTML('beforeend', limitPestRowHtml(null, false));
-            box.lastElementChild.querySelector('.lim-pest').focus();
-        }
-        function removeLimitRow(btn) {
-            const box = document.getElementById('limRows');
-            if (box.children.length <= 1) { btn.closest('.lim-row').querySelectorAll('input').forEach(i => { i.value = ''; }); return; }
-            btn.closest('.lim-row').remove();
-        }
-        // the pests in the form: [{ id, species, max }], or an error message
-        function readLimitRows() {
-            const rows = [];
-            const seen = new Set();
-            for (const r of document.querySelectorAll('#limRows .lim-row')) {
-                const pest = r.querySelector('.lim-pest').value.trim(), maxRaw = r.querySelector('.lim-max').value.trim();
-                if (!pest && maxRaw === '' && document.querySelectorAll('#limRows .lim-row').length > 1) continue;   // an empty extra row
-                const species = !pest || /^any( pest)?$/i.test(pest) ? ANY_PEST : pest;
-                const max = parseFloat(maxRaw);
-                if (maxRaw === '' || isNaN(max) || max < 0) return { error: `Enter the most allowed a month for ${species === ANY_PEST ? 'Any pest' : species}.` };
-                const k = species === ANY_PEST ? '*' : pestKey(species);
-                if (seen.has(k)) return { error: `${species === ANY_PEST ? 'Any pest' : species} is listed twice.` };
-                seen.add(k);
-                rows.push({ id: r.dataset.id || null, species, max });
-            }
-            return rows.length ? { rows } : { error: 'Add at least one pest and its monthly limit.' };
-        }
-        // stations in one area name, limits in another: move the stations into the limits' area (one area again)
-        async function linkLimitArea(stationArea, limitArea) {
-            const c = selectedClient;
-            if (!c || !confirm(`Move the stations in "${stationArea}" into "${limitArea}"?\n\nThey then count towards ${limitArea}'s critical limits, here and in the Client Portal.`)) { renderSiteLimits(); return; }
-            const { error } = await _supabase.rpc('portal_rename_zone', { p_client_id: String(c.id), p_old: stationArea, p_new: limitArea });
-            if (error) { alert('Could not link the area: ' + (portalMissing(error) ? PORTAL_SQL_NOTE : error.message)); renderSiteLimits(); return; }
-            await withSiteCache(c.id, cache => { if (!cache || !cache.tables) return false; (cache.tables.stations || []).forEach(r => { if (zoneKey(r.zone) === zoneKey(stationArea)) r.zone = limitArea; }); });
-            await queueSiteChange({ action: 'limit', title: `Critical limits area linked: ${stationArea} → ${limitArea}`, detail: '' });
-            await reloadSiteLimits();
-        }
-        function editSiteLimit(id) { if (id && !isAdmin()) return; limitEditing = id; renderSiteLimits(); const z = document.getElementById('limZone'); if (z && id === 'new') z.focus(); }
-        async function reloadSiteLimits() {
-            const c = selectedClient;
-            if (!c) return;
-            const { data, error } = await _supabase.from('critical_limits').select('*').eq('client_id', String(c.id));
-            if (error) throw error;
-            await withSiteCache(c.id, cache => { if (!cache) return false; cache.tables = Object.assign({}, cache.tables, { critical_limits: data || [] }); });
-            await refreshSiteStateFromCache();
-        }
-        async function saveSiteLimit() {
-            const c = selectedClient;
-            if (!c) return;
-            const zone = document.getElementById('limZone').value.trim(), notes = document.getElementById('limNotes').value.trim();
-            if (!zone) { alert('Enter the critical limits area.'); return; }
-            const got = readLimitRows();
-            if (got.error) { alert(got.error); return; }
-            const ed = limitEditing !== 'new' ? siteLimits.find(x => x.id === limitEditing) : null;
-            const before = ed ? siteLimits.filter(x => x.zone === ed.zone) : [];
-            const keep = new Set(got.rows.map(r => r.id).filter(Boolean));
-            const btn = document.getElementById('limSaveBtn');
-            btn.disabled = true;
-            try {
-                // a new name for the area: its stations move with it (one area, not an old and a new one)
-                if (ed && ed.zone !== zone) {
-                    const { error } = await _supabase.rpc('portal_rename_zone', { p_client_id: String(c.id), p_old: ed.zone, p_new: zone });
-                    if (error) throw error;
-                    const k = z => String(z || '').trim().toLowerCase();
-                    await withSiteCache(c.id, cache => {
-                        if (!cache || !cache.tables) return false;
-                        (cache.tables.stations || []).forEach(r => { if (k(r.zone) === k(ed.zone)) r.zone = zone; });
-                    });
-                }
-                for (const l of before.filter(x => !keep.has(x.id))) {
-                    const { error } = await _supabase.rpc('portal_delete_limit', { p_id: l.id });
-                    if (error) throw error;
-                }
-                for (const r of got.rows) {
-                    const { error } = await _supabase.rpc('portal_save_limit', { p_client_id: String(c.id), p_id: r.id, p_zone: zone, p_species: r.species, p_max: r.max, p_notes: notes || null });
-                    if (error) throw error;
-                }
-                await queueSiteChange({ action: 'limit', title: `Critical limits ${ed ? 'changed' : 'added'}: ${zone}`, detail: got.rows.map(r => `${r.species === ANY_PEST ? 'Any pest' : r.species} ${r.max} a month`).join(' · ') });
-                limitEditing = null;
-                await reloadSiteLimits();
-            } catch (e) {
-                alert('Could not save the limit: ' + (portalMissing(e) ? PORTAL_SQL_NOTE : (e.message || e)));
-                btn.disabled = false;
-            }
-        }
-        async function deleteSiteLimit(id) {
-            const l = siteLimits.find(x => x.id === id);
-            if (!l || !confirm(`Remove the limit for ${l.zone} · ${limitPest(l)}?`)) return;
-            const { error } = await _supabase.rpc('portal_delete_limit', { p_id: id });
-            if (error) { alert('Could not remove: ' + (portalMissing(error) ? PORTAL_SQL_NOTE : error.message)); return; }
-            await queueSiteChange({ action: 'limit', title: `Critical limit removed: ${l.zone} · ${limitPest(l)}`, detail: '' });
-            await reloadSiteLimits();
-        }
+        function renderSiteLimits() {}   // limits are set up in Admin; the site page has nothing to draw
 
         function rerenderOpenSite() {
             refreshLandingHeader();
@@ -7861,7 +7740,7 @@
             hideStationForm();
             ['mapModal', 'mapEditDialog', 'stationOverviewModal', 'visitModal', 'barcodeModal'].forEach(id => document.getElementById(id).classList.add('hidden'));
             mapPlacing = null; mapFocus = null; currentMapId = null; ovBarcode = null; openVisitIndex = null; visitEditing = false; scanTypeFilter = new Set();
-            siteMaps = []; sitePins = new Map(); siteEvents = []; currentVisitEntries = []; lastVisitStats = null; barcodeAliases = new Map(); siteLimits = []; limitEditing = null;
+            siteMaps = []; sitePins = new Map(); siteEvents = []; currentVisitEntries = []; lastVisitStats = null; barcodeAliases = new Map(); siteLimits = [];
             stationTypeFilter = 'all'; activityFilter = 'all';
             const ss = document.getElementById('siteStationSearch');
             if (ss) ss.value = '';
@@ -8311,17 +8190,25 @@
                 </div>`;
         }
 
+        let visitTech = '';
+        function setVisitTech(v) { visitTech = v; renderLandingVisitsOnly(); }
         function renderLandingVisitsOnly() {
             const visitsContainer = document.getElementById('siteLandingVisitsList');
             if (!visitsContainer) return;
+            // filter by the technician who did the service
+            const techs = Array.from(new Set(sitePastVisits.map(v => v.technician || 'Technician not recorded'))).sort((a, b) => a.localeCompare(b));
+            if (visitTech && !techs.includes(visitTech)) visitTech = '';
+            const fbox = document.getElementById('visitTechFilter');
+            if (fbox) fbox.innerHTML = techs.length > 1 ? `<select class="field !w-auto !py-1.5 !text-xs max-w-[14rem]" aria-label="Technician" onchange="setVisitTech(this.value)"><option value="">All technicians (${sitePastVisits.length})</option>${techs.map(t => `<option value="${esc(t)}" ${visitTech === t ? 'selected' : ''}>${esc(t)} (${sitePastVisits.filter(v => (v.technician || 'Technician not recorded') === t).length})</option>`).join('')}</select>` : '';
+            const shownVisits = sitePastVisits.map((v, index) => ({ v, index })).filter(x => !visitTech || (x.v.technician || 'Technician not recorded') === visitTech);
             if (sitePastVisits.length === 0) {
                 visitsContainer.innerHTML = '<span class="t-faint italic">No past visit history recorded yet.</span>';
             } else {
                 const monthOf = v => new Date(v.date).toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
                 const perMonth = new Map();
-                sitePastVisits.forEach(v => { const k = monthOf(v); perMonth.set(k, (perMonth.get(k) || 0) + 1); });
+                shownVisits.forEach(({ v }) => { const k = monthOf(v); perMonth.set(k, (perMonth.get(k) || 0) + 1); });
                 let lastMonth = '';
-                visitsContainer.innerHTML = sitePastVisits.map((v, index) => {
+                visitsContainer.innerHTML = shownVisits.map(({ v, index }) => {
                     const dt = fmtDateTimeLong(v.date);
                     const n = new Set(v.entries.filter(e => !e.recOnly).map(e => e.barcode)).size;
                     const mk = monthOf(v), shut = foldShut.has('v:' + mk);
@@ -8482,9 +8369,7 @@
                             <div class="nf-img" data-st-photo="${esc(d.barcode_id)}">${(siteStations.get(d.barcode_id) || {}).photo_path ? '' : `<span class="nf-ph">📍</span>`}</div>
                             <div class="nf-shade"></div>
                         </div>
-                        ${nfMetaHtml({ title: esc(d.locationName), id: esc(d.barcode_id), dot: col, sub: esc(d.deviceType), subColor: col,
-                            chips: openN ? `<span class="chip chip-orange">${openN} open</span>` : '',
-                            foot: [last ? `Serviced ${esc(nfDate(last.at))} · ${esc(last.activity === 'Caught' ? 'caught' : last.activity === 'None' ? 'no activity' : last.activity.toLowerCase())}` : 'Not serviced yet', plan ? `📍 ${esc(plan)}` : ''].filter(Boolean).join(' · ') })}
+                        ${nfMetaHtml({ title: esc(d.locationName), dot: col, sub: last ? `Last scanned ${esc(nfDate(last.at))}` : 'Not scanned yet' })}
                     </div>`;
                 }).join('');
             return list.map(d => {
@@ -8910,7 +8795,7 @@
             y = 42;
             const breaches = visitLimitBreaches(v);
             if (breaches.length) {
-                const bl = breaches.map(x => doc.splitTextToSize(`${x.limit.zone} - ${limitPest(x.limit)}: ${x.total} recorded in ${monthName(x.month)}, limit ${x.limit.max_per_month} a month (${x.total - Number(x.limit.max_per_month)} over). Caught at: ${breachStations(x).map(b => `${b.name} (${b.n})`).join(', ')}`, 172));
+                const bl = breaches.map(x => doc.splitTextToSize(`${x.limit.name} - ${x.rule.species}: ${x.total} caught in ${monthName(x.month)}, limit ${x.rule.max} a month (${x.total - x.rule.max} over). Caught at: ${breachStations(x).map(b => `${b.name} (${b.n})`).join(', ')}`, 172));
                 const h = 10 + bl.reduce((n, l) => n + l.length * 5, 0);
                 doc.setFillColor(254, 226, 226);
                 doc.setDrawColor(220, 38, 38);
@@ -9456,7 +9341,7 @@
                 fact('Last serviced', last ? `${esc(fmtDateTimeLong(last.at).date)}<div class="t-faint font-normal text-[11px]">${esc(last.technician || '')}</div>` : '<span class="t-faint font-normal">Never</span>'),
                 fact('Last activity', last ? esc(last.activity) + (last.species && last.species !== NONE_SPECIES ? ` · ${esc(last.species)}` : '') : '-'),
                 fact('Open recommendations', String(openRecCount(d)))
-            ].concat(LIMITS_ON ? [fact('Critical limits', stationZoneOf(barcode) ? esc(stationZoneOf(barcode)) : '<span class="t-faint font-normal">None</span>')] : []);
+            ].concat(isInsectType(d.deviceType) || stationLimitName(barcode) ? [fact('Critical limit', stationLimitName(barcode) ? esc(stationLimitName(barcode)) : '<span class="t-faint font-normal">None</span>')] : []);
             if (isToxicRodent(d.deviceType)) facts.push(`<div class="col-span-2">${fact('Bait last changed', esc(baitLastChangedText(d)))}</div>`);
             const hasPhoto = !!(siteStations.get(barcode) || {}).photo_path;
             facts.unshift(`<div class="col-span-2 inset p-2.5 flex items-center gap-3 flex-wrap"><div id="ovPhotoBox" class="station-photo-box station-photo-lg"></div>
@@ -9578,7 +9463,7 @@
             if (scannedBarcodesThisVisit.has(from)) { scannedBarcodesThisVisit.delete(from); scannedBarcodesThisVisit.add(to); }
             if (currentBarcode === from) {
                 currentBarcode = to;
-                document.getElementById('scannedBarcodeBadge').textContent = `Barcode: ${to}`;
+                document.getElementById('scannedBarcodeBadge').textContent = to;
             }
             await refreshSiteStateFromCache();
             if (!document.getElementById('stationOverviewModal').classList.contains('hidden') && ovBarcode === from) openStationOverview(to);
@@ -11378,7 +11263,7 @@
         }
         // address search (Photon, built on OpenStreetMap - made for search-as-you-type)
         async function pmLookup(q, limit) {
-            const near = pm ? `&lat=${pm.lat.toFixed(3)}&lon=${pm.lon.toFixed(3)}` : '';
+            const near = pm ? `&lat=${pm.lat.toFixed(3)}&lon=${pm.lon.toFixed(3)}` : '&lat=-41.0&lon=174.0';   // otherwise New Zealand first
             try {
                 const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=${limit || 6}&lang=en${near}`);
                 const j = r.ok ? await r.json() : { features: [] };
@@ -11416,6 +11301,49 @@
             else if (e.key === 'Enter') { e.preventDefault(); if (n) pmPick(Math.max(0, pm.sugOn)); else pmGoText(e.target.value); }
             else if (e.key === 'Escape' && n) { e.stopPropagation(); pmSugHide(); }
         }
+        // site address boxes: addresses suggested as you type (the same address search as the map); pick one to fill it in exactly
+        (function bindAddressSearch() {
+            let timer = null;
+            const listFor = inp => {
+                let el = inp.parentElement.querySelector('.addr-sug');
+                if (!el) { el = document.createElement('div'); el.className = 'pm-sug addr-sug hidden'; el.setAttribute('role', 'listbox'); inp.parentElement.appendChild(el); }
+                return el;
+            };
+            const hideAll = () => document.querySelectorAll('.addr-sug').forEach(el => el.classList.add('hidden'));
+            const draw = (inp, items, on) => {
+                const el = listFor(inp);
+                inp._sug = items; inp._on = on == null ? -1 : on;
+                if (!items.length) { el.classList.add('hidden'); return; }
+                el.innerHTML = '<div class="pm-sug-h">Addresses</div>' + items.map((x, i) => `<button type="button" role="option" data-i="${i}" class="${i === inp._on ? 'on' : ''}">${esc(x.label)}${x.sub ? `<small>${esc(x.sub)}</small>` : ''}</button>`).join('');
+                el.classList.remove('hidden');
+            };
+            const pick = (inp, i) => { const x = inp._sug && inp._sug[i]; if (!x) return; inp.value = x.label; hideAll(); inp.dispatchEvent(new Event('change', { bubbles: true })); };
+            document.addEventListener('input', e => {
+                const inp = e.target;
+                if (!inp.matches || !inp.matches('[data-addr-search]')) return;
+                const q = inp.value.trim();
+                clearTimeout(timer);
+                if (q.length < 3 || !isOnline) { draw(inp, []); return; }
+                timer = setTimeout(async () => {
+                    const found = await pmLookup(q, 6);
+                    if (inp.value.trim() === q && document.activeElement === inp) draw(inp, found);
+                }, 300);
+            });
+            document.addEventListener('keydown', e => {
+                const inp = e.target;
+                if (!inp.matches || !inp.matches('[data-addr-search]') || !inp._sug || !inp._sug.length || listFor(inp).classList.contains('hidden')) return;
+                const n = inp._sug.length;
+                if (e.key === 'ArrowDown') { e.preventDefault(); draw(inp, inp._sug, (inp._on + 1) % n); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); draw(inp, inp._sug, (inp._on - 1 + n) % n); }
+                else if (e.key === 'Enter') { e.preventDefault(); pick(inp, Math.max(0, inp._on)); }
+                else if (e.key === 'Escape') { e.stopPropagation(); hideAll(); }
+            }, true);
+            document.addEventListener('mousedown', e => {
+                const b = e.target.closest && e.target.closest('.addr-sug button');
+                if (b) { e.preventDefault(); pick(b.closest('.addr-wrap').querySelector('[data-addr-search]'), +b.dataset.i); return; }
+                if (!(e.target.closest && e.target.closest('.addr-wrap'))) hideAll();
+            });
+        })();
         (function bindMapPick() {
             const v = document.getElementById('pmView');
             if (!v) return;
@@ -11565,6 +11493,7 @@
                 const row = isNew
                     ? { id, name, width: d.w, height: d.h, sort: siteMaps.length ? Math.max(...siteMaps.map(x => x.order || 0)) + 1 : 1, created_by: tech, drawing }
                     : { id, name, width: d.w, height: d.h, drawing, updated_at: at };
+                if (isNew) row.updated_at = at;
                 const old = isNew ? null : currentMapById(id);
                 await queueTableRow('site_maps', row, `Floor plan ${isNew ? 'drawn' : 'updated'} · ${name}`, {
                     blobs, photoField: 'image_path', prefix: 'SITE_MAP',
@@ -11747,6 +11676,20 @@
         }
 
         // Dashboard card listing the plans
+        // floor plans are checked once a year: editing a plan (or marking it checked) resets the date
+        const MAP_REVIEW_DAYS = 365;
+        function mapReviewDue(m) { const t = Date.parse(m && m.editedAt); return !isNaN(t) && Date.now() - t > MAP_REVIEW_DAYS * 86400000; }
+        async function markMapChecked() {
+            document.getElementById('mapMenu').classList.add('hidden');
+            const m = currentMap();
+            if (!m) return;
+            const at = new Date().toISOString();
+            await queueTableRow('site_maps', { id: m.id, updated_at: at }, `Floor plan checked · ${m.name}`);
+            await queueSiteChange({ action: 'floor_plan', title: `Floor plan "${m.name}" checked - still correct` }, 'Floor plan · log');
+            m.editedAt = at;
+            renderSiteMapsList();
+            alert(`"${m.name}" is marked as checked today. The next check is due in a year.`);
+        }
         function renderSiteMapsList() {
             const el = document.getElementById('siteMapsList');
             if (!el) return;
@@ -11754,8 +11697,9 @@
             const placed = siteDevices.filter(d => { const p = sitePins.get(d.barcode_id); return p && p.mapId && p.x != null; }).length;
             el.innerHTML = (siteMaps.length ? '<div class="maps-scroll space-y-2 overflow-y-auto scroll-thin pr-1" style="max-height:8.6rem;">' + siteMaps.map(m => {
                 const n = pinsOn(m.id).filter(([b, p]) => p.x != null && siteDevices.some(d => d.barcode_id === b)).length;
-                return `<button type="button" data-id="${esc(m.id)}" onclick="openMapModal({ mapId: this.dataset.id })" class="row-item clickable w-full text-left p-2.5 flex justify-between items-center gap-2">
-                    <span class="font-bold t-strong truncate">🗺️ ${esc(m.name)}</span><span class="t-muted shrink-0">${n} pin${n === 1 ? '' : 's'}${m.pending ? ' · uploading' : ''}</span></button>`;
+                const due = mapReviewDue(m);
+                return `<button type="button" data-id="${esc(m.id)}" onclick="openMapModal({ mapId: this.dataset.id })" class="row-item clickable w-full text-left p-2.5 flex justify-between items-center gap-2" ${due ? 'style="border-color:#d97706;"' : ''}>
+                    <span class="min-w-0"><span class="block font-bold t-strong truncate">🗺️ ${esc(m.name)}</span><span class="block text-[10px] ${due ? 'font-bold' : 't-faint'}" ${due ? 'style="color:#d97706;"' : ''}>${m.editedAt ? `${due ? 'Check due · ' : ''}Updated ${esc(fmtDay(String(m.editedAt).slice(0, 10)))}` : 'Date not recorded'}</span></span><span class="t-muted shrink-0">${n} pin${n === 1 ? '' : 's'}${m.pending ? ' · uploading' : ''}</span></button>`;
             }).join('') + '</div>'
                 : '<div class="t-faint italic">No floor plans yet.</div>') +
                 `<button type="button" onclick="openMapModal({ add: true })" class="btn btn-secondary w-full !py-2">+ Add floor plan</button>`;
@@ -11864,21 +11808,39 @@
             if (typeof MutationObserver === 'function') new MutationObserver(() => equalizeLandHeads()).observe(board, { childList: true, subtree: true, characterData: true });
         }
         function boardMove(card, handle, e0) {
+            // the box stays put while it's dragged; a line shows where it will go, and it moves there when let go
+            // (so the boxes don't shuffle around under the pointer on the way to an empty space)
             const board = card.parentNode;
             card.classList.add('lc-dragging'); document.body.classList.add('lc-busy');
+            const mark = document.createElement('div');
+            mark.className = 'lc-drop-mark hidden';
+            document.body.appendChild(mark);
+            let target;   // { ref } - the box it goes in front of (null: the end)
+            const show = (x, top, h) => { mark.style.left = (x - 2) + 'px'; mark.style.top = top + 'px'; mark.style.height = h + 'px'; mark.classList.remove('hidden'); };
             const move = e => {
                 if (e.clientY < 70) window.scrollBy(0, -18); else if (e.clientY > window.innerHeight - 70) window.scrollBy(0, 18);
                 const under = document.elementFromPoint(e.clientX, e.clientY);
-                const tgt = under && under.closest('.land-card');
-                if (!tgt || tgt === card || tgt.parentNode !== board) return;
-                const r = tgt.getBoundingClientRect();
-                const after = isWideBoard() ? e.clientX > r.left + r.width / 2 : e.clientY > r.top + r.height / 2;
-                const ref = after ? tgt.nextElementSibling : tgt;
-                if (ref !== card && ref !== card.nextElementSibling) board.insertBefore(card, ref);
+                const tgt = under && under.closest && under.closest('.land-card');
+                const others = boardCards().filter(c => c !== card);
+                if (tgt && tgt !== card && tgt.parentNode === board) {
+                    const r = tgt.getBoundingClientRect();
+                    const after = isWideBoard() ? e.clientX > r.left + r.width / 2 : e.clientY > r.top + r.height / 2;
+                    target = { ref: after ? tgt.nextElementSibling : tgt };
+                    if (isWideBoard()) show(after ? r.right + 10 : r.left - 12, r.top, r.height); else { mark.classList.add('hidden'); }
+                    return;
+                }
+                if (!tgt && isWideBoard() && under && board.contains(under)) {
+                    // empty space beside a row: after the last box to the left of the pointer in that row
+                    const row = others.map(c => ({ c, r: c.getBoundingClientRect() })).filter(x => e.clientY >= x.r.top && e.clientY <= x.r.bottom && x.r.right <= e.clientX);
+                    if (row.length) { const last = row.sort((a, b) => a.r.right - b.r.right).pop(); target = { ref: last.c.nextElementSibling }; show(last.r.right + 10, last.r.top, last.r.height); return; }
+                }
+                if (tgt === card) { target = null; mark.classList.add('hidden'); }
             };
             const up = () => {
                 window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
                 card.classList.remove('lc-dragging'); document.body.classList.remove('lc-busy');
+                mark.remove();
+                if (target && target.ref !== card && target.ref !== card.nextElementSibling) board.insertBefore(card, target.ref);
                 saveBoardLayout(); equalizeLandHeads();
             };
             // listen on the window: moving the box in the page drops the pointer capture
@@ -12079,8 +12041,7 @@
                         <div class="nf-img" data-st-photo="${esc(d.barcode_id)}">${hasPhoto ? '' : '<span class="nf-ph">📍</span>'}</div>
                         <div class="nf-shade"></div>
                     </div>
-                    ${nfMetaHtml({ title: esc(d.locationName), id: esc(d.barcode_id), dot: col, sub: esc(d.deviceType), subColor: col,
-                        foot: esc(lastServicedText(d, isScanned)) })}
+                    ${nfMetaHtml({ title: esc(d.locationName), dot: col, sub: esc(lastServicedText(d, isScanned)) })}
                 </div>`;
         }
 
@@ -12313,7 +12274,7 @@
                 recType: document.getElementById('recType').value || '',
                 name: document.getElementById('newLocName').value.trim(),
                 type: document.getElementById('newDeviceType').value,
-                zone: document.getElementById('stationZone').value.trim(),
+                limitId: document.getElementById('stationLimit').value,
                 kept: keptPhotos.map(k => k.path).join('|')
             };
         }
@@ -12538,20 +12499,20 @@
             const dot = document.getElementById('formTypeDot');
             dot.style.background = c.color;
             dot.title = c.label;
-            toggleZoneRow();
+            toggleLimitRow();
         }
         // Zones are for insect stations (flying and crawling); a station that already has one keeps showing it
         const isInsectType = t => /insect|fly|flies|flying|crawl|ilt|moth|beetle|cockroach|midge|monitor|glue|uv/i.test(String(t || ''));
-        function toggleZoneRow() {
+        // the critical limit choice: insect stations on a site that has limits (or a station that already has one)
+        function toggleLimitRow() {
             const t = document.getElementById('newDeviceType').value || currentDeviceType;
-            const z = document.getElementById('stationZone');
-            document.getElementById('stationZoneRow').classList.toggle('hidden', !LIMITS_ON || !(isInsectType(t) || (z && z.value.trim())));
+            const sel = document.getElementById('stationLimit');
+            document.getElementById('stationLimitRow').classList.toggle('hidden', !((isInsectType(t) && siteLimits.length) || (sel && sel.value)));
         }
-        function siteZones() {
-            const seen = new Map();
-            siteStations.forEach(st => { const z = String(st.zone || '').trim(); if (z && !seen.has(zoneKey(z))) seen.set(zoneKey(z), z); });
-            siteLimits.forEach(l => { const z = String(l.zone || '').trim(); if (z && !seen.has(zoneKey(z))) seen.set(zoneKey(z), z); });
-            return Array.from(seen.values()).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        function fillStationLimits(barcode) {
+            const sel = document.getElementById('stationLimit'), cur = stationLimitId(barcode);
+            sel.innerHTML = '<option value="">None</option>' + siteLimits.map(l => `<option value="${esc(l.id)}">${esc(l.name || 'Critical limit')} - ${esc(limitRules(l).map(r => `${r.species} ${r.max}/month`).join(', ') || 'no pests yet')}</option>`).join('');
+            sel.value = limitById(cur) ? cur : '';
         }
 
         // Bait last changed (toxic rodent stations)
@@ -12611,7 +12572,7 @@
 
             resetServiceFields();
 
-            document.getElementById('scannedBarcodeBadge').textContent = `Barcode: ${barcode}`;
+            document.getElementById('scannedBarcodeBadge').textContent = barcode;
 
             const existingDev = siteDevices.find(d => d.barcode_id === barcode);
             stationRecsShowAll = false;
@@ -12630,18 +12591,16 @@
             } else {
                 document.getElementById('formTitle').textContent = locName;
                 document.getElementById('formTitle').title = devType;
-                document.getElementById('stationDetailsHeading').textContent = 'Station details (change the type here if needed):';
+                document.getElementById('stationDetailsHeading').textContent = 'Station details';
                 document.getElementById('newLocName').value = locName;
                 setSelectValue('newDeviceType', devType);
             }
             document.getElementById('newStationFields').classList.remove('hidden');
             document.getElementById(isNew || !locName ? 'stationDetailsTop' : 'stationDetailsBottom').appendChild(document.getElementById('stationDetailsWrap'));
             populateStationMapSelect(barcode);
-            const stRow = siteStations.get(barcode);
-            document.getElementById('stationZone').value = (stRow && stRow.zone) || '';
+            fillStationLimits(barcode);
             clearStationPhoto();
             showStationPhotoIn(document.getElementById('stationPhotoPreview'), barcode, { empty: 'No photo yet' });
-            document.getElementById('zoneOptions').innerHTML = siteZones().map(z => `<option value="${esc(z)}"></option>`).join('');
             updateFormTypeDot();
 
             const hadVisit = prefillFromThisVisit(existingDev);
@@ -12945,21 +12904,28 @@
                     return false;
                 }
             }
-            // Critical limits: ask the technician to double-check a count that takes a zone over its monthly limit
-            const hit = limitsHitBy(currentBarcode, f.zone, f.speciesCaught, f.pestCount);
-            if (hit.length && !confirm('⚠ CRITICAL LIMIT EXCEEDED\n\n' + hit.map(x => `${x.limit.zone} · ${limitPest(x.limit)}: this makes ${x.total} this month (limit ${x.limit.max_per_month}).`).join('\n') +
-                '\n\nPlease double-check the species and number are right.\nOK to save, Cancel to check again.')) {
-                document.getElementById('pestCount').focus();
-                return false;
-            }
-
-            // High rodent activity, or insects over a critical limit: suggest a recommendation
+            // Critical limits: a count that takes a limit over is double-checked, and needs a recommendation
+            const hit = limitsHitBy(currentBarcode, f.limitId, f.speciesCaught, f.pestCount);
             const hasRec = !!(f.recTitle || f.recommendation || pendingPhotos.length);
+            const devNow = siteDevices.find(d => d.barcode_id === currentBarcode);
+            const recThisVisit = !!(devNow && (devNow.recommendationsHistory || []).some(r => r.thisVisit));
+            if (hit.length) {
+                if (!confirm('⚠ CRITICAL LIMIT EXCEEDED\n\n' + hit.map(x => `${limitLabel(x)}: this makes ${x.total} this month (limit ${x.rule.max}).`).join('\n') +
+                    '\n\nPlease double-check the pest and the number are right.\nOK if they are right, Cancel to check again.')) {
+                    document.getElementById('pestCount').focus();
+                    return false;
+                }
+                if (!hasRec && !recThisVisit) {
+                    alert(`A recommendation is required: ${limitLabel(hit[0])} is over its critical limit.\n\nAdd the recommendation, then save.`);
+                    openRecEditor({ type: 'Pest activity', title: `${hit[0].rule.species} over the critical limit (${hit[0].limit.name})` });
+                    return false;
+                }
+            }
+            // High rodent activity: suggest a recommendation
             const rodentHigh = f.activityLevel === 'High' && isRodentSpecies(f.speciesCaught);
-            if (!hasRec && (rodentHigh || hit.length)) {
-                const why = rodentHigh ? `High rodent activity (${f.speciesCaught}, 75-100% of bait eaten).` : `${hit[0].limit.zone} is over its critical limit for ${limitPest(hit[0].limit).toLowerCase()}.`;
-                if (confirm(`${why}\n\nAdd a recommendation for the customer?\nOK to add one, Cancel to save without.`)) {
-                    openRecEditor({ type: 'Pest activity', title: rodentHigh ? `High ${f.speciesCaught.toLowerCase()} activity - find and treat the source` : `${limitPest(hit[0].limit)} over the critical limit in ${hit[0].limit.zone}` });
+            if (!hasRec && rodentHigh) {
+                if (confirm(`High rodent activity (${f.speciesCaught}, 75-100% of bait eaten).\n\nAdd a recommendation for the customer?\nOK to add one, Cancel to save without.`)) {
+                    openRecEditor({ type: 'Pest activity', title: `High ${f.speciesCaught.toLowerCase()} activity - find and treat the source` });
                     return false;
                 }
             }
@@ -13012,13 +12978,13 @@
                 const newRec = f.recTitle || f.recommendation || newBlobs.length;
                 const photoBit = newBlobs.length ? ` + ${mediaCountText(pendingPhotos)}` : '';
                 await queueLog(currentBarcode, payloadData, null, `Service record · ${locNameInput}`);
-                for (const x of hit) await queueSiteChange({ action: 'limit_breach', title: `Critical limit exceeded: ${x.limit.zone} · ${limitPest(x.limit)}`,
-                    detail: `${x.total} this month, limit ${x.limit.max_per_month} · ${locNameInput} (${f.speciesCaught} ×${pestN(f.speciesCaught, f.pestCount)})` });
+                for (const x of hit) await queueSiteChange({ action: 'limit_breach', title: `Critical limit exceeded: ${limitLabel(x)}`,
+                    detail: `${x.total} this month, limit ${x.rule.max} · ${locNameInput} (${f.speciesCaught} ×${pestN(f.speciesCaught, f.pestCount)})` });
                 // The station's own row: created the first time, updated when its name or type changes
                 const st = siteStations.get(currentBarcode);
-                if (!st || st.name !== locNameInput || (st.type || '') !== (devType || '') || (st.zone || '') !== f.zone || pendingStationPhoto) {
-                    const row = st ? { id: st.id, barcode: currentBarcode, name: locNameInput, type: devType, zone: f.zone || null, updated_at: new Date().toISOString() }
-                        : { id: uid(), barcode: currentBarcode, name: locNameInput, type: devType, zone: f.zone || null, created_by: technicianLabel(), created_at: new Date().toISOString() };
+                if (!st || st.name !== locNameInput || (st.type || '') !== (devType || '') || String(st.limit_id || '') !== String(f.limitId || '') || pendingStationPhoto) {
+                    const row = st ? { id: st.id, barcode: currentBarcode, name: locNameInput, type: devType, limit_id: f.limitId || null, updated_at: new Date().toISOString() }
+                        : { id: uid(), barcode: currentBarcode, name: locNameInput, type: devType, limit_id: f.limitId || null, created_by: technicianLabel(), created_at: new Date().toISOString() };
                     const sp = pendingStationPhoto;
                     await queueTableRow('stations', row, (st ? `Station details updated · ${locNameInput}` : `New station · ${locNameInput}`) + (sp ? ' + location photo' : ''),
                         sp ? { blobs: [sp.blob], photoField: 'photo_path', prefix: 'STATION_' + safeName(currentBarcode) } : undefined);
@@ -13608,7 +13574,7 @@
         // ---------- Lists in their own tables ----------
         const LIST_TABLES = { prep: 'preparations', species: 'species', station_type: 'station_types' };
         // extra details kept with list items: a preparation's safety data sheet, a pest's category, picture and guide
-        const LIST_EXTRA_COLS = { prep: ['sds_path', 'sds_name', 'sds_expires', 'sds_updated_at', 'sds_updated_by'], species: ['category', 'subcategory', 'photo_path', 'photo_source', 'gallery', 'about', 'breeding', 'control', 'updated_at', 'updated_by'] };
+        const LIST_EXTRA_COLS = { prep: ['sds_path', 'sds_name', 'sds_expires', 'sds_updated_at', 'sds_updated_by'], species: ['category', 'subcategory', 'photo_path', 'photo_source', 'gallery', 'about', 'breeding', 'control', 'updated_at', 'updated_by'], station_type: ['color'] };
         let listExtrasMissing = false;
         let listTablesMissing = false;
         async function loadListTables() {
@@ -14396,6 +14362,23 @@
             applyMobileFolds();
         });
         window.addEventListener('resize', () => applyMobileFolds());
+        // the service screen's Unscanned / Scanned boxes fold the same way (phones)
+        const WS_FOLD_KEY = 'pestis-ws-folded';
+        function applyWsFolds() {
+            const folded = new Set(loadJSON(WS_FOLD_KEY, [])), phone = isPhone();
+            document.querySelectorAll('.ws-fold').forEach(c => c.classList.toggle('ws-folded', phone && folded.has(c.dataset.ws)));
+        }
+        document.addEventListener('click', e => {
+            if (!isPhone()) return;
+            const h = e.target.closest && e.target.closest('.ws-fold-head');
+            if (!h || e.target.closest('button, a, select, input')) return;
+            const c = h.closest('.ws-fold'), folded = new Set(loadJSON(WS_FOLD_KEY, []));
+            if (folded.has(c.dataset.ws)) folded.delete(c.dataset.ws); else folded.add(c.dataset.ws);
+            saveJSON(WS_FOLD_KEY, Array.from(folded));
+            applyWsFolds();
+        });
+        window.addEventListener('resize', () => applyWsFolds());
+        setTimeout(() => { try { applyWsFolds(); } catch (e) {} }, 0);
 
         // ---------- drop-down menus stay on the screen (phones) ----------
         const ONSCREEN_SEL = '.scan-type-menu, #mapMenu, #mapPopover, [data-onscreen]';
