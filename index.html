@@ -2255,7 +2255,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.23-r68';
+        const APP_VERSION = '2026.10.23-r69';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = true;   // critical limits (rebuilt in r65)
         // after Check for updates, tidy the address bar
@@ -14709,6 +14709,19 @@
 //   svc = Service App (index.html), adm = Admin (admin.html), cli = Client Portal (client.html - written for clients)
 const WN = (() => {
     const LOG = [
+        { rev: 'r69', date: '2026-10-23', v: { svc: '2026.10.23-r69', adm: '2026.10.23-a14', cli: '2026.10.23-p29' },
+            adm: ['Reports › One station: a line for each pest caught (or the activity level for external toxic stations), over the years',
+                  'Reports: "Year on year" shows each year as its own line, January to December, to compare',
+                  'Reports: drop-downs for stations, pests, preparations and floor plans you can type in to search',
+                  'Reports: monthly charts (recommendations, visits) are line charts'],
+            cli: ['Overview › Outstanding recommendations: a set height that scrolls, photo or list view, and − / + to make the cards smaller or bigger',
+                  'Overview › Site contacts: as tall as the recommendations beside it, and scrolls',
+                  'Overview › Pest activity: the pest, station and floor plan drop-downs can be searched by typing',
+                  'Overview › Your stations: the same cards as the recommendations',
+                  'Reports › Recommendations: tap an R number to open that recommendation',
+                  'Reports › One station: search for the station, a line for each pest caught (or activity level for external bait stations) over the years, and "Show on floor plan"',
+                  'Reports: "Year on year" shows each year as its own line, January to December, to compare',
+                  'Reports: monthly charts are line charts'] },
         { rev: 'r68', date: '2026-10-23', v: { svc: '2026.10.23-r68', adm: '2026.10.23-a13', cli: '2026.10.23-p28' },
             svc: ["What's new: this page, listing every update (Settings › What's new)",
                   'Settings › Site page layout: choose how many boxes sit in each row, and reset the layout (moved here from the site page)',
