@@ -6,7 +6,7 @@
     The Admin site, separate from the Service App (index.html) and the Client Portal (client.html):
     its own page, its own sign-in (admin accounts only) and its own code. They only share the database.
     Open it at  https://<your site>/admin.html  and upload it next to index.html.
-    Version 2026.10.23-a16
+    Version 2026.10.23-a17
 -->
 <head>
     <meta charset="UTF-8">
@@ -196,7 +196,8 @@
         .site-hero-band { position: relative; isolation: isolate; padding: 1rem; background: linear-gradient(135deg, rgb(var(--b500) / .10), transparent 55%); }
         .sh-topline { display: flex; align-items: center; justify-content: space-between; gap: .75rem; font-size: 11px; margin-bottom: .8rem; }
         .sh-id { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .9rem; min-width: 0; }
-        .sh-id > .sh-contact { flex: 1 1 100%; margin-top: 0; width: auto; }
+        .sh-id > .sh-contact { flex: 0 1 auto; margin-top: 0; width: fit-content; max-width: 100%; }
+        .sh-id > .sh-break { flex-basis: 100%; height: 0; }   /* the contact box starts its own line, only as wide as it needs */
         .sh-id > .min-w-0 { min-width: 0; flex: 1; }
         .sh-title { font-size: 1.45rem; font-weight: 900; line-height: 1.15; }
         .sh-contact { margin-top: .75rem; }
@@ -3042,6 +3043,13 @@
 //   svc = Service App (index.html), adm = Admin (admin.html), cli = Client Portal (client.html - written for clients)
 const WN = (() => {
     const LOG = [
+        { rev: 'r72', date: '2026-10-23', v: { svc: '2026.10.23-r72' },
+            svc: ['Site page: the site contact box is only as wide as it needs to be, and tapping anywhere on it opens all the contacts',
+                  'Floor plan editor: dragging a wall moves the whole room (or the whole fence line) it belongs to',
+                  'Floor plan editor: tap a wall once to select its room, tap it again to select just that wall - then dragging it moves only that wall, the walls either side stretch to follow and the room\'s colour fills the new shape',
+                  'Floor plan editor: walls and corners that touch (rooms side by side, a fence meeting a wall) stay joined when you move one of them',
+                  'Floor plan editor: walls drawn one by one and closed into a shape become a room, with a colour, that moves as one',
+                  'Floor plan editor: with the move tool, drag a room, wall or object to move it; drag empty space to move around'] },
         { rev: 'r71', date: '2026-10-23', v: { cli: '2026.10.23-p31' },
             cli: ['Floor plans: the tab opens on a card for each plan (its picture, name and number of stations); tap a card to open the plan, and "‹ All floor plans" to go back'] },
         { rev: 'r70', date: '2026-10-23', v: { svc: '2026.10.23-r70', adm: '2026.10.23-a15', cli: '2026.10.23-p30' },
@@ -3654,7 +3662,7 @@ const PR = (() => {
 /* PESTIS-REPORTS:END */
 
         // Tells index.html what loaded, and which version of the hook-up it was written for
-        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.23-a16', api: 0 };
+        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.23-a17', api: 0 };
 
         async function loadAdminPanel() {
             const profList = document.getElementById('adminProfilesList');

@@ -191,7 +191,8 @@
         .site-hero-band { position: relative; isolation: isolate; padding: 1rem; background: linear-gradient(135deg, rgb(var(--b500) / .10), transparent 55%); }
         .sh-topline { display: flex; align-items: center; justify-content: space-between; gap: .75rem; font-size: 11px; margin-bottom: .8rem; }
         .sh-id { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .9rem; min-width: 0; }
-        .sh-id > .sh-contact { flex: 1 1 100%; margin-top: 0; width: auto; }
+        .sh-id > .sh-contact { flex: 0 1 auto; margin-top: 0; width: fit-content; max-width: 100%; }
+        .sh-id > .sh-break { flex-basis: 100%; height: 0; }   /* the contact box starts its own line, only as wide as it needs */
         .sh-id > .min-w-0 { min-width: 0; flex: 1; }
         .sh-title { font-size: 1.45rem; font-weight: 900; line-height: 1.15; }
         .sh-contact { margin-top: .75rem; }
@@ -1053,11 +1054,12 @@
                                 <div id="visitStatusLine" class="hidden mt-2.5"></div>
                             </div>
                             <!-- site contact: under the logo and name, across the full width -->
-                            <div id="siteContactBox" class="sh-contact" role="button" tabindex="0" onclick="if (!event.target.closest('a')) openSiteContacts()" onkeydown="if (event.key === 'Enter') openSiteContacts()" title="Show all the site's contacts">
+                            <span class="sh-break" aria-hidden="true"></span>
+                            <div id="siteContactBox" class="sh-contact" role="button" tabindex="0" onclick="if (!event.target.closest('a')) openSiteContacts()" onkeydown="if (event.key === 'Enter') openSiteContacts()" title="Tap to see all the site's contacts">
                                 <span class="eyebrow t-faint">Site contact</span>
                                 <span id="siteLandingContact" class="font-bold t-strong break-words">Not specified</span>
                                 <span id="siteLandingEmail" class="break-all">No email on file</span>
-                                <span id="siteContactsMore" class="link-btn !no-underline !text-[11px] ml-auto">All contacts ›</span>
+                                <span id="siteContactsMore" class="link-btn !no-underline !text-[11px] hidden"></span>
                             </div>
                         </div>
                         <div class="st-actions">
@@ -2256,7 +2258,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.23-r71';
+        const APP_VERSION = '2026.10.23-r72';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = true;   // critical limits (rebuilt in r65)
         // after Check for updates, tidy the address bar
@@ -10190,8 +10192,8 @@
             if (!pe) return;
             const st = PE_OBJECTS.find(o => o.k === pe.stampKind);
             const t = {
-                select: pe.sel && pe.sel.type === 'multi' ? 'Drag any of them to move them together · tap one on its own to move just that one' : pe.sel ? 'Drag to move it · drag the white dots to reshape · Delete to remove' : 'Tap something to select it · drag a box around things to select several · two fingers or the Move tool to move around',
-                pan: 'Drag to move around · pinch or scroll to zoom',
+                select: pe.sel && pe.sel.type === 'multi' ? 'Drag any of them to move them together · tap one on its own to move just that one' : pe.sel && pe.sel.type === 'wall' ? 'Drag this wall to move just it (the walls next to it stretch) · drag a white dot to move a corner · Delete to remove' : pe.sel ? 'Drag to move it all · tap a wall again to move just that wall · drag the white dots to reshape · Delete to remove' : 'Tap something to select it · drag a box around things to select several · two fingers or the Move tool to move around',
+                pan: 'Drag a room, wall or object to move it · drag empty space to move around · pinch or scroll to zoom',
                 wall: pe.chain ? 'Tap to add the next corner · tap the first corner to close it, or tap ✓ Finish' : 'Tap where the wall starts (it snaps to the grid and to other corners)',
                 room: 'Drag from one corner of the room to the opposite corner',
                 stamp: `Tap where the ${st ? st.label.toLowerCase() : 'object'} goes${st && PE_WALL_MOUNT.has(st.k) ? ' - it fits itself onto the nearest wall' : ''}`,
@@ -10336,6 +10338,26 @@
             return peAddNode(s.x, s.y);
         }
         // the nodes a selection moves, made its own first (corners it shares with anything not selected are copied)
+        // the object a wall belongs to: its room, or every wall joined to it (a fence line, or walls drawn one by one)
+        function peObjectOfWall(w) {
+            const room = pe.doc.rooms.find(r => peEdgeOf(r, w));
+            if (room) return { type: 'room', id: room.id };
+            const seen = new Set([w.id]), nodes = new Set([w.a, w.b]);
+            let grew = true;
+            while (grew) {
+                grew = false;
+                pe.doc.walls.forEach(x => { if (!seen.has(x.id) && (nodes.has(x.a) || nodes.has(x.b))) { seen.add(x.id); nodes.add(x.a); nodes.add(x.b); grew = true; } });
+            }
+            const list = Array.from(seen).map(id => ({ type: 'wall', id }));
+            return list.length > 1 ? { type: 'multi', list } : list[0];
+        }
+        const peSameSel = (a, b) => !!(a && b) && a.type === b.type && (a.type === 'multi' ? a.list.length === b.list.length && a.list.every(x => b.list.some(y => y.type === x.type && y.id === x.id)) : a.id === b.id);
+        // corners of other walls or rooms sitting on the same spot as these (touching rooms, a fence meeting a wall):
+        // they move along, so moving one wall or corner doesn't pull things apart
+        function peCoincident(ids) {
+            const set = new Set(ids), pts = ids.map(peNode).filter(Boolean);
+            return pe.doc.nodes.filter(n => !set.has(n.id) && pts.some(q => Math.abs(q.x - n.x) < 0.6 && Math.abs(q.y - n.y) < 0.6)).map(n => n.id);
+        }
         function peSelParts(list) {
             const rooms = list.filter(x => x.type === 'room').map(x => pe.doc.rooms.find(r => r.id === x.id)).filter(Boolean);
             const walls = list.filter(x => x.type === 'wall').map(x => pe.doc.walls.find(w => w.id === x.id)).filter(Boolean);
@@ -10721,8 +10743,9 @@
                 if (pe.pointers.size > 2) return;
                 const p = peToPlan(e), hit = peHitOf(e.target);
                 const base = { sx: e.clientX, sy: e.clientY, p, moved: false, v: Object.assign({}, pe.view), hit };
-                if (e.button === 1 || e.button === 2 || pe.space || pe.tool === 'pan') { pe.op = Object.assign(base, { type: 'pan' }); return; }
-                if (pe.tool === 'select') {
+                // the move tool: drag a shape to move it, drag empty space to move around
+                if (e.button === 1 || e.button === 2 || pe.space || (pe.tool === 'pan' && !(hit && hit.type !== 'node'))) { pe.op = Object.assign(base, { type: 'pan' }); return; }
+                if (pe.tool === 'select' || pe.tool === 'pan') {
                     const multi = pe.sel && pe.sel.type === 'multi' ? pe.sel.list : null;
                     const inMulti = h => multi && h && multi.some(x => x.type === h.type && x.id === h.id);
                     if (hit && hit.type !== 'node' && e.shiftKey) {   // Shift-click adds or removes one thing
@@ -10734,13 +10757,24 @@
                     }
                     if (hit && inMulti(hit)) { pe.op = Object.assign(base, { type: 'group', list: multi.slice() }); return; }
                     if (hit && hit.type === 'room') { pe.op = Object.assign(base, { type: 'group', list: [hit] }); peSelect(hit); return; }
-                    if (hit && hit.type === 'node') { const n = peNode(hit.id); pe.op = Object.assign(base, { type: 'node', id: hit.id, o: { x: n.x, y: n.y } }); peSelect(hit); return; }
+                    if (hit && hit.type === 'node') { const n = peNode(hit.id); pe.op = Object.assign(base, { type: 'node', id: hit.id, o: { x: n.x, y: n.y }, with: peCoincident([hit.id]).map(id => { const m = peNode(id); return { id, x: m.x, y: m.y }; }) }); peSelect(hit); return; }
                     if (hit && hit.type === 'item') { const it = pe.doc.items.find(i => i.id === hit.id); pe.op = Object.assign(base, { type: 'item', id: hit.id, o: { x: it.x, y: it.y } }); peSelect(hit); return; }
-                    if (hit && (hit.type === 'wall' || hit.type === 'room')) {
-                        const ids = hit.type === 'wall' ? (w => w ? [w.a, w.b] : [])(pe.doc.walls.find(w => w.id === hit.id)) : (pe.doc.rooms.find(r => r.id === hit.id) || { nodes: [] }).nodes;
-                        pe.op = Object.assign(base, { type: 'shape', o: ids.map(id => { const n = peNode(id); return n ? { id, x: n.x, y: n.y } : null; }).filter(Boolean) });
-                        peSelect(hit); return;
+                    if (hit && hit.type === 'wall') {
+                        const w = pe.doc.walls.find(x => x.id === hit.id);
+                        if (!w) return;
+                        const pos = ids => ids.map(id => { const n = peNode(id); return n ? { id, x: n.x, y: n.y } : null; }).filter(Boolean);
+                        // this wall on its own (it was tapped again): it moves, the walls either side stretch to follow
+                        if (pe.sel && pe.sel.type === 'wall' && pe.sel.id === w.id) { pe.op = Object.assign(base, { type: 'shape', o: pos([w.a, w.b].concat(peCoincident([w.a, w.b]))) }); return; }
+                        // otherwise the whole thing it's part of: its room, or the whole fence line
+                        const obj = peObjectOfWall(w);
+                        if (obj.type === 'room') pe.op = Object.assign(base, { type: 'group', list: [obj], tapSel: obj, wallHit: hit });
+                        else {
+                            const ids = new Set(); (obj.type === 'multi' ? obj.list : [obj]).forEach(x => { const ww = pe.doc.walls.find(y => y.id === x.id); if (ww) { ids.add(ww.a); ids.add(ww.b); } });
+                            pe.op = Object.assign(base, { type: 'shape', o: pos(Array.from(ids)), tapSel: obj, wallHit: hit });
+                        }
+                        return;
                     }
+                    if (pe.tool === 'pan') { pe.op = Object.assign(base, { type: 'pan' }); return; }
                     pe.op = Object.assign(base, { type: 'marquee', b: p });   // drag a box around things to select them
                     return;
                 }
@@ -10777,6 +10811,7 @@
                     const s = peSnap({ x: op.o.x + dx / pe.view.z, y: op.o.y + dy / pe.view.z }, null, op.id);
                     const tgt = peNodeNear(s, 14, op.id);
                     n.x = tgt ? tgt.x : s.x; n.y = tgt ? tgt.y : s.y;
+                    (op.with || []).forEach(o => { const m = peNode(o.id); if (m) { m.x = n.x; m.y = n.y; } });
                     pe.hover = tgt ? { node: tgt.id } : null;
                     peRender(); return;
                 }
@@ -10823,6 +10858,10 @@
                     return;
                 }
                 if (op.type === 'group' && !op.moved && op.list.length > 1 && op.hit) { peSelect(op.hit); return; }   // a tap on one of several: just that one
+                if (op.tapSel) {
+                    if (!op.moved) { peSelect(peSameSel(pe.sel, op.tapSel) || (pe.sel && pe.sel.type === 'multi' && pe.sel.list.some(x => x.id === op.wallHit.id)) ? op.wallHit : op.tapSel); return; }
+                    peDropOrphans(); peCommit(); peSelect(op.tapSel); peRender(); peRenderPanel(); return;
+                }
                 if (op.type === 'item' || op.type === 'shape' || op.type === 'group') { if (op.moved) { peDropOrphans(); peCommit(); peRender(); peRenderPanel(); } return; }
                 if (op.type === 'marquee') {
                     if (!op.moved) { if (pe.sel) peSelect(null); return; }
@@ -10929,7 +10968,17 @@
             else if (n.id !== pe.chain.last) {
                 peAddWall(pe.chain.last, n.id);
                 pe.chain.n++;
-                if (n.id === pe.chain.first && pe.chain.n >= 2) { pe.chain = null; peCommit(); peRender(); peHint(); return; }
+                if (n.id === pe.chain.first && pe.chain.n >= 2) {
+                    const ring = pe.chain.ids.slice();
+                    pe.chain = null;
+                    // closed: it's a room (coloured inside, and it moves and reshapes as one) unless one is there already
+                    if (ring.length >= 3 && !pe.doc.rooms.some(r => r.nodes.length === ring.length && ring.every(id => r.nodes.includes(id)))) {
+                        const r = { id: uid(), nodes: ring, name: `Room ${pe.doc.rooms.length + 1}`, color: PE_ROOM_COLORS[pe.doc.rooms.length % PE_ROOM_COLORS.length] };
+                        pe.doc.rooms.push(r);
+                        pe.sel = { type: 'room', id: r.id };
+                    }
+                    peCommit(); peRender(); peRenderPanel(); peHint(); return;
+                }
                 pe.chain.last = n.id;
                 if (!pe.chain.ids.includes(n.id)) pe.chain.ids.push(n.id);
             }
@@ -11840,7 +11889,7 @@
         const telHref = p => 'tel:' + String(p || '').replace(/[^\d+]/g, '');
         function renderSiteContactCard() {
             const main = siteContacts[0], more = document.getElementById('siteContactsMore');
-            if (more) more.textContent = siteContacts.length > 1 ? `All ${siteContacts.length} contacts ›` : siteContacts.length ? 'Contacts ›' : '+ Add contact';
+            if (more) { more.textContent = siteContacts.length ? '' : '+ Add contact'; more.classList.toggle('hidden', !!siteContacts.length); }   // the whole box opens the list
             if (!main) return;
             document.getElementById('siteLandingContact').innerHTML = `👤 ${esc(main.name)}${main.role ? ` <span class="t-muted font-semibold text-[11px]">· ${esc(main.role)}</span>` : ''}`
                 + (main.phone ? ` <a href="${esc(telHref(main.phone))}" class="link-btn !no-underline font-mono text-xs ml-1">📞 ${esc(main.phone)}</a>` : '');
@@ -14752,6 +14801,13 @@
 //   svc = Service App (index.html), adm = Admin (admin.html), cli = Client Portal (client.html - written for clients)
 const WN = (() => {
     const LOG = [
+        { rev: 'r72', date: '2026-10-23', v: { svc: '2026.10.23-r72' },
+            svc: ['Site page: the site contact box is only as wide as it needs to be, and tapping anywhere on it opens all the contacts',
+                  'Floor plan editor: dragging a wall moves the whole room (or the whole fence line) it belongs to',
+                  'Floor plan editor: tap a wall once to select its room, tap it again to select just that wall - then dragging it moves only that wall, the walls either side stretch to follow and the room\'s colour fills the new shape',
+                  'Floor plan editor: walls and corners that touch (rooms side by side, a fence meeting a wall) stay joined when you move one of them',
+                  'Floor plan editor: walls drawn one by one and closed into a shape become a room, with a colour, that moves as one',
+                  'Floor plan editor: with the move tool, drag a room, wall or object to move it; drag empty space to move around'] },
         { rev: 'r71', date: '2026-10-23', v: { cli: '2026.10.23-p31' },
             cli: ['Floor plans: the tab opens on a card for each plan (its picture, name and number of stations); tap a card to open the plan, and "‹ All floor plans" to go back'] },
         { rev: 'r70', date: '2026-10-23', v: { svc: '2026.10.23-r70', adm: '2026.10.23-a15', cli: '2026.10.23-p30' },

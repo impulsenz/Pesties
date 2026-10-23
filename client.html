@@ -722,7 +722,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.23-p31';
+const PORTAL_VERSION = '2026.10.23-p32';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -4612,6 +4612,13 @@ const PR = (() => {
 //   svc = Service App (index.html), adm = Admin (admin.html), cli = Client Portal (client.html - written for clients)
 const WN = (() => {
     const LOG = [
+        { rev: 'r72', date: '2026-10-23', v: { svc: '2026.10.23-r72' },
+            svc: ['Site page: the site contact box is only as wide as it needs to be, and tapping anywhere on it opens all the contacts',
+                  'Floor plan editor: dragging a wall moves the whole room (or the whole fence line) it belongs to',
+                  'Floor plan editor: tap a wall once to select its room, tap it again to select just that wall - then dragging it moves only that wall, the walls either side stretch to follow and the room\'s colour fills the new shape',
+                  'Floor plan editor: walls and corners that touch (rooms side by side, a fence meeting a wall) stay joined when you move one of them',
+                  'Floor plan editor: walls drawn one by one and closed into a shape become a room, with a colour, that moves as one',
+                  'Floor plan editor: with the move tool, drag a room, wall or object to move it; drag empty space to move around'] },
         { rev: 'r71', date: '2026-10-23', v: { cli: '2026.10.23-p31' },
             cli: ['Floor plans: the tab opens on a card for each plan (its picture, name and number of stations); tap a card to open the plan, and "‹ All floor plans" to go back'] },
         { rev: 'r70', date: '2026-10-23', v: { svc: '2026.10.23-r70', adm: '2026.10.23-a15', cli: '2026.10.23-p30' },
