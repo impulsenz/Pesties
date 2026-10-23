@@ -719,7 +719,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.23-p29';
+const PORTAL_VERSION = '2026.10.23-p30';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -777,10 +777,23 @@ function normalizeSite(s) {
     return s;
 }
 
+// One sign-in for the three Pestis apps (Service App, Admin, Client Portal - the same website and database):
+// signing in to one signs you in to the others. Each app still checks for itself that the account may use it,
+// and the database rules decide what each account can see. The key is the Service App's, so its sign-ins carry over.
+const PESTIS_AUTH_KEY = 'sb-' + SUPABASE_URL.replace(/^https?:\/\//, '').split('.')[0] + '-auth-token';
+function pestisAdoptSignIn(oldKey) {   // a sign-in saved by an older version of this app (under its own key) is kept, once
+    try { const v = localStorage.getItem(oldKey); if (v && !localStorage.getItem(PESTIS_AUTH_KEY)) localStorage.setItem(PESTIS_AUTH_KEY, v); localStorage.removeItem(oldKey); } catch (e) {}
+}
+// "Not used for a while" counts activity in any Pestis app, so working in one doesn't sign you out of another
+const PESTIS_ACTIVE_KEY = 'pestis-last-active';
+let pestisActiveWritten = 0;
+function pestisMarkActive() { const t = Date.now(); if (t - pestisActiveWritten < 5000) return; pestisActiveWritten = t; try { localStorage.setItem(PESTIS_ACTIVE_KEY, String(t)); } catch (e) {} }
+function pestisLastActive() { try { return Number(localStorage.getItem(PESTIS_ACTIVE_KEY)) || 0; } catch (e) { return 0; } }
+pestisAdoptSignIn('pestis-portal-auth');
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
         persistSession: true, autoRefreshToken: true, detectSessionInUrl: true,
-        storageKey: 'pestis-portal-auth',              // separate from the field app, so staff can use both side by side
+        storageKey: PESTIS_AUTH_KEY,                   // shared with the Service App and Admin: one sign-in for all three
         lock: async (name, t, fn) => await fn()
     }
 });
@@ -862,7 +875,7 @@ async function signInWithGoogle() {
 // ===================================================================
 let idleLast = Date.now(), idleMins = 5, idleWarnEl = null;
 const IDLE_WARN_SECONDS = 60;
-function idleActivity() { idleLast = Date.now(); if (idleWarnEl) { idleWarnEl.remove(); idleWarnEl = null; } }
+function idleActivity() { idleLast = Date.now(); if (state.me) pestisMarkActive(); if (idleWarnEl) { idleWarnEl.remove(); idleWarnEl = null; } }
 ['pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'].forEach(ev => document.addEventListener(ev, idleActivity, { passive: true, capture: true }));
 async function loadIdleMinutes() {
     try { const { data, error } = await sb.rpc('pestis_idle_minutes'); if (!error && data != null && isFinite(Number(data))) idleMins = Math.max(0, Number(data)); } catch (e) {}
@@ -870,6 +883,7 @@ async function loadIdleMinutes() {
 function idleCheck() {
     if (!state.me) { idleLast = Date.now(); return; }
     if (!idleMins) return;
+    idleLast = Math.max(idleLast, pestisLastActive());   // used in another Pestis app
     const left = idleLast + idleMins * 60000 - Date.now();
     if (left <= 0) { idleSignOut(); return; }
     if (left <= IDLE_WARN_SECONDS * 1000) {
@@ -979,7 +993,7 @@ async function checkForUpdates() {
     } catch (e) {}
     try { Object.keys(localStorage).filter(k => /^pestis-portal-(bell-seen|dismissed)/.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
     try { await sb.auth.signOut(); } catch (e) {}
-    try { localStorage.removeItem('pestis-portal-auth'); } catch (e) {}
+    try { localStorage.removeItem('pestis-portal-auth'); } catch (e) {}   // (older versions' own sign-in)
     location.replace(portalUrl() + '?fresh=' + Date.now());
 }
 // drop-down menus stay on the screen (phones)
@@ -1070,7 +1084,11 @@ async function init() {
 }
 sb.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' && session && !state.started) afterSignIn(session);
+    // signed out in another Pestis app (or the sign-in ended): back to the sign-in screen
+    if (event === 'SIGNED_OUT' && state.me) { stopLive(); state.me = null; state.sites = []; state.site = null; state.data = null; history.replaceState(null, '', portalUrl()); showLogin('You have been signed out.'); }
 });
+function differentAccountHtml() { return `<div class="mt-3"><button type="button" class="btn btn-secondary w-full" onclick="useDifferentAccount()">Sign in with a different account</button></div>`; }
+async function useDifferentAccount() { try { await sb.auth.signOut({ scope: 'local' }); } catch (e) {} location.replace(portalUrl()); }
 
 async function afterSignIn(session) {
     if (state.started) return;
@@ -1091,19 +1109,20 @@ async function afterSignIn(session) {
         return;
     }
     state.me = Object.assign({ email: session.user.email, uid: session.user.id }, me || {});
+    // the other apps in the menu: only the ones this account can use (staff: the Service App; admins: Admin too)
+    document.querySelectorAll('#accountMenu .app-switch a').forEach(a => a.classList.toggle('hidden', !(me && me.staff) || (a.getAttribute('href') === 'admin.html' && !(me && me.admin))));
     idleActivity();
     loadIdleMinutes();
     loadAccountPrefs();
+    // (not signed out: the same sign-in is used by the other Pestis apps - "Sign in with a different account" does that)
     if (!me || (!me.staff && !me.client)) {
-        await sb.auth.signOut().catch(() => {});
-        state.started = false;
-        showLogin(`<b class="t-strong">${esc(session.user.email)}</b> doesn't have access to any sites yet. Ask Pesties to give this email address access to your site, then sign in again.`, 'error');
+        state.me = null; state.started = false;
+        showLogin(`You're signed in as <b class="t-strong">${esc(session.user.email)}</b>, which doesn't have access to any sites yet. Ask Pesties to give this email address access to your site.${differentAccountHtml()}`, 'error');
         return;
     }
-    if (me.client && !me.active) {
-        await sb.auth.signOut().catch(() => {});
-        state.started = false;
-        showLogin('Access for this account has been paused. Please contact Pesties.', 'error');
+    if (me.client && !me.active && !me.staff) {
+        state.me = null; state.started = false;
+        showLogin(`Access for ${esc(session.user.email)} has been paused. Please contact Pesties.${differentAccountHtml()}`, 'error');
         return;
     }
     // signed in
@@ -4562,6 +4581,14 @@ const PR = (() => {
 //   svc = Service App (index.html), adm = Admin (admin.html), cli = Client Portal (client.html - written for clients)
 const WN = (() => {
     const LOG = [
+        { rev: 'r70', date: '2026-10-23', v: { svc: '2026.10.23-r70', adm: '2026.10.23-a15', cli: '2026.10.23-p30' },
+            svc: ['One sign-in for all three apps: switch to Admin or the Client Portal from your menu without signing in again',
+                  'Using any Pestis app counts as activity, so you\'re not signed out of one while working in another',
+                  'Station names can\'t be used twice on a site: naming or renaming a station to a name that\'s taken shows a warning and won\'t save'],
+            adm: ['One sign-in for all three apps: switch to the Service App or the Client Portal from your menu without signing in again',
+                  'Signed in with an account that isn\'t an admin: Admin says so and points to the right app, without signing you out of the others'],
+            cli: ['Pesties staff: one sign-in for the Service App, Admin and the Client Portal',
+                  'Your menu only shows the apps your account can use'] },
         { rev: 'r69', date: '2026-10-23', v: { svc: '2026.10.23-r69', adm: '2026.10.23-a14', cli: '2026.10.23-p29' },
             adm: ['Reports › One station: a line for each pest caught (or the activity level for external toxic stations), over the years',
                   'Reports: "Year on year" shows each year as its own line, January to December, to compare',

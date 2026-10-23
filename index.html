@@ -1317,7 +1317,8 @@
                         <div id="stationDetailsHeading" class="sm:col-span-2 eyebrow t-accent">New Barcode Detected - Register Device Details:</div>
                         <div>
                             <label class="lbl">Station / Location Name</label>
-                            <input type="text" id="newLocName" placeholder="e.g. Back Roller Door" class="field">
+                            <input type="text" id="newLocName" placeholder="e.g. Back Roller Door" class="field" oninput="checkStationNameLive()">
+                            <p id="newLocNameWarn" class="hidden text-[11px] font-semibold mt-1" style="color:#dc2626;" role="alert"></p>
                         </div>
                         <div>
                             <label class="lbl">Station Type</label>
@@ -2255,7 +2256,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.23-r69';
+        const APP_VERSION = '2026.10.23-r70';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = true;   // critical limits (rebuilt in r65)
         // after Check for updates, tidy the address bar
@@ -2291,9 +2292,22 @@
         // admin powers or admin links, whatever their role.
         const ADMIN_MODE = false;
         const { createClient } = supabase;
+        // One sign-in for the three Pestis apps (Service App, Admin, Client Portal - the same website and database):
+        // signing in to one signs you in to the others. Each app still checks for itself that the account may use it,
+        // and the database rules decide what each account can see. The key is the Service App's, so its sign-ins carry over.
+        const PESTIS_AUTH_KEY = 'sb-' + SUPABASE_URL.replace(/^https?:\/\//, '').split('.')[0] + '-auth-token';
+        function pestisAdoptSignIn(oldKey) {   // a sign-in saved by an older version of this app (under its own key) is kept, once
+            try { const v = localStorage.getItem(oldKey); if (v && !localStorage.getItem(PESTIS_AUTH_KEY)) localStorage.setItem(PESTIS_AUTH_KEY, v); localStorage.removeItem(oldKey); } catch (e) {}
+        }
+        // "Not used for a while" counts activity in any Pestis app, so working in one doesn't sign you out of another
+        const PESTIS_ACTIVE_KEY = 'pestis-last-active';
+        let pestisActiveWritten = 0;
+        function pestisMarkActive() { const t = Date.now(); if (t - pestisActiveWritten < 5000) return; pestisActiveWritten = t; try { localStorage.setItem(PESTIS_ACTIVE_KEY, String(t)); } catch (e) {} }
+        function pestisLastActive() { try { return Number(localStorage.getItem(PESTIS_ACTIVE_KEY)) || 0; } catch (e) { return 0; } }
+
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: {
-                storageKey: ADMIN_MODE ? 'sb-pestis-admin-auth-token' : undefined,   // a separate sign-in for the Admin site
+                storageKey: PESTIS_AUTH_KEY,   // shared with Admin and the Client Portal
                 persistSession: true,
                 autoRefreshToken: true,
                 detectSessionInUrl: true,
@@ -2700,6 +2714,9 @@
             el.classList.remove('hidden');
         }
 
+        // signed in, but with an account that can't use this app: sign out here (all Pestis apps) to use another
+        function differentAccountHtml() { return `<div class="mt-3"><button type="button" class="btn btn-secondary w-full !py-2.5" onclick="useDifferentAccount()">Sign in with a different account</button></div>`; }
+        async function useDifferentAccount() { try { await withTimeout(_supabase.auth.signOut({ scope: 'local' }), 5000, 'Sign out'); } catch (e) {} location.href = window.location.origin + window.location.pathname; }
         function showLoginPanel() {
             let idleOut = null;
             try { idleOut = sessionStorage.getItem('pestis-idle-out'); sessionStorage.removeItem('pestis-idle-out'); } catch (e) {}
@@ -2766,13 +2783,14 @@
             const open = id => { const el = document.getElementById(id); return el && !el.classList.contains('hidden'); };
             return open('fullscreenScannerModal') || open('videoRecModal');
         }
-        function idleActivity() { idleLast = Date.now(); if (idleWarnEl) { idleWarnEl.remove(); idleWarnEl = null; } }
+        function idleActivity() { idleLast = Date.now(); if (appStarted) pestisMarkActive(); if (idleWarnEl) { idleWarnEl.remove(); idleWarnEl = null; } }
         ['pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'].forEach(ev => document.addEventListener(ev, idleActivity, { passive: true, capture: true }));
         function idleCheck() {
             if (!appStarted || !currentUser) { idleLast = Date.now(); return; }
             const mins = idleMinutes();
             if (!mins) return;
-            if (idleBusy()) { idleLast = Date.now(); return; }
+            if (idleBusy()) { idleLast = Date.now(); pestisMarkActive(); return; }
+            idleLast = Math.max(idleLast, pestisLastActive());   // used in another Pestis app
             const left = idleLast + mins * 60000 - Date.now();
             if (left <= 0) { idleSignOut(mins); return; }
             if (left <= IDLE_WARN_SECONDS * 1000) {
@@ -2935,12 +2953,11 @@
                         try { const w = await withTimeout(_supabase.rpc('portal_whoami'), 6000, 'Account check'); isClient = !!(w.data && w.data.client); } catch (e) {}
                         if (isClient) {
                             showLoginMessage('');
-                            document.getElementById('loginMessage').innerHTML = `${esc(email)} is a client account. <a href="${esc(portalUrl())}" class="link-btn">Open the Client Portal</a>`;
-                            _supabase.auth.signOut().catch(() => {});
+                            document.getElementById('loginMessage').innerHTML = `You're signed in as ${esc(email)}, a client account. <a href="${esc(portalUrl())}" class="link-btn">Open the Client Portal</a>${differentAccountHtml()}`;
                             return;
                         }
-                        showLoginMessage('Signed in as ' + email + ', but this account has not been approved yet. Ask your administrator to approve your email, then sign in again.');
-                        _supabase.auth.signOut().catch(() => {});
+                        showLoginMessage('');
+                        document.getElementById('loginMessage').innerHTML = `Signed in as ${esc(email)}, but this account has not been approved for the Service App yet. Ask your administrator to approve your email, then try again.${differentAccountHtml()}`;
                         return;
                     }
 
@@ -12821,6 +12838,7 @@
                 document.getElementById('formTitle').textContent = 'Register & Service New Station';
                 document.getElementById('stationDetailsHeading').textContent = 'New barcode - register the station:';
                 document.getElementById('newLocName').value = '';
+                checkStationNameLive();
                 const types = optionLabels('station_type');
                 document.getElementById('newDeviceType').value = types.includes(devType) ? devType : (types[0] || '');
             } else {
@@ -12828,6 +12846,7 @@
                 document.getElementById('formTitle').title = devType;
                 document.getElementById('stationDetailsHeading').textContent = 'Station details';
                 document.getElementById('newLocName').value = locName;
+                checkStationNameLive();
                 setSelectValue('newDeviceType', devType);
             }
             document.getElementById('newStationFields').classList.remove('hidden');
@@ -13102,6 +13121,23 @@
             return (currentProfile && (currentProfile.full_name || currentProfile.email)) || (currentUser && currentUser.email) || '';
         }
 
+        // Station names are unique on a site, so a technician (and the floor plans and reports) can't mix two up.
+        // Checked when a station is named or renamed; stations that already share a name aren't blocked unless renamed.
+        const stationNameKey = n => String(n || '').trim().replace(/\s+/g, ' ').toLowerCase();
+        function stationNameTaken(name, barcode) {
+            const k = stationNameKey(name);
+            if (!k) return null;
+            return siteDevices.find(d => d.barcode_id !== barcode && stationNameKey(d.locationName) === k) || null;
+        }
+        function checkStationNameLive() {
+            const inp = document.getElementById('newLocName'), warn = document.getElementById('newLocNameWarn');
+            if (!inp || !warn) return;
+            const v = inp.value.trim(), changed = stationNameKey(v) !== stationNameKey(currentDeviceName);
+            const taken = changed ? stationNameTaken(v, currentBarcode) : null;
+            warn.textContent = taken ? `There's already a station called "${taken.locationName}" on this site (barcode ${taken.barcode_id}). Please use a different name.` : '';
+            warn.classList.toggle('hidden', !taken);
+            inp.style.borderColor = taken ? '#dc2626' : '';
+        }
         let savingStation = false;
         async function saveStationServiceRecord() {
             if (savingStation) return false;
@@ -13111,6 +13147,13 @@
 
             if (!locNameInput) {
                 alert('Please enter a device/location name.');
+                return false;
+            }
+            const nameClash = stationNameKey(locNameInput) !== stationNameKey(currentDeviceName) ? stationNameTaken(locNameInput, currentBarcode) : null;
+            if (nameClash) {
+                checkStationNameLive();
+                alert(`There's already a station called "${nameClash.locationName}" on this site (barcode ${nameClash.barcode_id}).\n\nPlease give this station a different name, for example "${locNameInput} 2" or a name that says where it is.`);
+                const inp = document.getElementById('newLocName'); inp.focus(); inp.select();
                 return false;
             }
             const usedPrep = f.prepUsed && f.prepUsed !== NONE_PREP;
@@ -14709,6 +14752,14 @@
 //   svc = Service App (index.html), adm = Admin (admin.html), cli = Client Portal (client.html - written for clients)
 const WN = (() => {
     const LOG = [
+        { rev: 'r70', date: '2026-10-23', v: { svc: '2026.10.23-r70', adm: '2026.10.23-a15', cli: '2026.10.23-p30' },
+            svc: ['One sign-in for all three apps: switch to Admin or the Client Portal from your menu without signing in again',
+                  'Using any Pestis app counts as activity, so you\'re not signed out of one while working in another',
+                  'Station names can\'t be used twice on a site: naming or renaming a station to a name that\'s taken shows a warning and won\'t save'],
+            adm: ['One sign-in for all three apps: switch to the Service App or the Client Portal from your menu without signing in again',
+                  'Signed in with an account that isn\'t an admin: Admin says so and points to the right app, without signing you out of the others'],
+            cli: ['Pesties staff: one sign-in for the Service App, Admin and the Client Portal',
+                  'Your menu only shows the apps your account can use'] },
         { rev: 'r69', date: '2026-10-23', v: { svc: '2026.10.23-r69', adm: '2026.10.23-a14', cli: '2026.10.23-p29' },
             adm: ['Reports › One station: a line for each pest caught (or the activity level for external toxic stations), over the years',
                   'Reports: "Year on year" shows each year as its own line, January to December, to compare',
