@@ -299,6 +299,9 @@
         .st-rec-dot { display: block; width: 1.1rem; height: 1.1rem; border-radius: 999px; box-shadow: 0 0 0 4px rgba(255, 255, 255, .65); }
         .ov-combo .pr-combo { min-width: 10rem; }
         .ov-combo .pr-combo-btn { padding-top: .38rem; padding-bottom: .38rem; font-size: .75rem; }
+        /* floor plan cards: the whole plan shows (it isn't cropped), on white */
+        .plan-card .rec-media { aspect-ratio: 16 / 10; background: #fff; }
+        .plan-card .rec-media img { object-fit: contain; }
 </style>
 <style id="pestisReportsCss">
 /* PESTIS-REPORTS-CSS:BEGIN */
@@ -719,7 +722,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.23-p30';
+const PORTAL_VERSION = '2026.10.23-p31';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -1539,7 +1542,7 @@ function renderSiteHeader() {
         + ` <span id="liveBadge" class="${live.state === 'live' ? '' : 'hidden'} ml-1 text-[11px] font-bold" style="color:#10b981;" title="Changes from Pesties show here straight away"><span class="live-dot"></span> Live</span>`;
     const openRecs = m.recs.filter(r => r.status !== 'complete').length;
     const toReview = (m.sightings || []).filter(x => x.status === 'actioned').length;
-    $('siteTabs').innerHTML = TABS.map(([k, l]) => `<button type="button" class="nav-tab ${state.tab === k ? 'active' : ''}" onclick="setTab('${k}')">${l}${k === 'recs' && openRecs ? `<span class="count">${openRecs}</span>` : ''}${k === 'sightings' && toReview ? `<span class="count" title="Actioned by your technician, waiting for your review">${toReview}</span>` : ''}</button>`).join('');
+    $('siteTabs').innerHTML = TABS.map(([k, l]) => `<button type="button" class="nav-tab ${state.tab === k ? 'active' : ''}" onclick="${k === 'plans' ? "planId = null; planFocus = null; if (state.tab === 'plans') renderPlans(); else " : ''}setTab('${k}')">${l}${k === 'recs' && openRecs ? `<span class="count">${openRecs}</span>` : ''}${k === 'sightings' && toReview ? `<span class="count" title="Actioned by your technician, waiting for your review">${toReview}</span>` : ''}</button>`).join('');
 }
 
 function renderTab() {
@@ -3533,17 +3536,18 @@ function showOnPlan(barcode) {
     if (!st || !st.mapId) { alert('This station is not on a floor plan yet.'); return; }
     closeModal(true);
     planId = st.mapId; planFocus = barcode;
-    setTab('plans');
+    if (state.tab === 'plans') renderPlans(); else setTab('plans');
 }
 async function renderPlans() {
     const m = state.model;
     if (!m.maps.length) { $('tabBody').innerHTML = `<div class="card p-5">${emptyNote('No floor plans have been added for this site yet.')}</div>`; return; }
-    if (!m.maps.some(p => p.id === planId)) planId = m.maps[0].id;
+    // first: a card for each floor plan; tapping a card opens that plan
+    if (!m.maps.some(p => p.id === planId)) { planId = null; renderPlanCards(); return; }
     const plan = m.maps.find(p => p.id === planId);
     const pins = planPins(plan);
     $('tabBody').innerHTML = `<div class="card p-5 space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="flex flex-wrap gap-1.5">${m.maps.map(p => `<button type="button" class="tab-btn ${p.id === planId ? 'active' : ''}" onclick="planId = '${esc(p.id)}'; renderPlans();">${esc(p.name)}</button>`).join('')}</div>
+            <div class="flex flex-wrap items-center gap-1.5"><button type="button" class="btn btn-secondary !py-1.5 !px-3" onclick="planId = null; planFocus = null; renderPlans()">‹ All floor plans</button>${m.maps.map(p => `<button type="button" class="tab-btn ${p.id === planId ? 'active' : ''}" onclick="planId = '${esc(p.id)}'; renderPlans();">${esc(p.name)}</button>`).join('')}</div>
             <div class="flex flex-wrap items-center gap-2">
                 <span class="text-xs t-muted">${plural(pins.length, 'station')} on this plan</span>
                 <span class="flex items-center gap-2" title="The logo on your pest maps"><img src="${esc(mapLogoSrc())}" alt="Map logo" class="map-logo-prev"><button type="button" class="link-btn !text-[11px]" onclick="pickMapLogo()">Change logo</button></span>
@@ -3560,6 +3564,33 @@ async function renderPlans() {
     stage.innerHTML = url ? `<img src="${esc(url)}" alt="${esc(plan.name)}">${pins.map(x => `<button type="button" class="plan-pin ${x.overdue ? 'overdue' : ''} ${x.barcode === planFocus ? 'plan-focus' : ''}" style="left:${x.x * 100}%;top:${x.y * 100}%;" title="${esc(x.name)}" onclick="showStation('${esc(x.barcode)}')"><span style="background:${stationColor(x.type)}"></span></button>`).join('')}` : '<div class="t-faint text-xs p-10">The floor plan image could not be loaded.</div>';
     const focusPin = stage.querySelector('.plan-focus');
     if (focusPin) setTimeout(() => { try { focusPin.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }); } catch (e) {} }, 150);
+}
+// the Floor plans tab opens on these: the plan's picture, its name and how many stations are on it
+function renderPlanCards() {
+    const m = state.model;
+    $('tabBody').innerHTML = `<div class="card p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2"><span class="eyebrow flex items-center gap-2" style="color:#0891b2;"><span class="w-2 h-2 rounded-full" style="background:#0891b2;"></span>Floor plans</span><span class="text-xs t-muted">${plural(m.maps.length, 'floor plan')} · tap one to open it</span></div>
+        <div id="planCards" class="rec-grid ov-cards plan-cards" style="--ov-w:${OV_SIZES[Math.max(ovPrefs().size, 2)]}rem">${m.maps.map(p => {
+            const n = planPins(p).length, late = planPins(p).filter(x => x.overdue).length;
+            return `<button type="button" class="rec-card plan-card" data-plan="${esc(p.id)}" onclick="planId = this.dataset.plan; planFocus = null; renderPlans()" aria-label="Open the floor plan ${esc(p.name)}">
+                <div class="rec-media" data-plan-img="${esc(p.image_path || '')}">
+                    <div class="rec-media-ph">${p.image_path ? 'Loading plan...' : '<b>🗺️</b>No picture'}</div>
+                    <div class="rec-badges"><span class="chip chip-blue">${plural(n, 'station')}</span>${late ? `<span class="chip chip-red">${late} overdue</span>` : ''}</div>
+                </div>
+                <div class="rec-body">
+                    <div class="rec-type-row"><span class="rec-type">Floor plan</span></div>
+                    <div class="rec-title clamp2">${esc(p.name)}</div>
+                    <div class="rec-meta"><span class="rec-meta-item">🗺️ <span class="truncate">Tap to open</span></span>${p.updated_at || p.created_at ? `<span class="rec-meta-item t-faint">Updated ${fmtDate(p.updated_at || p.created_at)}</span>` : ''}</div>
+                </div>
+            </button>`;
+        }).join('')}</div></div>`;
+    fillPlanCardImages($('planCards'));
+}
+async function fillPlanCardImages(box) {
+    const els = Array.from(box.querySelectorAll('[data-plan-img]')).filter(el => el.dataset.planImg);
+    if (!els.length) return;
+    const urls = await signPaths(els.map(el => el.dataset.planImg));
+    els.forEach((el, i) => { const ph = el.querySelector('.rec-media-ph'); if (!ph) return; if (urls[i]) ph.outerHTML = `<img src="${esc(urls[i])}" alt="" loading="lazy">`; else ph.innerHTML = '<b>🗺️</b>Picture unavailable'; });
 }
 function planPins(plan) { return state.model.stations.filter(x => x.mapId === plan.id && x.x != null && x.y != null); }
 // The plan image with the station pins drawn on, as a canvas (the image is fetched first, so the canvas can be saved)
@@ -4581,6 +4612,8 @@ const PR = (() => {
 //   svc = Service App (index.html), adm = Admin (admin.html), cli = Client Portal (client.html - written for clients)
 const WN = (() => {
     const LOG = [
+        { rev: 'r71', date: '2026-10-23', v: { cli: '2026.10.23-p31' },
+            cli: ['Floor plans: the tab opens on a card for each plan (its picture, name and number of stations); tap a card to open the plan, and "‹ All floor plans" to go back'] },
         { rev: 'r70', date: '2026-10-23', v: { svc: '2026.10.23-r70', adm: '2026.10.23-a15', cli: '2026.10.23-p30' },
             svc: ['One sign-in for all three apps: switch to Admin or the Client Portal from your menu without signing in again',
                   'Using any Pestis app counts as activity, so you\'re not signed out of one while working in another',

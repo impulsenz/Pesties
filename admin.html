@@ -6,7 +6,7 @@
     The Admin site, separate from the Service App (index.html) and the Client Portal (client.html):
     its own page, its own sign-in (admin accounts only) and its own code. They only share the database.
     Open it at  https://<your site>/admin.html  and upload it next to index.html.
-    Version 2026.10.23-a15
+    Version 2026.10.23-a16
 -->
 <head>
     <meta charset="UTF-8">
@@ -3042,6 +3042,8 @@
 //   svc = Service App (index.html), adm = Admin (admin.html), cli = Client Portal (client.html - written for clients)
 const WN = (() => {
     const LOG = [
+        { rev: 'r71', date: '2026-10-23', v: { cli: '2026.10.23-p31' },
+            cli: ['Floor plans: the tab opens on a card for each plan (its picture, name and number of stations); tap a card to open the plan, and "‹ All floor plans" to go back'] },
         { rev: 'r70', date: '2026-10-23', v: { svc: '2026.10.23-r70', adm: '2026.10.23-a15', cli: '2026.10.23-p30' },
             svc: ['One sign-in for all three apps: switch to Admin or the Client Portal from your menu without signing in again',
                   'Using any Pestis app counts as activity, so you\'re not signed out of one while working in another',
@@ -3652,7 +3654,7 @@ const PR = (() => {
 /* PESTIS-REPORTS:END */
 
         // Tells index.html what loaded, and which version of the hook-up it was written for
-        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.23-a15', api: 0 };
+        window.ADDON_INFO = { name: 'Pestis Admin', version: '2026.10.23-a16', api: 0 };
 
         async function loadAdminPanel() {
             const profList = document.getElementById('adminProfilesList');

@@ -2256,7 +2256,7 @@
         const SITE_IMG_PREFIX = 'site-covers';           // site card photos live in the same bucket under this folder
         const SIGNED_URL_SECONDS = 7 * 24 * 60 * 60;     // photo links stay valid for 7 days (saved on the device and reused)
         const SQL_HINT = ' Run pestis_offline_sites_update.sql in the Supabase SQL editor.';
-        const APP_VERSION = '2026.10.23-r70';
+        const APP_VERSION = '2026.10.23-r71';
         // Critical limits are switched off while they are rebuilt (the code stays, dormant, behind this one switch)
         const LIMITS_ON = true;   // critical limits (rebuilt in r65)
         // after Check for updates, tidy the address bar
@@ -14752,6 +14752,8 @@
 //   svc = Service App (index.html), adm = Admin (admin.html), cli = Client Portal (client.html - written for clients)
 const WN = (() => {
     const LOG = [
+        { rev: 'r71', date: '2026-10-23', v: { cli: '2026.10.23-p31' },
+            cli: ['Floor plans: the tab opens on a card for each plan (its picture, name and number of stations); tap a card to open the plan, and "‹ All floor plans" to go back'] },
         { rev: 'r70', date: '2026-10-23', v: { svc: '2026.10.23-r70', adm: '2026.10.23-a15', cli: '2026.10.23-p30' },
             svc: ['One sign-in for all three apps: switch to Admin or the Client Portal from your menu without signing in again',
                   'Using any Pestis app counts as activity, so you\'re not signed out of one while working in another',
