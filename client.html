@@ -277,6 +277,7 @@
         .app-switch > a:hover, .app-switch > a:focus-visible { border-color: rgb(var(--b500)); outline: none; }
         .app-switch > .on { background: rgb(var(--b500)); border-color: transparent; color: #fff; cursor: default; }
         .app-here { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+        .wn-badge { margin-left: .35rem; font-size: 9px; font-weight: 800; color: #fff; background: rgb(var(--b500)); padding: 0 .4rem; border-radius: 999px; line-height: 1.6; }
 </style>
 <style id="pestisReportsCss">
 /* PESTIS-REPORTS-CSS:BEGIN */
@@ -346,6 +347,14 @@
     body.pr-printing .pr-tbl-wrap { max-height: none; overflow: visible; }
 }
 /* PESTIS-REPORTS-CSS:END */
+.pr-link { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 30%, transparent); text-underline-offset: 2px; }
+.pr-link:hover, .pr-link:focus-visible { color: rgb(var(--b500, 249 115 22)); text-decoration-color: currentColor; outline: none; }
+.pr-sds { display: inline-block; margin-left: .25rem; padding: 0 .35rem; border-radius: 999px; font-size: 9.5px; font-weight: 800; color: #fff; background: #dc2626; text-decoration: none; vertical-align: 1px; }
+@media print { .pr-link { text-decoration: none; } .pr-sds { display: none; } }
+.pr-link { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 30%, transparent); text-underline-offset: 2px; }
+.pr-link:hover, .pr-link:focus-visible { color: rgb(var(--b500, 249 115 22)); text-decoration-color: currentColor; outline: none; }
+.pr-sds { display: inline-block; margin-left: .25rem; padding: 0 .35rem; border-radius: 999px; font-size: 9.5px; font-weight: 800; color: #fff; background: #dc2626; text-decoration: none; vertical-align: 1px; }
+@media print { .pr-link { text-decoration: none; } .pr-sds { display: none; } }
 </style>
 </head>
 <body class="font-sans antialiased min-h-screen flex flex-col">
@@ -411,6 +420,7 @@
                 <div id="accountMenu" class="hidden absolute right-0 mt-2 w-64 card p-3 space-y-2 text-xs z-50" role="menu">
                     <div id="accountDetail" class="t-muted break-words"></div>
                     <button type="button" onclick="$('accountMenu').classList.add('hidden'); openSettings()" class="btn btn-secondary w-full">⚙ Settings</button>
+                    <button type="button" onclick="$('accountMenu').classList.add('hidden'); openWhatsNew()" class="btn btn-secondary w-full">✨ What's new<span data-wn-badge class="wn-badge" style="display:none"></span></button>
                     <button type="button" id="accountUpdateBtn" onclick="$('accountMenu').classList.add('hidden'); checkForUpdates()" class="btn btn-secondary w-full">⟳ Check for updates</button>
                     <div class="text-[10px] t-faint text-center">Version <span class="portal-version-inline"></span></div>
                     <div class="border-t divider pt-2 space-y-1.5"><div class="app-here text-center">Pestis apps · you're in the Client Portal</div><nav class="app-switch" aria-label="Pestis apps"><a href="index.html">🛠 Service App</a><a href="admin.html">🛡 Admin</a><span class="on" aria-current="page">🏢 Client Portal</span></nav></div>
@@ -609,7 +619,7 @@
 //  Same Supabase project as the Pestis field app. What a client can see and change is enforced by the database
 //  (pestis_client_portal.sql); this page only shows it.
 // =====================================================================
-const PORTAL_VERSION = '2026.10.23-p27';
+const PORTAL_VERSION = '2026.10.23-p28';
 const SUPABASE_URL = 'https://gxxyxknzyzaexdufliwv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ESTd1a8NRdN7LIxbsD_RuQ_AtmPlxRT';
 const PHOTO_BUCKET = 'station-photos';
@@ -1129,7 +1139,7 @@ function renderPicker() {
 //  ONE SITE: load everything once, then each tab is worked out on this device
 // ===================================================================
 const TABS = [
-    ['overview', 'Overview'], ['recs', 'Recommendations'], ['sightings', 'Pest sightings'], ['reports', 'Reports'], ['chemicals', 'Preparations'],
+    ['overview', 'Overview'], ['recs', 'Recommendations'], ['sightings', 'Pest sightings'], ['reports', 'Reports'],
     ['visits', 'Visits'], ['documents', 'Documents'], ['plans', 'Floor plans'], ['techs', 'Technicians']
 ];
 // which filters each report tab offers (hidden filters are not applied)
@@ -1583,6 +1593,19 @@ function renderOverview() {
     if ($('ovStations')) fillStationCardPhotos($('ovStations'));
     renderOverviewChart();
 }
+// ---------- What's new: every update to the Client Portal (the list is shared with the Service App and Admin) ----------
+function openWhatsNew() {
+    if (typeof WN === 'undefined') return;
+    $('modalEyebrow').textContent = 'Client Portal';
+    $('modalTitle').textContent = "What's new";
+    $('modalSub').textContent = 'Version ' + PORTAL_VERSION;
+    $('modalNav').classList.add('hidden');
+    $('modalBody').innerHTML = WN.html('cli');
+    openModal();
+    WN.markSeen('cli');
+}
+window.addEventListener('load', () => { try { WN.badges('cli'); } catch (e) {} });
+
 // ---------- Site contacts: the people at this site and their roles (the client and Pesties staff both keep them up to date) ----------
 const CONTACT_ROLES = ['Site manager', 'Facilities manager', 'Health & safety', 'Quality / food safety', 'Operations', 'Maintenance', 'Reception', 'Accounts', 'After hours'];
 const telHref = p => 'tel:' + String(p || '').replace(/[^\d+]/g, '');
@@ -2335,7 +2358,8 @@ function renderReports() {
     $('tabBody').appendChild(holder);
     if (!state.prBox) state.prBox = holder; else { holder.replaceWith(state.prBox); }
     const data = PR.build({ siteName: siteName(state.site), logs: d.logs || [], stations: d.stations || [], maps: d.maps || [], visits: d.visits || [], recs: d.recs || [], limits: d.limits || [] });
-    PR.render(state.prBox, data, { colorOf: t => stationColor(t) });
+    // a preparation's name in the reports opens its safety data sheet (the same one as in Documents > SDS)
+    PR.render(state.prBox, data, { colorOf: t => stationColor(t), sdsOf: name => { const o = (state.preps || []).find(x => x.label === name && x.sds_path); return o ? o.id : null; }, openSds: id => openPrepSds(id) });
 }
 function renderReportsOld() {
     const list = reportEntries();
@@ -3892,6 +3916,11 @@ const PR = (() => {
     const LOC = 'en-NZ';
     const fmtD = t => t ? new Date(t).toLocaleDateString(LOC, { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
     const fmtDT = t => t ? new Date(t).toLocaleString(LOC, { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '-';
+    const fmtDTS = t => t ? new Date(t).toLocaleString(LOC, { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' }) : '-';   // to the second
+    // a station's name that opens its own report (its history and chart)
+    const stLink = (opts, x) => `${dot(opts, x.type)}<button type="button" class="pr-link" data-b="${e(x.barcode)}" onclick="PR.station(this, this.dataset.b)" title="Show this station's history"><b>${e(x.name)}</b></button>`;
+    // a preparation's name that opens its safety data sheet (when there is one)
+    const prepLink = (opts, name, bold) => { const id = name && opts.sdsOf ? opts.sdsOf(name) : null; const t = bold ? `<b>${e(name)}</b>` : e(name); return id ? `<button type="button" class="pr-link" data-id="${e(id)}" onclick="PR.sds(this, this.dataset.id)" title="Open the safety data sheet">${t} <span class="pr-sds">SDS ↗</span></button>` : t; };
     const monthKey = t => { const d = new Date(t); return d.getFullYear() * 12 + d.getMonth(); };
     const monthStart = k => new Date(Math.floor(k / 12), k % 12, 1).getTime();
     const monthLbl = k => new Date(Math.floor(k / 12), k % 12, 1).toLocaleDateString(LOC, { month: 'short', year: '2-digit' });
@@ -4016,7 +4045,10 @@ const PR = (() => {
         box._pr = { data, opts };
         draw(box);
     }
-    function set(btn, k, v) { const box = btn.closest('.pr-root').parentElement, s = ST.get(box); if (!s) return; s[k] = v; if (k === 'report') window.scrollTo && box.scrollIntoView && box.scrollIntoView({ block: 'start', behavior: 'smooth' }); draw(box); }
+    function set(btn, k, v) { const box = btn.closest('.pr-root').parentElement, s = ST.get(box); if (!s) return;
+        if (k === 'report' && s._linked) { s.station = s._prevStation; s._linked = false; }   // back from a station opened by tapping its name: the other reports aren't left filtered to it
+        if (k === 'station') s._linked = false;
+        s[k] = v; if (k === 'report') window.scrollTo && box.scrollIntoView && box.scrollIntoView({ block: 'start', behavior: 'smooth' }); draw(box); }
     function draw(box) {
         const s = ST.get(box), { data, opts } = box._pr;
         if (!s.report) {
@@ -4112,7 +4144,7 @@ const PR = (() => {
             return {
                 html: kpis([{ v: rows.length, l: 'stations with pests' }, { v: list.reduce((n, x) => n + x.count, 0), l: 'captures' }, { v: rows[0] ? rows[0].st.name : '-', l: 'busiest station' }])
                     + `<div class="pr-chart">${barChart(rows.slice(0, 15).map(o => ({ l: o.st.name, v: o.n, c: color(opts, o.st.type) })))}${rows.length > 15 ? `<p class="pr-note">The top 15 are charted; all ${rows.length} are in the table.</p>` : ''}</div>`
-                    + table(head, rows.map(o => ({ cells: [`${dot(opts, o.st.type)}<b>${e(o.st.name)}</b>`, e(o.st.type), e(o.st.map || '-'), o.n, o.recs, e(main(o)), e(fmtD(o.last))] }))),
+                    + table(head, rows.map(o => ({ cells: [stLink(opts, o.st), e(o.st.type), e(o.st.map || '-'), o.n, o.recs, e(main(o)), e(fmtD(o.last))] }))),
                 csv: [head.map(h => h.t)].concat(rows.map(o => [o.st.name, o.st.type, o.st.map, o.n, o.recs, main(o), fmtD(o.last)]))
             };
         },
@@ -4141,11 +4173,11 @@ const PR = (() => {
             const head = [{ t: 'Station' }, { t: 'Type' }, { t: 'Floor plan' }, { t: 'Last scanned' }, { t: 'Days ago', num: true }, { t: 'Last result' }, { t: 'By' }];
             return {
                 html: kpis([{ v: list.length, l: 'stations' }, { v: list.length - late.length, l: `scanned in the last ${gap} days`, c: '#16a34a' }, { v: late.length, l: 'not scanned for longer', c: late.length ? '#dc2626' : '' }])
-                    + table(head, list.map(o => ({ _cls: o.days == null || o.days > gap ? 'pr-late' : '', cells: [`${dot(opts, o.x.type)}<b>${e(o.x.name)}</b>`, e(o.x.type), e(o.x.map || '-'), e(o.x.lastAt ? fmtD(o.x.lastAt) : 'Never'), o.days == null ? '-' : o.days, e(o.x.last ? (o.x.last.species ? `${o.x.last.species}${o.x.last.count ? ' ×' + o.x.last.count : ''}` : o.x.last.activity === 'None' ? 'No activity' : o.x.last.activity) : '-'), e(o.x.last ? o.x.last.tech : '')] }))),
-                csv: [head.map(h => h.t)].concat(list.map(o => [o.x.name, o.x.type, o.x.map, o.x.lastAt ? fmtD(o.x.lastAt) : 'Never', o.days == null ? '' : o.days, o.x.last ? (o.x.last.species || o.x.last.activity) : '', o.x.last ? o.x.last.tech : '']))
+                    + table(head, list.map(o => ({ _cls: o.days == null || o.days > gap ? 'pr-late' : '', cells: [stLink(opts, o.x), e(o.x.type), e(o.x.map || '-'), e(o.x.lastAt ? fmtDTS(o.x.lastAt) : 'Never'), o.days == null ? '-' : o.days, e(o.x.last ? (o.x.last.species ? `${o.x.last.species}${o.x.last.count ? ' ×' + o.x.last.count : ''}` : o.x.last.activity === 'None' ? 'No activity' : o.x.last.activity) : '-'), e(o.x.last ? o.x.last.tech : '')] }))),
+                csv: [head.map(h => h.t)].concat(list.map(o => [o.x.name, o.x.type, o.x.map, o.x.lastAt ? fmtDTS(o.x.lastAt) : 'Never', o.days == null ? '' : o.days, o.x.last ? (o.x.last.species || o.x.last.activity) : '', o.x.last ? o.x.last.tech : '']))
             };
         },
-        preps(d, s) {
+        preps(d, s, opts) {
             const q = String(s.batch || '').toLowerCase();
             const list = pick(d, s, x => x.prep && (!s.prep || x.prep === s.prep) && (!s.station || x.barcode === s.station) && (!q || String(x.batch).toLowerCase().includes(q))).reverse();
             const byPrep = new Map();
@@ -4154,8 +4186,8 @@ const PR = (() => {
             const head = [{ t: 'Date' }, { t: 'Station' }, { t: 'Preparation' }, { t: 'Batch' }, { t: 'Amount', num: true }, { t: 'Technician' }];
             return {
                 html: kpis([{ v: list.length, l: 'times used' }, { v: sums.length, l: 'preparations' }, { v: new Set(list.map(x => x.batch).filter(Boolean)).size, l: 'batch numbers' }])
-                    + `<div class="pr-sum">${table([{ t: 'Preparation' }, { t: 'Times used', num: true }, { t: 'Total used', num: true }, { t: 'Stations', num: true }, { t: 'Batches' }], sums.map(o => ({ cells: [`<b>${e(o.prep)}</b>`, o.n, `${Math.round(o.qty * 100) / 100} ${e(o.unit)}`, o.stations.size, `<span class="pr-mono">${e(Array.from(o.batches).join(', ') || '-')}</span>`] })), { empty: 'No preparations were used in this period.' })}</div>`
-                    + table(head, list.map(x => ({ cells: [e(fmtDT(x.at)), e(x.station), e(x.prep), `<span class="pr-mono">${e(x.batch || '-')}</span>`, x.qty != null ? `${e(x.qty)} ${e(x.unit)}` : '', e(x.tech)] })), { empty: 'No preparations were used in this period.' }),
+                    + `<div class="pr-sum">${table([{ t: 'Preparation' }, { t: 'Times used', num: true }, { t: 'Total used', num: true }, { t: 'Stations', num: true }, { t: 'Batches' }], sums.map(o => ({ cells: [prepLink(opts, o.prep, true), o.n, `${Math.round(o.qty * 100) / 100} ${e(o.unit)}`, o.stations.size, `<span class="pr-mono">${e(Array.from(o.batches).join(', ') || '-')}</span>`] })), { empty: 'No preparations were used in this period.' })}</div>`
+                    + table(head, list.map(x => ({ cells: [e(fmtDT(x.at)), stLink(opts, x.stationObj), prepLink(opts, x.prep), `<span class="pr-mono">${e(x.batch || '-')}</span>`, x.qty != null ? `${e(x.qty)} ${e(x.unit)}` : '', e(x.tech)] })), { empty: 'No preparations were used in this period.' }),
                 csv: [head.map(h => h.t)].concat(list.map(x => [fmtDT(x.at), x.station, x.prep, x.batch, x.qty != null ? x.qty : '', x.unit, x.tech]))
             };
         },
@@ -4235,9 +4267,121 @@ const PR = (() => {
         window.print();
         setTimeout(done, 1500);
     }
-    return { build, render, set, download, print, REPORTS };
+    // a station's name: its own report (or the app's station view when it has one)
+    function station(btn, barcode) {
+        const box = btn.closest('.pr-root').parentElement, s = ST.get(box);
+        if (!s) return;
+        const o = box._pr.opts || {};
+        if (o.onStation) { o.onStation(barcode); return; }
+        if (!s._linked) s._prevStation = s.station;
+        s._linked = true; s.station = barcode; s.report = 'station';
+        box.scrollIntoView && box.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        draw(box);
+    }
+    function sds(btn, id) { const box = btn.closest('.pr-root').parentElement, o = (box._pr && box._pr.opts) || {}; if (o.openSds) o.openSds(id); }
+    return { build, render, set, download, print, station, sds, REPORTS };
 })();
 /* PESTIS-REPORTS:END */
+</script>
+<script id="pestisChangelogJs">
+/* PESTIS-CHANGELOG:BEGIN - "What's new" (identical in the Service App, Admin and the Client Portal; edit changelog_shared.js and run sync_changelog.py) */
+// One list of every update, newest first. Each update says what changed in each app:
+//   svc = Service App (index.html), adm = Admin (admin.html), cli = Client Portal (client.html - written for clients)
+const WN = (() => {
+    const LOG = [
+        { rev: 'r68', date: '2026-10-23', v: { svc: '2026.10.23-r68', adm: '2026.10.23-a13', cli: '2026.10.23-p28' },
+            svc: ["What's new: this page, listing every update (Settings › What's new)",
+                  'Settings › Site page layout: choose how many boxes sit in each row, and reset the layout (moved here from the site page)',
+                  'Site contacts added or changed in Admin or the Client Portal now show straight away on an open site'],
+            adm: ["What's new: this page, listing every update (your menu, top right)",
+                  'Reports › Last scanned: the time to the second, and tap a station to see its history',
+                  'Reports › Preparations used: tap a preparation to open its safety data sheet (SDS)'],
+            cli: ["What's new: this page, listing every update (your menu, top right)",
+                  'Reports › Last scanned: the time each station was checked, to the second, and tap a station to see its history',
+                  'Reports › Preparations used: tap a preparation to open its safety data sheet',
+                  'The Preparations tab has gone: preparations are in Reports, and safety data sheets are in Documents › SDS'] },
+        { rev: 'r67', date: '2026-10-23', v: { svc: '2026.10.23-r67', adm: '2026.10.23-a12', cli: '2026.10.23-p27' },
+            svc: ['Site contacts: any number per site with their role, phone and email; the main contact shows on the site page with a phone number to tap',
+                  'Floor plans: each plan shows how many of its stations are still to be placed; "Unpin all stations" to place them again; "Place here" is now "Place"',
+                  'Settings: choose how many boxes sit in each row on the site page',
+                  'Station and recommendation cards are all the same size again',
+                  'The station pop-up after scanning lays out correctly again (notes, recommendations and Save were outside it)',
+                  'Pest guide pictures load again',
+                  'Phones: less space above the site card; the pin next to the site address has gone',
+                  'Only admin accounts can change a site\'s picture',
+                  'Links between the Service App, Admin and the Client Portal, and each says which app it is'],
+            adm: ['Site contacts tab: add, change and remove each site\'s contacts, and choose the main contact',
+                  'Links between the Service App, Admin and the Client Portal'],
+            cli: ['Site contacts: keep the list of people at your site up to date (Overview › Site contacts)',
+                  'Links to the other Pestis apps for Pesties staff'] },
+        { rev: 'r66', date: '2026-10-22', v: { svc: '2026.10.22-r66' },
+            svc: ['Opens with weak or no signal in a few seconds, using the copy saved on the phone',
+                  '"Repair app" won\'t run without signal (it could have left the app unable to open)'] },
+        { rev: 'r65', date: '2026-10-22', v: { svc: '2026.10.22-r65', adm: '2026.10.22-a11', cli: '2026.10.22-p26' },
+            svc: ['Address search when adding or editing a site',
+                  'Critical limits rebuilt: set by an admin for each site; going over a limit asks for a recommendation',
+                  'Station cards show the station name and when it was last scanned; station type colours',
+                  'Past visits: filter by technician',
+                  'Needs action: contracts ending and floor plans due their yearly check',
+                  'Phones: the scan screen\'s sections fold away',
+                  'Barcode shown in the station details, with Change barcode beside the Map button'],
+            adm: ['Critical limits tab: each site\'s own limits and the stations on them',
+                  'Reports tab: the same nine reports as the Client Portal, with download for Excel and print',
+                  'Station types have their own colours',
+                  'Download a whole documents folder as a zip'],
+            cli: ['New Reports tab: pest trends, pests found, busiest stations, one station\'s history, last scanned, preparations used, critical limits, recommendations and visits; each can be downloaded for Excel or printed',
+                  'Critical limits now follow each site\'s own limits',
+                  'Stations show in their type colours'] },
+        { rev: 'r64', svc: ['Satellite floor plans: no more watermark on the picture'] },
+        { rev: 'r63', svc: ['Floor plan text: bold, italic and font; a slider to turn items; labels start at size 100'],
+            adm: ['Download all: a whole documents folder as a zip'],
+            cli: ['Download all: a whole documents folder as a zip'] },
+        { rev: 'r62', svc: ['Floor plans: the plan picker is a drop-down on desktop too',
+                            'Rodent stations: "Bait eaten" is now "Activity", with a new "Caught" option',
+                            'Phones: a more compact station form'] },
+        { rev: 'r61', svc: ['Floor plan labels: type the text size',
+                            'Past visits and the activity log: month and day headings fold away',
+                            'Photo cards share one compact layout'] },
+        { rev: 'r60', svc: ['Phones: the floor plan picker is a drop-down'] },
+        { rev: 'r59', svc: ['"Satellite map" is an option when adding a floor plan'] },
+        { rev: 'r58', svc: ['Satellite floor plans are saved much smaller'] },
+        { rev: 'r57', svc: ['Satellite map: rotate it, use it at any zoom, and find an address as you type'] },
+        { rev: 'r56', svc: ['Pest guide: Surinam, native bush and black (Māori bug) cockroaches',
+                            'Settings moved into your profile',
+                            'Phones: notifications and tasks share one pop-up with tabs'] },
+        { rev: 'r55', svc: ['Past visits grouped by month',
+                            'Floor plan editor: shapes, select several items to move together, independent rooms, a bigger page when needed, and a satellite map background',
+                            'Photo cards all the same size'] }
+    ];
+    const APP = { svc: 'Service App', adm: 'Admin', cli: 'Client Portal' };
+    const e = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    const fmt = d => d ? new Date(d + 'T12:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+    const forApp = app => LOG.filter(x => x[app] && x[app].length);
+    const KEY = app => 'pestis-whatsnew-seen-' + app;
+    const seen = app => { try { return localStorage.getItem(KEY(app)) || ''; } catch (err) { return ''; } };
+    const rank = rev => Number(String(rev || '').replace(/\D/g, '')) || 0;
+    // updates for this app the person hasn't opened yet
+    function unseen(app) { const s = rank(seen(app)); const list = forApp(app); return s ? list.filter(x => rank(x.rev) > s).length : (list.length ? 1 : 0); }
+    function markSeen(app) { const l = forApp(app)[0]; if (l) { try { localStorage.setItem(KEY(app), l.rev); } catch (err) {} } badges(app); }
+    function badges(app) { const n = unseen(app); document.querySelectorAll('[data-wn-badge]').forEach(b => { b.textContent = n ? 'New' : ''; b.style.display = n ? '' : 'none'; }); }
+    function html(app) {
+        const s = rank(seen(app));
+        if (!document.getElementById('wnCss')) {
+            const st = document.createElement('style'); st.id = 'wnCss';
+            st.textContent = '.wn-list{display:flex;flex-direction:column;gap:.75rem}.wn-rev{border:1px solid var(--border);border-radius:.9rem;padding:.8rem 1rem;background:var(--surface2)}.wn-rev.wn-new{border-color:rgb(var(--b500))}'
+                + '.wn-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .6rem;margin-bottom:.35rem}.wn-h b{font-weight:900;color:var(--text)}.wn-h span{font-size:11px;color:var(--faint)}'
+                + '.wn-tag{font-size:9.5px!important;font-weight:800;color:#fff!important;background:rgb(var(--b500));padding:0 .4rem;border-radius:999px}'
+                + '.wn-rev ul{margin:0;padding-left:1.1rem;list-style:disc;font-size:12.5px;line-height:1.45;color:var(--text)}.wn-rev li+li{margin-top:.2rem}';
+            document.head.appendChild(st);
+        }
+        const list = forApp(app);
+        return `<div class="wn-list"><p style="font-size:12px;color:var(--muted);margin:0">What's changed in the ${e(APP[app])}, newest first. You're on <b>${e((list[0] && list[0].v && list[0].v[app]) || (list[0] && list[0].rev) || '')}</b>.</p>`
+            + list.map(x => `<div class="wn-rev ${s && rank(x.rev) > s ? 'wn-new' : ''}"><div class="wn-h"><b>Update ${e(x.rev)}</b>${x.date ? `<span>${e(fmt(x.date))}</span>` : ''}${x.v && x.v[app] ? `<span>version ${e(x.v[app])}</span>` : ''}${s && rank(x.rev) > s ? '<span class="wn-tag">New</span>' : ''}</div>`
+                + `<ul>${x[app].map(t => `<li>${e(t)}</li>`).join('')}</ul></div>`).join('') + '</div>';
+    }
+    return { LOG, html, unseen, markSeen, badges, latest: app => forApp(app)[0] };
+})();
+/* PESTIS-CHANGELOG:END */
 </script>
 </body>
 </html>
